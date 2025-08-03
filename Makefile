@@ -2,7 +2,7 @@ build:
 	docker compose --progress=plain build
 
 up:
-	docker compose up -d
+	docker compose --env-file .env.local up -d
 
 logs:
 	docker compose logs -f

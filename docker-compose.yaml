@@ -7,9 +7,9 @@ services:
     container_name: gmao-database
     environment:
       - MARIADB_ROOT_PASSWORD=${MARIADB_ROOT_PASSWORD:-root_password}
-      - MARIADB_USER=${MARIADB_USER:-app}
-      - MARIADB_PASSWORD=${MARIADB_PASSWORD:-app_password}
-      - MARIADB_DATABASE=${MARIADB_DATABASE:-app}
+      - MARIADB_USER=${MARIADB_USER}
+      - MARIADB_PASSWORD=${MARIADB_PASSWORD}
+      - MARIADB_DATABASE=${MARIADB_DATABASE}
     volumes:
       - database_data:/bitnami/mariadb
     networks:
@@ -27,8 +27,8 @@ services:
     environment:
       - PMA_ARBITRARY=1
       - PMA_HOST=database
-      - PMA_USER=${MARIADB_USER:-app}
-      - PMA_PASSWORD=${MARIADB_PASSWORD:-app_password}
+      - PMA_USER=${MARIADB_USER}
+      - PMA_PASSWORD=${MARIADB_PASSWORD}
     depends_on:
       - database
     networks:
