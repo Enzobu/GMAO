@@ -44,6 +44,51 @@ $tooltip-bg: $primary;
 // Ombres activées
 $enable-shadows: true;
 
+// Custom
+.sidebar-btn-active {
+  background: rgba(30, 79, 188, 0.045);
+
+  @media (prefers-color-scheme: dark) {
+    background: rgba(150, 180, 245, 0.045);
+  }
+}
+
+.sidebar-btn:hover {
+  background: rgba(30, 79, 188, 0.09);
+
+  @media (prefers-color-scheme: dark) {
+    background: rgba(150, 180, 245, 0.09);
+  }
+}.sidebar-btn-active {
+  background: rgba(30, 79, 188, 0.045);
+
+  @media (prefers-color-scheme: dark) {
+    background: rgba(150, 180, 245, 0.045);
+  }
+}
+
+.sidebar-btn:hover {
+  background: rgba(30, 79, 188, 0.09);
+
+  @media (prefers-color-scheme: dark) {
+    background: rgba(150, 180, 245, 0.09);
+  }
+}
+
+.
+
+.h-full {
+    height: 100vh;
+}
+
+.h-fit-content {
+    height: calc(100vh - 93px);
+}
+
+.cursor-pointer {
+    cursor: pointer;
+}
+
 @import "../../vendor/twbs/bootstrap/scss/functions";
 @import "../../vendor/twbs/bootstrap/scss/variables";
 @import "../../vendor/twbs/bootstrap/scss/maps";
