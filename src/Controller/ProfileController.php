@@ -8,14 +8,15 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\CurrentUser;
 
-final class AdminController extends AbstractController
+final class ProfileController extends AbstractController
 {
-    #[Route('/admin', name: 'app_admin')]
+    #[Route('/profile', name: 'app_profile')]
     public function index(
+        #[CurrentUser] User $currentUser,
     ): Response
     {
-        return $this->render('admin/index.html.twig', [
-            'controller_name' => 'AdminController',
+        return $this->render('profile/index.html.twig', [
+            'controller_name' => 'ProfileController',
             'currentUser' => $currentUser,
         ]);
     }

@@ -15,12 +15,6 @@
       <div class="collapse navbar-collapse" id="navbarSupportedContent">
         {# ----- Bouton de gauche ----- #}
         <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-          {# {{ navigation.nav_item(
-            label: 'Évènements',
-            path: path('app_event_index'),
-            icon: fa.icon('calendar-star', size: 'lg'),
-            check_path: 'app_event',
-          ) }} #}
         </ul>
 
         {# ----- Bouton de droite ----- #}
@@ -33,22 +27,10 @@
               <ul class="dropdown-menu dropdown-menu-end">
                 {{ dropdown.item(
                   label: 'Profil',
-                  path: path('app_home'),
+                  path: path('app_profile'),
                   icon: fa.icon('user', fixed_width: true),
                 ) }}
 
-                {# {% if is_granted('ROLE_ADMIN') %}
-                  <li>
-                    <hr class="dropdown-divider" />
-                  </li>
-                  
-                  {{ dropdown.item(
-                    label: 'Plans',
-                    path: path('app_admin_plan_index'),
-                    icon: fa.icon('face-tongue-money', fixed_width: true),
-                  ) }}
-                {% endif %} #}
-                
                 <li>
                   <hr class="dropdown-divider" />
                 </li>
