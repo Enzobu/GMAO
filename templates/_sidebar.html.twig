@@ -1,0 +1,39 @@
+{% import "macros/navigation.html.twig" as navigation %}
+{% import "macros/fontawesome.html.twig" as fa %}
+
+<div class="border-end h-100 shadow-lg p-3">
+    {{ navigation.sidebar_item(
+        label: 'Accueil',
+        path: path('app_home'),
+        icon: fa.icon('user', fixed_width: true),
+        check_path: 'app_home',
+    ) }}
+    <hr>
+    {{ navigation.sidebar_item(
+        label: 'Véhicules',
+        path: path('app_vehicule'),
+        icon: fa.icon('user', fixed_width: true),
+        check_path: 'app_vehicule',
+    ) }}
+    <hr>
+    {{ navigation.sidebar_item(
+        label: 'Interventions',
+        path: path('app_intervention'),
+        icon: fa.icon('user', fixed_width: true),
+        check_path: 'app_intervention',
+    ) }}
+    <hr>
+    {{ navigation.sidebar_item(
+        label: 'Stock',
+        path: path('app_stock'),
+        icon: fa.icon('user', fixed_width: true),
+        check_path: 'app_stock',
+    ) }}
+    <hr>
+    {{ navigation.sidebar_item(
+        label: 'Admin',
+        path: path('app_admin'),
+        icon: fa.icon('user', fixed_width: true),
+        check_path: 'app_admin',
+    ) }}
+</div>

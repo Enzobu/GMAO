@@ -1,0 +1,51 @@
+{% import "macros/dropdown.html.twig" as dropdown %}
+{% import "macros/fontawesome.html.twig" as fa %}
+{% import "macros/navigation.html.twig" as navigation %}
+
+<header class="sticky-top">
+  <nav class="navbar navbar-expand-lg bg-body border-bottom shadow-sm" id="main-navbar">
+    <div class="container">
+      {# ----- Logo ----- #}
+      <a class="d-flex align-items-center gap-2 navbar-brand me-5" href="{{ path('app_home') }}" aria-label="Accueil">
+        <img src="{{ asset('images/logo.png') }}" alt="" style="max-width: 3rem;">
+        <p class="fs-4 p-0 m-0">Gestionnaire d'entretien</p>
+      </a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
+
+      <div class="collapse navbar-collapse" id="navbarSupportedContent">
+        {# ----- Bouton de gauche ----- #}
+        <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+        </ul>
+
+        {# ----- Bouton de droite ----- #}
+        {% if is_granted('ROLE_USER') %}
+          <ul class="navbar-nav">
+            <li class="nav-item dropdown">
+              <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                {{ currentUser.firstname|slice(0, 1) }}{{ currentUser.lastname|slice(0, 1) }}
+              </a>
+              <ul class="dropdown-menu dropdown-menu-end">
+                {{ dropdown.item(
+                  label: 'Profil',
+                  path: path('app_profile'),
+                  icon: fa.icon('user', fixed_width: true),
+                ) }}
+
+                <li>
+                  <hr class="dropdown-divider" />
+                </li>
+                
+                {{ dropdown.item(
+                  label: 'Déconnexion',
+                  path: path('app_logout'),
+                  icon: fa.icon('right-from-bracket', fixed_width: true),
+                  destructive: true,
+                ) }}
+              </ul>
+            </li>
+          </ul>
+        {% endif %}
+      </div>
+    </div>
+  </nav>
+</header>
