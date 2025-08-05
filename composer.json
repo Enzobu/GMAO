@@ -11,6 +11,7 @@
         "doctrine/doctrine-bundle": "^2.15",
         "doctrine/doctrine-migrations-bundle": "^3.4",
         "doctrine/orm": "^3.5",
+        "league/commonmark": "^2.7",
         "phpdocumentor/reflection-docblock": "^5.6",
         "phpstan/phpdoc-parser": "^2.2",
         "symfony/asset": "7.2.*",
@@ -45,6 +46,7 @@
         "symfonycasts/sass-bundle": "^0.8.2",
         "twbs/bootstrap": "^5.3",
         "twig/extra-bundle": "^2.12|^3.0",
+        "twig/markdown-extra": "^3.21",
         "twig/twig": "^2.12|^3.0"
     },
     "config": {
