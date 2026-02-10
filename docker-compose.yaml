@@ -3,7 +3,7 @@ name: gmao
 services:
   ###> doctrine/doctrine-bundle ###
   database:
-    image: bitnami/mariadb:11.8
+    image: mariadb:11.8.5-ubi9
     container_name: gmao-database
     environment:
       - MARIADB_ROOT_PASSWORD=${MARIADB_ROOT_PASSWORD:-root_password}
@@ -20,7 +20,7 @@ services:
   ###< doctrine/doctrine-bundle ###
 
   phpmyadmin:
-    image: phpmyadmin:5.2.2
+    image: phpmyadmin:5.2.3
     container_name: gmao-phpmyadmin
     ports:
       - 8080:80
