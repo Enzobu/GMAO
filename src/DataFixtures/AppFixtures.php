@@ -4,6 +4,8 @@ namespace App\DataFixtures;
 
 use App\Entity\User;
 use App\Entity\Vehicle;
+use App\Entity\VehicleInsurance;
+use App\Enum\InsurancePaymentFrequencyEnum;
 use App\Enum\VehicleFuelTypeEnum;
 use App\Enum\VehicleStatusEnum;
 use App\Enum\VehicleTransmissionTypeEnum;
@@ -135,6 +137,8 @@ class AppFixtures extends Fixture
             ],
         ];
 
+        $vehiclesByRegistration = [];
+
         foreach ($vehiclesData as $data) {
             $vehicle = new Vehicle();
             $vehicle->setName($data['name']);
@@ -155,6 +159,93 @@ class AppFixtures extends Fixture
             $vehicle->setUser($data['user']);
 
             $manager->persist($vehicle);
+
+            $vehiclesByRegistration[$data['registration']] = $vehicle;
+        }
+
+        $manager->flush();
+
+        
+        // INSURANCES
+        $insurancesData = [
+            [
+                'vehicleRegistration' => 'AB-123-CD', // Focus
+                'providerName' => 'MAIF',
+                'policyNumber' => 'MAIF-FOCUS-2026-001',
+                'startDate' => new DateTimeImmutable('2026-01-01'),
+                'endDate' => new DateTimeImmutable('2026-12-31'),
+                'paymentFrequency' => InsurancePaymentFrequencyEnum::Monthly,
+                'isActive' => true,
+            ],
+            [
+                'vehicleRegistration' => 'EF-456-GH', // Almera
+                'providerName' => 'AXA',
+                'policyNumber' => 'AXA-ALMERA-2026-014',
+                'startDate' => new DateTimeImmutable('2026-02-15'),
+                'endDate' => new DateTimeImmutable('2027-02-14'),
+                'paymentFrequency' => InsurancePaymentFrequencyEnum::Yearly,
+                'isActive' => true,
+            ],
+            [
+                'vehicleRegistration' => 'IJ-789-KL', // Ninja
+                'providerName' => 'AMV',
+                'policyNumber' => 'AMV-NINJA-2026-777',
+                'startDate' => new DateTimeImmutable('2026-03-01'),
+                'endDate' => new DateTimeImmutable('2027-02-28'),
+                'paymentFrequency' => InsurancePaymentFrequencyEnum::Monthly,
+                'isActive' => true,
+            ],
+            [
+                'vehicleRegistration' => 'MN-321-OP', // Partner
+                'providerName' => 'GMF',
+                'policyNumber' => 'GMF-PARTNER-2025-332',
+                'startDate' => new DateTimeImmutable('2025-09-01'),
+                'endDate' => new DateTimeImmutable('2026-08-31'),
+                'paymentFrequency' => InsurancePaymentFrequencyEnum::Monthly,
+                'isActive' => true,
+            ],
+            [
+                'vehicleRegistration' => 'QR-654-ST', // Clio
+                'providerName' => 'Allianz',
+                'policyNumber' => 'ALLIANZ-CLIO-2026-090',
+                'startDate' => new DateTimeImmutable('2026-02-01'),
+                'endDate' => new DateTimeImmutable('2027-01-31'),
+                'paymentFrequency' => InsurancePaymentFrequencyEnum::Yearly,
+                'isActive' => true,
+            ],
+        ];
+
+        // (Optionnel) exemple d'historique : ancienne assurance inactive pour la Focus
+        $insurancesData[] = [
+            'vehicleRegistration' => 'AB-123-CD',
+            'providerName' => 'Direct Assurance',
+            'policyNumber' => 'DA-FOCUS-2025-099',
+            'startDate' => new DateTimeImmutable('2025-01-01'),
+            'endDate' => new DateTimeImmutable('2025-12-31'),
+            'paymentFrequency' => InsurancePaymentFrequencyEnum::Monthly,
+            'isActive' => false,
+        ];
+
+        foreach ($insurancesData as $data) {
+            $vehicle = $vehiclesByRegistration[$data['vehicleRegistration']] ?? null;
+
+            if (!$vehicle) {
+                throw new \RuntimeException(sprintf(
+                    'Véhicule introuvable pour la plaque "%s".',
+                    $data['vehicleRegistration']
+                ));
+            }
+
+            $insurance = new VehicleInsurance();
+            $insurance->setVehicle($vehicle);
+            $insurance->setProviderName($data['providerName']);
+            $insurance->setPolicyNumber($data['policyNumber']);
+            $insurance->setStartDate($data['startDate']);
+            $insurance->setEndDate($data['endDate']);
+            $insurance->setPaymentFrequency($data['paymentFrequency']);
+            $insurance->setIsActive($data['isActive']);
+
+            $manager->persist($insurance);
         }
 
         $manager->flush();

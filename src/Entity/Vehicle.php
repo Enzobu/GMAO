@@ -7,6 +7,8 @@ use App\Enum\VehicleStatusEnum;
 use App\Enum\VehicleTransmissionTypeEnum;
 use App\Enum\VehicleTypeEnum;
 use App\Repository\VehicleRepository;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
@@ -66,6 +68,17 @@ class Vehicle
     #[ORM\ManyToOne(inversedBy: 'vehicles')]
     #[ORM\JoinColumn(nullable: false)]
     private ?User $user = null;
+
+    /**
+     * @var Collection<int, VehicleInsurance>
+     */
+    #[ORM\OneToMany(targetEntity: VehicleInsurance::class, mappedBy: 'vehicle')]
+    private Collection $vehicleInsurances;
+
+    public function __construct()
+    {
+        $this->vehicleInsurances = new ArrayCollection();
+    }
 
     public function getId(): ?int
     {
@@ -260,6 +273,35 @@ class Vehicle
     public function setUser(?User $user): static
     {
         $this->user = $user;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, VehicleInsurance>
+     */
+    public function getVehicleInsurances(): Collection
+    {
+        return $this->vehicleInsurances;
+    }
+
+    public function addVehicleInsurance(VehicleInsurance $vehicleInsurance): static
+    {
+        if (!$this->vehicleInsurances->contains($vehicleInsurance)) {
+            $this->vehicleInsurances->add($vehicleInsurance);
+            $vehicleInsurance->setVehicle($this);
+        }
+
+        return $this;
+    }
+
+    public function removeVehicleInsurance(VehicleInsurance $vehicleInsurance): static
+    {
+        if ($this->vehicleInsurances->removeElement($vehicleInsurance)) {
+            // set the owning side to null (unless already changed)
+            if ($vehicleInsurance->getVehicle() === $this) {
+            }
+        }
 
         return $this;
     }

@@ -35,17 +35,17 @@
                 <td>{{ vehicle.registration }}</td>
                 <td>{{ vehicle.brand }}</td>
                 <td>{{ vehicle.model }}</td>
-                <td>{{ vehicle.type.name }}</td>
+                <td>{{ vehicle.type.label }}</td>
                 <td>{{ vehicle.year }}</td>
                 <td>{{ vehicle.vin }}</td>
                 <td>{{ vehicle.engine }}</td>
-                <td>{{ vehicle.fuelType.name }}</td>
-                <td>{{ vehicle.transmission.name }}</td>
+                <td>{{ vehicle.fuelType.label }}</td>
+                <td>{{ vehicle.transmission.label }}</td>
                 <td>{{ vehicle.lastMileage }}</td>
                 <td>{{ vehicle.color }}</td>
                 <td>{{ vehicle.purchaseDate ? vehicle.purchaseDate|date('Y-m-d') : '' }}</td>
                 <td>{{ vehicle.purchasePrice }}</td>
-                <td>{{ vehicle.status.name }}</td>
+                <td>{{ vehicle.status.label }}</td>
                 <td>
                     <a href="{{ path('app_vehicle_show', {'id': vehicle.id}) }}">show</a>
                     <a href="{{ path('app_vehicle_edit', {'id': vehicle.id}) }}">edit</a>
