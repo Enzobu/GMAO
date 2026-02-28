@@ -1,0 +1,63 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Vehicle index{% endblock %}
+
+{% block body %}
+    <h1>Vehicle index</h1>
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Id</th>
+                <th>Name</th>
+                <th>Registration</th>
+                <th>Brand</th>
+                <th>Model</th>
+                <th>Type</th>
+                <th>Year</th>
+                <th>Vin</th>
+                <th>Engine</th>
+                <th>FuelType</th>
+                <th>Transmission</th>
+                <th>LastMileage</th>
+                <th>Color</th>
+                <th>PurchaseDate</th>
+                <th>PurchasePrice</th>
+                <th>Status</th>
+                <th>actions</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for vehicle in vehicles %}
+            <tr>
+                <td>{{ vehicle.id }}</td>
+                <td>{{ vehicle.name }}</td>
+                <td>{{ vehicle.registration }}</td>
+                <td>{{ vehicle.brand }}</td>
+                <td>{{ vehicle.model }}</td>
+                <td>{{ vehicle.type.name }}</td>
+                <td>{{ vehicle.year }}</td>
+                <td>{{ vehicle.vin }}</td>
+                <td>{{ vehicle.engine }}</td>
+                <td>{{ vehicle.fuelType.name }}</td>
+                <td>{{ vehicle.transmission.name }}</td>
+                <td>{{ vehicle.lastMileage }}</td>
+                <td>{{ vehicle.color }}</td>
+                <td>{{ vehicle.purchaseDate ? vehicle.purchaseDate|date('Y-m-d') : '' }}</td>
+                <td>{{ vehicle.purchasePrice }}</td>
+                <td>{{ vehicle.status.name }}</td>
+                <td>
+                    <a href="{{ path('app_vehicle_show', {'id': vehicle.id}) }}">show</a>
+                    <a href="{{ path('app_vehicle_edit', {'id': vehicle.id}) }}">edit</a>
+                </td>
+            </tr>
+        {% else %}
+            <tr>
+                <td colspan="17">no records found</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+
+    <a href="{{ path('app_vehicle_new') }}">Create new</a>
+{% endblock %}
