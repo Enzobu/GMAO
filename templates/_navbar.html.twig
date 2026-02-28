@@ -22,7 +22,7 @@
           <ul class="navbar-nav">
             <li class="nav-item dropdown">
               <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                {{ currentUser.firstname|slice(0, 1) }}{{ currentUser.lastname|slice(0, 1) }}
+                {{ app.user.firstname|slice(0, 1)|upper }}{{ app.user.lastname|slice(0, 1)|upper }}
               </a>
               <ul class="dropdown-menu dropdown-menu-end">
                 {{ dropdown.item(

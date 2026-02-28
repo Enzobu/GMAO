@@ -85,7 +85,6 @@ final class ProfileController extends AbstractController
         }
 
         return $this->render('profile/index.html.twig', [
-            'currentUser' => $currentUser,
             'form' => $form,
         ]);
     }
