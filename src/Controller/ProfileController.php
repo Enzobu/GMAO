@@ -42,13 +42,12 @@ final class ProfileController extends AbstractController
                     $this->addFlash('danger', 'Veuillez remplir tous les champs pour mettre à jour votre mot de passe');
                     return $this->redirectToRoute('app_profile');
                 }
-                // Vérification du mot de passe actuel
+
                 if (!$passwordHasher->isPasswordValid($currentUser, $oldPassword)) {
                     $this->addFlash('danger', 'Votre mot de passe actuel est incorrect.');
                     return $this->redirectToRoute('app_profile');
                 }
     
-                // Vérification de la correspondance des nouveaux mots de passe
                 if ($newPassword !== $newPasswordRetry) {
                     $this->addFlash('danger', 'Les nouveaux mots de passe ne correspondent pas.');
                     return $this->redirectToRoute('app_profile');
@@ -80,7 +79,8 @@ final class ProfileController extends AbstractController
 
                 $this->addFlash('success', 'Données mise à jour.');
             }
-
+                
+            $this->addFlash('warning', 'Aucune données n\'a été modifiées.');
             return $this->redirectToRoute('app_profile');
         }
 
