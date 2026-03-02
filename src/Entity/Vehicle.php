@@ -75,9 +75,16 @@ class Vehicle
     #[ORM\OneToMany(targetEntity: VehicleInsurance::class, mappedBy: 'vehicle')]
     private Collection $vehicleInsurances;
 
+    /**
+     * @var Collection<int, VehicleInspection>
+     */
+    #[ORM\OneToMany(targetEntity: VehicleInspection::class, mappedBy: 'vehicle')]
+    private Collection $vehicleInspections;
+
     public function __construct()
     {
         $this->vehicleInsurances = new ArrayCollection();
+        $this->vehicleInspections = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -300,6 +307,35 @@ class Vehicle
         if ($this->vehicleInsurances->removeElement($vehicleInsurance)) {
             // set the owning side to null (unless already changed)
             if ($vehicleInsurance->getVehicle() === $this) {
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, VehicleInspection>
+     */
+    public function getVehicleInspections(): Collection
+    {
+        return $this->vehicleInspections;
+    }
+
+    public function addVehicleInspection(VehicleInspection $vehicleInspection): static
+    {
+        if (!$this->vehicleInspections->contains($vehicleInspection)) {
+            $this->vehicleInspections->add($vehicleInspection);
+            $vehicleInspection->setVehicle($this);
+        }
+
+        return $this;
+    }
+
+    public function removeVehicleInspection(VehicleInspection $vehicleInspection): static
+    {
+        if ($this->vehicleInspections->removeElement($vehicleInspection)) {
+            // set the owning side to null (unless already changed)
+            if ($vehicleInspection->getVehicle() === $this) {
             }
         }
 
