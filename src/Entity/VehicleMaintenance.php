@@ -4,6 +4,8 @@ namespace App\Entity;
 
 use App\Enum\MaintenanceStatusEnum;
 use App\Repository\VehicleMaintenanceRepository;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
@@ -24,10 +26,10 @@ class VehicleMaintenance
     #[ORM\JoinColumn(nullable: false)]
     private ?MaintenanceType $maintenanceType = null;
 
-    #[ORM\Column]
+    #[ORM\Column(type: Types::DATE_IMMUTABLE, nullable: true)]
     private ?\DateTimeImmutable $performedAt = null;
 
-    #[ORM\Column]
+    #[ORM\Column(nullable: true)]
     private ?int $mileage = null;
 
     #[ORM\Column(type: Types::DECIMAL, precision: 10, scale: 2, nullable: true)]
@@ -42,17 +44,28 @@ class VehicleMaintenance
     #[ORM\Column(type: Types::TEXT, nullable: true)]
     private ?string $notes = null;
 
-    #[ORM\Column]
-    private ?bool $isPlanned = null;
+    #[ORM\Column(options: ['default' => false])]
+    private bool $isPlanned = false;
 
-    #[ORM\Column]
+    #[ORM\Column(type: Types::DATETIME_IMMUTABLE)]
     private ?\DateTimeImmutable $createdAt = null;
 
-    #[ORM\Column]
+    #[ORM\Column(type: Types::DATETIME_IMMUTABLE)]
     private ?\DateTimeImmutable $updatedAt = null;
 
     #[ORM\Column(enumType: MaintenanceStatusEnum::class, options: ['default' => 'todo'])]
     private MaintenanceStatusEnum $status = MaintenanceStatusEnum::ToDo;
+
+    /**
+     * @var Collection<int, VehicleMaintenancePart>
+     */
+    #[ORM\OneToMany(targetEntity: VehicleMaintenancePart::class, mappedBy: 'vehicleMaintenance')]
+    private Collection $vehicleMaintenanceParts;
+
+    public function __construct()
+    {
+        $this->vehicleMaintenanceParts = new ArrayCollection();
+    }
 
     public function getId(): ?int
     {
@@ -112,7 +125,7 @@ class VehicleMaintenance
         return $this->cost;
     }
 
-    public function setCost(string $cost): static
+    public function setCost(?string $cost): static
     {
         $this->cost = $cost;
 
@@ -213,6 +226,35 @@ class VehicleMaintenance
     public function setStatus(MaintenanceStatusEnum $status): static
     {
         $this->status = $status;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, VehicleMaintenancePart>
+     */
+    public function getVehicleMaintenanceParts(): Collection
+    {
+        return $this->vehicleMaintenanceParts;
+    }
+
+    public function addVehicleMaintenancePart(VehicleMaintenancePart $vehicleMaintenancePart): static
+    {
+        if (!$this->vehicleMaintenanceParts->contains($vehicleMaintenancePart)) {
+            $this->vehicleMaintenanceParts->add($vehicleMaintenancePart);
+            $vehicleMaintenancePart->setVehicleMaintenance($this);
+        }
+
+        return $this;
+    }
+
+    public function removeVehicleMaintenancePart(VehicleMaintenancePart $vehicleMaintenancePart): static
+    {
+        if ($this->vehicleMaintenanceParts->removeElement($vehicleMaintenancePart)) {
+            // set the owning side to null (unless already changed)
+            if ($vehicleMaintenancePart->getVehicleMaintenance() === $this) {
+            }
+        }
 
         return $this;
     }

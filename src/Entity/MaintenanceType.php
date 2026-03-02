@@ -36,9 +36,16 @@ class MaintenanceType
     #[ORM\OneToMany(targetEntity: VehicleMaintenance::class, mappedBy: 'maintenanceType')]
     private Collection $vehicleMaintenances;
 
+    /**
+     * @var Collection<int, MaintenanceTypePartRequirement>
+     */
+    #[ORM\OneToMany(targetEntity: MaintenanceTypePartRequirement::class, mappedBy: 'maintenanceType')]
+    private Collection $maintenanceTypePartRequirements;
+
     public function __construct()
     {
         $this->vehicleMaintenances = new ArrayCollection();
+        $this->maintenanceTypePartRequirements = new ArrayCollection();
     }
 
 
@@ -130,7 +137,35 @@ class MaintenanceType
         if ($this->vehicleMaintenances->removeElement($vehicleMaintenance)) {
             // set the owning side to null (unless already changed)
             if ($vehicleMaintenance->getMaintenanceType() === $this) {
-                $vehicleMaintenance->setMaintenanceType(null);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, MaintenanceTypePartRequirement>
+     */
+    public function getMaintenanceTypePartRequirements(): Collection
+    {
+        return $this->maintenanceTypePartRequirements;
+    }
+
+    public function addMaintenanceTypePartRequirement(MaintenanceTypePartRequirement $maintenanceTypePartRequirement): static
+    {
+        if (!$this->maintenanceTypePartRequirements->contains($maintenanceTypePartRequirement)) {
+            $this->maintenanceTypePartRequirements->add($maintenanceTypePartRequirement);
+            $maintenanceTypePartRequirement->setMaintenanceType($this);
+        }
+
+        return $this;
+    }
+
+    public function removeMaintenanceTypePartRequirement(MaintenanceTypePartRequirement $maintenanceTypePartRequirement): static
+    {
+        if ($this->maintenanceTypePartRequirements->removeElement($maintenanceTypePartRequirement)) {
+            // set the owning side to null (unless already changed)
+            if ($maintenanceTypePartRequirement->getMaintenanceType() === $this) {
             }
         }
 
