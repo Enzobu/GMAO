@@ -87,6 +87,23 @@ $enable-shadows: true;
     cursor: pointer;
 }
 
+.card {
+  border-radius: .75rem;
+}
+
+.card-header {
+  border-top-left-radius: .75rem;
+  border-top-right-radius: .75rem;
+}
+
+.border.rounded {
+  border-radius: .75rem;
+}
+
+label.required:after {
+  content: " *";
+}
+
 @import "../../vendor/twbs/bootstrap/scss/functions";
 @import "../../vendor/twbs/bootstrap/scss/variables";
 @import "../../vendor/twbs/bootstrap/scss/maps";

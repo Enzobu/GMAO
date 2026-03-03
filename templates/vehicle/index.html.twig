@@ -1,63 +1,113 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Vehicle index{% endblock %}
+{% block title %}Véhicules{% endblock %}
 
 {% block body %}
-    <h1>Vehicle index</h1>
+  <div class="d-flex align-items-center justify-content-between mb-3">
+    <div>
+      <h1 class="h3 mb-1">Véhicules</h1>
+      <div class="text-body-secondary small">{{ vehicles|length }} véhicule(s)</div>
+    </div>
 
-    <table class="table">
-        <thead>
-            <tr>
-                <th>Id</th>
-                <th>Name</th>
-                <th>Registration</th>
-                <th>Brand</th>
-                <th>Model</th>
-                <th>Type</th>
-                <th>Year</th>
-                <th>Vin</th>
-                <th>Engine</th>
-                <th>FuelType</th>
-                <th>Transmission</th>
-                <th>LastMileage</th>
-                <th>Color</th>
-                <th>PurchaseDate</th>
-                <th>PurchasePrice</th>
-                <th>Status</th>
-                <th>actions</th>
-            </tr>
-        </thead>
-        <tbody>
-        {% for vehicle in vehicles %}
-            <tr>
-                <td>{{ vehicle.id }}</td>
-                <td>{{ vehicle.name }}</td>
-                <td>{{ vehicle.registration }}</td>
-                <td>{{ vehicle.brand }}</td>
-                <td>{{ vehicle.model }}</td>
-                <td>{{ vehicle.type.label }}</td>
-                <td>{{ vehicle.year }}</td>
-                <td>{{ vehicle.vin }}</td>
-                <td>{{ vehicle.engine }}</td>
-                <td>{{ vehicle.fuelType.label }}</td>
-                <td>{{ vehicle.transmission.label }}</td>
-                <td>{{ vehicle.lastMileage }}</td>
-                <td>{{ vehicle.color }}</td>
-                <td>{{ vehicle.purchaseDate ? vehicle.purchaseDate|date('Y-m-d') : '' }}</td>
-                <td>{{ vehicle.purchasePrice }}</td>
-                <td>{{ vehicle.status.label }}</td>
-                <td>
-                    <a href="{{ path('app_vehicle_show', {'id': vehicle.id}) }}">show</a>
-                    <a href="{{ path('app_vehicle_edit', {'id': vehicle.id}) }}">edit</a>
-                </td>
-            </tr>
-        {% else %}
-            <tr>
-                <td colspan="17">no records found</td>
-            </tr>
-        {% endfor %}
-        </tbody>
-    </table>
+    {% if is_granted('ROLE_ADMIN') %}
+      <a class="btn btn-primary" href="{{ path('app_vehicle_new') }}">
+        Ajouter un véhicule
+      </a>
+    {% endif %}
+  </div>
 
-    <a href="{{ path('app_vehicle_new') }}">Create new</a>
+  {% if vehicles is empty %}
+    <div class="alert alert-info">
+      Aucun véhicule pour le moment.
+    </div>
+  {% else %}
+    <div class="row g-3">
+      {% for vehicle in vehicles %}
+        <div class="col-12 col-xl-6">
+          <div class="card shadow-sm">
+            <div class="card-body">
+              <div class="d-flex align-items-start justify-content-between gap-3">
+                <div class="w-100">
+                  <div class="d-flex align-items-center gap-2 flex-wrap">
+                    <h2 class="h5 mb-0">
+                      {{ vehicle.name|capitalize ?: (vehicle.brand|capitalize ~ ' ' ~ vehicle.model|capitalize)|trim }}
+                    </h2>
+
+                    {% if vehicle.type %}
+                      <span class="badge text-bg-secondary">
+                        {{ vehicle.type.label }}
+                      </span>
+                    {% endif %}
+
+                    <span class="badge text-bg-light border">
+                      {{ vehicle.status.label }}
+                    </span>
+                  </div>
+
+                  <div class="text-body-secondary small mt-1">
+                    <span class="me-3">
+                      <strong>Immat.</strong> {{ vehicle.registration|upper }}
+                    </span>
+
+                    {% if vehicle.year %}
+                      <span class="me-3"><strong>Année</strong> {{ vehicle.year }}</span>
+                    {% endif %}
+
+                    {% if vehicle.lastMileage is not null %}
+                      <span><strong>Km</strong> {{ vehicle.lastMileage }}</span>
+                    {% endif %}
+                  </div>
+
+                  <div class="mt-2 d-flex flex-wrap gap-2">
+                    {% if vehicle.fuelType %}
+                      <span class="badge rounded-pill text-bg-info">
+                        {{ vehicle.fuelType.label }}
+                      </span>
+                    {% endif %}
+
+                    {% if vehicle.transmission %}
+                      <span class="badge rounded-pill text-bg-warning">
+                        {{ vehicle.transmission.label }}
+                      </span>
+                    {% endif %}
+
+                    {% if vehicle.color %}
+                      <span class="badge rounded-pill text-bg-dark">
+                        {{ vehicle.color|capitalize }}
+                      </span>
+                    {% endif %}
+                  </div>
+                </div>
+
+                <div class="d-flex gap-2 flex-shrink-0">
+                  <a class="btn btn-sm btn-outline-secondary"
+                     href="{{ path('app_vehicle_show', {id: vehicle.id}) }}">
+                    Voir
+                  </a>
+
+                  {% if is_granted('ROLE_ADMIN') %}
+                    <a class="btn btn-sm btn-outline-primary"
+                       href="{{ path('app_vehicle_edit', {id: vehicle.id}) }}">
+                      Modifier
+                    </a>
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+
+            {% if is_granted('ROLE_ADMIN') %}
+              <div class="card-footer bg-body d-flex justify-content-end">
+                <form method="post"
+                      action="{{ path('app_vehicle_delete', {id: vehicle.id}) }}"
+                      onsubmit="return confirm('Supprimer ce véhicule ?');">
+                  <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ vehicle.id) }}">
+                  <button class="btn btn-sm btn-outline-danger">Supprimer</button>
+                </form>
+              </div>
+            {% endif %}
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
 {% endblock %}

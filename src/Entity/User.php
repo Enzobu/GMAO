@@ -130,7 +130,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     public function setFirstname(string $firstname): static
     {
-        $this->firstname = $firstname;
+        $this->firstname = strtolower($firstname);
 
         return $this;
     }
@@ -142,7 +142,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     public function setLastname(string $lastname): static
     {
-        $this->lastname = $lastname;
+        $this->lastname = strtolower($lastname);
 
         return $this;
     }

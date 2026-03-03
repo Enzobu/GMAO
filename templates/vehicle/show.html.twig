@@ -1,82 +1,217 @@
+{# templates/vehicle/show.html.twig #}
 {% extends 'base.html.twig' %}
 
-{% block title %}Vehicle{% endblock %}
+{% block title %}Véhicule{% endblock %}
 
 {% block body %}
-    <h1>Vehicle</h1>
+  <div class="d-flex align-items-start justify-content-between gap-3 mb-3">
+    <div>
+      <div class="d-flex align-items-center gap-2 flex-wrap">
+        <h1 class="h3 mb-0">
+          {{ vehicle.name|capitalize ?: (vehicle.brand|capitalize ~ ' ' ~ vehicle.model|capitalize)|trim }}
+        </h1>
 
-    <table class="table">
-        <tbody>
-            <tr>
-                <th>Id</th>
-                <td>{{ vehicle.id }}</td>
-            </tr>
-            <tr>
-                <th>Name</th>
-                <td>{{ vehicle.name }}</td>
-            </tr>
-            <tr>
-                <th>Registration</th>
-                <td>{{ vehicle.registration }}</td>
-            </tr>
-            <tr>
-                <th>Brand</th>
-                <td>{{ vehicle.brand }}</td>
-            </tr>
-            <tr>
-                <th>Model</th>
-                <td>{{ vehicle.model }}</td>
-            </tr>
-            <tr>
-                <th>Type</th>
-                <td>{{ vehicle.type }}</td>
-            </tr>
-            <tr>
-                <th>Year</th>
-                <td>{{ vehicle.year }}</td>
-            </tr>
-            <tr>
-                <th>Vin</th>
-                <td>{{ vehicle.vin }}</td>
-            </tr>
-            <tr>
-                <th>Engine</th>
-                <td>{{ vehicle.engine }}</td>
-            </tr>
-            <tr>
-                <th>FuelType</th>
-                <td>{{ vehicle.fuelType }}</td>
-            </tr>
-            <tr>
-                <th>Transmission</th>
-                <td>{{ vehicle.transmission }}</td>
-            </tr>
-            <tr>
-                <th>LastMileage</th>
-                <td>{{ vehicle.lastMileage }}</td>
-            </tr>
-            <tr>
-                <th>Color</th>
-                <td>{{ vehicle.color }}</td>
-            </tr>
-            <tr>
-                <th>PurchaseDate</th>
-                <td>{{ vehicle.purchaseDate ? vehicle.purchaseDate|date('Y-m-d') : '' }}</td>
-            </tr>
-            <tr>
-                <th>PurchasePrice</th>
-                <td>{{ vehicle.purchasePrice }}</td>
-            </tr>
-            <tr>
-                <th>Status</th>
-                <td>{{ vehicle.status }}</td>
-            </tr>
-        </tbody>
-    </table>
+        {% if vehicle.type %}
+          <span class="badge text-bg-secondary">{{ vehicle.type.label }}</span>
+        {% endif %}
 
-    <a href="{{ path('app_vehicle_index') }}">back to list</a>
+        <span class="badge text-bg-light border">{{ vehicle.status.label }}</span>
+      </div>
 
-    <a href="{{ path('app_vehicle_edit', {'id': vehicle.id}) }}">edit</a>
+      <div class="text-body-secondary mt-1">
+        <span class="me-3"><strong>Immat.</strong> {{ vehicle.registration|upper }}</span>
+        {% if vehicle.year %}
+          <span class="me-3"><strong>Année</strong> {{ vehicle.year }}</span>
+        {% endif %}
+        {% if vehicle.lastMileage is not null %}
+          <span><strong>Km</strong> {{ vehicle.lastMileage }}</span>
+        {% endif %}
+      </div>
+    </div>
 
-    {{ include('vehicle/_delete_form.html.twig') }}
+    <div class="d-flex gap-2 flex-shrink-0">
+      <a class="btn btn-light" href="{{ path('app_vehicle_index') }}">Retour</a>
+
+      {% if is_granted('ROLE_ADMIN') %}
+        <a class="btn btn-primary" href="{{ path('app_vehicle_edit', {id: vehicle.id}) }}?show=true">
+          Modifier
+        </a>
+
+        <form method="post"
+              action="{{ path('app_vehicle_delete', {id: vehicle.id}) }}"
+              onsubmit="return confirm('Supprimer ce véhicule ?');">
+          <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ vehicle.id) }}">
+          <button class="btn btn-outline-danger">Supprimer</button>
+        </form>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="row g-3">
+    {# ---- Carte : Identité ---- #}
+    <div class="col-12 col-xl-6">
+      <div class="card shadow-sm">
+        <div class="card-header bg-body">
+          <div class="fw-semibold">Identité</div>
+        </div>
+        <div class="card-body">
+          <dl class="row mb-0">
+            <dt class="col-sm-4 text-body-secondary">Nom</dt>
+            <dd class="col-sm-8 mb-2">{{ vehicle.name|capitalize }}</dd>
+
+            <dt class="col-sm-4 text-body-secondary">Marque</dt>
+            <dd class="col-sm-8 mb-2">{{ vehicle.brand|capitalize }}</dd>
+
+            <dt class="col-sm-4 text-body-secondary">Modèle</dt>
+            <dd class="col-sm-8 mb-2">{{ vehicle.model|capitalize }}</dd>
+
+            <dt class="col-sm-4 text-body-secondary">Immatriculation</dt>
+            <dd class="col-sm-8 mb-2">{{ vehicle.registration|upper }}</dd>
+
+            <dt class="col-sm-4 text-body-secondary">Type</dt>
+            <dd class="col-sm-8 mb-2">
+              {{ vehicle.type ? vehicle.type.label : '—' }}
+            </dd>
+
+            <dt class="col-sm-4 text-body-secondary">Statut</dt>
+            <dd class="col-sm-8 mb-0">
+              {{ vehicle.status.label }}
+            </dd>
+          </dl>
+        </div>
+      </div>
+    </div>
+
+    {# ---- Carte : Techniques ---- #}
+    <div class="col-12 col-xl-6">
+      <div class="card shadow-sm">
+        <div class="card-header bg-body">
+          <div class="fw-semibold">Caractéristiques</div>
+        </div>
+        <div class="card-body">
+          <dl class="row mb-0">
+            <dt class="col-sm-4 text-body-secondary">Année</dt>
+            <dd class="col-sm-8 mb-2">{{ vehicle.year ?: '—' }}</dd>
+
+            <dt class="col-sm-4 text-body-secondary">VIN</dt>
+            <dd class="col-sm-8 mb-2">{{ vehicle.vin ?: '—' }}</dd>
+
+            <dt class="col-sm-4 text-body-secondary">Moteur</dt>
+            <dd class="col-sm-8 mb-2">{{ vehicle.engine ?: '—' }}</dd>
+
+            <dt class="col-sm-4 text-body-secondary">Carburant</dt>
+            <dd class="col-sm-8 mb-2">
+              {{ vehicle.fuelType ? vehicle.fuelType.label : '—' }}
+            </dd>
+
+            <dt class="col-sm-4 text-body-secondary">Transmission</dt>
+            <dd class="col-sm-8 mb-2">
+              {{ vehicle.transmission ? vehicle.transmission.label : '—' }}
+            </dd>
+
+            <dt class="col-sm-4 text-body-secondary">Couleur</dt>
+            <dd class="col-sm-8 mb-0">{{ vehicle.color|capitalize ?: '—' }}</dd>
+          </dl>
+        </div>
+      </div>
+    </div>
+
+    {# ---- Carte : Achat / suivi ---- #}
+    <div class="col-12">
+      <div class="card shadow-sm">
+        <div class="card-header bg-body">
+          <div class="fw-semibold">Achat et suivi</div>
+        </div>
+        <div class="card-body">
+          <div class="row g-3">
+            <div class="col-12 col-md-4">
+              <div class="border rounded p-3 h-100">
+                <div class="text-body-secondary small">Date d’achat</div>
+                <div class="fs-5">
+                  {{ vehicle.purchaseDate ? vehicle.purchaseDate|date('d/m/Y') : '—' }}
+                </div>
+              </div>
+            </div>
+
+            <div class="col-12 col-md-4">
+              <div class="border rounded p-3 h-100">
+                <div class="text-body-secondary small">Prix d’achat</div>
+                <div class="fs-5">
+                  {% if vehicle.purchasePrice %}
+                    {{ vehicle.purchasePrice }} €
+                  {% else %}
+                    —
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+
+            <div class="col-12 col-md-4">
+              <div class="border rounded p-3 h-100">
+                <div class="text-body-secondary small">Dernier kilométrage</div>
+                <div class="fs-5">
+                  {{ vehicle.lastMileage is not null ? vehicle.lastMileage ~ ' km' : '—' }}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <hr class="my-4">
+
+          <div class="text-body-secondary small">
+            Propriétaire :
+            <strong>{{ vehicle.user.firstname|capitalize }} {{ vehicle.user.lastname|upper }}</strong>
+            <span class="ms-2">
+              (
+                <a href="mailto:{{ vehicle.user.email }}">{{ vehicle.user.email }}</a>
+              )
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {# ---- Placeholder : blocs à venir ---- #}
+    <div class="col-12 col-xl-6">
+      <div class="card shadow-sm">
+        <div class="card-header bg-body d-flex align-items-center justify-content-between">
+          <div class="fw-semibold">Assurance</div>
+          {# <span class="badge text-bg-light border">à venir</span> #}
+        </div>
+        <div class="card-body text-body-secondary">
+          <pre>
+            {{ dump(insurance) }}
+          </pre>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12 col-xl-6">
+      <div class="card shadow-sm">
+        <div class="card-header bg-body d-flex align-items-center justify-content-between">
+          <div class="fw-semibold">Contrôle technique</div>
+          <span class="badge text-bg-light border">à venir</span>
+        </div>
+        <div class="card-body text-body-secondary">
+          <pre>
+            {{ dump(inspection) }}
+          </pre>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12">
+      <div class="card shadow-sm">
+        <div class="card-header bg-body d-flex align-items-center justify-content-between">
+          <div class="fw-semibold">Entretiens</div>
+          <span class="badge text-bg-light border">à venir</span>
+        </div>
+        <div class="card-body text-body-secondary">
+          <pre>
+            {{ dump(maintenance) }}
+          </pre>
+        </div>
+      </div>
+    </div>
+  </div>
 {% endblock %}

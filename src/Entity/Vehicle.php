@@ -106,7 +106,7 @@ class Vehicle
 
     public function setName(string $name): static
     {
-        $this->name = $name;
+        $this->name = strtolower($name);
 
         return $this;
     }
@@ -118,7 +118,7 @@ class Vehicle
 
     public function setRegistration(string $registration): static
     {
-        $this->registration = $registration;
+        $this->registration = strtolower($registration);
 
         return $this;
     }
@@ -130,7 +130,7 @@ class Vehicle
 
     public function setBrand(string $brand): static
     {
-        $this->brand = $brand;
+        $this->brand = strtolower($brand);
 
         return $this;
     }
@@ -142,7 +142,7 @@ class Vehicle
 
     public function setModel(string $model): static
     {
-        $this->model = $model;
+        $this->model = strtolower($model);
 
         return $this;
     }
@@ -238,7 +238,7 @@ class Vehicle
 
     public function setColor(?string $color): static
     {
-        $this->color = $color;
+        $this->color = strtolower($color);
 
         return $this;
     }

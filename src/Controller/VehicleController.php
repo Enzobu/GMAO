@@ -4,7 +4,11 @@ namespace App\Controller;
 
 use App\Entity\User;
 use App\Entity\Vehicle;
+use App\Entity\VehicleMaintenance;
 use App\Form\VehicleType;
+use App\Repository\VehicleInspectionRepository;
+use App\Repository\VehicleInsuranceRepository;
+use App\Repository\VehicleMaintenanceRepository;
 use App\Repository\VehicleRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -33,9 +37,13 @@ final class VehicleController extends AbstractController
     }
 
     #[Route('/new', name: 'app_vehicle_new', methods: ['GET', 'POST'])]
-    public function new(Request $request, EntityManagerInterface $entityManager): Response
-    {
-        $vehicle = new Vehicle();
+    public function new(
+        Request $request,
+        EntityManagerInterface $entityManager,
+        #[CurrentUser] User $currentUser,
+    ): Response {
+        $vehicle = (new Vehicle())->setUser($currentUser);
+
         $form = $this->createForm(VehicleType::class, $vehicle);
         $form->handleRequest($request);
 
@@ -53,10 +61,29 @@ final class VehicleController extends AbstractController
     }
 
     #[Route('/{id}', name: 'app_vehicle_show', methods: ['GET'])]
-    public function show(Vehicle $vehicle): Response
+    public function show(
+        Vehicle $vehicle,
+        VehicleInsuranceRepository $vehicleInsuranceRepository,
+        VehicleInspectionRepository $vehicleInspectionRepository,
+        VehicleMaintenanceRepository $vehicleMaintenanceRepository,
+    ): Response
     {
+        $insurance = $vehicleInsuranceRepository->findBy([
+            "vehicle" => $vehicle,
+        ], ['startDate' => 'DESC']);
+
+        $inspection = $vehicleInspectionRepository->findBy([        
+            "vehicle" => $vehicle,
+        ], ['inspectionDate' => 'DESC']);
+        $maintenance = $vehicleMaintenanceRepository->findBy([
+            "vehicle" => $vehicle,
+        ]);
+
         return $this->render('vehicle/show.html.twig', [
             'vehicle' => $vehicle,
+            'insurance' => $insurance[0],
+            'inspection' => $inspection[0],
+            'maintenance' => $maintenance,
         ]);
     }
 
@@ -69,7 +96,9 @@ final class VehicleController extends AbstractController
         if ($form->isSubmitted() && $form->isValid()) {
             $entityManager->flush();
 
-            return $this->redirectToRoute('app_vehicle_index', [], Response::HTTP_SEE_OTHER);
+            return $request->query->get('show') == 'true' ?
+                $this->redirectToRoute('app_vehicle_show', ["id" => $vehicle->getId()], Response::HTTP_SEE_OTHER) :
+                $this->redirectToRoute('app_vehicle_index', [], Response::HTTP_SEE_OTHER);
         }
 
         return $this->render('vehicle/edit.html.twig', [
