@@ -1,0 +1,66 @@
+{% macro list(documents, fallback = "Aucun document") %}
+  {% import "macros/fontawesome.html.twig" as fa %}
+  {% set date_format = 'd/m/Y' %}
+
+  <h3 class="fw-semibold mt-4 mb-2">Documents</h3>
+
+  <div class="col-12">
+    <div class="card shadow-sm">
+      <div class="card-header bg-body d-flex align-items-center justify-content-between">
+        <div class="fw-semibold">
+          <span>
+            Documents
+          </span>
+        </div>
+      </div>
+
+      <div class="card-body">
+        {% set count = 1 %}
+
+        {% if documents is empty %}
+          <div class="text-body-secondary">
+            Aucun document lié directement au véhicule.
+          </div>
+        {% else %}
+          <div class="d-flex flex-column gap-2">
+            {% for document in documents %}
+              {% set shortDescription = document.description
+                ? (document.description|length > 40
+                  ? document.description|slice(0, 40) ~ '...'
+                  : document.description)
+                : '—'
+              %}
+
+              <div class="d-flex flex-column flex-xl-row align-items-xl-center justify-content-between gap-2 py-3 {{ documents|length != count ? 'border-bottom' }}">
+                <div class="d-flex flex-column flex-xl-row align-items-xl-center gap-3 flex-grow-1 min-w-0">
+                  <div class="fw-semibold text-truncate" style="min-width: 180px; max-width: 240px;">
+                    {{ document.name ?: 'Document sans nom' }}
+                  </div>
+
+                  <div class="small text-body-secondary" style="min-width: 150px;">
+                    Ajouté le {{ document.createdAt|date(date_format) }}
+                  </div>
+
+                  <div class="small text-body-secondary" style="min-width: 170px;">
+                    Modifié le {{ document.updatedAt|date(date_format) }}
+                  </div>
+
+                  <div class="small text-body-secondary text-truncate">
+                    {{ shortDescription }}
+                  </div>
+                </div>
+
+                <div class="flex-shrink-0">
+                  <button type="button" class="btn btn-sm btn-primary">
+                    Ouvrir
+                  </button>
+                </div>
+              </div>
+              {% set count = count + 1 %}
+            {% endfor %}
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+{% endmacro %}

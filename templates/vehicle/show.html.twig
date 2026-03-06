@@ -1,10 +1,9 @@
 {% extends 'base.html.twig' %}
 {% import "macros/badge.html.twig" as badge %}
 {% import "macros/fontawesome.html.twig" as fa %}
+{% import 'macros/document.html.twig' as document %}
 
 {% block title %}Véhicule{% endblock %}
-
-{% set date_format = 'd/m/Y' %}
 
 {% block body %}
   <div class="d-flex align-items-start justify-content-between gap-3 mb-3">
@@ -308,7 +307,7 @@
           <div class="fw-semibold">
             <span>
               Assurance ・
-              <a href="">
+              <a href="{{ path('app_vehicle_insurance_index', {vehicleId: vehicle.id}) }}">
                 {{ fa.icon(name: 'arrow-up-right-from-square', family: 'solid', size: 'sm') }}
               </a>
             </span>
@@ -370,7 +369,7 @@
           <div class="fw-semibold">
             <span>
               Contrôle technique ・
-              <a href="">
+              <a href="{{ path('app_vehicle_inspection_index', {vehicleId: vehicle.id}) }}">
                 {{ fa.icon(name: 'arrow-up-right-from-square', family: 'solid', size: 'sm') }}
               </a>
             </span>
@@ -454,70 +453,6 @@
       </div>
     </div>
 
-    <h3 class="fw-semibold mt-4 mb-2">Documents</h3>
-
-    <div class="col-12">
-      <div class="card shadow-sm">
-        <div class="card-header bg-body d-flex align-items-center justify-content-between">
-          <div class="fw-semibold">
-            <span>
-              Documents ・
-              <a href="">
-                {{ fa.icon(name: 'arrow-up-right-from-square', family: 'solid', size: 'sm') }}
-              </a>
-            </span>
-          </div>
-        </div>
-
-        <div class="card-body">
-          {% set documents = vehicle.documents %}
-          {% set count = 1 %}
-
-          {% if documents is empty %}
-            <div class="text-body-secondary">
-              Aucun document lié directement au véhicule.
-            </div>
-          {% else %}
-            <div class="d-flex flex-column gap-2">
-              {% for document in documents %}
-                {% set shortDescription = document.description
-                  ? (document.description|length > 40
-                    ? document.description|slice(0, 40) ~ '...'
-                    : document.description)
-                  : '—'
-                %}
-
-                <div class="d-flex flex-column flex-xl-row align-items-xl-center justify-content-between gap-2 py-3 {{ documents|length != count ? 'border-bottom' }}">
-                  <div class="d-flex flex-column flex-xl-row align-items-xl-center gap-3 flex-grow-1 min-w-0">
-                    <div class="fw-semibold text-truncate" style="min-width: 180px; max-width: 240px;">
-                      {{ document.name ?: 'Document sans nom' }}
-                    </div>
-
-                    <div class="small text-body-secondary" style="min-width: 150px;">
-                      Ajouté le {{ document.createdAt|date(date_format) }}
-                    </div>
-
-                    <div class="small text-body-secondary" style="min-width: 170px;">
-                      Modifié le {{ document.updatedAt|date(date_format) }}
-                    </div>
-
-                    <div class="small text-body-secondary text-truncate">
-                      {{ shortDescription }}
-                    </div>
-                  </div>
-
-                  <div class="flex-shrink-0">
-                    <button type="button" class="btn btn-sm btn-primary">
-                      Ouvrir
-                    </button>
-                  </div>
-                </div>
-                {% set count = count + 1 %}
-              {% endfor %}
-            </div>
-          {% endif %}
-        </div>
-      </div>
-    </div>
+    {{ document.list(documents: vehicle.documents, fallback: "Aucun document disponible pour ce véhicule" ) }}
   </div>
 {% endblock %}

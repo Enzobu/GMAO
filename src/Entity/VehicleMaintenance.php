@@ -26,7 +26,7 @@ class VehicleMaintenance
     #[ORM\JoinColumn(nullable: false)]
     private ?MaintenanceType $maintenanceType = null;
 
-    #[ORM\Column(type: Types::DATE_IMMUTABLE, nullable: true)]
+    #[ORM\Column(nullable: true)]
     private ?\DateTimeImmutable $performedAt = null;
 
     #[ORM\Column(nullable: true)]
@@ -105,7 +105,7 @@ class VehicleMaintenance
         return $this->performedAt;
     }
 
-    public function setPerformedAt(\DateTimeImmutable $performedAt): static
+    public function setPerformedAt(?\DateTimeImmutable $performedAt): static
     {
         $this->performedAt = $performedAt;
 

@@ -170,8 +170,6 @@ class AppFixtures extends Fixture
 
         $vehiclesByRegistration = [];
 
-        $vehicles = new ArrayObject();
-
         foreach ($vehiclesData as $data) {
             $vehicle = (new Vehicle())
                 ->setName($data['name'])
@@ -194,8 +192,6 @@ class AppFixtures extends Fixture
 
             $manager->persist($vehicle);
             $vehiclesByRegistration[$data['registration']] = $vehicle;
-
-            $vehicles[$data['registration']] = $vehicle;
         }
 
         $manager->flush();
@@ -544,15 +540,30 @@ class AppFixtures extends Fixture
         $vm1 = (new VehicleMaintenance())
             ->setVehicle($focus)
             ->setMaintenanceType($maintenanceTypesByName['Vidange + filtre'])
-            ->setPerformedAt(new DateTimeImmutable('2026-01-20'))
+            ->setPerformedAt(null)
+            ->setIsPlanned(true)
+            ->setNextDueDate(new DateTimeImmutable('2026-04-20'))
             ->setMileage(183200)
             ->setCost('89.90')
             ->setNotes('Vidange + filtre à huile')
-            ->setStatus(MaintenanceStatusEnum::Completed)
+            ->setStatus(MaintenanceStatusEnum::ToDo)
         ;
         $manager->persist($vm1);
 
         $vm2 = (new VehicleMaintenance())
+            ->setVehicle($focus)
+            ->setMaintenanceType($maintenanceTypesByName['Vidange + filtre'])
+            ->setPerformedAt(null)
+            ->setIsPlanned(true)
+            ->setNextDueDate(new DateTimeImmutable('2026-05-20'))
+            ->setMileage(183200)
+            ->setCost('89.90')
+            ->setNotes('Vidange + filtre à huile')
+            ->setStatus(MaintenanceStatusEnum::ToDo)
+        ;
+        $manager->persist($vm2);
+
+        $vm3 = (new VehicleMaintenance())
             ->setVehicle($ninja)
             ->setMaintenanceType($maintenanceTypesByName['Vidange + filtre'])
             ->setPerformedAt(new DateTimeImmutable('2026-02-10'))
@@ -561,9 +572,9 @@ class AppFixtures extends Fixture
             ->setNotes('Vidange moto')
             ->setStatus(MaintenanceStatusEnum::Completed)
         ;
-        $manager->persist($vm2);
+        $manager->persist($vm3);
 
-        $vm3 = (new VehicleMaintenance())
+        $vm4 = (new VehicleMaintenance())
             ->setVehicle($almera)
             ->setMaintenanceType($maintenanceTypesByName['Liquide de frein'])
             ->setPerformedAt(new DateTimeImmutable('now')) // planned
@@ -572,7 +583,7 @@ class AppFixtures extends Fixture
             ->setNotes('À planifier')
             ->setStatus(MaintenanceStatusEnum::ToDo)
         ;
-        $manager->persist($vm3);
+        $manager->persist($vm4);
 
         $manager->flush();
 
@@ -623,7 +634,7 @@ class AppFixtures extends Fixture
             ->setExtension('pdf')
             ->setSize(245000)
             ->setDescription('Carte grise')
-            ->setVehicle($vehicles['AB-123-CD'])
+            ->setVehicle($vehiclesByRegistration['AB-123-CD'])
         ;
 
         $document02
@@ -634,7 +645,7 @@ class AppFixtures extends Fixture
             ->setExtension('pdf')
             ->setSize(245000)
             ->setDescription('Certificat de cession')
-            ->setVehicle($vehicles['AB-123-CD'])
+            ->setVehicle($vehiclesByRegistration['AB-123-CD'])
         ;
 
         $manager->persist($document01);

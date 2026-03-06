@@ -231,4 +231,33 @@ class VehicleInspection
 
         return $this;
     }
+
+    /**
+     * @return Collection<int, Document>
+     */
+    public function getDocuments(): Collection
+    {
+        return $this->documents;
+    }
+
+    public function addDocument(Document $document): static
+    {
+        if (!$this->documents->contains($document)) {
+            $this->documents->add($document);
+            $document->setVehicleInspection($this);
+        }
+
+        return $this;
+    }
+
+    public function removeDocument(Document $document): static
+    {
+        if ($this->documents->removeElement($document)) {
+            if ($document->getVehicleInsurance() === $this) {
+                $document->setVehicleInspection(null);
+            }
+        }
+
+        return $this;
+    }
 }

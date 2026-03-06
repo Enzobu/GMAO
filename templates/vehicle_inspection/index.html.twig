@@ -1,0 +1,126 @@
+{% extends 'base.html.twig' %}
+
+{% import 'macros/fontawesome.html.twig' as fa %}
+{% import 'macros/badge.html.twig' as badge %}
+
+{% block title %}Contrôles techniques{% endblock %}
+
+{% block body %}
+  <div class="d-flex align-items-start justify-content-between gap-3 mb-4">
+    <div>
+      <h1 class="h3 mb-1">Contrôles techniques du véhicule</h1>
+      <div class="text-body-secondary">
+        {{ vehicle_inspections|length }} contrôle(s) technique(s) enregistré(s)
+      </div>
+    </div>
+
+    <div class="d-flex gap-2">
+      <a href="{{ path('app_vehicle_show', { id: vehicle_id }) }}" class="btn btn-light">
+        Retour au véhicule
+      </a>
+
+      {% if is_granted('ROLE_ADMIN') %}
+        <a href="{{ path('app_vehicle_inspection_new', { vehicleId: vehicle_id }) }}" class="btn btn-primary">
+          {{ fa.icon(name: 'plus', family: 'solid', size: 'sm') }}
+          Ajouter un contrôle
+        </a>
+      {% endif %}
+    </div>
+  </div>
+
+  {% if vehicle_inspections is empty %}
+    <div class="card shadow-sm">
+      <div class="card-body py-4 text-body-secondary">
+        Aucun contrôle technique trouvé pour ce véhicule.
+      </div>
+    </div>
+  {% else %}
+    <div class="d-flex flex-column gap-3">
+      {% for vehicle_inspection in vehicle_inspections %}
+        {% set resultVariant = 'secondary' %}
+        {% if vehicle_inspection.result is not null %}
+          {% if vehicle_inspection.result.value == 'pass' %}
+            {% set resultVariant = 'success' %}
+          {% elseif vehicle_inspection.result.value == 'counter_visit' %}
+            {% set resultVariant = 'warning' %}
+          {% elseif vehicle_inspection.result.value == 'fail' %}
+            {% set resultVariant = 'danger' %}
+          {% endif %}
+        {% endif %}
+
+        <div class="card shadow-sm">
+          <div class="card-body">
+            <div class="d-flex flex-column flex-xl-row align-items-xl-start justify-content-between gap-3">
+              <div class="flex-grow-1 min-w-0">
+                <div class="d-flex flex-column flex-lg-row align-items-lg-center gap-2 mb-2">
+                  <h2 class="h5 mb-0">
+                    Contrôle du
+                    {{ vehicle_inspection.inspectionDate ? vehicle_inspection.inspectionDate|date(date_format) : '—' }}
+                  </h2>
+
+                  {{ badge.emphasis(
+                    label: vehicle_inspection.result ? vehicle_inspection.result.label() : 'Non renseigné',
+                    variant: resultVariant
+                  ) }}
+
+                  {% if vehicle_inspection.counterVisitRequired %}
+                    {{ badge.default(label: 'Contre-visite requise', variant: 'warning') }}
+                  {% else %}
+                    {{ badge.default(label: 'Sans contre-visite', variant: 'success') }}
+                  {% endif %}
+                </div>
+
+                <div class="row g-3">
+                  <div class="col-12 col-md-6 col-xl-3">
+                    <div class="small text-body-secondary mb-1">Date du contrôle</div>
+                    <div>{{ vehicle_inspection.inspectionDate ? vehicle_inspection.inspectionDate|date(date_format) : '—' }}</div>
+                  </div>
+
+                  <div class="col-12 col-md-6 col-xl-3">
+                    <div class="small text-body-secondary mb-1">Valide jusqu’au</div>
+                    <div>{{ vehicle_inspection.validUntil ? vehicle_inspection.validUntil|date(date_format) : '—' }}</div>
+                  </div>
+
+                  <div class="col-12 col-md-6 col-xl-3">
+                    <div class="small text-body-secondary mb-1">Kilométrage</div>
+                    <div>{{ vehicle_inspection.mileage is not null ? vehicle_inspection.mileage ~ ' km' : '—' }}</div>
+                  </div>
+
+                  <div class="col-12 col-md-6 col-xl-3">
+                    <div class="small text-body-secondary mb-1">Date limite contre-visite</div>
+                    <div>{{ vehicle_inspection.counterVisitDueAt ? vehicle_inspection.counterVisitDueAt|date(date_format) : '—' }}</div>
+                  </div>
+
+                  {% if vehicle_inspection.notes %}
+                    <div class="col-12">
+                      <div class="small text-body-secondary mb-1">Notes</div>
+                      <div class="text-truncate">{{ vehicle_inspection.notes }}</div>
+                    </div>
+                  {% endif %}
+                </div>
+              </div>
+
+              <div class="d-flex flex-row flex-xl-column gap-2 flex-shrink-0">
+                <a
+                  href="{{ path('app_vehicle_inspection_show', { vehicleId: vehicle_id, id: vehicle_inspection.id }) }}"
+                  class="btn btn-sm btn-outline-secondary"
+                >
+                  Voir
+                </a>
+
+                {% if is_granted('ROLE_ADMIN') %}
+                  <a
+                    href="{{ path('app_vehicle_inspection_edit', { vehicleId: vehicle_id, id: vehicle_inspection.id }) }}"
+                    class="btn btn-sm btn-outline-primary"
+                  >
+                    Modifier
+                  </a>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+{% endblock %}
