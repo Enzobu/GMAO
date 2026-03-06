@@ -64,18 +64,16 @@
   </li>
 {% endmacro %}
 
-{% macro sidebar_item(label, path, icon, check_path) %}
-  {% set is_active = _context.app.request.attributes.get('_route') starts with check_path %}
-  {% set classes = ['w-100', 'sidebar-btn', 'py-2', 'px-2', 'rounded-2', 'cursor-pointer'] %}
-
-  {% if is_active %}
-    {% set classes = classes|merge(['active']) %}
-  {% endif %}
+{% macro sidebar_item(label, path, icon, check_paths) %}
+  {% set current_route = app.request.attributes.get('_route') %}
+  {% set check_paths = check_paths is iterable ? check_paths : [check_paths] %}
+  {% set is_active = check_paths|filter(check_path => current_route starts with check_path)|length > 0 %}
 
   <a href="{{ path }}" class="text-reset text-decoration-none">
-      <div class="w-100 sidebar-btn py-2 px-2 rounded-2 cursor-pointer {% if is_active %}sidebar-btn-active{% endif %}" {% if is_active %}aria-current="page"{% endif %}>
-        {{ icon }}
-        {{ label }}
-      </div>
+    <div class="w-100 sidebar-btn py-2 px-2 rounded-2 cursor-pointer {% if is_active %}sidebar-btn-active{% endif %}"
+         {% if is_active %}aria-current="page"{% endif %}>
+      {{ icon }}
+      {{ label }}
+    </div>
   </a>
 {% endmacro %}
