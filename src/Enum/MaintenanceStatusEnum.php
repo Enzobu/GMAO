@@ -18,4 +18,14 @@ enum MaintenanceStatusEnum: string
             self::Cancelled => 'Abandonné',
         };
     }
+
+    public function variant(): string
+    {
+        return match ($this) {
+            self::ToDo => 'danger',
+            self::InProgress => 'warning',
+            self::Completed => 'succes',
+            self::Cancelled => 'dark',
+        };
+    }
 }

@@ -1,7 +1,10 @@
-{# templates/vehicle/show.html.twig #}
 {% extends 'base.html.twig' %}
+{% import "macros/badge.html.twig" as badge %}
+{% import "macros/fontawesome.html.twig" as fa %}
 
 {% block title %}Véhicule{% endblock %}
+
+{% set date_format = 'd/m/Y' %}
 
 {% block body %}
   <div class="d-flex align-items-start justify-content-between gap-3 mb-3">
@@ -12,10 +15,10 @@
         </h1>
 
         {% if vehicle.type %}
-          <span class="badge text-bg-secondary">{{ vehicle.type.label }}</span>
+          {{ badge.emphasis(label: vehicle.type.label, variant: vehicle.type.variant ) }}
         {% endif %}
 
-        <span class="badge text-bg-light border">{{ vehicle.status.label }}</span>
+        {{ badge.emphasis(label: vehicle.status.label, variant: vehicle.status.variant ) }}
       </div>
 
       <div class="text-body-secondary mt-1">
@@ -24,7 +27,7 @@
           <span class="me-3"><strong>Année</strong> {{ vehicle.year }}</span>
         {% endif %}
         {% if vehicle.lastMileage is not null %}
-          <span><strong>Km</strong> {{ vehicle.lastMileage }}</span>
+          <span><strong>Km</strong> {{ vehicle.lastMileage|number_format(2, '.', ' ') }}</span>
         {% endif %}
       </div>
     </div>
@@ -48,6 +51,7 @@
   </div>
 
   <div class="row g-3">
+    <h3 class="fw-semibold mb-2">Informations générales</h3>
     {# ---- Carte : Identité ---- #}
     <div class="col-12 col-xl-6">
       <div class="card shadow-sm">
@@ -171,45 +175,347 @@
       </div>
     </div>
 
+    <div class="col-12">
+      <div class="shadow-sm">
+        <div class="bg-body d-flex align-items-center justify-content-between mt-4 mb-3">
+          <h3 class="fw-semibold mb-0">
+            <span>
+              Entretiens ・ <a href="">{{ fa.icon(name: 'arrow-up-right-from-square', family: 'solid', size: 'sm') }}</a>
+            </span>
+          </h3>
+          {{ badge.emphasis(label: 'À venir', variant: 'info') }}
+        </div>
+
+        {% if maintenance is empty %}
+          <div class="text-body-secondary">
+            Aucun entretien à venir.
+          </div>
+        {% else %}
+          <div class="accordion accordion-flush" id="vehicle-maintenance-accordion">
+            {% for item in maintenance %}
+              {% set headingId = 'maintenance-heading-' ~ item.id %}
+              {% set collapseId = 'maintenance-collapse-' ~ item.id %}
+
+              <div class="accordion-item border rounded-3 mb-3 overflow-hidden">
+                <h2 class="accordion-header" id="{{ headingId }}">
+                  <button
+                    class="accordion-button {% if not loop.first %}collapsed{% endif %}"
+                    type="button"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#{{ collapseId }}"
+                    aria-expanded="{{ loop.first ? 'true' : 'false' }}"
+                    aria-controls="{{ collapseId }}"
+                  >
+                    <div class="d-flex flex-column flex-lg-row align-items-lg-center justify-content-between w-100 me-3 gap-2">
+                      <div class="d-flex flex-column">
+                        <span class="fw-semibold">
+                          {{ item.notes ?: 'Entretien sans notes' }}
+                        </span>
+
+                        <div class="small text-body-secondary mt-1">
+                          {{ item.maintenanceType.name ?? 'Type non renseigné' }}
+                        </div>
+                      </div>
+
+                      <div class="d-flex flex-wrap align-items-center gap-2 small">
+                        <span class="text-body-secondary">
+                          Échéance :
+                          <strong class="text-body">
+                            {{ item.nextDueDate ? item.nextDueDate|date(date_format) : 'Date à définir' }}
+                          </strong>
+                        </span>
+
+                        {% if item.nextDueMileage is not null %}
+                          <span class="text-body-secondary">
+                            · <strong class="text-body">{{ item.nextDueMileage }} km</strong>
+                          </span>
+                        {% endif %}
+                      </div>
+                    </div>
+                  </button>
+                </h2>
+
+                <div
+                  id="{{ collapseId }}"
+                  class="accordion-collapse collapse {% if loop.first %}show{% endif %}"
+                  aria-labelledby="{{ headingId }}"
+                  data-bs-parent="#vehicle-maintenance-accordion"
+                >
+                  <div class="accordion-body pt-3">
+                    <div class="row gy-3">
+                      <div class="col-12 col-md-6">
+                        <div class="small text-body-secondary mb-1">Type d’entretien</div>
+                        <div>{{ item.maintenanceType.name ?? 'Non renseigné' }}</div>
+                      </div>
+
+                      <div class="col-12 col-md-6">
+                        <div class="small text-body-secondary mb-1">Statut</div>
+                        <div>
+                          {% if item.status %}
+                            {{ badge.emphasis(label: item.status.label, variant: item.status.variant) }}
+                          {% else %}
+                            <span class="text-body-secondary">Non renseigné</span>
+                          {% endif %}
+                        </div>
+                      </div>
+
+                      <div class="col-12 col-md-4">
+                        <div class="small text-body-secondary mb-1">Date prévue</div>
+                        <div>{{ item.nextDueDate ? item.nextDueDate|date(date_format) : '—' }}</div>
+                      </div>
+
+                      <div class="col-12 col-md-4">
+                        <div class="small text-body-secondary mb-1">Kilométrage prévu</div>
+                        <div>{{ item.nextDueMileage is not null ? item.nextDueMileage|number_format(2, '.', ' ') ~ ' km' : '—' }}</div>
+                      </div>
+
+                      <div class="col-12 col-md-4">
+                        <div class="small text-body-secondary mb-1">Coût estimé</div>
+                        <div>{{ item.cost is not null ? item.cost ~ ' €' : '—' }}</div>
+                      </div>
+
+                      <div class="col-12 col-md-6">
+                        <div class="small text-body-secondary mb-1">Dernière réalisation</div>
+                        <div>{{ item.performedAt ? item.performedAt|date(date_format) : '—' }}</div>
+                      </div>
+
+                      <div class="col-12 col-md-6">
+                        <div class="small text-body-secondary mb-1">Kilométrage relevé</div>
+                        <div>{{ item.mileage|number_format(2, '.', ' ') is not null ? item.mileage|number_format(2, '.', ' ') ~ ' km' : '—' }}</div>
+                      </div>
+
+                      {% if item.notes %}
+                        <div class="col-12">
+                          <div class="small text-body-secondary mb-1">Notes</div>
+                          <div class="lh-sm">{{ item.notes }}</div>
+                        </div>
+                      {% endif %}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <h3 class="fw-semibold mt-4 mb-2">Assurance & Controle technique</h3>
     {# ---- Placeholder : blocs à venir ---- #}
     <div class="col-12 col-xl-6">
-      <div class="card shadow-sm">
+      <div class="card shadow-sm h-100">
         <div class="card-header bg-body d-flex align-items-center justify-content-between">
-          <div class="fw-semibold">Assurance</div>
-          {# <span class="badge text-bg-light border">à venir</span> #}
+          <div class="fw-semibold">
+            <span>
+              Assurance ・
+              <a href="">
+                {{ fa.icon(name: 'arrow-up-right-from-square', family: 'solid', size: 'sm') }}
+              </a>
+            </span>
+          </div>
+          {{ badge.emphasis(label: 'Last', variant: 'info') }}
         </div>
-        <div class="card-body text-body-secondary">
-          <pre>
-            {{ dump(insurance) }}
-          </pre>
+
+        <div class="card-body">
+          {% if insurance is null %}
+            <div class="text-body-secondary">
+              Aucune assurance renseignée.
+            </div>
+          {% else %}
+            <div class="row gy-3">
+              <div class="col-12">
+                <div class="small text-body-secondary mb-1">Assureur</div>
+                <div class="fw-semibold">{{ insurance.providerName }}</div>
+              </div>
+
+              <div class="col-12 col-md-6">
+                <div class="small text-body-secondary mb-1">Numéro de police</div>
+                <div>{{ insurance.policyNumber ?: '—' }}</div>
+              </div>
+
+              <div class="col-12 col-md-6">
+                <div class="small text-body-secondary mb-1">Statut</div>
+                <div>
+                  {% if insurance.isActive %}
+                    {{ badge.emphasis(label: 'Active', variant: 'success') }}
+                  {% else %}
+                    {{ badge.emphasis(label: 'Inactive', variant: 'secondary') }}
+                  {% endif %}
+                </div>
+              </div>
+
+              <div class="col-12 col-md-6">
+                <div class="small text-body-secondary mb-1">Début</div>
+                <div>{{ insurance.startDate ? insurance.startDate|date(date_format) : '—' }}</div>
+              </div>
+
+              <div class="col-12 col-md-6">
+                <div class="small text-body-secondary mb-1">Fin</div>
+                <div>{{ insurance.endDate ? insurance.endDate|date(date_format) : '—' }}</div>
+              </div>
+
+              <div class="col-12">
+                <div class="small text-body-secondary mb-1">Fréquence de paiement</div>
+                <div>{{ insurance.paymentFrequency.label() }}</div>
+              </div>
+            </div>
+          {% endif %}
         </div>
       </div>
     </div>
 
     <div class="col-12 col-xl-6">
-      <div class="card shadow-sm">
+      <div class="card shadow-sm h-100">
         <div class="card-header bg-body d-flex align-items-center justify-content-between">
-          <div class="fw-semibold">Contrôle technique</div>
-          <span class="badge text-bg-light border">à venir</span>
+          <div class="fw-semibold">
+            <span>
+              Contrôle technique ・
+              <a href="">
+                {{ fa.icon(name: 'arrow-up-right-from-square', family: 'solid', size: 'sm') }}
+              </a>
+            </span>
+          </div>
+          {{ badge.emphasis(label: 'Last', variant: 'info') }}
         </div>
-        <div class="card-body text-body-secondary">
-          <pre>
-            {{ dump(inspection) }}
-          </pre>
+
+        <div class="card-body">
+          {% if inspection is null %}
+            <div class="text-body-secondary">
+              Aucun contrôle technique renseigné.
+            </div>
+          {% else %}
+            <div class="row gy-3">
+              <div class="col-12">
+                <div class="small text-body-secondary mb-1">Résultat</div>
+                <div>
+                  {% set resultVariant = 'secondary' %}
+                  {% if inspection.result is not null %}
+                    {% if inspection.result.value == 'pass' %}
+                      {% set resultVariant = 'success' %}
+                    {% elseif inspection.result.value == 'counter_visit' %}
+                      {% set resultVariant = 'warning' %}
+                    {% elseif inspection.result.value == 'fail' %}
+                      {% set resultVariant = 'danger' %}
+                    {% endif %}
+                  {% endif %}
+
+                  {{ badge.emphasis(label: inspection.result ? inspection.result.label() : 'Non renseigné', variant: resultVariant) }}
+                </div>
+              </div>
+
+              <div class="col-12 col-md-6">
+                <div class="small text-body-secondary mb-1">Date du contrôle</div>
+                <div>{{ inspection.inspectionDate ? inspection.inspectionDate|date(date_format) : '—' }}</div>
+              </div>
+
+              <div class="col-12 col-md-6">
+                <div class="small text-body-secondary mb-1">Valide jusqu’au</div>
+                <div>{{ inspection.validUntil ? inspection.validUntil|date(date_format) : '—' }}</div>
+              </div>
+
+              <div class="col-12 col-md-6">
+                <div class="small text-body-secondary mb-1">Kilométrage</div>
+                <div>{{ inspection.mileage is not null ? inspection.mileage ~ ' km' : '—' }}</div>
+              </div>
+
+              <div class="col-12 col-md-6">
+                <div class="small text-body-secondary mb-1">Contre-visite</div>
+                <div>
+                  {% if inspection.counterVisitRequired %}
+                    {{ badge.emphasis(label: 'Requise', variant: 'danger') }}
+
+                  {% else %}
+                    {{ badge.emphasis(label: "Non requise", variant: 'success') }}
+                  {% endif %}
+                </div>
+              </div>
+
+              {% if inspection.counterVisitRequired %}
+                <div class="col-12">
+                  <div class="small text-body-secondary mb-1">Date limite contre-visite</div>
+                  <div>{{ inspection.counterVisitDueAt ? inspection.counterVisitDueAt|date(date_format) : '—' }}</div>
+                </div>
+              {% endif %}
+
+              <div class="col-12">
+                <div class="small text-body-secondary mb-1">Centre</div>
+                <div>{{ inspection.center.name ?? 'Non renseigné' }}</div>
+              </div>
+
+              {% if inspection.notes %}
+                <div class="col-12">
+                  <div class="small text-body-secondary mb-1">Notes</div>
+                  <div class="lh-sm">{{ inspection.notes }}</div>
+                </div>
+              {% endif %}
+            </div>
+          {% endif %}
         </div>
       </div>
     </div>
+
+    <h3 class="fw-semibold mt-4 mb-2">Documents</h3>
 
     <div class="col-12">
       <div class="card shadow-sm">
         <div class="card-header bg-body d-flex align-items-center justify-content-between">
-          <div class="fw-semibold">Entretiens</div>
-          <span class="badge text-bg-light border">à venir</span>
+          <div class="fw-semibold">
+            <span>
+              Documents ・
+              <a href="">
+                {{ fa.icon(name: 'arrow-up-right-from-square', family: 'solid', size: 'sm') }}
+              </a>
+            </span>
+          </div>
         </div>
-        <div class="card-body text-body-secondary">
-          <pre>
-            {{ dump(maintenance) }}
-          </pre>
+
+        <div class="card-body">
+          {% set documents = vehicle.documents %}
+          {% set count = 1 %}
+
+          {% if documents is empty %}
+            <div class="text-body-secondary">
+              Aucun document lié directement au véhicule.
+            </div>
+          {% else %}
+            <div class="d-flex flex-column gap-2">
+              {% for document in documents %}
+                {% set shortDescription = document.description
+                  ? (document.description|length > 40
+                    ? document.description|slice(0, 40) ~ '...'
+                    : document.description)
+                  : '—'
+                %}
+
+                <div class="d-flex flex-column flex-xl-row align-items-xl-center justify-content-between gap-2 py-3 {{ documents|length != count ? 'border-bottom' }}">
+                  <div class="d-flex flex-column flex-xl-row align-items-xl-center gap-3 flex-grow-1 min-w-0">
+                    <div class="fw-semibold text-truncate" style="min-width: 180px; max-width: 240px;">
+                      {{ document.name ?: 'Document sans nom' }}
+                    </div>
+
+                    <div class="small text-body-secondary" style="min-width: 150px;">
+                      Ajouté le {{ document.createdAt|date(date_format) }}
+                    </div>
+
+                    <div class="small text-body-secondary" style="min-width: 170px;">
+                      Modifié le {{ document.updatedAt|date(date_format) }}
+                    </div>
+
+                    <div class="small text-body-secondary text-truncate">
+                      {{ shortDescription }}
+                    </div>
+                  </div>
+
+                  <div class="flex-shrink-0">
+                    <button type="button" class="btn btn-sm btn-primary">
+                      Ouvrir
+                    </button>
+                  </div>
+                </div>
+                {% set count = count + 1 %}
+              {% endfor %}
+            </div>
+          {% endif %}
         </div>
       </div>
     </div>

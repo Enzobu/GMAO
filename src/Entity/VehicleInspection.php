@@ -4,6 +4,8 @@ namespace App\Entity;
 
 use App\Enum\InspectionResultEnum;
 use App\Repository\VehicleInspectionRepository;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Context\ExecutionContextInterface;
@@ -53,6 +55,9 @@ class VehicleInspection
     #[ORM\JoinColumn(nullable: false)]
     private ?InspectionCenter $center = null;
 
+    #[ORM\OneToMany(mappedBy: 'vehicleInspection', targetEntity: Document::class, orphanRemoval: true)]
+    private Collection $documents;
+
     #[Assert\Callback]
     public function validate(ExecutionContextInterface $context): void
     {
@@ -69,6 +74,11 @@ class VehicleInspection
                 ->atPath('counterVisitDueAt')
                 ->addViolation();
         }
+    }
+
+    public function __construct()
+    {
+        $this->documents = new ArrayCollection();
     }
 
     public function getId(): ?int

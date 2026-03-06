@@ -86,12 +86,16 @@ class Vehicle
      */
     #[ORM\OneToMany(targetEntity: VehicleMaintenance::class, mappedBy: 'vehicle')]
     private Collection $vehicleMaintenances;
+    
+    #[ORM\OneToMany(mappedBy: 'vehicle', targetEntity: Document::class, orphanRemoval: true)]
+    private Collection $documents;
 
     public function __construct()
     {
         $this->vehicleInsurances = new ArrayCollection();
         $this->vehicleInspections = new ArrayCollection();
         $this->vehicleMaintenances = new ArrayCollection();
+        $this->documents = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -373,6 +377,35 @@ class Vehicle
             // set the owning side to null (unless already changed)
             if ($vehicleMaintenance->getVehicle() === $this) {
                 $vehicleMaintenance->setVehicle(null);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Document>
+     */
+    public function getDocuments(): Collection
+    {
+        return $this->documents;
+    }
+
+    public function addDocument(Document $document): static
+    {
+        if (!$this->documents->contains($document)) {
+            $this->documents->add($document);
+            $document->setVehicle($this);
+        }
+
+        return $this;
+    }
+
+    public function removeDocument(Document $document): static
+    {
+        if ($this->documents->removeElement($document)) {
+            if ($document->getVehicle() === $this) {
+                $document->setVehicle(null);
             }
         }
 

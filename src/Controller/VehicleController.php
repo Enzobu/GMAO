@@ -4,7 +4,7 @@ namespace App\Controller;
 
 use App\Entity\User;
 use App\Entity\Vehicle;
-use App\Entity\VehicleMaintenance;
+use App\Enum\MaintenanceStatusEnum;
 use App\Form\VehicleType;
 use App\Repository\VehicleInspectionRepository;
 use App\Repository\VehicleInsuranceRepository;
@@ -77,12 +77,13 @@ final class VehicleController extends AbstractController
         ], ['inspectionDate' => 'DESC']);
         $maintenance = $vehicleMaintenanceRepository->findBy([
             "vehicle" => $vehicle,
-        ]);
+            "status" => MaintenanceStatusEnum::ToDo,
+        ], ['nextDueDate' => 'ASC', 'createdAt' => 'ASC']);
 
         return $this->render('vehicle/show.html.twig', [
             'vehicle' => $vehicle,
-            'insurance' => $insurance[0],
-            'inspection' => $inspection[0],
+            'insurance' => $insurance[0] ?? null,
+            'inspection' => $inspection[0] ?? null,
             'maintenance' => $maintenance,
         ]);
     }

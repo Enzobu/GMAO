@@ -22,4 +22,16 @@ enum VehicleTypeEnum: string
             self::Other => 'Autre',
         };
     }
+
+    public function variant(): string
+    {
+        return match ($this) {
+            self::Car => 'Primary',
+            self::Motorcycle => 'success',
+            self::Utility => 'warning',
+            self::Truck => 'warning',
+            self::Van => 'info',
+            self::Other => 'danger',
+        };
+    }
 }

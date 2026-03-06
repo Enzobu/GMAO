@@ -4,6 +4,8 @@ namespace App\Entity;
 
 use App\Enum\InsurancePaymentFrequencyEnum;
 use App\Repository\VehicleInsuranceRepository;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
@@ -44,6 +46,14 @@ class VehicleInsurance
     #[ORM\Column(type: Types::DATETIME_IMMUTABLE)]
     private \DateTimeImmutable $updatedAt;
 
+    #[ORM\OneToMany(mappedBy: 'vehicleInsurance', targetEntity: Document::class, orphanRemoval: true)]
+    private Collection $documents;
+
+    public function __construct()
+    {
+        $this->documents = new ArrayCollection();
+    }
+    
     public function getId(): ?int
     {
         return $this->id;
@@ -168,5 +178,34 @@ class VehicleInsurance
     public function onUpdate(): void
     {
         $this->updatedAt = new \DateTimeImmutable();
+    }
+
+    /**
+     * @return Collection<int, Document>
+     */
+    public function getDocuments(): Collection
+    {
+        return $this->documents;
+    }
+
+    public function addDocument(Document $document): static
+    {
+        if (!$this->documents->contains($document)) {
+            $this->documents->add($document);
+            $document->setVehicleInsurance($this);
+        }
+
+        return $this;
+    }
+
+    public function removeDocument(Document $document): static
+    {
+        if ($this->documents->removeElement($document)) {
+            if ($document->getVehicleInsurance() === $this) {
+                $document->setVehicleInsurance(null);
+            }
+        }
+
+        return $this;
     }
 }

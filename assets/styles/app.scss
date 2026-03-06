@@ -104,6 +104,23 @@ label.required:after {
   content: " *";
 }
 
+.accordion-item {
+  background-color: transparent;
+}
+
+.accordion-button {
+  padding-top: 1rem;
+  padding-bottom: 1rem;
+}
+
+.accordion-button:not(.collapsed) {
+  box-shadow: none;
+}
+
+.accordion-body {
+  background-color: transparent;
+}
+
 @import "../../vendor/twbs/bootstrap/scss/functions";
 @import "../../vendor/twbs/bootstrap/scss/variables";
 @import "../../vendor/twbs/bootstrap/scss/maps";
@@ -138,6 +155,7 @@ label.required:after {
 @import "../../vendor/twbs/bootstrap/scss/tooltip";
 @import "../../vendor/twbs/bootstrap/scss/popover";
 @import "../../vendor/twbs/bootstrap/scss/utilities/api";
+@import "../../vendor/twbs/bootstrap/scss/accordion";
 
 // Variables pour le thème sombre dans media query (prefers-color-scheme: dark)
 @media (prefers-color-scheme: dark) {

@@ -21,7 +21,7 @@ enum VehicleStatusEnum: string
         };
     }
 
-    public function badgeClass(): string
+    public function variant(): string
     {
         return match ($this) {
             self::Active => 'success',

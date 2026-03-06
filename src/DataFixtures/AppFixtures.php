@@ -3,6 +3,7 @@
 namespace App\DataFixtures;
 
 use App\Entity\Address;
+use App\Entity\Document;
 use App\Entity\InspectionCenter;
 use App\Entity\InventoryItem;
 use App\Entity\MaintenanceType;
@@ -21,6 +22,8 @@ use App\Enum\VehicleFuelTypeEnum;
 use App\Enum\VehicleStatusEnum;
 use App\Enum\VehicleTransmissionTypeEnum;
 use App\Enum\VehicleTypeEnum;
+use App\Repository\VehicleRepository;
+use ArrayObject;
 use DateTimeImmutable;
 use Doctrine\Bundle\FixturesBundle\Fixture;
 use Doctrine\Persistence\ObjectManager;
@@ -66,6 +69,8 @@ class AppFixtures extends Fixture
 
         $manager->persist($userAdmin);
         $manager->persist($user);
+
+        $manager->flush();
 
         // --------------------
         // VEHICLES
@@ -165,6 +170,8 @@ class AppFixtures extends Fixture
 
         $vehiclesByRegistration = [];
 
+        $vehicles = new ArrayObject();
+
         foreach ($vehiclesData as $data) {
             $vehicle = (new Vehicle())
                 ->setName($data['name'])
@@ -187,7 +194,11 @@ class AppFixtures extends Fixture
 
             $manager->persist($vehicle);
             $vehiclesByRegistration[$data['registration']] = $vehicle;
+
+            $vehicles[$data['registration']] = $vehicle;
         }
+
+        $manager->flush();
 
         // --------------------
         // INSURANCE
@@ -268,6 +279,8 @@ class AppFixtures extends Fixture
             $manager->persist($insurance);
         }
 
+        $manager->flush();
+
         // --------------------
         // INSPECTION CENTERS + ADDRESSES
         // --------------------
@@ -299,6 +312,8 @@ class AppFixtures extends Fixture
 
         $manager->persist($centerNarbonne);
         $manager->persist($centerMontpellier);
+
+        $manager->flush();
 
         // --------------------
         // VEHICLE INSPECTIONS (CT)
@@ -371,6 +386,8 @@ class AppFixtures extends Fixture
             $manager->persist($inspection);
         }
 
+        $manager->flush();
+
         // ============================================================
         // =====================  PARTS / STOCK  =======================
         // ============================================================
@@ -410,6 +427,8 @@ class AppFixtures extends Fixture
             $partsByKey[$p['brand'].'|'.$p['reference']] = $part;
         }
 
+        $manager->flush();
+
         // --------------------
         // INVENTORY (stock)
         // (unique par part_id)
@@ -441,6 +460,8 @@ class AppFixtures extends Fixture
             $manager->persist($inv);
         }
 
+        $manager->flush();
+
         // --------------------
         // MAINTENANCE TYPES
         // --------------------
@@ -464,6 +485,8 @@ class AppFixtures extends Fixture
             $manager->persist($mt);
             $maintenanceTypesByName[$t['name']] = $mt;
         }
+
+        $manager->flush();
 
         // --------------------
         // MAINTENANCE TYPE -> PART REQUIREMENTS (unique maintenance_type_id + part_id)
@@ -509,6 +532,8 @@ class AppFixtures extends Fixture
             $manager->persist($req);
         }
 
+        $manager->flush();
+
         // --------------------
         // VEHICLE MAINTENANCES
         // --------------------
@@ -549,6 +574,8 @@ class AppFixtures extends Fixture
         ;
         $manager->persist($vm3);
 
+        $manager->flush();
+
         // --------------------
         // VEHICLE MAINTENANCE PARTS (unique vehicle_maintenance_id + part_id)
         // --------------------
@@ -581,5 +608,39 @@ class AppFixtures extends Fixture
         }
 
         $manager->flush();
+
+        // --------------------
+        // DOCUMENT
+        // --------------------
+        $document01 = new Document();
+        $document02 = new Document();
+
+        $document01
+            ->setName('Carte grise')
+            ->setOriginalFilename('carte_grise_focus.pdf')
+            ->setStoredFilename('carte_grise_focus.pdf')
+            ->setMimeType('application/pdf')
+            ->setExtension('pdf')
+            ->setSize(245000)
+            ->setDescription('Carte grise')
+            ->setVehicle($vehicles['AB-123-CD'])
+        ;
+
+        $document02
+            ->setName('Certificat de cession')
+            ->setOriginalFilename('cetificat_session.pdf')
+            ->setStoredFilename('cetificat_session.pdf')
+            ->setMimeType('application/pdf')
+            ->setExtension('pdf')
+            ->setSize(245000)
+            ->setDescription('Certificat de cession')
+            ->setVehicle($vehicles['AB-123-CD'])
+        ;
+
+        $manager->persist($document01);
+        $manager->persist($document02);
+
+        $manager->flush();
+
     }
 }

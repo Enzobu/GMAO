@@ -56,6 +56,9 @@ class VehicleMaintenance
     #[ORM\Column(enumType: MaintenanceStatusEnum::class, options: ['default' => 'todo'])]
     private MaintenanceStatusEnum $status = MaintenanceStatusEnum::ToDo;
 
+    #[ORM\OneToMany(mappedBy: 'vehicleMaintenance', targetEntity: Document::class, orphanRemoval: true)]
+    private Collection $documents;
+
     /**
      * @var Collection<int, VehicleMaintenancePart>
      */
@@ -65,6 +68,7 @@ class VehicleMaintenance
     public function __construct()
     {
         $this->vehicleMaintenanceParts = new ArrayCollection();
+        $this->documents = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -253,6 +257,35 @@ class VehicleMaintenance
         if ($this->vehicleMaintenanceParts->removeElement($vehicleMaintenancePart)) {
             // set the owning side to null (unless already changed)
             if ($vehicleMaintenancePart->getVehicleMaintenance() === $this) {
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Document>
+     */
+    public function getDocuments(): Collection
+    {
+        return $this->documents;
+    }
+
+    public function addDocument(Document $document): static
+    {
+        if (!$this->documents->contains($document)) {
+            $this->documents->add($document);
+            $document->setVehicleMaintenance($this);
+        }
+
+        return $this;
+    }
+
+    public function removeDocument(Document $document): static
+    {
+        if ($this->documents->removeElement($document)) {
+            if ($document->getVehicleMaintenance() === $this) {
+                $document->setVehicleMaintenance(null);
             }
         }
 
