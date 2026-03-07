@@ -34,11 +34,11 @@
     <div class="d-flex gap-2 flex-shrink-0">
       <a class="btn btn-light" href="{{ path('app_vehicle_index') }}">Retour</a>
 
-      {% if is_granted('ROLE_ADMIN') %}
-        <a class="btn btn-primary" href="{{ path('app_vehicle_edit', {id: vehicle.id}) }}?show=true">
-          Modifier
-        </a>
+      <a class="btn btn-primary" href="{{ path('app_vehicle_edit', {id: vehicle.id}) }}?show=true">
+        Modifier
+      </a>
 
+      {% if is_granted('ROLE_ADMIN') %}
         <form method="post"
               action="{{ path('app_vehicle_delete', {id: vehicle.id}) }}"
               onsubmit="return confirm('Supprimer ce véhicule ?');">

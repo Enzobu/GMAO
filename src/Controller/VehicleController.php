@@ -28,8 +28,9 @@ final class VehicleController extends AbstractController
         $isAdmin = $this->isGranted('ROLE_ADMIN');
 
         $vehicles = $isAdmin ? 
-            $vehicleRepository->findAll() :
-            $vehicleRepository->findByUser(user: $currentUser);
+            $vehicleRepository->findAllNotDeleted() :
+            $vehicleRepository->findAllNotDeletedByUser($currentUser)
+        ;
 
         return $this->render('vehicle/index.html.twig', [
             'vehicles' => $vehicles,
@@ -44,10 +45,13 @@ final class VehicleController extends AbstractController
     ): Response {
         $vehicle = (new Vehicle())->setUser($currentUser);
 
-        $form = $this->createForm(VehicleType::class, $vehicle);
+        $form = $this->createForm(VehicleType::class, $vehicle, ['edit' => false]);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
+            if (!$this->isGranted('ROLE_ADMIN')) {
+                $vehicle->setUser($currentUser);
+            }
             $entityManager->persist($vehicle);
             $entityManager->flush();
 
@@ -68,6 +72,12 @@ final class VehicleController extends AbstractController
         VehicleMaintenanceRepository $vehicleMaintenanceRepository,
     ): Response
     {
+        if ($vehicle->isDeleted()) {
+            $this->addFlash('warning', 'Ce véhicule a été supprimé.');
+
+            return $this->redirectToRoute('app_vehicle_index');
+        }
+
         $insurance = $vehicleInsuranceRepository->findBy([
             "vehicle" => $vehicle,
         ], ['startDate' => 'DESC']);
@@ -91,7 +101,7 @@ final class VehicleController extends AbstractController
     #[Route('/{id}/edit', name: 'app_vehicle_edit', methods: ['GET', 'POST'])]
     public function edit(Request $request, Vehicle $vehicle, EntityManagerInterface $entityManager): Response
     {
-        $form = $this->createForm(VehicleType::class, $vehicle);
+        $form = $this->createForm(VehicleType::class, $vehicle, ['edit' => true]);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
@@ -112,8 +122,10 @@ final class VehicleController extends AbstractController
     public function delete(Request $request, Vehicle $vehicle, EntityManagerInterface $entityManager): Response
     {
         if ($this->isCsrfTokenValid('delete'.$vehicle->getId(), $request->getPayload()->getString('_token'))) {
-            $entityManager->remove($vehicle);
+            $vehicle->setIsDeleted(true);
             $entityManager->flush();
+
+            $this->addFlash('success', $vehicle->getName() . ' a bien été supprimé.');
         }
 
         return $this->redirectToRoute('app_vehicle_index', [], Response::HTTP_SEE_OTHER);

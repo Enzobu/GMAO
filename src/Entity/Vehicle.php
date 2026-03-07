@@ -90,6 +90,9 @@ class Vehicle
     #[ORM\OneToMany(mappedBy: 'vehicle', targetEntity: Document::class, orphanRemoval: true)]
     private Collection $documents;
 
+    #[ORM\Column(options: ['default' => false])]
+    private bool $isDeleted = false;
+
     public function __construct()
     {
         $this->vehicleInsurances = new ArrayCollection();
@@ -408,6 +411,18 @@ class Vehicle
                 $document->setVehicle(null);
             }
         }
+
+        return $this;
+    }
+
+    public function isDeleted(): bool
+    {
+        return $this->isDeleted;
+    }
+
+    public function setIsDeleted(bool $isDeleted): static
+    {
+        $this->isDeleted = $isDeleted;
 
         return $this;
     }

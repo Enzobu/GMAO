@@ -17,6 +17,20 @@ class VehicleRepository extends ServiceEntityRepository
         parent::__construct($registry, Vehicle::class);
     }
 
+    /**
+     * @return Vehicle[]
+     */
+    public function findAllNotDeleted(): array
+    {
+        return $this->createQueryBuilder('v')
+            ->andWhere('v.isDeleted = :isDeleted')
+            ->setParameter('isDeleted', false)
+            ->orderBy('v.id', 'DESC')
+            ->getQuery()
+            ->getResult()
+        ;
+    }
+
     public function findByUser(User $user): array
     {
         return $this->createQueryBuilder('v')
@@ -25,5 +39,33 @@ class VehicleRepository extends ServiceEntityRepository
             ->orderBy('v.name', 'ASC')
             ->getQuery()
             ->getResult();
+    }
+
+    /**
+     * @return Vehicle[]
+     */
+    public function findAllNotDeletedByUser(User $user): array
+    {
+        return $this->createQueryBuilder('v')
+            ->andWhere('v.user = :user')
+            ->andWhere('v.isDeleted = :isDeleted')
+            ->setParameter('user', $user)
+            ->setParameter('isDeleted', false)
+            ->orderBy('v.id', 'DESC')
+            ->getQuery()
+            ->getResult()
+        ;
+    }
+
+    public function findOneNotDeletedById(int $id): ?Vehicle
+    {
+        return $this->createQueryBuilder('v')
+            ->andWhere('v.id = :id')
+            ->andWhere('v.isDeleted = :isDeleted')
+            ->setParameter('id', $id)
+            ->setParameter('isDeleted', false)
+            ->getQuery()
+            ->getOneOrNullResult()
+        ;
     }
 }

@@ -193,3 +193,57 @@ label.required:after {
   $tooltip-color: #f8fafc !default;
   $tooltip-bg: $primary !default;
 }
+
+@mixin generate-custom-color-utilities($colors) {
+  @each $name, $color in $colors {
+    .text-#{$name}-emphasis {
+      color: shade-color($color, 0%) !important;
+    }
+
+    .bg-#{$name}-subtle {
+      background-color: shade-color($color, 70%) !important;
+    }
+
+    .border-#{$name}-subtle {
+      border-color: shade-color($color, 10%) !important;
+    }
+  }
+}
+
+$custom-colors-light: (
+  "red": #dc3545,
+  "green": #198754,
+  "blue": #0d6efd,
+  "pink": #d63384,
+  "purple": #6f42c1,
+  "violet": #7c3aed,
+  "orange": #fd7e14,
+  "yellow": #ffc107,
+  "teal": #20c997,
+  "cyan": #0dcaf0,
+  "gray": #a0a0a0,
+  "black": #4d4d4d,
+  "white": #ffffff
+);
+
+$custom-colors-dark: (
+  "red": #f87171,
+  "green": #4ade80,
+  "blue": #60a5fa,
+  "pink": #f472b6,
+  "purple": #a78bfa,
+  "violet": #8b5cf6,
+  "orange": #fb923c,
+  "yellow": #facc15,
+  "teal": #2dd4bf,
+  "cyan": #22d3ee,
+  "gray": #d1d5db,
+  "black": #3d3d3d,
+  "white": #ffffff
+);
+
+@include generate-custom-color-utilities($custom-colors-light);
+
+@media (prefers-color-scheme: dark) {
+  @include generate-custom-color-utilities($custom-colors-dark);
+}

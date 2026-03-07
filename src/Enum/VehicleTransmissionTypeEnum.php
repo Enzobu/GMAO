@@ -22,4 +22,16 @@ enum VehicleTransmissionTypeEnum: string
             self::Other => 'Autre',
         };
     }
+
+    public function variant(): string
+    {
+        return match ($this) {
+            self::Manual => 'success',
+            self::Automatic => 'danger',
+            self::CVT => 'primary',
+            self::SemiAutomatic => 'warning',
+            self::DualClutch => 'danger',
+            self::Other => 'info',
+        };
+    }
 }

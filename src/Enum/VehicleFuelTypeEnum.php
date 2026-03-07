@@ -26,4 +26,18 @@ enum VehicleFuelTypeEnum: string
             self::Other => 'Autre',
         };
     }
+
+    public function variant(): string
+    {
+        return match ($this) {
+            self::Petrol => 'primary',
+            self::Diesel => 'danger',
+            self::Ethanol => 'success',
+            self::Hybrid => 'secondary',
+            self::Electric => 'warning',
+            self::LPG => 'info',
+            self::CNG => 'danger',
+            self::Other => 'tertiary',
+        };
+    }
 }

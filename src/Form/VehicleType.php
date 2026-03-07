@@ -133,7 +133,7 @@ class VehicleType extends AbstractType
                     'step' => 1,
                     'placeholder' => 'Ex: 187500',
                     'class' => 'form-control',
-                    'disabled' => true,
+                    'disabled' => $options['edit'],
                 ],
             ])
 
@@ -197,6 +197,7 @@ class VehicleType extends AbstractType
     {
         $resolver->setDefaults([
             'data_class' => Vehicle::class,
+            'edit' => false,
         ]);
     }
 }

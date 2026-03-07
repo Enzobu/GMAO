@@ -26,7 +26,7 @@ enum VehicleTypeEnum: string
     public function variant(): string
     {
         return match ($this) {
-            self::Car => 'Primary',
+            self::Car => 'primary',
             self::Motorcycle => 'success',
             self::Utility => 'warning',
             self::Truck => 'warning',

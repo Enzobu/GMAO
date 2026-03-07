@@ -1,20 +1,47 @@
 {% extends 'base.html.twig' %}
 
+{% import 'macros/modal.html.twig' as modal %}
+{% import "macros/badge.html.twig" as badge %}
+
+{% set colors = {
+    'rouge': 'danger',
+    'vert': 'success',
+    'bleu': 'blue',
+    'rose': 'pink',
+    'pourpre': 'purple',
+    'violet': 'violet',
+    'orange': 'orange',
+    'jaune': 'yellow',
+    'turquoise': 'cyan',
+    'cyan': 'cyan',
+    'gris': 'gray',
+    'noir': 'black',
+    'blanc': 'white'
+} %}
+
 {% block title %}Véhicules{% endblock %}
 
 {% block body %}
+
   <div class="d-flex align-items-center justify-content-between mb-3">
     <div>
       <h1 class="h3 mb-1">Véhicules</h1>
       <div class="text-body-secondary small">{{ vehicles|length }} véhicule(s)</div>
     </div>
 
-    {% if is_granted('ROLE_ADMIN') %}
-      <a class="btn btn-primary" href="{{ path('app_vehicle_new') }}">
-        Ajouter un véhicule
-      </a>
-    {% endif %}
+    <a class="btn btn-primary" href="{{ path('app_vehicle_new') }}">
+      Ajouter un véhicule
+    </a>
   </div>
+
+  {% for label, messages in app.flashes %}
+    {% for message in messages %}
+      <div class="alert alert-{{ label }} alert-dismissible fade show" role="alert">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fermer"></button>
+      </div>
+    {% endfor %}
+  {% endfor %}
 
   {% if vehicles is empty %}
     <div class="alert alert-info">
@@ -34,14 +61,10 @@
                     </h2>
 
                     {% if vehicle.type %}
-                      <span class="badge text-bg-secondary">
-                        {{ vehicle.type.label }}
-                      </span>
+                      {{ badge.default(label: vehicle.type.label, variant: vehicle.type.variant) }}
                     {% endif %}
 
-                    <span class="badge text-bg-light border">
-                      {{ vehicle.status.label }}
-                    </span>
+                    {{ badge.default(label: vehicle.status.label, variant: vehicle.status.variant) }}
                   </div>
 
                   <div class="text-body-secondary small mt-1">
@@ -60,21 +83,16 @@
 
                   <div class="mt-2 d-flex flex-wrap gap-2">
                     {% if vehicle.fuelType %}
-                      <span class="badge rounded-pill text-bg-info">
-                        {{ vehicle.fuelType.label }}
-                      </span>
+                      {{ badge.emphasis(label: vehicle.fuelType.label, variant: vehicle.fuelType.variant) }}
                     {% endif %}
 
                     {% if vehicle.transmission %}
-                      <span class="badge rounded-pill text-bg-warning">
-                        {{ vehicle.transmission.label }}
-                      </span>
+                      {{ badge.emphasis(label: vehicle.transmission.label, variant: vehicle.transmission.variant) }}
                     {% endif %}
 
                     {% if vehicle.color %}
-                      <span class="badge rounded-pill text-bg-dark">
-                        {{ vehicle.color|capitalize }}
-                      </span>
+                      {% set color = colors[vehicle.color|lower] ?? 'gray' %}
+                      {{ badge.emphasis(label: vehicle.color, variant: color) }}
                     {% endif %}
                   </div>
                 </div>
@@ -85,28 +103,47 @@
                     Voir
                   </a>
 
-                  {% if is_granted('ROLE_ADMIN') %}
-                    <a class="btn btn-sm btn-outline-primary"
-                       href="{{ path('app_vehicle_edit', {id: vehicle.id}) }}">
-                      Modifier
-                    </a>
-                  {% endif %}
+                  <a class="btn btn-sm btn-outline-primary"
+                      href="{{ path('app_vehicle_edit', {id: vehicle.id}) }}">
+                    Modifier
+                  </a>
                 </div>
               </div>
             </div>
 
             {% if is_granted('ROLE_ADMIN') %}
               <div class="card-footer bg-body d-flex justify-content-end">
-                <form method="post"
-                      action="{{ path('app_vehicle_delete', {id: vehicle.id}) }}"
-                      onsubmit="return confirm('Supprimer ce véhicule ?');">
-                  <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ vehicle.id) }}">
-                  <button class="btn btn-sm btn-outline-danger">Supprimer</button>
-                </form>
+                <button type="button"
+                        class="btn btn-sm btn-outline-danger"
+                        data-bs-toggle="modal"
+                        data-bs-target="#deleteVehicleModal{{ vehicle.id }}">
+                  Supprimer
+                </button>
               </div>
             {% endif %}
           </div>
         </div>
+
+        {% if is_granted('ROLE_ADMIN') %}
+          {{ modal.confirm(
+            id: 'deleteVehicleModal' ~ vehicle.id,
+            title: 'Supprimer le véhicule',
+            description: '
+              <p class="mb-2">Tu es sur le point de supprimer ce véhicule :</p>
+              <div class="fw-semibold">' ~
+                (vehicle.name ?: ((vehicle.brand ?: '') ~ ' ' ~ (vehicle.model ?: ''))|trim)
+              ~ '</div>
+              <div class="small text-body-secondary mt-1">' ~ vehicle.registration|upper ~ '</div>
+              <p class="mt-3 mb-0 text-danger">Cette action est définitive.</p>
+            ',
+            continueButton: 'Supprimer',
+            cancelButton: 'Annuler',
+            type: 'submit',
+            accent: 'danger',
+            action: path('app_vehicle_delete', {id: vehicle.id}),
+            csrfToken: csrf_token('delete' ~ vehicle.id)
+          ) }}
+        {% endif %}
       {% endfor %}
     </div>
   {% endif %}
