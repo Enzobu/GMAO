@@ -18,6 +18,7 @@ use App\Entity\VehicleMaintenancePart;
 use App\Enum\InsurancePaymentFrequencyEnum;
 use App\Enum\InspectionResultEnum;
 use App\Enum\MaintenanceStatusEnum;
+use App\Enum\VehicleColorEnum;
 use App\Enum\VehicleFuelTypeEnum;
 use App\Enum\VehicleStatusEnum;
 use App\Enum\VehicleTransmissionTypeEnum;
@@ -88,7 +89,7 @@ class AppFixtures extends Fixture
                 'fuel' => VehicleFuelTypeEnum::Diesel,
                 'transmission' => VehicleTransmissionTypeEnum::Manual,
                 'km' => 187500,
-                'color' => 'Noir',
+                'color' => VehicleColorEnum::Black,
                 'status' => VehicleStatusEnum::Active,
                 'purchaseDate' => new DateTimeImmutable('2023-06-12'),
                 'purchasePrice' => '2499.00',
@@ -106,7 +107,7 @@ class AppFixtures extends Fixture
                 'fuel' => VehicleFuelTypeEnum::Petrol,
                 'transmission' => VehicleTransmissionTypeEnum::Automatic,
                 'km' => 243000,
-                'color' => 'Gris',
+                'color' => VehicleColorEnum::Gray,
                 'status' => VehicleStatusEnum::Active,
                 'purchaseDate' => null,
                 'purchasePrice' => null,
@@ -124,7 +125,7 @@ class AppFixtures extends Fixture
                 'fuel' => VehicleFuelTypeEnum::Petrol,
                 'transmission' => VehicleTransmissionTypeEnum::Manual,
                 'km' => 8200,
-                'color' => 'Vert',
+                'color' => VehicleColorEnum::Green,
                 'status' => VehicleStatusEnum::Active,
                 'purchaseDate' => new DateTimeImmutable('2025-12-10'),
                 'purchasePrice' => '5000.00',
@@ -142,7 +143,7 @@ class AppFixtures extends Fixture
                 'fuel' => VehicleFuelTypeEnum::Diesel,
                 'transmission' => VehicleTransmissionTypeEnum::Manual,
                 'km' => 156000,
-                'color' => 'Blanc',
+                'color' => VehicleColorEnum::white,
                 'status' => VehicleStatusEnum::Inactive,
                 'purchaseDate' => null,
                 'purchasePrice' => null,
@@ -160,7 +161,7 @@ class AppFixtures extends Fixture
                 'fuel' => VehicleFuelTypeEnum::Petrol,
                 'transmission' => VehicleTransmissionTypeEnum::Manual,
                 'km' => 94500,
-                'color' => 'Rouge',
+                'color' => VehicleColorEnum::Red,
                 'status' => VehicleStatusEnum::Active,
                 'purchaseDate' => null,
                 'purchasePrice' => null,

@@ -4,6 +4,7 @@ namespace App\Form;
 
 use App\Entity\User;
 use App\Entity\Vehicle;
+use App\Enum\VehicleColorEnum;
 use App\Enum\VehicleFuelTypeEnum;
 use App\Enum\VehicleStatusEnum;
 use App\Enum\VehicleTransmissionTypeEnum;
@@ -137,13 +138,14 @@ class VehicleType extends AbstractType
                 ],
             ])
 
-            ->add('color', TextType::class, [
+            ->add('color', ChoiceType::class, [
                 'label' => 'Couleur',
-                'required' => false,
+                'choices' => VehicleColorEnum::cases(),
+                'choice_label' => fn (VehicleColorEnum $e) => $e->label(),
+                'choice_value' => fn (?VehicleColorEnum $e) => $e?->value ?? '',
                 'attr' => [
-                    'placeholder' => 'Ex: Noir',
                     'class' => 'form-control',
-                ],
+                ]
             ])
 
             ->add('purchaseDate', DateType::class, [

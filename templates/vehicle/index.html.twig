@@ -3,22 +3,6 @@
 {% import 'macros/modal.html.twig' as modal %}
 {% import "macros/badge.html.twig" as badge %}
 
-{% set colors = {
-    'rouge': 'danger',
-    'vert': 'success',
-    'bleu': 'blue',
-    'rose': 'pink',
-    'pourpre': 'purple',
-    'violet': 'violet',
-    'orange': 'orange',
-    'jaune': 'yellow',
-    'turquoise': 'cyan',
-    'cyan': 'cyan',
-    'gris': 'gray',
-    'noir': 'black',
-    'blanc': 'white'
-} %}
-
 {% block title %}Véhicules{% endblock %}
 
 {% block body %}
@@ -91,8 +75,7 @@
                     {% endif %}
 
                     {% if vehicle.color %}
-                      {% set color = colors[vehicle.color|lower] ?? 'gray' %}
-                      {{ badge.emphasis(label: vehicle.color, variant: color) }}
+                      {{ badge.emphasis(label: vehicle.color.label, variant: vehicle.color.variant) }}
                     {% endif %}
                   </div>
                 </div>

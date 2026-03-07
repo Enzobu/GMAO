@@ -2,6 +2,7 @@
 
 namespace App\Entity;
 
+use App\Enum\VehicleColorEnum;
 use App\Enum\VehicleFuelTypeEnum;
 use App\Enum\VehicleStatusEnum;
 use App\Enum\VehicleTransmissionTypeEnum;
@@ -53,8 +54,8 @@ class Vehicle
     #[ORM\Column(nullable: true)]
     private ?int $lastMileage = null;
 
-    #[ORM\Column(length: 255, nullable: true)]
-    private ?string $color = null;
+    #[ORM\Column(enumType: VehicleColorEnum::class, nullable: true)]
+    private ?VehicleColorEnum $color = null;
 
     #[ORM\Column(type: Types::DATE_IMMUTABLE, nullable: true)]
     private ?\DateTimeImmutable $purchaseDate = null;
@@ -238,14 +239,14 @@ class Vehicle
         return $this;
     }
 
-    public function getColor(): ?string
+    public function getColor(): ?VehicleColorEnum
     {
         return $this->color;
     }
 
-    public function setColor(?string $color): static
+    public function setColor(?VehicleColorEnum $color): static
     {
-        $this->color = strtolower($color);
+        $this->color = $color;
 
         return $this;
     }
