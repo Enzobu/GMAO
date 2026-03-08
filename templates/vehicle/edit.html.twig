@@ -1,6 +1,8 @@
 {% extends 'base.html.twig' %}
 {% block title %}Modifier véhicule{% endblock %}
 {% block body %}
-  <h1 class="h3 mb-3">Modifier le véhicule</h1>
-  {% include 'vehicle/_form.html.twig' with { form: form, button_label: 'Mettre à jour' } %}
+  <div class="container">
+    <h1 class="h3 mb-3">Modifier le véhicule</h1>
+    {% include 'vehicle/_form.html.twig' with { form: form, button_label: 'Mettre à jour' } %}
+  </div>
 {% endblock %}
