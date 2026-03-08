@@ -18,19 +18,19 @@ class Document
     #[ORM\Column(length: 255)]
     private string $name;
 
-    #[ORM\Column(length: 255)]
+    #[ORM\Column(length: 255, nullable: true)]
     private string $originalFilename;
 
-    #[ORM\Column(length: 255)]
+    #[ORM\Column(length: 255, nullable: true)]
     private string $storedFilename;
 
-    #[ORM\Column(length: 100)]
+    #[ORM\Column(length: 100, nullable: true)]
     private string $mimeType;
 
-    #[ORM\Column]
+    #[ORM\Column(nullable: true)]
     private int $size;
 
-    #[ORM\Column(length: 20)]
+    #[ORM\Column(length: 20, nullable: true)]
     private string $extension;
 
     #[ORM\Column(type: Types::TEXT, nullable: true)]
@@ -100,56 +100,56 @@ class Document
         return $this;
     }
 
-    public function getOriginalFilename(): string
+    public function getOriginalFilename(): ?string
     {
         return $this->originalFilename;
     }
 
-    public function setOriginalFilename(string $originalFilename): static
+    public function setOriginalFilename(?string $originalFilename): static
     {
         $this->originalFilename = $originalFilename;
         return $this;
     }
 
-    public function getStoredFilename(): string
+    public function getStoredFilename(): ?string
     {
         return $this->storedFilename;
     }
 
-    public function setStoredFilename(string $storedFilename): static
+    public function setStoredFilename(?string $storedFilename): static
     {
         $this->storedFilename = $storedFilename;
         return $this;
     }
 
-    public function getMimeType(): string
+    public function getMimeType(): ?string
     {
         return $this->mimeType;
     }
 
-    public function setMimeType(string $mimeType): static
+    public function setMimeType(?string $mimeType): static
     {
         $this->mimeType = $mimeType;
         return $this;
     }
 
-    public function getSize(): int
+    public function getSize(): ?int
     {
         return $this->size;
     }
 
-    public function setSize(int $size): static
+    public function setSize(?int $size): static
     {
         $this->size = $size;
         return $this;
     }
 
-    public function getExtension(): string
+    public function getExtension(): ?string
     {
         return $this->extension;
     }
 
-    public function setExtension(string $extension): static
+    public function setExtension(?string $extension): static
     {
         $this->extension = $extension;
         return $this;

@@ -55,6 +55,8 @@ RUN echo 'alias scmcrud="symfony console make:crud"' >> ~/.bashrc
 RUN echo 'alias scmf="symfony console make:form"' >> ~/.bashrc
 RUN echo 'alias cc="symfony console cache:clear"' >> ~/.bashrc
 
+RUN echo 'alias c="clear"' >> ~/.bashrc
+
 CMD ["/entrypoint.sh"]
 
 EXPOSE 80

@@ -1,5 +1,6 @@
-{% macro list(documents, fallback = "Aucun document") %}
+{% macro list(documents, path, sourceRoute, sourceId, editPathRoute, editPathId = null, entity = null, fallback = "Aucun document") %}
   {% import "macros/fontawesome.html.twig" as fa %}
+  {% import _self as self %}
   {% set date_format = 'd/m/Y' %}
 
   <h3 class="fw-semibold mt-4 mb-2">Documents</h3>
@@ -12,6 +13,9 @@
             Documents
           </span>
         </div>
+        <a class="btn btn-secondary" href="{{ path }}?sourceRoute={{ sourceRoute }}&sourceId={{ sourceId }}">
+          Ajouter un document
+        </a>
       </div>
 
       <div class="card-body">
@@ -28,10 +32,10 @@
                 ? (document.description|length > 40
                   ? document.description|slice(0, 40) ~ '...'
                   : document.description)
-                : '—'
+                : 'Aucune description à afficher'
               %}
 
-              <div class="d-flex flex-column flex-xl-row align-items-xl-center justify-content-between gap-2 py-3 {{ documents|length != count ? 'border-bottom' }}">
+              <div class="d-flex flex-column flex-xl-row align-items-xl-center justify-content-between gap-2 py-3 px-3 {{ documents|length != count ? 'border-bottom' }}">
                 <div class="d-flex flex-column flex-xl-row align-items-xl-center gap-3 flex-grow-1 min-w-0">
                   <div class="fw-semibold text-truncate" style="min-width: 180px; max-width: 240px;">
                     {{ document.name ?: 'Document sans nom' }}
@@ -41,19 +45,38 @@
                     Ajouté le {{ document.createdAt|date(date_format) }}
                   </div>
 
+                  <div>・</div>
+
                   <div class="small text-body-secondary" style="min-width: 170px;">
                     Modifié le {{ document.updatedAt|date(date_format) }}
                   </div>
+
+                  <div>・</div>
 
                   <div class="small text-body-secondary text-truncate">
                     {{ shortDescription }}
                   </div>
                 </div>
 
-                <div class="flex-shrink-0">
-                  <button type="button" class="btn btn-sm btn-primary">
-                    Ouvrir
-                  </button>
+                <div class="flex-shrink-0 d-flex gap-2">
+                  {{ self.show(
+                      document: document,
+                      url: path('app_document_show', {id: document.id}),
+                      label: 'Voir'
+                  ) }}
+                  <a
+                    class="btn btn-sm btn-outline-secondary d-flex align-items-center" 
+                    href="{{ 
+                      editPathId ? 
+                      path(editPathRoute, {'id': entity.id, 'documentId': document.id}) : 
+                      path(editPathRoute, {'id': document.id})
+                    }}?sourceRoute={{ sourceRoute }}&sourceId={{ sourceId }}"
+                  >
+                    Modifier
+                  </a>
+                  {% if is_granted('ROLE_ADMIN') %}
+                    {{ include('document/_delete_form.html.twig') }}
+                  {% endif %}
                 </div>
               </div>
               {% set count = count + 1 %}
@@ -63,4 +86,88 @@
       </div>
     </div>
   </div>
+{% endmacro %}
+
+{% macro show(document, url, label = 'Voir', buttonClass = 'btn btn-sm btn-outline-primary', modalSize = 'modal-xl') %}
+
+  {% if document is not null %}
+    {% set modalId = 'document-show-modal-' ~ document.id %}
+
+    <button
+      type="button"
+      class="{{ buttonClass }}"
+      data-bs-toggle="modal"
+      data-bs-target="#{{ modalId }}"
+    >
+      {{ label }}
+    </button>
+
+    <div
+      class="modal fade"
+      id="{{ modalId }}"
+      tabindex="-1"
+      aria-labelledby="{{ modalId }}-label"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog {{ modalSize }} modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+          <div class="modal-header">
+            <div>
+              <h5 class="modal-title mb-0" id="{{ modalId }}-label">
+                {{ document.name }}
+              </h5>
+
+              {% if document.originalFilename %}
+                <div class="small text-body-secondary">
+                  {{ document.originalFilename }}
+                </div>
+              {% endif %}
+            </div>
+
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+              aria-label="Fermer"
+            ></button>
+          </div>
+
+          <div class="modal-body p-0" style="height: 80vh;">
+            {% if document.extension == 'pdf' %}
+              <iframe
+                src="{{ url }}"
+                title="{{ document.name }}"
+                class="w-100 h-100 border-0"
+              ></iframe>
+            {% else %}
+              <div class="d-flex flex-column align-items-center p-4">
+                <p class="mb-3">
+                  Aperçu indisponible pour ce type de fichier.
+                </p>
+
+                <div class="d-flex gap-2">
+                  <a href="{{ url }}" target="_blank" class="btn btn-primary">
+                    Ouvrir le document
+                  </a>
+                  <a href="{{ url }}" class="btn btn-primary" download>
+                    Télécharger le document
+                  </a>
+                </div>
+              </div>
+            {% endif %}
+          </div>
+
+          <div class="modal-footer">
+            <a href="{{ url }}" target="_blank" class="btn btn-outline-secondary">
+              Ouvrir dans un nouvel onglet
+            </a>
+
+            <button type="button" class="btn btn-primary" data-bs-dismiss="modal">
+              Fermer
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  {% endif %}
 {% endmacro %}

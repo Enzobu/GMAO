@@ -11,6 +11,8 @@
   method = 'post',
   csrfToken = null,
   csrfFieldName = '_token',
+  _route = null,
+  _entity_id = null,
 ) %}
 
   <div class="modal fade"
@@ -48,6 +50,13 @@
                 {% if csrfToken %}
                   <input type="hidden" name="{{ csrfFieldName }}" value="{{ csrfToken }}">
                 {% endif %}
+                {% if _route %}
+                  <input type="hidden" name="_route" value="{{ _route }}">
+                {% endif %}
+                {% if _entity_id %}
+                  <input type="hidden" name="_entity_id" value="{{ _entity_id }}">
+                {% endif %}
+
 
                 <button type="submit" class="btn btn-{{ accent }}">
                   {{ continueButton }}

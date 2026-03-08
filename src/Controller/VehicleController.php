@@ -2,20 +2,26 @@
 
 namespace App\Controller;
 
+use App\Entity\Document;
 use App\Entity\User;
 use App\Entity\Vehicle;
 use App\Enum\MaintenanceStatusEnum;
+use App\Form\DocumentType;
 use App\Form\VehicleType;
 use App\Repository\VehicleInspectionRepository;
 use App\Repository\VehicleInsuranceRepository;
 use App\Repository\VehicleMaintenanceRepository;
 use App\Repository\VehicleRepository;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Bridge\Doctrine\Attribute\MapEntity;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\File\Exception\FileException;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\CurrentUser;
+use Symfony\Component\String\Slugger\SluggerInterface;
+use Symfony\Component\Validator\Constraints\All;
 
 #[Route('/vehicle')]
 final class VehicleController extends AbstractController
@@ -129,5 +135,127 @@ final class VehicleController extends AbstractController
         }
 
         return $this->redirectToRoute('app_vehicle_index', [], Response::HTTP_SEE_OTHER);
+    }
+
+    #[Route('/{id}/document/new', name: 'app_vehicle_document_new', methods: ['GET', 'POST'])]
+    public function newDocument(
+        Request $request,
+        EntityManagerInterface $entityManager,
+        Vehicle $vehicle,
+        SluggerInterface $slugger,
+    ): Response {
+        if ($vehicle->isDeleted()) {
+            $this->addFlash('warning', 'Ce véhicule a été supprimé.');
+
+            return $this->redirectToRoute('app_vehicle_index');
+        }
+
+        $document = new Document();
+        $form = $this->createForm(DocumentType::class, $document);
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted() && $form->isValid()) {
+            $uploadedFile = $form->get('file')->getData();
+
+            if ($uploadedFile !== null) {
+                $originalFilename = pathinfo($uploadedFile->getClientOriginalName(), PATHINFO_FILENAME);
+                $safeFilename = $slugger->slug($originalFilename);
+                $extension = $uploadedFile->guessExtension() ?: $uploadedFile->getClientOriginalExtension() ?: 'bin';
+
+                $mimeType = $uploadedFile->getMimeType();
+                $size = $uploadedFile->getSize();
+
+                $storedFilename = sprintf('%s-%s.%s', $safeFilename, uniqid(), $extension);
+
+                try {
+                    $uploadedFile->move(
+                        $this->getParameter('documents_directory'),
+                        $storedFilename
+                    );
+                } catch (FileException $e) {
+                    $this->addFlash('danger', 'Le fichier n’a pas pu être envoyé.');
+
+                    return $this->render('document/new.html.twig', [
+                        'document' => $document,
+                        'form' => $form,
+                        'subtitle' => 'Véhicule : ' . ucfirst($vehicle->getName()) . ' ・ ' . strtoupper($vehicle->getRegistration()),
+                        'entity' => $vehicle,
+                    ]);
+                }
+
+                $document
+                    ->setVehicle($vehicle)
+                    ->setOriginalFilename($uploadedFile->getClientOriginalName())
+                    ->setStoredFilename($storedFilename)
+                    ->setMimeType($mimeType)
+                    ->setSize($size)
+                    ->setExtension($extension)
+                ;
+
+                if (!$document->getName()) {
+                    $document->setName($originalFilename);
+                }
+
+                $entityManager->persist($document);
+                $entityManager->flush();
+
+                $this->addFlash('success', 'Le document a bien été ajouté.');
+
+                return $this->redirectToRoute('app_vehicle_show', [
+                    'id' => $vehicle->getId(),
+                ], Response::HTTP_SEE_OTHER);
+            }
+        }
+
+        return $this->render('document/new.html.twig', [
+            'document' => $document,
+            'form' => $form->createView(),
+            'subtitle' => 'Véhicule : ' . ucfirst($vehicle->getName()) . ' ・ ' . strtoupper($vehicle->getRegistration()),
+            'entity' => $vehicle,
+        ]);
+    }
+
+    #[Route('/{id}/document/{documentId}/edit', name: 'app_vehicle_document_edit', methods: ['GET', 'POST'])]
+    public function editDocument(
+        Request $request, 
+        EntityManagerInterface $entityManager,
+        Vehicle $vehicle,
+        #[MapEntity(id: 'documentId')] Document $document,
+    ): Response {
+        if ($vehicle->isDeleted()) {
+            $this->addFlash('warning', 'Ce véhicule a été supprimé.');
+
+            return $this->redirectToRoute('app_vehicle_index');
+        }
+
+        $oldName = $document->getName();
+        $oldDescription = $document->getDescription();
+
+        $form = $this->createForm(DocumentType::class, $document, ['edit' => true]);
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted() && $form->isValid()) {
+            $entityManager->flush();
+
+            $name = $document->getName();
+            $description = $document->getDescription();
+
+            if (($oldName != $name) || ($oldDescription != $description)) {
+                $this->addFlash('success', 'Le document a bien été modifié.');
+            } else {
+                $this->addFlash('warning', 'Le document ne comporte aucune modification.');
+            }
+
+            return $this->redirectToRoute('app_vehicle_show', [
+                'id' => $vehicle->getId(),
+            ], Response::HTTP_SEE_OTHER);
+        }
+
+        return $this->render('document/edit.html.twig', [
+            'document' => $document,
+            'form' => $form,
+            'entity' => $vehicle,
+            'subtitle' => 'Véhicule : ' . ucfirst($vehicle->getName()) . ' ・ ' . strtoupper($vehicle->getRegistration()),
+        ]);
     }
 }
