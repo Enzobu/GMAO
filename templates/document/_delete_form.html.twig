@@ -22,7 +22,7 @@
   cancelButton: 'Annuler',
   type: 'submit',
   accent: 'danger',
-  action: path('app_document_delete', {'id': document.id}),
+  action: deletePath,
   csrfToken: csrf_token('delete' ~ document.id),
   _route: app.request.attributes.get('_route'),
   _entity_id: document.id,

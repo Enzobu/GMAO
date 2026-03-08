@@ -1,4 +1,13 @@
-{% macro list(documents, path, sourceRoute, sourceId, editPathRoute, editPathId = null, entity = null, fallback = "Aucun document") %}
+{% macro list(
+  documents,
+  newPath,
+  sourceRoute,
+  editRoute,
+  editParameters,
+  deleteRoute,
+  deleteParameters,
+  fallback = "Aucun document"
+) %}
   {% import "macros/fontawesome.html.twig" as fa %}
   {% import _self as self %}
   {% set date_format = 'd/m/Y' %}
@@ -13,7 +22,7 @@
             Documents
           </span>
         </div>
-        <a class="btn btn-primary" href="{{ path }}?sourceRoute={{ sourceRoute }}&sourceId={{ sourceId }}">
+        <a class="btn btn-primary" href="{{ newPath }}?sourceRoute={{ sourceRoute }}">
           Ajouter un document
         </a>
       </div>
@@ -66,15 +75,12 @@
                   ) }}
                   <a
                     class="btn btn-sm btn-outline-secondary d-flex align-items-center" 
-                    href="{{ 
-                      editPathId ? 
-                      path(editPathRoute, {'id': entity.id, 'documentId': document.id}) : 
-                      path(editPathRoute, {'id': document.id})
-                    }}?sourceRoute={{ sourceRoute }}&sourceId={{ sourceId }}"
+                    href="{{ path(editRoute, editParameters|merge({documentId: document.id})) }}?sourceRoute={{ sourceRoute }}"
                   >
                     Modifier
                   </a>
                   {% if is_granted('ROLE_ADMIN') %}
+                    {% set deletePath = path(deleteRoute, deleteParameters|merge({documentId: document.id})) %}
                     {{ include('document/_delete_form.html.twig') }}
                   {% endif %}
                 </div>

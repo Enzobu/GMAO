@@ -258,4 +258,28 @@ final class VehicleController extends AbstractController
             'subtitle' => 'Véhicule : ' . ucfirst($vehicle->getName()) . ' ・ ' . strtoupper($vehicle->getRegistration()),
         ]);
     }
+
+    #[Route('{id}/document/{documentId}', name: 'app_vehicle_document_delete', methods: ['POST'])]
+    public function deleteDocument(
+        Request $request,
+        Vehicle $vehicle,
+        #[MapEntity(id: 'documentId')] Document $document, 
+        EntityManagerInterface $entityManager,
+    ): Response {
+        if ($this->isCsrfTokenValid('delete'.$document->getId(), $request->getPayload()->getString('_token'))) {
+
+            if (!$this->isGranted('ROLE_ADMIN')) {
+                $this->addFlash('danger', 'Vous n\'avez pas les autorisations nécessaire pour supprimer un document. Veuillez contacter un administrateur');
+    
+                return $this->redirectToRoute('app_vehicle_show', ["id" => $vehicle->getId()], Response::HTTP_SEE_OTHER);
+            }
+
+            $entityManager->remove($document);
+            $entityManager->flush();
+
+            $this->addFlash('success', 'Document supprimé avec succès.');
+        }
+
+        return $this->redirectToRoute('app_vehicle_show', ["id" => $vehicle->getId()], Response::HTTP_SEE_OTHER);
+    }
 }

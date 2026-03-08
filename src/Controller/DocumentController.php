@@ -28,33 +28,4 @@ final class DocumentController extends AbstractController
             ResponseHeaderBag::DISPOSITION_INLINE
         );
     }
-
-    #[Route('/{id}', name: 'app_document_delete', methods: ['POST'])]
-    public function delete(Request $request, Document $document, EntityManagerInterface $entityManager): Response
-    {
-        $_route = 'app_home';
-        $_entity_id = null;
-
-        if ($this->isCsrfTokenValid('delete'.$document->getId(), $request->getPayload()->getString('_token'))) {
-            $_route = $request->request->get('_route');
-            $_entity_id = $request->request->get('_entity_id');
-
-            if (!$this->isGranted('ROLE_ADMIN')) {
-                $this->addFlash('danger', 'Vous n\'avez pas les autorisations nécessaire pour supprimer un document. Veuillez contacter un administrateur');
-    
-                return $_entity_id ? 
-                    $this->redirectToRoute($_route, ["id" => $_entity_id], Response::HTTP_SEE_OTHER) : 
-                    $this->redirectToRoute($_route, [], Response::HTTP_SEE_OTHER);
-            }
-
-            $entityManager->remove($document);
-            $entityManager->flush();
-
-            $this->addFlash('success', 'Document supprimé avec succès.');
-        }
-
-        return $_entity_id ? 
-            $this->redirectToRoute($_route, ["id" => $_entity_id], Response::HTTP_SEE_OTHER) : 
-            $this->redirectToRoute($_route, [], Response::HTTP_SEE_OTHER);
-    }
 }
