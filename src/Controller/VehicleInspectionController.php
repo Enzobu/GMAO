@@ -37,7 +37,7 @@ final class VehicleInspectionController extends AbstractController
 
     #[Route('/{vehicleId}/inspection/new', name: 'app_vehicle_inspection_new', methods: ['GET', 'POST'])]
     public function new(
-        Request $request, 
+        Request $request,
         EntityManagerInterface $entityManager,
         #[MapEntity(id: 'vehicleId')] Vehicle $vehicle,
     ): Response {
@@ -46,15 +46,20 @@ final class VehicleInspectionController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
+            $vehicleInspection->setVehicle($vehicle);
+
             $entityManager->persist($vehicleInspection);
             $entityManager->flush();
 
-            return $this->redirectToRoute('app_vehicle_inspection_index', [], Response::HTTP_SEE_OTHER);
+            return $this->redirectToRoute('app_vehicle_inspection_index', [
+                'vehicleId' => $vehicle->getId(),
+            ], Response::HTTP_SEE_OTHER);
         }
 
         return $this->render('vehicle_inspection/new.html.twig', [
             'vehicle_inspection' => $vehicleInspection,
             'form' => $form,
+            'vehicle' => $vehicle,
         ]);
     }
 
@@ -70,39 +75,52 @@ final class VehicleInspectionController extends AbstractController
     }
 
     #[Route('/{vehicleId}/inspection/{id}/edit', name: 'app_vehicle_inspection_edit', methods: ['GET', 'POST'])]
-    public function edit(Request $request, 
-        VehicleInspection $vehicleInspection, 
+    public function edit(
+        Request $request,
+        VehicleInspection $vehicleInspection,
         EntityManagerInterface $entityManager,
         #[MapEntity(id: 'vehicleId')] Vehicle $vehicle,
     ): Response {
-        $form = $this->createForm(VehicleInspectionType::class, $vehicleInspection);
+        $form = $this->createForm(VehicleInspectionType::class, $vehicleInspection, ['edit' => true]);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
             $entityManager->flush();
 
-            return $this->redirectToRoute('app_vehicle_inspection_index', [], Response::HTTP_SEE_OTHER);
+            return $request->query->get('show') == 'true' ?
+                $this->redirectToRoute('app_vehicle_inspection_show', [
+                    "id" => $vehicleInspection->getId(),
+                    "vehicleId" => $vehicle->getId(),
+                ], Response::HTTP_SEE_OTHER) :
+                $this->redirectToRoute('app_vehicle_inspection_index', [
+                    "vehicleId" => $vehicle->getId(),
+                ], Response::HTTP_SEE_OTHER);
         }
 
         return $this->render('vehicle_inspection/edit.html.twig', [
             'vehicle_inspection' => $vehicleInspection,
             'form' => $form,
+            'vehicle' => $vehicle,
         ]);
     }
 
     #[Route('/{vehicleId}/inspection/{id}', name: 'app_vehicle_inspection_delete', methods: ['POST'])]
     public function delete(
-        Request $request, 
-        VehicleInspection $vehicleInspection, 
+        Request $request,
+        VehicleInspection $vehicleInspection,
         EntityManagerInterface $entityManager,
         #[MapEntity(id: 'vehicleId')] Vehicle $vehicle,
     ): Response {
-        if ($this->isCsrfTokenValid('delete'.$vehicleInspection->getId(), $request->getPayload()->getString('_token'))) {
+        if ($this->isCsrfTokenValid('delete' . $vehicleInspection->getId(), $request->getPayload()->getString('_token'))) {
             $entityManager->remove($vehicleInspection);
             $entityManager->flush();
+
+            $this->addFlash('success', 'Contrôle technique supprimé avec succès.');
         }
 
-        return $this->redirectToRoute('app_vehicle_inspection_index', [], Response::HTTP_SEE_OTHER);
+        return $this->redirectToRoute('app_vehicle_inspection_index', [
+            'vehicleId' => $vehicle->getId(),
+        ], Response::HTTP_SEE_OTHER);
     }
 
     #[Route('/{vehicleId}/inspection/{id}/document/new', name: 'app_vehicle_inspection_document_new', methods: ['GET', 'POST'])]

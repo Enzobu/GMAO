@@ -1,0 +1,26 @@
+{% import 'macros/modal.html.twig' as modal %}
+
+<button type="button"
+  class="btn btn-outline-danger"
+  data-bs-toggle="modal"
+  data-bs-target="#deleteVehicleInspectionModal{{ vehicle_inspection.id }}"
+>
+  Supprimer
+</button>
+
+{{ modal.confirm(
+  id: 'deleteVehicleInspectionModal' ~ vehicle_inspection.id,
+  title: 'Supprimer le contrôle technique',
+  description: '
+    <p class="mb-2">Tu es sur le point de supprimer ce contrôle technique :</p>
+    <div class="fw-semibold">Contrôle du ' ~ (vehicle_inspection.inspectionDate ? vehicle_inspection.inspectionDate|date(date_format) : '—') ~ '</div>
+    <div class="small text-body-secondary mt-1">' ~ (vehicle_inspection.result ? vehicle_inspection.result.label() : 'Résultat non renseigné') ~ '</div>
+    <p class="mt-3 mb-0 text-danger">Cette action est définitive.</p>
+  ',
+  continueButton: 'Supprimer',
+  cancelButton: 'Annuler',
+  type: 'submit',
+  accent: 'danger',
+  action: path('app_vehicle_inspection_delete', { vehicleId: vehicle.id, id: vehicle_inspection.id }),
+  csrfToken: csrf_token('delete' ~ vehicle_inspection.id)
+) }}

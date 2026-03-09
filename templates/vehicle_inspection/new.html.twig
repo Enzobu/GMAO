@@ -1,11 +1,33 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}New VehicleInspection{% endblock %}
+{% import 'macros/fontawesome.html.twig' as fa %}
+
+{% block title %}Nouveau contrôle technique{% endblock %}
 
 {% block body %}
-    <h1>Create new VehicleInspection</h1>
+  <div class="d-flex align-items-start justify-content-between gap-3 mb-3">
+    <div>
+      <h1 class="h3 mb-1">Nouveau contrôle technique</h1>
+      <div class="text-body-secondary">
+        Véhicule :
+        <strong>
+          {{ vehicle.name|capitalize ?: (vehicle.brand|capitalize ~ ' ' ~ vehicle.model|capitalize)|trim }}
+        </strong>
+        · {{ vehicle.registration|upper }}
+      </div>
+    </div>
 
-    {{ include('vehicle_inspection/_form.html.twig') }}
+    <a
+      class="btn btn-outline-secondary"
+      href="{{ path('app_vehicle_inspection_index', { vehicleId: vehicle.id }) }}"
+    >
+      {{ fa.icon(name: 'arrow-left', family: 'solid', size: 'sm', fixed_width: true, additional_classes: ['me-1']) }}
+      Retour à la liste
+    </a>
+  </div>
 
-    <a href="{{ path('app_vehicle_inspection_index') }}">back to list</a>
+  {% include 'vehicle_inspection/_form.html.twig' with {
+    form: form,
+    button_label: 'Créer'
+  } %}
 {% endblock %}

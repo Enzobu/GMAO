@@ -1,4 +1,93 @@
-{{ form_start(form) }}
-    {{ form_widget(form) }}
-    <button class="btn">{{ button_label|default('Save') }}</button>
+{% import 'macros/fontawesome.html.twig' as fa %}
+
+{{ form_start(form, {
+    attr: {
+      'data-turbo': 'false'
+    }
+}) }}
+
+<div class="card shadow-sm">
+  <div class="card-header bg-body d-flex align-items-center justify-content-between">
+    <div class="fw-semibold">Informations du contrôle technique</div>
+    <div class="text-body-secondary small">Renseigne le contrôle du véhicule</div>
+  </div>
+
+  <div class="card-body">
+    <div class="row g-4">
+      <div class="col-12 col-xl-7">
+        <div class="border rounded p-3 h-100">
+          <div class="fw-semibold mb-3">Contrôle</div>
+
+          <div class="row g-3">
+            <div class="col-12 col-md-6">
+              {{ form_row(form.inspectionDate) }}
+            </div>
+
+            <div class="col-12 col-md-6">
+              {{ form_row(form.validUntil) }}
+            </div>
+
+            <div class="col-12 col-md-6">
+              {{ form_row(form.mileage) }}
+            </div>
+
+            <div class="col-12 col-md-6">
+              {{ form_row(form.result) }}
+            </div>
+
+            <div class="col-12">
+              {{ form_row(form.center) }}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-12 col-xl-5">
+        <div class="border rounded p-3 h-100">
+          <div class="fw-semibold mb-3">Contre-visite et remarques</div>
+
+          <div class="row g-3">
+            <div class="col-12">
+              <div class="form-check mt-2">
+                {{ form_widget(form.counterVisitRequired) }}
+                {{ form_label(form.counterVisitRequired) }}
+                {{ form_errors(form.counterVisitRequired) }}
+              </div>
+            </div>
+
+            <div class="col-12">
+              {{ form_row(form.counterVisitDueAt) }}
+            </div>
+
+            <div class="col-12">
+              {{ form_row(form.notes) }}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {{ form_rest(form) }}
+  </div>
+
+  <div class="card-footer bg-body d-flex justify-content-end gap-2">
+    <a 
+      class="btn btn-outline-secondary" 
+      href="{{ 
+        app.request.query.get('show') == 'true' ? 
+        path('app_vehicle_inspection_show', {vehicleId: vehicle.id, id: vehicle_inspection.id}) : 
+        path('app_vehicle_inspection_index', {vehicleId: vehicle.id}) 
+      }}"
+    >
+      {{ fa.icon(name: 'arrow-left', family: 'solid', size: 'sm', fixed_width: true, additional_classes: ['me-1']) }}
+      Annuler
+    </a>
+
+    <button class="btn btn-primary">
+      {{ fa.icon(name: 'floppy-disk', family: 'solid', size: 'sm', fixed_width: true, additional_classes: ['me-1']) }}
+      {{ button_label|default('Enregistrer') }}
+    </button>
+  </div>
+</div>
+
 {{ form_end(form) }}

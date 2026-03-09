@@ -1,13 +1,36 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Edit VehicleInspection{% endblock %}
+{% import 'macros/fontawesome.html.twig' as fa %}
+
+{% block title %}Modifier contrôle technique{% endblock %}
 
 {% block body %}
-    <h1>Edit VehicleInspection</h1>
+  <div class="d-flex align-items-start justify-content-between gap-3 mb-3">
+    <div>
+      <h1 class="h3 mb-1">Modifier le contrôle technique</h1>
+      <div class="text-body-secondary">
+        Contrôle du
+        {{ vehicle_inspection.inspectionDate ? vehicle_inspection.inspectionDate|date(date_format) : '—' }}
+      </div>
+    </div>
 
-    {{ include('vehicle_inspection/_form.html.twig', {'button_label': 'Update'}) }}
+    <div class="d-flex gap-2">
+      <a
+        class="btn btn-outline-secondary"
+        href="{{ 
+          app.request.query.get('show') == 'true' ? 
+          path('app_vehicle_inspection_show', {vehicleId: vehicle.id, id: vehicle_inspection.id}) : 
+          path('app_vehicle_inspection_index', {vehicleId: vehicle.id}) 
+        }}"
+      >
+        {{ fa.icon(name: 'arrow-left', family: 'solid', size: 'sm', fixed_width: true, additional_classes: ['me-1']) }}
+        Retour à la liste
+      </a>
+    </div>
+  </div>
 
-    <a href="{{ path('app_vehicle_inspection_index') }}">back to list</a>
-
-    {{ include('vehicle_inspection/_delete_form.html.twig') }}
+  {% include 'vehicle_inspection/_form.html.twig' with {
+    form: form,
+    button_label: 'Mettre à jour'
+  } %}
 {% endblock %}

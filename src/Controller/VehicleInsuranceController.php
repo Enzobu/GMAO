@@ -46,15 +46,18 @@ final class VehicleInsuranceController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
+            $vehicleInsurance->setVehicle($vehicle);
+
             $entityManager->persist($vehicleInsurance);
             $entityManager->flush();
 
-            return $this->redirectToRoute('app_vehicle_insurance_index', [], Response::HTTP_SEE_OTHER);
+            return $this->redirectToRoute('app_vehicle_insurance_index', ['vehicleId' => $vehicle->getId()], Response::HTTP_SEE_OTHER);
         }
 
         return $this->render('vehicle_insurance/new.html.twig', [
             'vehicle_insurance' => $vehicleInsurance,
             'form' => $form,
+            'vehicle' => $vehicle,
         ]);
     }
 
@@ -82,12 +85,20 @@ final class VehicleInsuranceController extends AbstractController
         if ($form->isSubmitted() && $form->isValid()) {
             $entityManager->flush();
 
-            return $this->redirectToRoute('app_vehicle_insurance_index', [], Response::HTTP_SEE_OTHER);
+            return $request->query->get('show') == 'true' ?
+                $this->redirectToRoute('app_vehicle_insurance_show', [
+                    "id" => $vehicleInsurance->getId(),
+                    "vehicleId" => $vehicle->getId(),
+                ], Response::HTTP_SEE_OTHER) :
+                $this->redirectToRoute('app_vehicle_insurance_index', [
+                    "vehicleId" => $vehicle->getId(),
+                ], Response::HTTP_SEE_OTHER);
         }
 
         return $this->render('vehicle_insurance/edit.html.twig', [
             'vehicle_insurance' => $vehicleInsurance,
             'form' => $form,
+            'vehicle' => $vehicle,
         ]);
     }
 
@@ -103,7 +114,9 @@ final class VehicleInsuranceController extends AbstractController
             $entityManager->flush();
         }
 
-        return $this->redirectToRoute('app_vehicle_insurance_index', [], Response::HTTP_SEE_OTHER);
+        $this->addFlash('success', 'Assurance supprimée avec succès.');
+
+        return $this->redirectToRoute('app_vehicle_insurance_index', ['vehicleId' => $vehicle->getId()], Response::HTTP_SEE_OTHER);
     }
 
     #[Route('/{vehicleId}/insurance/{id}/document/new', name: 'app_vehicle_insurance_document_new', methods: ['GET', 'POST'])]

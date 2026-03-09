@@ -19,12 +19,10 @@
         Retour au véhicule
       </a>
 
-      {% if is_granted('ROLE_ADMIN') %}
-        <a href="{{ path('app_vehicle_inspection_new', { vehicleId: vehicle.id }) }}" class="btn btn-primary">
-          {{ fa.icon(name: 'plus', family: 'solid', size: 'sm') }}
-          Ajouter un contrôle
-        </a>
-      {% endif %}
+      <a href="{{ path('app_vehicle_inspection_new', { vehicleId: vehicle.id }) }}" class="btn btn-primary">
+        {{ fa.icon(name: 'plus', family: 'solid', size: 'sm') }}
+        Ajouter un contrôle
+      </a>
     </div>
   </div>
 
@@ -107,14 +105,15 @@
                 >
                   Voir
                 </a>
+                <a
+                  href="{{ path('app_vehicle_inspection_edit', { vehicleId: vehicle.id, id: vehicle_inspection.id }) }}"
+                  class="btn btn-sm btn-outline-primary"
+                >
+                  Modifier
+                </a>
 
                 {% if is_granted('ROLE_ADMIN') %}
-                  <a
-                    href="{{ path('app_vehicle_inspection_edit', { vehicleId: vehicle.id, id: vehicle_inspection.id }) }}"
-                    class="btn btn-sm btn-outline-primary"
-                  >
-                    Modifier
-                  </a>
+                  {% include 'vehicle_inspection/_delete_form.html.twig' %}
                 {% endif %}
               </div>
             </div>
