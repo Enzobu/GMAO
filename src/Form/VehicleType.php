@@ -128,13 +128,13 @@ class VehicleType extends AbstractType
 
             ->add('lastMileage', IntegerType::class, [
                 'label' => 'Kilométrage',
-                'required' => false,
+                'required' => true,
                 'attr' => [
                     'min' => 0,
                     'step' => 1,
                     'placeholder' => 'Ex: 187500',
                     'class' => 'form-control',
-                    'disabled' => $options['edit'],
+                    'disabled' => $this->auth->isGranted('ROLE_ADMIN') ? false : $options['edit'],
                 ],
             ])
 

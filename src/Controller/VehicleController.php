@@ -12,6 +12,7 @@ use App\Repository\VehicleInspectionRepository;
 use App\Repository\VehicleInsuranceRepository;
 use App\Repository\VehicleMaintenanceRepository;
 use App\Repository\VehicleRepository;
+use App\Service\VehicleManager;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bridge\Doctrine\Attribute\MapEntity;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -73,11 +74,19 @@ final class VehicleController extends AbstractController
     #[Route('/{id}', name: 'app_vehicle_show', methods: ['GET'])]
     public function show(
         Vehicle $vehicle,
+        VehicleManager $vehicleManager,
         VehicleInsuranceRepository $vehicleInsuranceRepository,
         VehicleInspectionRepository $vehicleInspectionRepository,
         VehicleMaintenanceRepository $vehicleMaintenanceRepository,
+        #[CurrentUser] User $currentUser,
     ): Response
     {
+        if (!$vehicleManager->isAuthorized($currentUser, $vehicle)) {
+            $this->addFlash('danger', 'Vous n\'avez pas accès à la ressource demandé.');
+
+            return $this->redirectToRoute('app_vehicle_index');
+        }
+
         if ($vehicle->isDeleted()) {
             $this->addFlash('warning', 'Ce véhicule a été supprimé.');
 

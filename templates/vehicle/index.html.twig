@@ -87,37 +87,11 @@
 
             {% if is_granted('ROLE_ADMIN') %}
               <div class="card-footer bg-body d-flex justify-content-end">
-                <button type="button"
-                        class="btn btn-sm btn-outline-danger"
-                        data-bs-toggle="modal"
-                        data-bs-target="#deleteVehicleModal{{ vehicle.id }}">
-                  Supprimer
-                </button>
+                {% include "vehicle/_delete_form.html.twig" %}
               </div>
             {% endif %}
           </div>
         </div>
-
-        {% if is_granted('ROLE_ADMIN') %}
-          {{ modal.confirm(
-            id: 'deleteVehicleModal' ~ vehicle.id,
-            title: 'Supprimer le véhicule',
-            description: '
-              <p class="mb-2">Tu es sur le point de supprimer ce véhicule :</p>
-              <div class="fw-semibold">' ~
-                (vehicle.name ?: ((vehicle.brand ?: '') ~ ' ' ~ (vehicle.model ?: ''))|trim)
-              ~ '</div>
-              <div class="small text-body-secondary mt-1">' ~ vehicle.registration|upper ~ '</div>
-              <p class="mt-3 mb-0 text-danger">Cette action est définitive.</p>
-            ',
-            continueButton: 'Supprimer',
-            cancelButton: 'Annuler',
-            type: 'submit',
-            accent: 'danger',
-            action: path('app_vehicle_delete', {id: vehicle.id}),
-            csrfToken: csrf_token('delete' ~ vehicle.id)
-          ) }}
-        {% endif %}
       {% endfor %}
     </div>
   {% endif %}
