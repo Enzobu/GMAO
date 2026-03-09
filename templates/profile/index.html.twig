@@ -1,110 +1,111 @@
 {% extends 'base.html.twig' %}
+{% import 'macros/document.html.twig' as document %}
 
 {% block title %}Profil{% endblock %}
 
 {% block body %}
 <div class="container py-4 py-lg-5">
-  <div class="row justify-content-center">
-    <div class="col-12 col-lg-8 col-xl-7">
-
-      <div class="d-flex align-items-center justify-content-between mb-4">
-        <div>
-          <h1 class="h3 mb-1">Profil</h1>
-          <div class="text-body-secondary small">Gère tes informations et ton mot de passe.</div>
-        </div>
+  <div class="d-flex align-items-center justify-content-between mb-4">
+    <div>
+      <h1 class="h3 mb-1">Profil</h1>
+      <div class="text-body-secondary small">
+        Gère tes informations personnelles et ton mot de passe.
       </div>
-
-      {% include "_flashes.html.twig" %}
-
-      <div class="card shadow-sm border-0">
-        <div class="card-body py-2 px-4 py-lg-2 px-lg-5">
-          {{ form_start(form, { attr: { class: 'needs-validation' } }) }}
-
-            <div class="mb-4">
-              <h2 class="h6 mb-3 text-uppercase text-body-secondary">Informations</h2>
-
-              <div class="row g-3">
-                <div class="col-12">
-                  {{ form_row(form.email, {
-                    label: 'E-mail',
-                    row_attr: { class: 'mb-0' },
-                    attr: { class: 'form-control', autocomplete: 'email' }
-                  }) }}
-                </div>
-
-                <div class="col-12 col-md-6">
-                  {{ form_row(form.firstname, {
-                    label: 'Prénom',
-                    row_attr: { class: 'mb-0' },
-                    attr: { class: 'form-control', autocomplete: 'given-name' }
-                  }) }}
-                </div>
-
-                <div class="col-12 col-md-6">
-                  {{ form_row(form.lastname, {
-                    label: 'Nom',
-                    row_attr: { class: 'mb-0' },
-                    attr: { class: 'form-control', autocomplete: 'family-name' }
-                  }) }}
-                </div>
-              </div>
-            </div>
-
-            <hr class="my-4">
-
-            <div class="mb-0">
-              <div class="d-flex align-items-center justify-content-between mb-3">
-                <h2 class="h6 mb-0 text-uppercase text-body-secondary">Mot de passe</h2>
-                <span class="badge text-bg-light">Optionnel</span>
-              </div>
-
-              <div class="row g-3">
-                <div class="col-12">
-                  {{ form_row(form.old_password, {
-                    label: 'Ancien mot de passe',
-                    row_attr: { class: 'mb-0' },
-                    attr: { class: 'form-control', autocomplete: 'current-password' }
-                  }) }}
-                </div>
-
-                <div class="col-12 col-md-6">
-                  {{ form_row(form.new_password, {
-                    label: 'Nouveau mot de passe',
-                    row_attr: { class: 'mb-0' },
-                    attr: { class: 'form-control', autocomplete: 'new-password' }
-                  }) }}
-                </div>
-
-                <div class="col-12 col-md-6">
-                  {{ form_row(form.new_password_retry, {
-                    label: 'Confirmer le mot de passe',
-                    row_attr: { class: 'mb-0' },
-                    attr: { class: 'form-control', autocomplete: 'new-password' }
-                  }) }}
-                </div>
-
-                <div class="col-12">
-                  <div class="form-text">
-                    Laisse les champs mot de passe vides si tu ne veux pas le modifier.
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div class="d-flex flex-column flex-sm-row gap-2 justify-content-end mt-4">
-              <a href="{{ path('app_home') }}" class="btn btn-outline-secondary">
-                Annuler
-              </a>
-              <button class="btn btn-primary" type="submit">
-                Enregistrer
-              </button>
-            </div>
-
-          {{ form_end(form) }}
-        </div>
-      </div>
-
     </div>
+    <a class="btn btn-outline-secondary" href="{{ path('app_home') }}">
+      Retour
+    </a>
+  </div>
+
+  {% include "_flashes.html.twig" %}
+
+  {{ form_start(form, { attr: { class: 'needs-validation' } }) }}
+
+  <div class="row g-3">
+    <div class="col-12 col-xl-6">
+      <div class="card shadow-sm h-100">
+        <div class="card-header bg-body">
+          <div class="fw-semibold">Informations</div>
+        </div>
+        <div class="card-body">
+          <div class="row g-3">
+            <div class="col-12">
+              {{ form_label(form.email, 'E-mail') }}
+              {{ form_widget(form.email, { attr: { class: 'form-control', autocomplete: 'email' } }) }}
+              {{ form_errors(form.email) }}
+            </div>
+            <div class="col-12 col-md-6">
+              {{ form_label(form.firstname, 'Prénom') }}
+              {{ form_widget(form.firstname, { attr: { class: 'form-control', autocomplete: 'given-name' } }) }}
+              {{ form_errors(form.firstname) }}
+            </div>
+            <div class="col-12 col-md-6">
+              {{ form_label(form.lastname, 'Nom') }}
+              {{ form_widget(form.lastname, { attr: { class: 'form-control', autocomplete: 'family-name' } }) }}
+              {{ form_errors(form.lastname) }}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12 col-xl-6">
+      <div class="card shadow-sm h-100">
+        <div class="card-header bg-body d-flex align-items-center justify-content-between">
+          <div class="fw-semibold">Mot de passe</div>
+          <span class="badge text-bg-light">Optionnel</span>
+        </div>
+        <div class="card-body">
+          <div class="row g-3">
+            <div class="col-12">
+              {{ form_label(form.old_password, 'Ancien mot de passe') }}
+              {{ form_widget(form.old_password, { attr: { class: 'form-control', autocomplete: 'current-password' } }) }}
+              {{ form_errors(form.old_password) }}
+            </div>
+            <div class="col-12 col-md-6">
+              {{ form_label(form.new_password, 'Nouveau mot de passe') }}
+              {{ form_widget(form.new_password, { attr: { class: 'form-control', autocomplete: 'new-password' } }) }}
+              {{ form_errors(form.new_password) }}
+            </div>
+            <div class="col-12 col-md-6">
+              {{ form_label(form.new_password_retry, 'Confirmer le mot de passe') }}
+              {{ form_widget(form.new_password_retry, { attr: { class: 'form-control', autocomplete: 'new-password' } }) }}
+              {{ form_errors(form.new_password_retry) }}
+            </div>
+            <div class="col-12">
+              <div class="form-text">
+                Laisse les champs mot de passe vides si tu ne veux pas le modifier.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-12">
+      <div class="d-flex flex-column flex-sm-row gap-2 justify-content-end mt-2">
+        <a href="{{ path('app_home') }}" class="btn btn-outline-secondary">
+          Annuler
+        </a>
+        <button class="btn btn-primary" type="submit">
+          Enregistrer
+        </button>
+      </div>
+    </div>
+  </div>
+
+  {{ form_end(form) }}
+
+  <div class="mt-4">
+    {{ document.list(
+      documents: user.documents,
+      newPath: path('app_profile_document_new'),
+      sourceRoute: path(app.request.attributes.get('_route')),
+      editRoute: 'app_profile_document_edit',
+      editParameters: {},
+      deleteRoute: 'app_profile_document_delete',
+      deleteParameters: {},
+      fallback: "Aucun document disponible pour cet utilisateur"
+    ) }}
   </div>
 </div>
 {% endblock %}

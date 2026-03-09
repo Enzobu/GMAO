@@ -8,7 +8,8 @@
     {% if 
       not (route == 'app_vehicle_document_edit' or
       route == 'app_vehicle_insurance_document_edit' or
-      route == 'app_vehicle_inspection_document_edit')
+      route == 'app_vehicle_inspection_document_edit' or
+      route == 'app_profile_document_edit')
     %}
       <div class="col-12">
         {{ form_row(form.file) }}
