@@ -58,6 +58,9 @@ class VehicleInspection
     #[ORM\OneToMany(mappedBy: 'vehicleInspection', targetEntity: Document::class, orphanRemoval: true)]
     private Collection $documents;
 
+    #[ORM\Column(options: ['default' => false])]
+    private bool $isDeleted = false;
+
     #[Assert\Callback]
     public function validate(ExecutionContextInterface $context): void
     {
@@ -257,6 +260,18 @@ class VehicleInspection
                 $document->setVehicleInspection(null);
             }
         }
+
+        return $this;
+    }
+
+    public function isDeleted(): bool
+    {
+        return $this->isDeleted;
+    }
+
+    public function setIsDeleted(bool $isDeleted): static
+    {
+        $this->isDeleted = $isDeleted;
 
         return $this;
     }

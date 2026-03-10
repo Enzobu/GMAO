@@ -22,7 +22,6 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\CurrentUser;
 use Symfony\Component\String\Slugger\SluggerInterface;
-use Symfony\Component\Validator\Constraints\All;
 
 #[Route('/vehicle')]
 final class VehicleController extends AbstractController
@@ -81,17 +80,8 @@ final class VehicleController extends AbstractController
         #[CurrentUser] User $currentUser,
     ): Response
     {
-        if (!$vehicleManager->isAuthorized($currentUser, $vehicle)) {
-            $this->addFlash('danger', 'Vous n\'avez pas accès à la ressource demandé.');
+        $this->checkAthorization($vehicleManager, $currentUser, $vehicle);
 
-            return $this->redirectToRoute('app_vehicle_index');
-        }
-
-        if ($vehicle->isDeleted()) {
-            $this->addFlash('warning', 'Ce véhicule a été supprimé.');
-
-            return $this->redirectToRoute('app_vehicle_index');
-        }
 
         $insurance = $vehicleInsuranceRepository->findBy([
             "vehicle" => $vehicle,
@@ -114,8 +104,15 @@ final class VehicleController extends AbstractController
     }
 
     #[Route('/{id}/edit', name: 'app_vehicle_edit', methods: ['GET', 'POST'])]
-    public function edit(Request $request, Vehicle $vehicle, EntityManagerInterface $entityManager): Response
-    {
+    public function edit(
+        Request $request,
+        Vehicle $vehicle, 
+        EntityManagerInterface $entityManager,
+        VehicleManager $vehicleManager,
+        #[CurrentUser] User $currentUser,
+    ): Response {
+        $this->checkAthorization($vehicleManager, $currentUser, $vehicle);
+
         $form = $this->createForm(VehicleType::class, $vehicle, ['edit' => true]);
         $form->handleRequest($request);
 
@@ -152,12 +149,10 @@ final class VehicleController extends AbstractController
         EntityManagerInterface $entityManager,
         Vehicle $vehicle,
         SluggerInterface $slugger,
+        VehicleManager $vehicleManager,
+        #[CurrentUser] User $currentUser,
     ): Response {
-        if ($vehicle->isDeleted()) {
-            $this->addFlash('warning', 'Ce véhicule a été supprimé.');
-
-            return $this->redirectToRoute('app_vehicle_index');
-        }
+        $this->checkAthorization($vehicleManager, $currentUser, $vehicle);
 
         $document = new Document();
         $form = $this->createForm(DocumentType::class, $document);
@@ -230,12 +225,10 @@ final class VehicleController extends AbstractController
         EntityManagerInterface $entityManager,
         Vehicle $vehicle,
         #[MapEntity(id: 'documentId')] Document $document,
+        VehicleManager $vehicleManager,
+        #[CurrentUser] User $currentUser,
     ): Response {
-        if ($vehicle->isDeleted()) {
-            $this->addFlash('warning', 'Ce véhicule a été supprimé.');
-
-            return $this->redirectToRoute('app_vehicle_index');
-        }
+        $this->checkAthorization($vehicleManager, $currentUser, $vehicle);
 
         $oldName = $document->getName();
         $oldDescription = $document->getDescription();
@@ -274,7 +267,11 @@ final class VehicleController extends AbstractController
         Vehicle $vehicle,
         #[MapEntity(id: 'documentId')] Document $document, 
         EntityManagerInterface $entityManager,
+        VehicleManager $vehicleManager,
+        #[CurrentUser] User $currentUser,
     ): Response {
+        $this->checkAthorization($vehicleManager, $currentUser, $vehicle);
+
         if ($this->isCsrfTokenValid('delete'.$document->getId(), $request->getPayload()->getString('_token'))) {
 
             if (!$this->isGranted('ROLE_ADMIN')) {
@@ -290,5 +287,23 @@ final class VehicleController extends AbstractController
         }
 
         return $this->redirectToRoute('app_vehicle_show', ["id" => $vehicle->getId()], Response::HTTP_SEE_OTHER);
+    }
+
+    private function checkAthorization(
+        VehicleManager $vehicleManager,
+        User $currentUser,
+        Vehicle $vehicle,
+    ): ?Response {
+        # -------------------- Authization --------------------
+        if (!$vehicleManager->isAuthorized($currentUser, $vehicle)) {
+            $this->addFlash('danger', 'Vous n\'avez pas accès à la ressource demandé. Pour plus d\'information, contactez un administrateur');
+            return $this->redirectToRoute('app_vehicle_index');
+        }
+        if ($vehicle->isDeleted()) {
+            $this->addFlash('danger', 'Le véhicule a été supprimé. Pour plus d\'information, contactez un administrateur');
+            return $this->redirectToRoute('app_vehicle_index');
+        }
+        # -----------------------------------------------------
+        return null;
     }
 }
