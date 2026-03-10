@@ -107,7 +107,7 @@
 
   {{ document.list
     (
-      documents: vehicle_insurance.documents, 
+      documents: vehicle_insurance_document, 
       newPath: path('app_vehicle_insurance_document_new', {vehicleId: vehicle.id, id: vehicle_insurance.id}),
       sourceRoute: path(app.request.attributes.get('_route'), {vehicleId: vehicle.id, id: vehicle_insurance.id}),
       editRoute: 'app_vehicle_insurance_document_edit',

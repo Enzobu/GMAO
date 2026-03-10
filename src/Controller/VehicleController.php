@@ -8,10 +8,12 @@ use App\Entity\Vehicle;
 use App\Enum\MaintenanceStatusEnum;
 use App\Form\DocumentType;
 use App\Form\VehicleType;
+use App\Repository\DocumentRepository;
 use App\Repository\VehicleInspectionRepository;
 use App\Repository\VehicleInsuranceRepository;
 use App\Repository\VehicleMaintenanceRepository;
 use App\Repository\VehicleRepository;
+use App\Service\DocumentManager;
 use App\Service\VehicleManager;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bridge\Doctrine\Attribute\MapEntity;
@@ -78,6 +80,7 @@ final class VehicleController extends AbstractController
         VehicleInspectionRepository $vehicleInspectionRepository,
         VehicleMaintenanceRepository $vehicleMaintenanceRepository,
         #[CurrentUser] User $currentUser,
+        DocumentRepository $documentRepository,
     ): Response
     {
         $this->checkAthorization($vehicleManager, $currentUser, $vehicle);
@@ -100,6 +103,7 @@ final class VehicleController extends AbstractController
             'insurance' => $insurance[0] ?? null,
             'inspection' => $inspection[0] ?? null,
             'maintenance' => $maintenance,
+            'vehicle_document' => $documentRepository->findByVehicle(vehicle: $vehicle, deleted: false),
         ]);
     }
 
@@ -266,22 +270,19 @@ final class VehicleController extends AbstractController
         Request $request,
         Vehicle $vehicle,
         #[MapEntity(id: 'documentId')] Document $document, 
-        EntityManagerInterface $entityManager,
+        DocumentManager $documentManager,
         VehicleManager $vehicleManager,
         #[CurrentUser] User $currentUser,
     ): Response {
         $this->checkAthorization($vehicleManager, $currentUser, $vehicle);
+        if (!$this->isGranted('ROLE_ADMIN')) {
+            $this->addFlash('danger', 'Vous n\'avez pas les autorisations nécessaire pour supprimer un document. Veuillez contacter un administrateur');
+
+            return $this->redirectToRoute('app_vehicle_show', ["id" => $vehicle->getId()], Response::HTTP_SEE_OTHER);
+        }
 
         if ($this->isCsrfTokenValid('delete'.$document->getId(), $request->getPayload()->getString('_token'))) {
-
-            if (!$this->isGranted('ROLE_ADMIN')) {
-                $this->addFlash('danger', 'Vous n\'avez pas les autorisations nécessaire pour supprimer un document. Veuillez contacter un administrateur');
-    
-                return $this->redirectToRoute('app_vehicle_show', ["id" => $vehicle->getId()], Response::HTTP_SEE_OTHER);
-            }
-
-            $entityManager->remove($document);
-            $entityManager->flush();
+            $documentManager->softDelete($document);
 
             $this->addFlash('success', 'Document supprimé avec succès.');
         }

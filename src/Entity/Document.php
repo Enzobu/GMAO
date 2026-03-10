@@ -24,6 +24,9 @@ class Document
     #[ORM\Column(length: 255, nullable: true)]
     private string $storedFilename;
 
+    #[ORM\Column(length: 255, nullable: true)]
+    private string $deletedStoredFilename;
+
     #[ORM\Column(length: 100, nullable: true)]
     private string $mimeType;
 
@@ -35,6 +38,9 @@ class Document
 
     #[ORM\Column(type: Types::TEXT, nullable: true)]
     private ?string $description = null;
+
+    #[ORM\Column(options: ['default' => false])]
+    private bool $isDeleted = false;
 
     /*
     |----------------------------------------
@@ -122,6 +128,17 @@ class Document
     public function setStoredFilename(?string $storedFilename): static
     {
         $this->storedFilename = $storedFilename;
+        return $this;
+    }
+
+    public function getDeletedStoredFilename(): ?string
+    {
+        return $this->deletedStoredFilename;
+    }
+
+    public function setDeletedStoredFilename(?string $deletedStoredFilename): static
+    {
+        $this->deletedStoredFilename = $deletedStoredFilename;
         return $this;
     }
 
@@ -252,6 +269,18 @@ class Document
     public function setUpdatedAt(\DateTimeImmutable $updatedAt): static
     {
         $this->updatedAt = $updatedAt;
+        return $this;
+    }
+
+    public function isDeleted(): bool
+    {
+        return $this->isDeleted;
+    }
+
+    public function setIsDeleted(bool $isDeleted): static
+    {
+        $this->isDeleted = $isDeleted;
+
         return $this;
     }
 }

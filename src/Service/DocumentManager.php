@@ -9,13 +9,17 @@ use App\Entity\VehicleInspection;
 use App\Entity\VehicleMaintenance;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
+use Symfony\Component\DependencyInjection\ParameterBag\ContainerBagInterface;
 
 class DocumentManager
 {
+    private string $uploadDirectory;
+
     public function __construct(
         private readonly EntityManagerInterface $entityManager,
-        private readonly string $uploadDirectory,
+        private readonly ContainerBagInterface $params,
     ) {
+        $this->uploadDirectory = $this->params->get('documents_directory');
     }
 
     public function createDocument(
@@ -50,6 +54,39 @@ class DocumentManager
         $this->entityManager->flush();
 
         return $document;
+    }
+
+    public function softDelete(Document $document): void
+    {
+        if ($document->isDeleted()) {
+            return;
+        }
+
+        $filename = $document->getStoredFilename();
+
+        if (!$filename) {
+            return;
+        }
+
+        $sourcePath = $this->uploadDirectory . '/' . $filename;
+
+        $deletedDirectory = $this->uploadDirectory . '/deleted';
+        $deletedRelativePath = 'deleted/' . $filename;
+        $destinationPath = $this->uploadDirectory . '/' . $deletedRelativePath;
+
+        if (!is_dir($deletedDirectory)) {
+            mkdir($deletedDirectory, 0775, true);
+        }
+
+        if (file_exists($sourcePath)) {
+            rename($sourcePath, $destinationPath);
+        }
+
+        $document
+            ->setDeletedStoredFilename($deletedRelativePath)
+            ->setIsDeleted(true);
+
+        $this->entityManager->flush();
     }
 }
 

@@ -97,7 +97,7 @@
 
   <div class="mt-4">
     {{ document.list(
-      documents: user.documents,
+      documents: user_document,
       newPath: path('app_profile_document_new'),
       sourceRoute: path(app.request.attributes.get('_route')),
       editRoute: 'app_profile_document_edit',

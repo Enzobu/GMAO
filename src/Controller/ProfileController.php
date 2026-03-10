@@ -6,6 +6,8 @@ use App\Entity\Document;
 use App\Entity\User;
 use App\Form\DocumentType;
 use App\Form\UpdateProfileType;
+use App\Repository\DocumentRepository;
+use App\Service\DocumentManager;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bridge\Doctrine\Attribute\MapEntity;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -26,6 +28,7 @@ final class ProfileController extends AbstractController
         Request $request,
         UserPasswordHasherInterface $passwordHasher,
         EntityManagerInterface $entityManager,
+        DocumentRepository $documentRepository,
     ): Response
     {
         $form = $this->createForm(UpdateProfileType::class, $currentUser);
@@ -93,6 +96,7 @@ final class ProfileController extends AbstractController
         return $this->render('profile/index.html.twig', [
             'form' => $form,
             'user' => $currentUser,
+            'user_document' => $documentRepository->findByUser(user: $currentUser, deleted: false),
         ]);
     }
 
@@ -205,20 +209,17 @@ final class ProfileController extends AbstractController
     #[Route('/document/{documentId}', name: 'app_profile_document_delete', methods: ['POST'])]
     public function deleteDocument(
         Request $request, 
-        EntityManagerInterface $entityManager,
-        #[CurrentUser] User $user,
+        DocumentManager $documentManager,
         #[MapEntity(id: 'documentId')] Document $document,
     ): Response {
+        if (!$this->isGranted('ROLE_ADMIN')) {
+            $this->addFlash('danger', 'Vous n\'avez pas les autorisations nécessaire pour supprimer un document. Veuillez contacter un administrateur');
+
+            return $this->redirectToRoute('app_profile', [], Response::HTTP_SEE_OTHER);
+        }
+
         if ($this->isCsrfTokenValid('delete'.$document->getId(), $request->getPayload()->getString('_token'))) {
-
-            if (!$this->isGranted('ROLE_ADMIN')) {
-                $this->addFlash('danger', 'Vous n\'avez pas les autorisations nécessaire pour supprimer un document. Veuillez contacter un administrateur');
-    
-                return $this->redirectToRoute('app_profile', [], Response::HTTP_SEE_OTHER);
-            }
-
-            $entityManager->remove($document);
-            $entityManager->flush();
+            $documentManager->softDelete($document);
 
             $this->addFlash('success', 'Document supprimé avec succès.');
         }

@@ -450,7 +450,7 @@
 
     {{ document.list
       (
-        documents: vehicle.documents, 
+        documents: vehicle_document, 
         newPath: path('app_vehicle_document_new', {id: vehicle.id}),
         sourceRoute: path(app.request.attributes.get('_route'), {id: vehicle.id}),
         editRoute: 'app_vehicle_document_edit',

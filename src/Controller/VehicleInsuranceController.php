@@ -8,7 +8,9 @@ use App\Entity\Vehicle;
 use App\Entity\VehicleInsurance;
 use App\Form\DocumentType;
 use App\Form\VehicleInsuranceType;
+use App\Repository\DocumentRepository;
 use App\Repository\VehicleInsuranceRepository;
+use App\Service\DocumentManager;
 use App\Service\VehicleManager;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bridge\Doctrine\Attribute\MapEntity;
@@ -70,12 +72,14 @@ final class VehicleInsuranceController extends AbstractController
         VehicleManager $vehicleManager,
         #[CurrentUser] User $currentUser,
         #[MapEntity(id: 'vehicleId')] Vehicle $vehicle,
+        DocumentRepository $documentRepository,
     ): Response {
         $this->checkAthorization($vehicleManager, $currentUser, $vehicle, $vehicleInsurance);
 
         return $this->render('vehicle_insurance/show.html.twig', [
             'vehicle_insurance' => $vehicleInsurance,
             'vehicle' => $vehicle,
+            'vehicle_insurance_document' => $documentRepository->findByVehicleInsurance(vehicleInsurance: $vehicleInsurance, deleted: false),
         ]);
     }
 
@@ -259,28 +263,25 @@ final class VehicleInsuranceController extends AbstractController
     #[Route('/{vehicleId}/insurance/{id}/document/{documentId}', name: 'app_vehicle_insurance_document_delete', methods: ['POST'])]
     public function deleteDocument(
         Request $request, 
-        EntityManagerInterface $entityManager,
         #[MapEntity(id: 'vehicleId')] Vehicle $vehicle,
         VehicleInsurance $vehicleInsurance,
         #[MapEntity(id: 'documentId')] Document $document,
         VehicleManager $vehicleManager,
         #[CurrentUser] User $currentUser,
+        DocumentManager $documentManager,
     ): Response {
         $this->checkAthorization($vehicleManager, $currentUser, $vehicle, $vehicleInsurance);
+        if (!$this->isGranted('ROLE_ADMIN')) {
+            $this->addFlash('danger', 'Vous n\'avez pas les autorisations nécessaire pour supprimer un document. Veuillez contacter un administrateur');
+
+            return $this->redirectToRoute('app_vehicle_insurance_show', [
+                'vehicleId' => $vehicle->getId(),
+                'id' => $vehicleInsurance->getId(),
+            ], Response::HTTP_SEE_OTHER);
+        }
 
         if ($this->isCsrfTokenValid('delete'.$document->getId(), $request->getPayload()->getString('_token'))) {
-
-            if (!$this->isGranted('ROLE_ADMIN')) {
-                $this->addFlash('danger', 'Vous n\'avez pas les autorisations nécessaire pour supprimer un document. Veuillez contacter un administrateur');
-    
-                return $this->redirectToRoute('app_vehicle_insurance_show', [
-                    'vehicleId' => $vehicle->getId(),
-                    'id' => $vehicleInsurance->getId(),
-                ], Response::HTTP_SEE_OTHER);
-            }
-
-            $entityManager->remove($document);
-            $entityManager->flush();
+            $documentManager->softDelete($document);
 
             $this->addFlash('success', 'Document supprimé avec succès.');
         }

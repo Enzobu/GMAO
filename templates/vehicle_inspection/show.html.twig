@@ -148,7 +148,7 @@
 
   {{ document.list
     (
-      documents: vehicle_inspection.documents, 
+      documents: vehicle_inspection_document, 
       newPath: path('app_vehicle_inspection_document_new', {vehicleId: vehicle.id, id: vehicle_inspection.id}),
       sourceRoute: path(app.request.attributes.get('_route'), {vehicleId: vehicle.id, id: vehicle_inspection.id}),
       editRoute: 'app_vehicle_inspection_document_edit',
