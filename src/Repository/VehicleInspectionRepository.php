@@ -42,6 +42,10 @@ class VehicleInspectionRepository extends ServiceEntityRepository
                 ->andWhere('v.isDeleted = :deleted')
                 ->setParameter('deleted', false)
             ;
+            $qb
+                ->andWhere('vi.isDeleted = :deleted')
+                ->setParameter('deleted', false)
+            ;
         }
 
         foreach ($orderBy as $field => $direction) {

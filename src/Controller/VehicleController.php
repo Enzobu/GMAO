@@ -92,10 +92,12 @@ final class VehicleController extends AbstractController
 
         $insurance = $vehicleInsuranceRepository->findBy([
             "vehicle" => $vehicle,
+            "isDeleted" => false,
         ], ['startDate' => 'DESC']);
 
         $inspection = $vehicleInspectionRepository->findBy([        
             "vehicle" => $vehicle,
+            "isDeleted" => false,
         ], ['inspectionDate' => 'DESC']);
         $maintenance = $vehicleMaintenanceRepository->findBy([
             "vehicle" => $vehicle,

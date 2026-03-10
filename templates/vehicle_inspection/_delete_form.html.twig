@@ -1,7 +1,7 @@
 {% import 'macros/modal.html.twig' as modal %}
 
 <button type="button"
-  class="btn btn-outline-danger"
+  class="btn {{ witdh_sm ? "btn-sm" }} btn-outline-danger"
   data-bs-toggle="modal"
   data-bs-target="#deleteVehicleInspectionModal{{ vehicle_inspection.id }}"
 >

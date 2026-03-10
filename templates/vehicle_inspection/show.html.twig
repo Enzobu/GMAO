@@ -33,7 +33,7 @@
     Modifier
   </a>
   {% if is_granted('ROLE_ADMIN') %}
-    {% include 'vehicle_inspection/_delete_form.html.twig' %}
+    {% include 'vehicle_inspection/_delete_form.html.twig' with { witdh_sm: false } %}
   {% endif %}
   </div>
 </div>
