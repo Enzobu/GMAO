@@ -83,8 +83,11 @@ final class VehicleController extends AbstractController
         DocumentRepository $documentRepository,
     ): Response
     {
-        $this->checkAthorization($vehicleManager, $currentUser, $vehicle);
-
+        $this->checkAthorization(
+            vehicleManager: $vehicleManager,
+            currentUser: $currentUser,
+            vehicle: $vehicle,
+        );
 
         $insurance = $vehicleInsuranceRepository->findBy([
             "vehicle" => $vehicle,
@@ -115,7 +118,11 @@ final class VehicleController extends AbstractController
         VehicleManager $vehicleManager,
         #[CurrentUser] User $currentUser,
     ): Response {
-        $this->checkAthorization($vehicleManager, $currentUser, $vehicle);
+        $this->checkAthorization(
+            vehicleManager: $vehicleManager,
+            currentUser: $currentUser,
+            vehicle: $vehicle,
+        );
 
         $form = $this->createForm(VehicleType::class, $vehicle, ['edit' => true]);
         $form->handleRequest($request);
@@ -135,8 +142,20 @@ final class VehicleController extends AbstractController
     }
 
     #[Route('/{id}', name: 'app_vehicle_delete', methods: ['POST'])]
-    public function delete(Request $request, Vehicle $vehicle, EntityManagerInterface $entityManager): Response
-    {
+    public function delete(
+        Request $request, 
+        Vehicle $vehicle, 
+        EntityManagerInterface $entityManager,
+        VehicleManager $vehicleManager,
+        #[CurrentUser] User $currentUser,
+    ): Response {
+        $this->checkAthorization(
+            vehicleManager: $vehicleManager,
+            currentUser: $currentUser,
+            vehicle: $vehicle,
+            delete: true,
+        );
+
         if ($this->isCsrfTokenValid('delete'.$vehicle->getId(), $request->getPayload()->getString('_token'))) {
             $vehicle->setIsDeleted(true);
             $entityManager->flush();
@@ -156,7 +175,11 @@ final class VehicleController extends AbstractController
         VehicleManager $vehicleManager,
         #[CurrentUser] User $currentUser,
     ): Response {
-        $this->checkAthorization($vehicleManager, $currentUser, $vehicle);
+        $this->checkAthorization(
+            vehicleManager: $vehicleManager,
+            currentUser: $currentUser,
+            vehicle: $vehicle,
+        );
 
         $document = new Document();
         $form = $this->createForm(DocumentType::class, $document);
@@ -232,7 +255,11 @@ final class VehicleController extends AbstractController
         VehicleManager $vehicleManager,
         #[CurrentUser] User $currentUser,
     ): Response {
-        $this->checkAthorization($vehicleManager, $currentUser, $vehicle);
+        $this->checkAthorization(
+            vehicleManager: $vehicleManager,
+            currentUser: $currentUser,
+            vehicle: $vehicle,
+        );
 
         $oldName = $document->getName();
         $oldDescription = $document->getDescription();
@@ -274,12 +301,12 @@ final class VehicleController extends AbstractController
         VehicleManager $vehicleManager,
         #[CurrentUser] User $currentUser,
     ): Response {
-        $this->checkAthorization($vehicleManager, $currentUser, $vehicle);
-        if (!$this->isGranted('ROLE_ADMIN')) {
-            $this->addFlash('danger', 'Vous n\'avez pas les autorisations nécessaire pour supprimer un document. Veuillez contacter un administrateur');
-
-            return $this->redirectToRoute('app_vehicle_show', ["id" => $vehicle->getId()], Response::HTTP_SEE_OTHER);
-        }
+        $this->checkAthorization(
+            vehicleManager: $vehicleManager,
+            currentUser: $currentUser,
+            vehicle: $vehicle,
+            delete: true,
+        );
 
         if ($this->isCsrfTokenValid('delete'.$document->getId(), $request->getPayload()->getString('_token'))) {
             $documentManager->softDelete($document);
@@ -294,15 +321,30 @@ final class VehicleController extends AbstractController
         VehicleManager $vehicleManager,
         User $currentUser,
         Vehicle $vehicle,
+        ?Document $document = null,
+        ?Array $params = [],
+        bool $delete = false,
     ): ?Response {
         # -------------------- Authization --------------------
         if (!$vehicleManager->isAuthorized($currentUser, $vehicle)) {
             $this->addFlash('danger', 'Vous n\'avez pas accès à la ressource demandé. Pour plus d\'information, contactez un administrateur');
-            return $this->redirectToRoute('app_vehicle_index');
+            return $this->redirectToRoute('app_vehicle_index', $params, Response::HTTP_SEE_OTHER);
         }
         if ($vehicle->isDeleted()) {
             $this->addFlash('danger', 'Le véhicule a été supprimé. Pour plus d\'information, contactez un administrateur');
-            return $this->redirectToRoute('app_vehicle_index');
+            return $this->redirectToRoute('app_vehicle_index', $params, Response::HTTP_SEE_OTHER);
+        }
+        if ($document) {
+            if ($document->isDeleted()) {
+                $this->addFlash('danger', 'Le document a été supprimé. Pour plus d\'information, contactez un administrateur');
+                return $this->redirectToRoute('app_vehicle_index', $params, Response::HTTP_SEE_OTHER);
+            }
+        }
+        if ($delete) {
+            if (!$this->isGranted('ROLE_ADMIN')) {
+                $this->addFlash('danger', 'Vous n\'avez pas les autorisations nécessaire pour supprimer un document. Veuillez contacter un administrateur');
+                return $this->redirectToRoute('app_vehicle_show', $params, Response::HTTP_SEE_OTHER);
+            }
         }
         # -----------------------------------------------------
         return null;

@@ -74,7 +74,12 @@ final class VehicleInsuranceController extends AbstractController
         #[MapEntity(id: 'vehicleId')] Vehicle $vehicle,
         DocumentRepository $documentRepository,
     ): Response {
-        $this->checkAthorization($vehicleManager, $currentUser, $vehicle, $vehicleInsurance);
+        $this->checkAthorization(
+            vehicleManager: $vehicleManager,
+            currentUser: $currentUser,
+            vehicle: $vehicle,
+            vehicleInsurance: $vehicleInsurance,
+        );
 
         return $this->render('vehicle_insurance/show.html.twig', [
             'vehicle_insurance' => $vehicleInsurance,
@@ -92,7 +97,12 @@ final class VehicleInsuranceController extends AbstractController
         #[CurrentUser] User $currentUser,
         #[MapEntity(id: 'vehicleId')] Vehicle $vehicle,
     ): Response {
-        $this->checkAthorization($vehicleManager, $currentUser, $vehicle, $vehicleInsurance);
+        $this->checkAthorization(
+            vehicleManager: $vehicleManager,
+            currentUser: $currentUser,
+            vehicle: $vehicle,
+            vehicleInsurance: $vehicleInsurance,
+        );
 
         $form = $this->createForm(VehicleInsuranceType::class, $vehicleInsurance);
         $form->handleRequest($request);
@@ -126,14 +136,21 @@ final class VehicleInsuranceController extends AbstractController
         VehicleManager $vehicleManager,
         #[CurrentUser] User $currentUser,
     ): Response {
-        $this->checkAthorization($vehicleManager, $currentUser, $vehicle, $vehicleInsurance);
+        $this->checkAthorization(
+            vehicleManager: $vehicleManager,
+            currentUser: $currentUser,
+            vehicle: $vehicle,
+            vehicleInsurance: $vehicleInsurance,
+            delete: true,
+        );
 
         if ($this->isCsrfTokenValid('delete'.$vehicleInsurance->getId(), $request->getPayload()->getString('_token'))) {
             $vehicleInsurance->setIsDeleted(true);
             $entityManager->flush();
+            
+            $this->addFlash('success', 'Assurance supprimée avec succès.');
         }
 
-        $this->addFlash('success', 'Assurance supprimée avec succès.');
 
         return $this->redirectToRoute('app_vehicle_insurance_index', ['vehicleId' => $vehicle->getId()], Response::HTTP_SEE_OTHER);
     }
@@ -148,7 +165,12 @@ final class VehicleInsuranceController extends AbstractController
         #[CurrentUser] User $currentUser,
         VehicleManager $vehicleManager,
     ): Response {
-        $this->checkAthorization($vehicleManager, $currentUser, $vehicle, $vehicleInsurance);
+        $this->checkAthorization(
+            vehicleManager: $vehicleManager,
+            currentUser: $currentUser,
+            vehicle: $vehicle,
+            vehicleInsurance: $vehicleInsurance,
+        );
 
         $document = new Document();
         $form = $this->createForm(DocumentType::class, $document);
@@ -226,7 +248,14 @@ final class VehicleInsuranceController extends AbstractController
         VehicleManager $vehicleManager,
         #[CurrentUser] User $currentUser,
     ): Response {
-        $this->checkAthorization($vehicleManager, $currentUser, $vehicle, $vehicleInsurance);
+        $this->checkAthorization(
+            vehicleManager: $vehicleManager, 
+            currentUser: $currentUser, 
+            vehicle: $vehicle, 
+            vehicleInsurance: $vehicleInsurance,
+            document: $document,
+            params: ["vehicleId" => $vehicle->getId()],
+        );
 
         $oldName = $document->getName();
         $oldDescription = $document->getDescription();
@@ -270,15 +299,15 @@ final class VehicleInsuranceController extends AbstractController
         #[CurrentUser] User $currentUser,
         DocumentManager $documentManager,
     ): Response {
-        $this->checkAthorization($vehicleManager, $currentUser, $vehicle, $vehicleInsurance);
-        if (!$this->isGranted('ROLE_ADMIN')) {
-            $this->addFlash('danger', 'Vous n\'avez pas les autorisations nécessaire pour supprimer un document. Veuillez contacter un administrateur');
-
-            return $this->redirectToRoute('app_vehicle_insurance_show', [
-                'vehicleId' => $vehicle->getId(),
-                'id' => $vehicleInsurance->getId(),
-            ], Response::HTTP_SEE_OTHER);
-        }
+        $this->checkAthorization(
+            vehicleManager: $vehicleManager, 
+            currentUser: $currentUser, 
+            vehicle: $vehicle, 
+            vehicleInsurance: $vehicleInsurance,
+            document: $document,
+            params: ["vehicleId" => $vehicle->getId()],
+            delete: true,
+        );
 
         if ($this->isCsrfTokenValid('delete'.$document->getId(), $request->getPayload()->getString('_token'))) {
             $documentManager->softDelete($document);
@@ -297,21 +326,34 @@ final class VehicleInsuranceController extends AbstractController
         User $currentUser,
         Vehicle $vehicle,
         VehicleInsurance $vehicleInsurance,
+        ?Document $document = null,
+        ?Array $params = [],
+        bool $delete = false,
     ): ?Response {
         # -------------------- Authization --------------------
         if (!$vehicleManager->isAuthorized($currentUser, $vehicle)) {
             $this->addFlash('danger', 'Vous n\'avez pas accès à la ressource demandé. Pour plus d\'information, contactez un administrateur');
-            return $this->redirectToRoute('app_vehicle_index');
+            return $this->redirectToRoute('app_vehicle_index', $params, Response::HTTP_SEE_OTHER);
         }
         if ($vehicle->isDeleted()) {
             $this->addFlash('danger', 'Le véhicule a été supprimé. Pour plus d\'information, contactez un administrateur');
-            return $this->redirectToRoute('app_vehicle_index');
+            return $this->redirectToRoute('app_vehicle_index', $params, Response::HTTP_SEE_OTHER);
         }
         if ($vehicleInsurance->isDeleted()) {
             $this->addFlash('warning', 'L\'assurance demandée a été supprimée. Pour plus d\'information, contactez un administrateur');
-            return $this->redirectToRoute('app_vehicle_insurance_index', [
-                "vehicleId" => $vehicle->getId(),
-            ], Response::HTTP_SEE_OTHER);
+            return $this->redirectToRoute('app_vehicle_insurance_index', $params, Response::HTTP_SEE_OTHER);
+        }
+        if ($document) {
+            if ($document->isDeleted()) {
+                $this->addFlash('danger', 'Le document a été supprimé. Pour plus d\'information, contactez un administrateur');
+                return $this->redirectToRoute('app_vehicle_insurance_index', $params, Response::HTTP_SEE_OTHER);
+            }
+        }
+        if ($delete) {
+            if (!$this->isGranted('ROLE_ADMIN')) {
+                $this->addFlash('danger', 'Vous n\'avez pas les autorisations nécessaire pour supprimer un document. Veuillez contacter un administrateur');
+                return $this->redirectToRoute('app_vehicle_show', $params, Response::HTTP_SEE_OTHER);
+            }
         }
         # -----------------------------------------------------
         return null;

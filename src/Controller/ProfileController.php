@@ -177,6 +177,10 @@ final class ProfileController extends AbstractController
         #[CurrentUser] User $user,
         #[MapEntity(id: 'documentId')] Document $document,
     ): Response {
+        $this->checkAthorization(
+            document: $document,
+        );
+
         $oldName = $document->getName();
         $oldDescription = $document->getDescription();
 
@@ -212,11 +216,10 @@ final class ProfileController extends AbstractController
         DocumentManager $documentManager,
         #[MapEntity(id: 'documentId')] Document $document,
     ): Response {
-        if (!$this->isGranted('ROLE_ADMIN')) {
-            $this->addFlash('danger', 'Vous n\'avez pas les autorisations nécessaire pour supprimer un document. Veuillez contacter un administrateur');
-
-            return $this->redirectToRoute('app_profile', [], Response::HTTP_SEE_OTHER);
-        }
+        $this->checkAthorization(
+            document: $document,
+            delete: true,
+        );
 
         if ($this->isCsrfTokenValid('delete'.$document->getId(), $request->getPayload()->getString('_token'))) {
             $documentManager->softDelete($document);
@@ -225,5 +228,27 @@ final class ProfileController extends AbstractController
         }
 
         return $this->redirectToRoute('app_profile', [], Response::HTTP_SEE_OTHER);
+    }
+
+    private function checkAthorization(
+        ?Document $document = null,
+        ?Array $params = [],
+        bool $delete = false,
+    ): ?Response {
+        # -------------------- Authization --------------------
+        if ($document) {
+            if ($document->isDeleted()) {
+                $this->addFlash('danger', 'Le document a été supprimé. Pour plus d\'information, contactez un administrateur');
+                return $this->redirectToRoute('app_vehicle_index', $params, Response::HTTP_SEE_OTHER);
+            }
+        }
+        if ($delete) {
+            if (!$this->isGranted('ROLE_ADMIN')) {
+                $this->addFlash('danger', 'Vous n\'avez pas les autorisations nécessaire pour supprimer un document. Veuillez contacter un administrateur');
+                return $this->redirectToRoute('app_vehicle_show', $params, Response::HTTP_SEE_OTHER);
+            }
+        }
+        # -----------------------------------------------------
+        return null;
     }
 }
