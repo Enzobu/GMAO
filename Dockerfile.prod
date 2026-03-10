@@ -1,0 +1,116 @@
+# syntax=docker/dockerfile:1
+
+FROM php:8.4-cli AS vendor
+
+WORKDIR /app
+
+RUN apt-get update -y && apt-get install -y --no-install-recommends \
+    git \
+    unzip \
+    libzip-dev \
+    && docker-php-ext-install zip \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+
+COPY composer.json composer.lock symfony.lock ./
+
+RUN composer install \
+    --no-dev \
+    --no-interaction \
+    --no-progress \
+    --prefer-dist \
+    --optimize-autoloader \
+    --classmap-authoritative \
+    --no-scripts
+
+COPY . .
+
+RUN composer dump-autoload \
+    --no-dev \
+    --optimize \
+    --classmap-authoritative
+
+# ==========================
+# 2) Runtime (Apache + PHP)
+# ==========================
+FROM php:8.4-apache
+
+WORKDIR /var/www
+ENV DEBIAN_FRONTEND=noninteractive
+
+# ---- system deps + PHP extensions
+RUN apt-get update -y && apt-get install -y --no-install-recommends \
+    ca-certificates \
+    curl \
+    git \
+    libfreetype6-dev \
+    libicu-dev \
+    libjpeg62-turbo-dev \
+    libpng-dev \
+    libzip-dev \
+    libonig-dev \
+    unzip \
+    zip \
+ && docker-php-ext-configure gd --with-freetype --with-jpeg \
+ && docker-php-ext-install -j$(nproc) \
+    gd intl mbstring opcache pdo_mysql zip \
+ && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# ---- Install Dart Sass (no node)
+# Choose the right arch:
+# - linux-x64 for standard amd64 servers
+# - linux-arm64 for ARM64 servers
+ARG SASS_VERSION=1.77.8
+ARG SASS_ARCH=linux-x64
+RUN curl -fsSL -o /tmp/sass.tar.gz \
+    "https://github.com/sass/dart-sass/releases/download/${SASS_VERSION}/dart-sass-${SASS_VERSION}-${SASS_ARCH}.tar.gz" \
+ && tar -xzf /tmp/sass.tar.gz -C /opt \
+ && ln -s /opt/dart-sass/sass /usr/local/bin/sass \
+ && rm -f /tmp/sass.tar.gz \
+ && sass --version
+
+# ---- Apache modules
+RUN a2enmod rewrite remoteip ssl headers
+
+# ---- Apache/PHP config
+COPY ./docker/apache/apache.conf /etc/apache2/sites-enabled/000-default.conf
+COPY ./docker/apache/php.ini /usr/local/etc/php/conf.d/php.custom.ini
+
+# ---- App sources
+COPY . /var/www/
+
+COPY ./docker/apache/.htaccess /var/www/public/.htaccess
+
+# ---- Vendors from composer stage
+COPY --from=vendor /app/vendor /var/www/vendor
+COPY --from=vendor /app/composer.* /var/www/
+COPY --from=vendor /app/symfony.lock /var/www/
+
+# ---- Permissions (adjust if needed)
+RUN mkdir -p var \
+ && chown -R www-data:www-data /var/www/var /var/www/public
+
+# ---- Build assets + warm cache (prod)
+RUN php bin/console importmap:install --env=prod \
+ && php bin/console sass:build --env=prod --no-debug \
+ && php bin/console asset-map:compile --env=prod --no-debug \
+ && php bin/console cache:clear --env=prod --no-debug \
+ && php bin/console cache:warmup --env=prod --no-debug
+
+# ---- Entrypoint
+ADD docker/apache/entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
+RUN mkdir -p /var/www/var/cache /var/www/var/log \
+    && chown -R www-data:www-data /var/www \
+    && chmod -R 775 /var/www/var
+
+ENV WWW_ROOT=/var/www
+
+EXPOSE 80
+CMD ["/entrypoint.sh"]
+
+# php bin/console doctrine:database:drop --force
+# php bin/console doctrine:database:create
+# php bin/console d:s:u --force -n

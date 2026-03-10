@@ -1,0 +1,38 @@
+{% extends 'base.html.twig' %}
+
+{% import 'macros/fontawesome.html.twig' as fa %}
+
+{% block title %}Modifier assurance{% endblock %}
+
+{% block body %}
+  <div class="d-flex align-items-start justify-content-between gap-3 mb-3">
+    <div>
+      <h1 class="h3 mb-1">Modifier l’assurance</h1>
+      <div class="text-body-secondary">
+        {{ vehicle_insurance.providerName }}
+        {% if vehicle_insurance.policyNumber %}
+          · {{ vehicle_insurance.policyNumber }}
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="d-flex gap-2">
+      <a
+        class="btn btn-outline-secondary"
+        href="{{ 
+          app.request.query.get('show') == 'true' ? 
+          path('app_vehicle_insurance_show', {vehicleId: vehicle.id, id: vehicle_insurance.id}) : 
+          path('app_vehicle_insurance_index', {vehicleId: vehicle.id}) 
+        }}"
+      >
+        {{ fa.icon(name: 'arrow-left', family: 'solid', size: 'sm', fixed_width: true, additional_classes: ['me-1']) }}
+        Retour à la liste
+      </a>
+    </div>
+  </div>
+
+  {% include 'vehicle_insurance/_form.html.twig' with {
+    form: form,
+    button_label: 'Mettre à jour'
+  } %}
+{% endblock %}

@@ -1,0 +1,101 @@
+{% extends 'base.html.twig' %}
+
+{% import 'macros/modal.html.twig' as modal %}
+{% import "macros/badge.html.twig" as badge %}
+{% import 'macros/fontawesome.html.twig' as fa %}
+
+{% block title %}Véhicules{% endblock %}
+
+{% block body %}
+
+  <div class="d-flex align-items-center justify-content-between mb-3">
+    <div>
+      <h1 class="h3 mb-1">Véhicules</h1>
+      <div class="text-body-secondary small">{{ vehicles|length }} véhicule(s)</div>
+    </div>
+
+    <a class="btn btn-primary" href="{{ path('app_vehicle_new') }}">
+      {{ fa.icon('plus', family: 'solid', fixed_width: true, additional_classes: ['me-1']) }}
+      Ajouter un véhicule
+    </a>
+  </div>
+
+  {% if vehicles is empty %}
+    <div class="alert alert-info">
+      Aucun véhicule pour le moment.
+    </div>
+  {% else %}
+    <div class="row g-3">
+      {% for vehicle in vehicles %}
+        <div class="col-12 col-xl-6">
+          <div class="card shadow-sm">
+            <div class="card-body">
+              <div class="d-flex align-items-start justify-content-between gap-3">
+                <div class="w-100">
+                  <div class="d-flex align-items-center gap-2 flex-wrap">
+                    <h2 class="h5 mb-0">
+                      {{ vehicle.name|capitalize ?: (vehicle.brand|capitalize ~ ' ' ~ vehicle.model|capitalize)|trim }}
+                    </h2>
+
+                    {% if vehicle.type %}
+                      {{ badge.default(label: vehicle.type.label, variant: vehicle.type.variant) }}
+                    {% endif %}
+
+                    {{ badge.default(label: vehicle.status.label, variant: vehicle.status.variant) }}
+                  </div>
+
+                  <div class="text-body-secondary small mt-1">
+                    <span class="me-3">
+                      <strong>Immat.</strong> {{ vehicle.registration|upper }}
+                    </span>
+
+                    {% if vehicle.year %}
+                      <span class="me-3"><strong>Année</strong> {{ vehicle.year }}</span>
+                    {% endif %}
+
+                    {% if vehicle.lastMileage is not null %}
+                      <span><strong>Km</strong> {{ vehicle.lastMileage }}</span>
+                    {% endif %}
+                  </div>
+
+                  <div class="mt-2 d-flex flex-wrap gap-2">
+                    {% if vehicle.fuelType %}
+                      {{ badge.emphasis(label: vehicle.fuelType.label, variant: vehicle.fuelType.variant) }}
+                    {% endif %}
+
+                    {% if vehicle.transmission %}
+                      {{ badge.emphasis(label: vehicle.transmission.label, variant: vehicle.transmission.variant) }}
+                    {% endif %}
+
+                    {% if vehicle.color %}
+                      {{ badge.emphasis(label: vehicle.color.label, variant: vehicle.color.variant) }}
+                    {% endif %}
+                  </div>
+                </div>
+
+                <div class="d-flex gap-2 flex-shrink-0">
+                  <a class="btn btn-sm btn-outline-secondary"
+                     href="{{ path('app_vehicle_show', {id: vehicle.id}) }}">
+                    {{ fa.icon('eye', family: 'solid', fixed_width: true, additional_classes: ['me-1']) }}
+                    Voir
+                  </a>
+                </div>
+              </div>
+            </div>
+
+            <div class="card-footer bg-body d-flex justify-content-end">
+              <a class="btn btn-sm btn-outline-primary d-flex align-items-center me-2"
+                  href="{{ path('app_vehicle_edit', {id: vehicle.id}) }}">
+                {{ fa.icon('pen', family: 'solid', fixed_width: true, additional_classes: ['me-1']) }}
+                Modifier
+              </a>
+              {% if is_granted('ROLE_ADMIN') %}
+                {% include "vehicle/_delete_form.html.twig" %}
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+{% endblock %}

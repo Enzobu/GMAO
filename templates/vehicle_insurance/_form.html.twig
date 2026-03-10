@@ -1,0 +1,86 @@
+{% import 'macros/fontawesome.html.twig' as fa %}
+{% import 'macros/fontawesome.html.twig' as fa %}
+
+{{ form_start(form, {
+    attr: {
+      'data-turbo': 'false'
+    }
+}) }}
+
+<div class="card shadow-sm">
+  <div class="card-header bg-body d-flex align-items-center justify-content-between">
+    <div class="fw-semibold">Informations de l’assurance</div>
+    <div class="text-body-secondary small">Renseigne le contrat du véhicule</div>
+  </div>
+
+  <div class="card-body">
+    <div class="row g-4">
+      <div class="col-12 col-xl-7">
+        <div class="border rounded p-3 h-100">
+          <div class="fw-semibold mb-3">Contrat</div>
+
+          <div class="row g-3">
+            <div class="col-12">
+              {{ form_row(form.providerName) }}
+            </div>
+
+            <div class="col-12">
+              {{ form_row(form.policyNumber) }}
+            </div>
+
+            <div class="col-12 col-md-6">
+              {{ form_row(form.startDate) }}
+            </div>
+
+            <div class="col-12 col-md-6">
+              {{ form_row(form.endDate) }}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-12 col-xl-5">
+        <div class="border rounded p-3 h-100">
+          <div class="fw-semibold mb-3">Statut et paiement</div>
+
+          <div class="row g-3">
+            <div class="col-12">
+              {{ form_row(form.paymentFrequency) }}
+            </div>
+
+            <div class="col-12">
+              <div class="form-check mt-2">
+                {{ form_widget(form.isActive) }}
+                {{ form_label(form.isActive) }}
+                {{ form_errors(form.isActive) }}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {{ form_rest(form) }}
+  </div>
+
+  <div class="card-footer bg-body d-flex justify-content-end gap-2">
+    <a 
+      class="btn btn-outline-secondary" 
+      href="{{ 
+        app.request.query.get('show') == 'true' ? 
+        path('app_vehicle_insurance_show', {vehicleId: vehicle.id, id: vehicle_insurance.id}) : 
+        path('app_vehicle_insurance_index', {vehicleId: vehicle.id}) 
+      }}"
+    >
+      {{ fa.icon(name: 'arrow-left', family: 'solid', size: 'sm', fixed_width: true, additional_classes: ['me-1']) }}
+      Annuler
+    </a>
+
+    <button class="btn btn-primary">
+      {{ fa.icon(name: 'floppy-disk', family: 'solid', size: 'sm', fixed_width: true, additional_classes: ['me-1']) }}
+      {{ button_label|default('Enregistrer') }}
+    </button>
+  </div>
+</div>
+
+{{ form_end(form) }}

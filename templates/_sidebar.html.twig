@@ -1,0 +1,39 @@
+{% import "macros/navigation.html.twig" as navigation %}
+{% import "macros/fontawesome.html.twig" as fa %}
+
+<div class="border-end h-100 shadow-lg p-3">
+    {{ navigation.sidebar_item(
+        label: 'Accueil',
+        path: path('app_home'),
+        icon: fa.icon('house', family: 'solid', fixed_width: true, additional_classes: ['me-2']),
+        check_paths: ['app_home'],
+    ) }}
+    <hr>
+    {{ navigation.sidebar_item(
+        label: 'Véhicules',
+        path: path('app_vehicle_index'),
+        icon: fa.icon('car-side', family: 'solid', fixed_width: true, additional_classes: ['me-2']),
+        check_paths: ['app_vehicle_'],
+    ) }}
+    <hr>
+    {{ navigation.sidebar_item(
+        label: 'Interventions',
+        path: path('app_home'),
+        icon: fa.icon('screwdriver-wrench', family: 'solid', fixed_width: true, additional_classes: ['me-2']),
+        check_paths: ['app_home'],
+    ) }}
+    <hr>
+    {{ navigation.sidebar_item(
+        label: 'Stock',
+        path: path('app_home'),
+        icon: fa.icon('warehouse', family: 'solid', fixed_width: true, additional_classes: ['me-2']),
+        check_paths: ['app_home'],
+    ) }}
+    <hr>
+    {{ navigation.sidebar_item(
+        label: 'Admin',
+        path: path('app_home'),
+        icon: fa.icon('crown', family: 'solid', fixed_width: true, additional_classes: ['me-2']),
+        check_paths: ['app_home'],
+    ) }}
+</div>

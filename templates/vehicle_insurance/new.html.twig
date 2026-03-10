@@ -1,0 +1,33 @@
+{% extends 'base.html.twig' %}
+
+{% import 'macros/fontawesome.html.twig' as fa %}
+
+{% block title %}Nouvelle assurance{% endblock %}
+
+{% block body %}
+  <div class="d-flex align-items-start justify-content-between gap-3 mb-3">
+    <div>
+      <h1 class="h3 mb-1">Nouvelle assurance</h1>
+      <div class="text-body-secondary">
+        Véhicule :
+        <strong>
+          {{ vehicle.name|capitalize ?: (vehicle.brand|capitalize ~ ' ' ~ vehicle.model|capitalize)|trim }}
+        </strong>
+        · {{ vehicle.registration|upper }}
+      </div>
+    </div>
+
+    <a
+      class="btn btn-outline-secondary"
+      href="{{ path('app_vehicle_insurance_index', { vehicleId: vehicle.id }) }}"
+    >
+      {{ fa.icon(name: 'arrow-left', family: 'solid', size: 'sm', fixed_width: true, additional_classes: ['me-1']) }}
+      Retour à la liste
+    </a>
+  </div>
+
+  {% include 'vehicle_insurance/_form.html.twig' with {
+    form: form,
+    button_label: 'Créer'
+  } %}
+{% endblock %}

@@ -1,0 +1,31 @@
+{% import 'macros/modal.html.twig' as modal %}
+{% import 'macros/fontawesome.html.twig' as fa %}
+
+<button type="button"
+  class="btn {{ witdh_sm ? "btn-sm" }} btn-outline-danger"
+  data-bs-toggle="modal"
+  data-bs-target="#deleteDocumentModal{{ document.id }}"
+>
+  {{ fa.icon('trash-can', family: 'solid', fixed_width: true, additional_classes: ['me-1']) }}
+  Supprimer
+</button>
+
+{{ modal.confirm(
+  id: 'deleteDocumentModal' ~ document.id,
+  title: 'Supprimer le document',
+  description: '
+    <p class="mb-2">Vous êtes sur le point de supprimer ce document :</p>
+    <div class="fw-semibold">' ~
+      (document.name ?: document.originalFilename|trim)
+    ~ '</div>
+    <p class="mt-3 mb-0 text-danger">Cette action est définitive.</p>
+  ',
+  continueButton: 'Supprimer',
+  cancelButton: 'Annuler',
+  type: 'submit',
+  accent: 'danger',
+  action: deletePath,
+  csrfToken: csrf_token('delete' ~ document.id),
+  _route: app.request.attributes.get('_route'),
+  _entity_id: document.id,
+) }}
