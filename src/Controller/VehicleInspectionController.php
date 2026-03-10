@@ -81,6 +81,7 @@ final class VehicleInspectionController extends AbstractController
             currentUser: $currentUser,
             vehicle: $vehicle,
             vehicleInspection: $vehicleInspection,
+            params: ["vehicleId" => $vehicle->getId(), "id" => $vehicleInspection->getId()],
         );
 
         return $this->render('vehicle_inspection/show.html.twig', [
@@ -104,6 +105,7 @@ final class VehicleInspectionController extends AbstractController
             currentUser: $currentUser,
             vehicle: $vehicle,
             vehicleInspection: $vehicleInspection,
+            params: ["vehicleId" => $vehicle->getId(), "id" => $vehicleInspection->getId()],
         );
 
         $form = $this->createForm(VehicleInspectionType::class, $vehicleInspection, ['edit' => true]);
@@ -143,6 +145,7 @@ final class VehicleInspectionController extends AbstractController
             currentUser: $currentUser,
             vehicle: $vehicle,
             vehicleInspection: $vehicleInspection,
+            params: ["vehicleId" => $vehicle->getId(), "id" => $vehicleInspection->getId()],
             delete: true,
         );
 
@@ -173,6 +176,7 @@ final class VehicleInspectionController extends AbstractController
             currentUser: $currentUser,
             vehicle: $vehicle,
             vehicleInspection: $vehicleInspection,
+            params: ["vehicleId" => $vehicle->getId(), "id" => $vehicleInspection->getId()],
         );
 
         $document = new Document();
@@ -257,7 +261,7 @@ final class VehicleInspectionController extends AbstractController
             vehicle: $vehicle,
             vehicleInspection: $vehicleInspection,
             document: $document,
-            params: ["vehicleId" => $vehicle->getId()],
+            params: ["vehicleId" => $vehicle->getId(), "id" => $vehicleInspection->getId()],
         );
 
         $oldName = $document->getName();
@@ -308,7 +312,7 @@ final class VehicleInspectionController extends AbstractController
             vehicle: $vehicle,
             vehicleInspection: $vehicleInspection,
             document: $document,
-            params: ["vehicleId" => $vehicle->getId()],
+            params: ["vehicleId" => $vehicle->getId(), "id" => $vehicleInspection->getId()],
             delete: true,
         );
 
@@ -336,11 +340,11 @@ final class VehicleInspectionController extends AbstractController
         # -------------------- Authization --------------------
         if (!$vehicleManager->isAuthorized($currentUser, $vehicle)) {
             $this->addFlash('danger', 'Vous n\'avez pas accès à la ressource demandé. Pour plus d\'information, contactez un administrateur');
-            return $this->redirectToRoute('app_vehicle_index', $params, Response::HTTP_SEE_OTHER);
+            return $this->redirectToRoute('app_vehicle_index', [], Response::HTTP_SEE_OTHER);
         }
         if ($vehicle->isDeleted()) {
             $this->addFlash('danger', 'Le véhicule a été supprimé. Pour plus d\'information, contactez un administrateur');
-            return $this->redirectToRoute('app_vehicle_index', $params, Response::HTTP_SEE_OTHER);
+            return $this->redirectToRoute('app_vehicle_index', [], Response::HTTP_SEE_OTHER);
         }
         if ($vehicleInspection->isDeleted()) {
             $this->addFlash('warning', 'Le contrôle technique demandé a été supprimé. Pour plus d\'information, contactez un administrateur');
@@ -355,7 +359,7 @@ final class VehicleInspectionController extends AbstractController
         if ($delete) {
             if (!$this->isGranted('ROLE_ADMIN')) {
                 $this->addFlash('danger', 'Vous n\'avez pas les autorisations nécessaire pour supprimer un document. Veuillez contacter un administrateur');
-                return $this->redirectToRoute('app_vehicle_show', $params, Response::HTTP_SEE_OTHER);
+                return $this->redirectToRoute('app_vehicle_show', ["id" => $params["vehicleId"]], Response::HTTP_SEE_OTHER);
             }
         }
         # -----------------------------------------------------

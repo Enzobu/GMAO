@@ -79,6 +79,7 @@ final class VehicleInsuranceController extends AbstractController
             currentUser: $currentUser,
             vehicle: $vehicle,
             vehicleInsurance: $vehicleInsurance,
+            params: ["vehicleId" => $vehicle->getId(), "id" => $vehicleInsurance->getId()],
         );
 
         return $this->render('vehicle_insurance/show.html.twig', [
@@ -102,6 +103,7 @@ final class VehicleInsuranceController extends AbstractController
             currentUser: $currentUser,
             vehicle: $vehicle,
             vehicleInsurance: $vehicleInsurance,
+            params: ["vehicleId" => $vehicle->getId(), "id" => $vehicleInsurance->getId()],
         );
 
         $form = $this->createForm(VehicleInsuranceType::class, $vehicleInsurance);
@@ -142,6 +144,7 @@ final class VehicleInsuranceController extends AbstractController
             vehicle: $vehicle,
             vehicleInsurance: $vehicleInsurance,
             delete: true,
+            params: ["vehicleId" => $vehicle->getId(), "id" => $vehicleInsurance->getId()],
         );
 
         if ($this->isCsrfTokenValid('delete'.$vehicleInsurance->getId(), $request->getPayload()->getString('_token'))) {
@@ -170,6 +173,7 @@ final class VehicleInsuranceController extends AbstractController
             currentUser: $currentUser,
             vehicle: $vehicle,
             vehicleInsurance: $vehicleInsurance,
+            params: ["vehicleId" => $vehicle->getId(), "id" => $vehicleInsurance->getId()],
         );
 
         $document = new Document();
@@ -254,7 +258,7 @@ final class VehicleInsuranceController extends AbstractController
             vehicle: $vehicle, 
             vehicleInsurance: $vehicleInsurance,
             document: $document,
-            params: ["vehicleId" => $vehicle->getId()],
+            params: ["vehicleId" => $vehicle->getId(), "id" => $vehicleInsurance->getId()],
         );
 
         $oldName = $document->getName();
@@ -305,7 +309,7 @@ final class VehicleInsuranceController extends AbstractController
             vehicle: $vehicle, 
             vehicleInsurance: $vehicleInsurance,
             document: $document,
-            params: ["vehicleId" => $vehicle->getId()],
+            params: ["vehicleId" => $vehicle->getId(), "id" => $vehicleInsurance->getId()],
             delete: true,
         );
 
@@ -333,11 +337,11 @@ final class VehicleInsuranceController extends AbstractController
         # -------------------- Authization --------------------
         if (!$vehicleManager->isAuthorized($currentUser, $vehicle)) {
             $this->addFlash('danger', 'Vous n\'avez pas accès à la ressource demandé. Pour plus d\'information, contactez un administrateur');
-            return $this->redirectToRoute('app_vehicle_index', $params, Response::HTTP_SEE_OTHER);
+            return $this->redirectToRoute('app_vehicle_index', [], Response::HTTP_SEE_OTHER);
         }
         if ($vehicle->isDeleted()) {
             $this->addFlash('danger', 'Le véhicule a été supprimé. Pour plus d\'information, contactez un administrateur');
-            return $this->redirectToRoute('app_vehicle_index', $params, Response::HTTP_SEE_OTHER);
+            return $this->redirectToRoute('app_vehicle_index', [], Response::HTTP_SEE_OTHER);
         }
         if ($vehicleInsurance->isDeleted()) {
             $this->addFlash('warning', 'L\'assurance demandée a été supprimée. Pour plus d\'information, contactez un administrateur');
@@ -352,7 +356,7 @@ final class VehicleInsuranceController extends AbstractController
         if ($delete) {
             if (!$this->isGranted('ROLE_ADMIN')) {
                 $this->addFlash('danger', 'Vous n\'avez pas les autorisations nécessaire pour supprimer un document. Veuillez contacter un administrateur');
-                return $this->redirectToRoute('app_vehicle_show', $params, Response::HTTP_SEE_OTHER);
+                return $this->redirectToRoute('app_vehicle_show', ["id" => $params["vehicleId"]], Response::HTTP_SEE_OTHER);
             }
         }
         # -----------------------------------------------------

@@ -87,6 +87,7 @@ final class VehicleController extends AbstractController
             vehicleManager: $vehicleManager,
             currentUser: $currentUser,
             vehicle: $vehicle,
+            params: ["id" => $vehicle->getId()],
         );
 
         $insurance = $vehicleInsuranceRepository->findBy([
@@ -122,6 +123,7 @@ final class VehicleController extends AbstractController
             vehicleManager: $vehicleManager,
             currentUser: $currentUser,
             vehicle: $vehicle,
+            params: ["id" => $vehicle->getId()],
         );
 
         $form = $this->createForm(VehicleType::class, $vehicle, ['edit' => true]);
@@ -154,6 +156,7 @@ final class VehicleController extends AbstractController
             currentUser: $currentUser,
             vehicle: $vehicle,
             delete: true,
+            params: ["id" => $vehicle->getId()],
         );
 
         if ($this->isCsrfTokenValid('delete'.$vehicle->getId(), $request->getPayload()->getString('_token'))) {
@@ -179,6 +182,7 @@ final class VehicleController extends AbstractController
             vehicleManager: $vehicleManager,
             currentUser: $currentUser,
             vehicle: $vehicle,
+            params: ["id" => $vehicle->getId()],
         );
 
         $document = new Document();
@@ -259,6 +263,7 @@ final class VehicleController extends AbstractController
             vehicleManager: $vehicleManager,
             currentUser: $currentUser,
             vehicle: $vehicle,
+            params: ["id" => $vehicle->getId()],
         );
 
         $oldName = $document->getName();
@@ -306,6 +311,7 @@ final class VehicleController extends AbstractController
             currentUser: $currentUser,
             vehicle: $vehicle,
             delete: true,
+            params: ["id" => $vehicle->getId()],
         );
 
         if ($this->isCsrfTokenValid('delete'.$document->getId(), $request->getPayload()->getString('_token'))) {
@@ -328,16 +334,16 @@ final class VehicleController extends AbstractController
         # -------------------- Authization --------------------
         if (!$vehicleManager->isAuthorized($currentUser, $vehicle)) {
             $this->addFlash('danger', 'Vous n\'avez pas accès à la ressource demandé. Pour plus d\'information, contactez un administrateur');
-            return $this->redirectToRoute('app_vehicle_index', $params, Response::HTTP_SEE_OTHER);
+            return $this->redirectToRoute('app_vehicle_index', [], Response::HTTP_SEE_OTHER);
         }
         if ($vehicle->isDeleted()) {
             $this->addFlash('danger', 'Le véhicule a été supprimé. Pour plus d\'information, contactez un administrateur');
-            return $this->redirectToRoute('app_vehicle_index', $params, Response::HTTP_SEE_OTHER);
+            return $this->redirectToRoute('app_vehicle_index', [], Response::HTTP_SEE_OTHER);
         }
         if ($document) {
             if ($document->isDeleted()) {
                 $this->addFlash('danger', 'Le document a été supprimé. Pour plus d\'information, contactez un administrateur');
-                return $this->redirectToRoute('app_vehicle_index', $params, Response::HTTP_SEE_OTHER);
+                return $this->redirectToRoute('app_vehicle_index', [], Response::HTTP_SEE_OTHER);
             }
         }
         if ($delete) {
