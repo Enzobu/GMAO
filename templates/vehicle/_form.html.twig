@@ -1,3 +1,5 @@
+{% import 'macros/fontawesome.html.twig' as fa %}
+
 {{ form_start(form) }}
 
 <div class="card shadow-sm">
@@ -103,9 +105,13 @@
         path('app_vehicle_index') 
       }}"
     >
+      {{ fa.icon('xmark', family: 'solid', fixed_width: true, additional_classes: ['me-1']) }}
       Annuler
     </a>
-    <button class="btn btn-primary">{{ button_label|default('Enregistrer') }}</button>
+    <button class="btn btn-primary">
+      {{ fa.icon('floppy-disk', family: 'solid', fixed_width: true, additional_classes: ['me-1']) }}
+      {{ button_label|default('Enregistrer') }}
+    </button>
   </div>
 </div>
 

@@ -25,6 +25,7 @@
 
   <div class="d-flex gap-2">
   <a href="{{ path('app_vehicle_inspection_index', { vehicleId: vehicle.id }) }}" class="btn btn-outline-secondary">
+    {{ fa.icon(name: 'arrow-left', family: 'solid', size: 'sm', fixed_width: true, additional_classes: ['me-1']) }}
     Retour
   </a>
 

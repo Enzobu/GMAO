@@ -1,3 +1,5 @@
+{% import 'macros/fontawesome.html.twig' as fa %}
+
 {{ form_start(form, {
     attr: {
       'data-turbo': 'false'
@@ -29,9 +31,11 @@
       href="{{ app.request.query.get('sourceRoute') }}"
       class="btn btn-sm btn-outline-secondary"
     >
+      {{ fa.icon('xmark', family: 'solid', fixed_width: true, additional_classes: ['me-1']) }}
       Annuler
     </a>
     <button type="submit" class="btn btn-sm btn-primary">
+      {{ fa.icon('floppy-disk', family: 'solid', fixed_width: true, additional_classes: ['me-1']) }}
       Enregistrer
     </button>
   </div>

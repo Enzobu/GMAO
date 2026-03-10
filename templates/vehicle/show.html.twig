@@ -32,9 +32,13 @@
     </div>
 
     <div class="d-flex gap-2 flex-shrink-0">
-      <a class="btn btn-outline-secondary" href="{{ path('app_vehicle_index') }}">Retour</a>
+      <a class="btn btn-outline-secondary" href="{{ path('app_vehicle_index') }}">
+        {{ fa.icon('arrow-left', family: 'solid', fixed_width: true, additional_classes: ['me-1']) }}
+        Retour
+      </a>
 
       <a class="btn btn-primary" href="{{ path('app_vehicle_edit', {id: vehicle.id}) }}?show=true">
+        {{ fa.icon('pen', family: 'solid', fixed_width: true, additional_classes: ['me-1']) }}
         Modifier
       </a>
 

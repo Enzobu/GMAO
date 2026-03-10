@@ -1,10 +1,12 @@
 {% import 'macros/modal.html.twig' as modal %}
+{% import 'macros/fontawesome.html.twig' as fa %}
 
 <button type="button"
   class="btn {{ witdh_sm ? "btn-sm" }} btn-outline-danger"
   data-bs-toggle="modal"
   data-bs-target="#deleteVehicleInsuranceModal{{ vehicle_insurance.id }}"
 >
+  {{ fa.icon('trash-can', family: 'solid', fixed_width: true, additional_classes: ['me-1']) }}
   Supprimer
 </button>
 

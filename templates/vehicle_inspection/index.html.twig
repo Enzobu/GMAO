@@ -16,6 +16,7 @@
 
     <div class="d-flex gap-2">
       <a href="{{ path('app_vehicle_show', { id: vehicle.id }) }}" class="btn btn-outline-secondary">
+        {{ fa.icon(name: 'arrow-left', family: 'solid', size: 'sm', fixed_width: true, additional_classes: ['me-1']) }}
         Retour au véhicule
       </a>
 
@@ -103,12 +104,14 @@
                   href="{{ path('app_vehicle_inspection_show', { vehicleId: vehicle.id, id: vehicle_inspection.id }) }}"
                   class="btn btn-sm btn-outline-secondary"
                 >
+                  {{ fa.icon('eye', family: 'solid', fixed_width: true, additional_classes: ['me-1']) }}
                   Voir
                 </a>
                 <a
                   href="{{ path('app_vehicle_inspection_edit', { vehicleId: vehicle.id, id: vehicle_inspection.id }) }}"
                   class="btn btn-sm btn-outline-primary"
                 >
+                  {{ fa.icon('pen', family: 'solid', fixed_width: true, additional_classes: ['me-1']) }}
                   Modifier
                 </a>
 
