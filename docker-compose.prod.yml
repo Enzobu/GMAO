@@ -1,0 +1,61 @@
+name: ${DOCKER_PROJECT_NAME}
+
+services:
+    ###> doctrine/doctrine-bundle ###
+    database:
+        image: mariadb:11.8.5-ubi9
+        container_name: ${DOCKER_PROJECT_NAME}-database
+        environment:
+            - MARIADB_ROOT_PASSWORD=${MARIADB_ROOT_PASSWORD}
+            - MARIADB_USER=${MARIADB_USER}
+            - MARIADB_PASSWORD=${MARIADB_PASSWORD}
+            - MARIADB_DATABASE=${MARIADB_DATABASE}
+        volumes:
+            - database_data:/var/lib/mysql
+        networks:
+            - project_network
+        expose:
+            - 3306
+        restart: unless-stopped
+    ###< doctrine/doctrine-bundle ###
+
+    phpmyadmin:
+        image: phpmyadmin:5.2.3
+        container_name: ${DOCKER_PROJECT_NAME}-phpmyadmin
+        ports:
+            - ${PHPMYADMIN_PORT}:80
+        environment:
+            - PMA_HOST=database
+        depends_on:
+            - database
+        networks:
+            - project_network
+        restart: unless-stopped
+
+    apache:
+        image: ${DOCKER_PROJECT_NAME}-apache:prod
+        build:
+            context: .
+            dockerfile: ./Dockerfile.prod
+        container_name: ${DOCKER_PROJECT_NAME}-apache
+        ports:
+            - ${APACHE_PORT}:80
+        depends_on:
+            - database
+        environment:
+            APP_ENV: prod
+            TRUSTED_PROXIES: ${TRUSTED_PROXIES}
+            APP_SECRET: ${APP_SECRET}
+        networks:
+            - project_network
+        restart: unless-stopped
+
+networks:
+    project_network:
+        name: ${DOCKER_PROJECT_NAME}_network
+        driver: bridge
+
+volumes:
+    database_data:
+        name: ${DOCKER_PROJECT_NAME}_database_data
+        driver: local
