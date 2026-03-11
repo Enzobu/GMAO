@@ -7,41 +7,43 @@
 {% block title %}Contrôle technique{% endblock %}
 
 {% block body %}
+  {% set readOnly = vehicle.user != app.user %}
+  <div class="d-flex align-items-start justify-content-between gap-3 mb-4">
+    <div>
+      <h1 class="h3 mb-1">
+        Contrôle du
+        {{ vehicle_inspection.inspectionDate
+          ? vehicle_inspection.inspectionDate|date(date_format)
+          : '—'
+        }}
+      </h1>
 
-<div class="d-flex align-items-start justify-content-between gap-3 mb-4">
-  <div>
-  <h1 class="h3 mb-1">
-    Contrôle du
-    {{ vehicle_inspection.inspectionDate
-    ? vehicle_inspection.inspectionDate|date(date_format)
-    : '—'
-    }}
-  </h1>
+      <div class="text-body-secondary">
+        Détails du contrôle technique
+      </div>
+    </div>
 
-  <div class="text-body-secondary">
-    Détails du contrôle technique
+    <div class="d-flex gap-2">
+      <a href="{{ path('app_vehicle_inspection_index', { vehicleId: vehicle.id }) }}" class="btn btn-outline-secondary">
+        {{ fa.icon(name: 'arrow-left', family: 'solid', size: 'sm', fixed_width: true, additional_classes: ['me-1']) }}
+        Retour
+      </a>
+
+      <a 
+        {% if not readOnly %}href="{{ path('app_vehicle_inspection_edit', { vehicleId: vehicle.id, id: vehicle_inspection.id }) }}?show=true"{% endif %} 
+        class="btn btn-primary {{ readOnly ? "btn-disable" }}">
+        {{ fa.icon(name: 'pen', family: 'solid', size: 'sm') }}
+        Modifier
+      </a>
+      {% if is_granted('ROLE_ADMIN') %}
+      {% include 'vehicle_inspection/_delete_form.html.twig' with { witdh_sm: false } %}
+      {% endif %}
+    </div>
   </div>
-  </div>
-
-  <div class="d-flex gap-2">
-  <a href="{{ path('app_vehicle_inspection_index', { vehicleId: vehicle.id }) }}" class="btn btn-outline-secondary">
-    {{ fa.icon(name: 'arrow-left', family: 'solid', size: 'sm', fixed_width: true, additional_classes: ['me-1']) }}
-    Retour
-  </a>
-
-  <a href="{{ path('app_vehicle_inspection_edit', { vehicleId: vehicle.id, id: vehicle_inspection.id }) }}?show=true" class="btn btn-primary">
-    {{ fa.icon(name: 'pen', family: 'solid', size: 'sm') }}
-    Modifier
-  </a>
-  {% if is_granted('ROLE_ADMIN') %}
-    {% include 'vehicle_inspection/_delete_form.html.twig' with { witdh_sm: false } %}
-  {% endif %}
-  </div>
-</div>
 
 
-{% set resultVariant = 'secondary' %}
-{% if vehicle_inspection.result is not null %}
+  {% set resultVariant = 'secondary' %}
+  {% if vehicle_inspection.result is not null %}
   {% if vehicle_inspection.result.value == 'pass' %}
   {% set resultVariant = 'success' %}
   {% elseif vehicle_inspection.result.value == 'counter_visit' %}
@@ -49,107 +51,95 @@
   {% elseif vehicle_inspection.result.value == 'fail' %}
   {% set resultVariant = 'danger' %}
   {% endif %}
-{% endif %}
+  {% endif %}
 
   <div class="card shadow-sm">
-  <div class="card-body">
+    <div class="card-body">
+      <div class="d-flex flex-column flex-lg-row align-items-lg-center gap-2 mb-4">
+        {{ badge.emphasis(
+        label: vehicle_inspection.result
+        ? vehicle_inspection.result.label()
+        : 'Non renseigné',
+        variant: resultVariant
+        ) }}
 
-    <div class="d-flex flex-column flex-lg-row align-items-lg-center gap-2 mb-4">
+        {% if vehicle_inspection.counterVisitRequired %}
+          {{ badge.default(label: 'Contre-visite requise', variant: 'warning') }}
+        {% else %}
+          {{ badge.default(label: 'Sans contre-visite', variant: 'success') }}
+        {% endif %}
+      </div>
+      <div class="row g-4">
+        <div class="col-12 col-md-6 col-xl-3">
+          <div class="small text-body-secondary mb-1">Date du contrôle</div>
+          <div class="fw-semibold">
+            {{ vehicle_inspection.inspectionDate
+              ? vehicle_inspection.inspectionDate|date(date_format)
+              : '—'
+            }}
+          </div>
+        </div>
+        <div class="col-12 col-md-6 col-xl-3">
+          <div class="small text-body-secondary mb-1">Valide jusqu’au</div>
+          <div>
+            {{ vehicle_inspection.validUntil
+              ? vehicle_inspection.validUntil|date(date_format)
+              : '—'
+            }}
+          </div>
+        </div>
+        <div class="col-12 col-md-6 col-xl-3">
+          <div class="small text-body-secondary mb-1">Kilométrage</div>
+          <div>
+            {{ vehicle_inspection.mileage is not null
+              ? vehicle_inspection.mileage ~ ' km'
+              : '—'
+            }}
+          </div>
+        </div>
+        <div class="col-12 col-md-6 col-xl-3">
+          <div class="small text-body-secondary mb-1">Date limite contre-visite</div>
+          <div>
+            {{ vehicle_inspection.counterVisitDueAt
+              ? vehicle_inspection.counterVisitDueAt|date(date_format)
+              : '—'
+            }}
+          </div>
+        </div>
+        <div class="col-12 col-md-6 col-xl-3">
+          <div class="small text-body-secondary mb-1">Créé le</div>
+          <div>
+            {{ vehicle_inspection.createdAt
+              ? vehicle_inspection.createdAt|date(date_format)
+              : '—'
+            }}
+          </div>
+        </div>
+        <div class="col-12 col-md-6 col-xl-3">
+          <div class="small text-body-secondary mb-1">Dernière modification</div>
+          <div>
+            {{ vehicle_inspection.updatedAt
+              ? vehicle_inspection.updatedAt|date(date_format)
+              : '—'
+            }}
+          </div>
+        </div>
+        {% if vehicle_inspection.notes %}
+          <div class="col-12">
+            <div class="small text-body-secondary mb-1">Notes</div>
+            <div class="lh-sm">
+              {{ vehicle_inspection.notes }}
+            </div>
+          </div>
+        {% endif %}
 
-    {{ badge.emphasis(
-      label: vehicle_inspection.result
-      ? vehicle_inspection.result.label()
-      : 'Non renseigné',
-      variant: resultVariant
-    ) }}
-
-    {% if vehicle_inspection.counterVisitRequired %}
-      {{ badge.default(label: 'Contre-visite requise', variant: 'warning') }}
-    {% else %}
-      {{ badge.default(label: 'Sans contre-visite', variant: 'success') }}
-    {% endif %}
-
-    </div>
-
-
-    <div class="row g-4">
-
-    <div class="col-12 col-md-6 col-xl-3">
-      <div class="small text-body-secondary mb-1">Date du contrôle</div>
-      <div class="fw-semibold">
-      {{ vehicle_inspection.inspectionDate
-        ? vehicle_inspection.inspectionDate|date(date_format)
-        : '—'
-      }}
       </div>
     </div>
-
-    <div class="col-12 col-md-6 col-xl-3">
-      <div class="small text-body-secondary mb-1">Valide jusqu’au</div>
-      <div>
-      {{ vehicle_inspection.validUntil
-        ? vehicle_inspection.validUntil|date(date_format)
-        : '—'
-      }}
-      </div>
-    </div>
-
-    <div class="col-12 col-md-6 col-xl-3">
-      <div class="small text-body-secondary mb-1">Kilométrage</div>
-      <div>
-      {{ vehicle_inspection.mileage is not null
-        ? vehicle_inspection.mileage ~ ' km'
-        : '—'
-      }}
-      </div>
-    </div>
-
-    <div class="col-12 col-md-6 col-xl-3">
-      <div class="small text-body-secondary mb-1">Date limite contre-visite</div>
-      <div>
-      {{ vehicle_inspection.counterVisitDueAt
-        ? vehicle_inspection.counterVisitDueAt|date(date_format)
-        : '—'
-      }}
-      </div>
-    </div>
-
-    <div class="col-12 col-md-6 col-xl-3">
-      <div class="small text-body-secondary mb-1">Créé le</div>
-      <div>
-      {{ vehicle_inspection.createdAt
-        ? vehicle_inspection.createdAt|date(date_format)
-        : '—'
-      }}
-      </div>
-    </div>
-
-    <div class="col-12 col-md-6 col-xl-3">
-      <div class="small text-body-secondary mb-1">Dernière modification</div>
-      <div>
-      {{ vehicle_inspection.updatedAt
-        ? vehicle_inspection.updatedAt|date(date_format)
-        : '—'
-      }}
-      </div>
-    </div>
-
-    {% if vehicle_inspection.notes %}
-      <div class="col-12">
-      <div class="small text-body-secondary mb-1">Notes</div>
-      <div class="lh-sm">
-        {{ vehicle_inspection.notes }}
-      </div>
-      </div>
-    {% endif %}
-
-    </div>
-  </div>
   </div>
 
   {{ document.list
     (
-      documents: vehicle_inspection_document, 
+      documents: vehicle_inspection_document,
       newPath: path('app_vehicle_inspection_document_new', {vehicleId: vehicle.id, id: vehicle_inspection.id}),
       sourceRoute: path(app.request.attributes.get('_route'), {vehicleId: vehicle.id, id: vehicle_inspection.id}),
       editRoute: 'app_vehicle_inspection_document_edit',
@@ -157,7 +147,7 @@
       deleteRoute: 'app_vehicle_inspection_document_delete',
       deleteParameters: {vehicleId: vehicle.id, id: vehicle_inspection.id},
       fallback: "Aucun document disponible pour cette assurance",
+      readOnly: readOnly,
     )
   }}
-
 {% endblock %}

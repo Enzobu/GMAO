@@ -7,7 +7,7 @@
 {% block title %}Assurance{% endblock %}
 
 {% block body %}
-
+  {% set readOnly = vehicle.user != app.user %}
   <div class="d-flex align-items-start justify-content-between gap-3 mb-4">
     <div>
       <h1 class="h3 mb-1">{{ vehicle_insurance.providerName }}</h1>
@@ -21,7 +21,9 @@
         {{ fa.icon(name: 'arrow-left', family: 'solid', size: 'sm', fixed_width: true, additional_classes: ['me-1']) }}
         Retour
       </a>
-      <a href="{{ path('app_vehicle_insurance_edit', { vehicleId: vehicle.id, id: vehicle_insurance.id }) }}?show=true" class="btn btn-primary">
+      <a 
+        {% if not readOnly %}href="{{ path('app_vehicle_insurance_edit', { vehicleId: vehicle.id, id: vehicle_insurance.id }) }}?show=true"{% endif %} 
+        class="btn btn-primary {{ readOnly ? "btn-disable" }}">
         {{ fa.icon(name: 'pen', family: 'solid', size: 'sm') }}
         Modifier
       </a>
@@ -116,6 +118,7 @@
       deleteRoute: 'app_vehicle_insurance_document_delete',
       deleteParameters: {vehicleId: vehicle.id, id: vehicle_insurance.id},
       fallback: "Aucun document disponible pour cette assurance",
+      readOnly: readOnly,
     )
   }}
 
