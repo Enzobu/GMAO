@@ -6,6 +6,7 @@
 {% block title %}Contrôles techniques{% endblock %}
 
 {% block body %}
+  {% set readOnly = vehicle.user != app.user %}
   <div class="d-flex align-items-start justify-content-between gap-3 mb-4">
     <div>
       <h1 class="h3 mb-1">Contrôles techniques du véhicule</h1>
@@ -20,7 +21,9 @@
         Retour au véhicule
       </a>
 
-      <a href="{{ path('app_vehicle_inspection_new', { vehicleId: vehicle.id }) }}" class="btn btn-primary">
+      <a 
+        {% if not readOnly %}href="{{ path('app_vehicle_inspection_new', { vehicleId: vehicle.id }) }}"{% endif %} 
+        class="btn btn-primary {{ readOnly ? "btn-disable" }}">
         {{ fa.icon(name: 'plus', family: 'solid', size: 'sm') }}
         Ajouter un contrôle
       </a>
@@ -108,8 +111,8 @@
                   Voir
                 </a>
                 <a
-                  href="{{ path('app_vehicle_inspection_edit', { vehicleId: vehicle.id, id: vehicle_inspection.id }) }}"
-                  class="btn btn-sm btn-outline-primary"
+                  {% if not readOnly %}href="{{ path('app_vehicle_inspection_edit', { vehicleId: vehicle.id, id: vehicle_inspection.id }) }}"{% endif %} 
+                  class="btn btn-sm btn-outline-primary {{ readOnly ? "btn-disable" }}"
                 >
                   {{ fa.icon('pen', family: 'solid', fixed_width: true, additional_classes: ['me-1']) }}
                   Modifier

@@ -29,7 +29,20 @@ final class VehicleInsuranceController extends AbstractController
     public function index(
         VehicleInsuranceRepository $vehicleInsuranceRepository,
         #[MapEntity(id: 'vehicleId')] Vehicle $vehicle,
+        #[CurrentUser] User $currentUser,
+        VehicleManager $vehicleManager,
     ): Response {
+        $response = $this->checkAthorization(
+            vehicleManager: $vehicleManager,
+            currentUser: $currentUser,
+            vehicle: $vehicle,
+            vehicleInsurance: new VehicleInsurance(),
+        );
+
+        if ($response) {
+            return $response;
+        }
+
         $insurances = $vehicleInsuranceRepository->findByVehicle([
             "vehicle" => $vehicle,
         ], ['startDate' => 'DESC'], deleted: false);
@@ -44,9 +57,25 @@ final class VehicleInsuranceController extends AbstractController
     public function new(
         Request $request, 
         EntityManagerInterface $entityManager,
+        #[CurrentUser] User $currentUser,
+        VehicleManager $vehicleManager,
         #[MapEntity(id: 'vehicleId')] Vehicle $vehicle,
     ): Response {
         $vehicleInsurance = new VehicleInsurance();
+        
+        $response = $this->checkAthorization(
+            vehicleManager: $vehicleManager,
+            currentUser: $currentUser,
+            vehicle: $vehicle,
+            vehicleInsurance: $vehicleInsurance,
+            params: ["vehicleId" => $vehicle->getId(), "id" => $vehicleInsurance->getId()],
+            new: true,
+        );
+
+        if ($response) {
+            return $response;
+        }
+
         $form = $this->createForm(VehicleInsuranceType::class, $vehicleInsurance);
         $form->handleRequest($request);
 
@@ -74,13 +103,17 @@ final class VehicleInsuranceController extends AbstractController
         #[MapEntity(id: 'vehicleId')] Vehicle $vehicle,
         DocumentRepository $documentRepository,
     ): Response {
-        $this->checkAthorization(
+        $response = $this->checkAthorization(
             vehicleManager: $vehicleManager,
             currentUser: $currentUser,
             vehicle: $vehicle,
             vehicleInsurance: $vehicleInsurance,
             params: ["vehicleId" => $vehicle->getId(), "id" => $vehicleInsurance->getId()],
         );
+
+        if ($response) {
+            return $response;
+        }
 
         return $this->render('vehicle_insurance/show.html.twig', [
             'vehicle_insurance' => $vehicleInsurance,
@@ -98,13 +131,18 @@ final class VehicleInsuranceController extends AbstractController
         #[CurrentUser] User $currentUser,
         #[MapEntity(id: 'vehicleId')] Vehicle $vehicle,
     ): Response {
-        $this->checkAthorization(
+        $response = $this->checkAthorization(
             vehicleManager: $vehicleManager,
             currentUser: $currentUser,
             vehicle: $vehicle,
             vehicleInsurance: $vehicleInsurance,
             params: ["vehicleId" => $vehicle->getId(), "id" => $vehicleInsurance->getId()],
+            update: true,
         );
+
+        if ($response) {
+            return $response;
+        }
 
         $form = $this->createForm(VehicleInsuranceType::class, $vehicleInsurance);
         $form->handleRequest($request);
@@ -138,7 +176,7 @@ final class VehicleInsuranceController extends AbstractController
         VehicleManager $vehicleManager,
         #[CurrentUser] User $currentUser,
     ): Response {
-        $this->checkAthorization(
+        $response = $this->checkAthorization(
             vehicleManager: $vehicleManager,
             currentUser: $currentUser,
             vehicle: $vehicle,
@@ -146,6 +184,10 @@ final class VehicleInsuranceController extends AbstractController
             delete: true,
             params: ["vehicleId" => $vehicle->getId(), "id" => $vehicleInsurance->getId()],
         );
+
+        if ($response) {
+            return $response;
+        }
 
         if ($this->isCsrfTokenValid('delete'.$vehicleInsurance->getId(), $request->getPayload()->getString('_token'))) {
             $vehicleInsurance->setIsDeleted(true);
@@ -168,15 +210,21 @@ final class VehicleInsuranceController extends AbstractController
         #[CurrentUser] User $currentUser,
         VehicleManager $vehicleManager,
     ): Response {
-        $this->checkAthorization(
+        $document = new Document();
+
+        $response = $this->checkAthorization(
             vehicleManager: $vehicleManager,
             currentUser: $currentUser,
             vehicle: $vehicle,
             vehicleInsurance: $vehicleInsurance,
             params: ["vehicleId" => $vehicle->getId(), "id" => $vehicleInsurance->getId()],
+            document: $document,
         );
 
-        $document = new Document();
+        if ($response) {
+            return $response;
+        }
+
         $form = $this->createForm(DocumentType::class, $document);
         $form->handleRequest($request);
 
@@ -252,14 +300,19 @@ final class VehicleInsuranceController extends AbstractController
         VehicleManager $vehicleManager,
         #[CurrentUser] User $currentUser,
     ): Response {
-        $this->checkAthorization(
+        $response = $this->checkAthorization(
             vehicleManager: $vehicleManager, 
             currentUser: $currentUser, 
             vehicle: $vehicle, 
             vehicleInsurance: $vehicleInsurance,
             document: $document,
             params: ["vehicleId" => $vehicle->getId(), "id" => $vehicleInsurance->getId()],
+            update: true,
         );
+
+        if ($response) {
+            return $response;
+        }
 
         $oldName = $document->getName();
         $oldDescription = $document->getDescription();
@@ -303,7 +356,7 @@ final class VehicleInsuranceController extends AbstractController
         #[CurrentUser] User $currentUser,
         DocumentManager $documentManager,
     ): Response {
-        $this->checkAthorization(
+        $response = $this->checkAthorization(
             vehicleManager: $vehicleManager, 
             currentUser: $currentUser, 
             vehicle: $vehicle, 
@@ -312,6 +365,10 @@ final class VehicleInsuranceController extends AbstractController
             params: ["vehicleId" => $vehicle->getId(), "id" => $vehicleInsurance->getId()],
             delete: true,
         );
+
+        if ($response) {
+            return $response;
+        }
 
         if ($this->isCsrfTokenValid('delete'.$document->getId(), $request->getPayload()->getString('_token'))) {
             $documentManager->softDelete($document);
@@ -333,11 +390,17 @@ final class VehicleInsuranceController extends AbstractController
         ?Document $document = null,
         ?Array $params = [],
         bool $delete = false,
+        bool $update = false,
+        bool $new = false,
     ): ?Response {
         # -------------------- Authization --------------------
         if (!$vehicleManager->isAuthorized($currentUser, $vehicle)) {
-            $this->addFlash('danger', 'Vous n\'avez pas accès à la ressource demandé. Pour plus d\'information, contactez un administrateur');
-            return $this->redirectToRoute('app_vehicle_index', [], Response::HTTP_SEE_OTHER);
+            $update ? 
+            $this->addFlash('danger', 'Vous ne pouvez pas modifier la ressource demandé. Pour plus d\'information, contactez un administrateur') : 
+            $this->addFlash('warning', 'Vous avez un accès en lecture seule à la ressource demandé. Pour plus d\'information, contactez un administrateur');
+            if ($update) {
+                return $this->redirectToRoute('app_vehicle_index', [], Response::HTTP_SEE_OTHER);
+            }
         }
         if ($vehicle->isDeleted()) {
             $this->addFlash('danger', 'Le véhicule a été supprimé. Pour plus d\'information, contactez un administrateur');
@@ -347,7 +410,17 @@ final class VehicleInsuranceController extends AbstractController
             $this->addFlash('warning', 'L\'assurance demandée a été supprimée. Pour plus d\'information, contactez un administrateur');
             return $this->redirectToRoute('app_vehicle_insurance_index', $params, Response::HTTP_SEE_OTHER);
         }
+        if ($new) {
+            if (!$vehicleManager->isAuthorized($currentUser, $vehicle)) {
+                $this->addFlash('danger', 'Vous ne pouvez pas ajouter un contrôle technique pour ce vehicule. Pour plus d\'information, contactez un administrateur');
+                return $this->redirectToRoute('app_vehicle_index', [], Response::HTTP_SEE_OTHER);
+            }
+        }
         if ($document) {
+            if (!$vehicleManager->isAuthorized($currentUser, $vehicle)) {
+                $this->addFlash('danger', 'Vous ne pouvez pas ajouter un document sur la ressource demandé. Pour plus d\'information, contactez un administrateur');
+                return $this->redirectToRoute('app_vehicle_index', [], Response::HTTP_SEE_OTHER);
+            }
             if ($document->isDeleted()) {
                 $this->addFlash('danger', 'Le document a été supprimé. Pour plus d\'information, contactez un administrateur');
                 return $this->redirectToRoute('app_vehicle_insurance_index', $params, Response::HTTP_SEE_OTHER);

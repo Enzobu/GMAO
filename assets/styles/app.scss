@@ -84,6 +84,41 @@ $enable-shadows: true;
     cursor: pointer;
 }
 
+.cursor-not-allowed {
+    cursor: not-allowed !important;
+    pointer-events: auto;
+}
+
+.btn-disable {
+    opacity: .40;
+    cursor: not-allowed !important;
+
+    &:hover {
+      background-color: $primary !important;
+      color: #ffffff !important;
+    }
+}
+
+.btn-outline-disable {
+  opacity: .40;
+  cursor: not-allowed !important;
+  
+  &:hover {
+    background-color: transparent !important;
+    color: $primary !important;
+  }
+}
+
+.btn-secondary-outline-disable {
+    opacity: .40;
+    cursor: not-allowed !important;
+
+    &:hover {
+      background-color: transparent !important;
+      color: $gray-600 !important;
+    }
+}
+
 .card {
   border-radius: .75rem;
 }

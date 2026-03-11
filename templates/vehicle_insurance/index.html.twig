@@ -6,6 +6,7 @@
 {% block title %}Assurances{% endblock %}
 
 {% block body %}
+  {% set readOnly = vehicle.user != app.user %}
   <div class="d-flex align-items-start justify-content-between gap-3 mb-4">
     <div>
       <h1 class="h3 mb-1">Assurances du véhicule</h1>
@@ -20,12 +21,12 @@
         Retour au véhicule
       </a>
 
-      {% if is_granted('ROLE_ADMIN') %}
-        <a href="{{ path('app_vehicle_insurance_new', { vehicleId: vehicle.id }) }}" class="btn btn-primary">
-          {{ fa.icon(name: 'plus', family: 'solid', size: 'sm') }}
-          Ajouter une assurance
-        </a>
-      {% endif %}
+      <a 
+        {% if not readOnly %}href="{{ path('app_vehicle_insurance_new', { vehicleId: vehicle.id }) }}"{% endif %}
+        class="btn btn-primary {{ readOnly ? "btn-disable" }}">
+        {{ fa.icon(name: 'plus', family: 'solid', size: 'sm') }}
+        Ajouter une assurance
+      </a>
     </div>
   </div>
 
@@ -91,8 +92,8 @@
                   Voir
                 </a>
                 <a
-                  href="{{ path('app_vehicle_insurance_edit', { vehicleId: vehicle.id, id: vehicle_insurance.id }) }}"
-                  class="btn btn-sm btn-outline-primary"
+                  {% if not readOnly %}href="{{ path('app_vehicle_insurance_edit', { vehicleId: vehicle.id, id: vehicle_insurance.id }) }}"{% endif %}
+                  class="btn btn-sm btn-outline-primary {{ readOnly ? "btn-outline-disable" }}"
                 >
                   {{ fa.icon('pen', family: 'solid', fixed_width: true, additional_classes: ['me-1']) }}
                   Modifier

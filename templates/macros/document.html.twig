@@ -6,7 +6,8 @@
   editParameters,
   deleteRoute,
   deleteParameters,
-  fallback = "Aucun document"
+  fallback = "Aucun document",
+  readOnly = true,
 ) %}
   {% import "macros/fontawesome.html.twig" as fa %}
   {% import _self as self %}
@@ -22,7 +23,7 @@
             Documents
           </span>
         </div>
-        <a class="btn btn-primary btn-sm" href="{{ newPath }}?sourceRoute={{ sourceRoute }}">
+        <a class="btn btn-primary btn-sm {{ readOnly ? "btn-disable" }}" {% if not readOnly %}href="{{ newPath }}?sourceRoute={{ sourceRoute }}"{% endif %}>
           {{ fa.icon('plus', family: 'solid', fixed_width: true, additional_classes: ['me-1']) }}
           Ajouter un document
         </a>
@@ -75,8 +76,8 @@
                       label: 'Voir'
                   ) }}
                   <a
-                    class="btn btn-sm btn-outline-secondary d-flex align-items-center" 
-                    href="{{ path(editRoute, editParameters|merge({documentId: document.id})) }}?sourceRoute={{ sourceRoute }}"
+                    class="btn btn-sm btn-outline-secondary d-flex align-items-center {{ readOnly ? "btn-secondary-outline-disable" }}" 
+                    {% if not readOnly %}href="{{ path(editRoute, editParameters|merge({documentId: document.id})) }}?sourceRoute={{ sourceRoute }}"{% endif %}
                   >
                     {{ fa.icon('pen', family: 'solid', fixed_width: true, additional_classes: ['me-1']) }}
                     Modifier
