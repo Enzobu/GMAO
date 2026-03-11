@@ -75,8 +75,15 @@
                 </div>
 
                 <div class="d-flex gap-2 flex-shrink-0">
-                  <a class="btn btn-sm btn-outline-secondary {{ readOnly ? "btn-outline-warning" }}"
-                     href="{{ path('app_vehicle_show', {id: vehicle.id}) }}">
+                  <a 
+                    class="btn btn-sm btn-outline-secondary {{ readOnly ? "btn-outline-warning" }}"
+                    href="{{ path('app_vehicle_show', {id: vehicle.id}) }}"
+                    {% if readOnly %}
+                      data-bs-toggle="tooltip" data-bs-placement="top"
+                      data-bs-custom-class="custom-tooltip"
+                      data-bs-title="Lecture seule"
+                    {% endif %}
+                  >
                     {{ fa.icon('eye', family: 'solid', fixed_width: true, additional_classes: ['me-1']) }}
                     Voir
                   </a>
