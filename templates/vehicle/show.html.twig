@@ -7,45 +7,59 @@
 
 {% block body %}
   {% set readOnly = is_granted('ROLE_USER') ? false : vehicle.user != app.user %}
-  <div class="d-flex align-items-start justify-content-between gap-3 mb-3">
-    <div>
-      <div class="d-flex align-items-center gap-2 flex-wrap">
-        <h1 class="h3 mb-0">
-          {{ vehicle.name|capitalize ?: (vehicle.brand|capitalize ~ ' ' ~ vehicle.model|capitalize)|trim }}
-        </h1>
+  <div class="mb-4">
+    <div class="d-flex flex-column gap-3">
+      <div class="d-flex flex-column flex-lg-row align-items-lg-start justify-content-between gap-3">
+        <div class="flex-grow-1 min-w-0">
+          <h1 class="h3 mb-2">
+            {{ vehicle.name|capitalize ?: (vehicle.brand|capitalize ~ ' ' ~ vehicle.model|capitalize)|trim }}
+          </h1>
 
-        {% if vehicle.type %}
-          {{ badge.emphasis(label: vehicle.type.label, variant: vehicle.type.variant ) }}
-        {% endif %}
+          {# Desktop uniquement #}
+          <div class="d-none d-lg-flex flex-column gap-2">
+            <div class="d-flex align-items-center gap-2 flex-wrap">
+              {% if vehicle.type %}
+                {{ badge.emphasis(label: vehicle.type.label, variant: vehicle.type.variant ) }}
+              {% endif %}
 
-        {{ badge.emphasis(label: vehicle.status.label, variant: vehicle.status.variant ) }}
+              {{ badge.emphasis(label: vehicle.status.label, variant: vehicle.status.variant ) }}
+            </div>
+
+            <div class="d-flex align-items-center gap-3 flex-wrap text-body-secondary">
+              <span><strong>Immat.</strong> {{ vehicle.registration|upper }}</span>
+
+              {% if vehicle.year %}
+                <span><strong>Année</strong> {{ vehicle.year }}</span>
+              {% endif %}
+
+              {% if vehicle.lastMileage is not null %}
+                <span><strong>Km</strong> {{ vehicle.lastMileage|number_format(0, '.', ' ') }}</span>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+
+        <div class="d-flex flex-column flex-sm-row align-items-stretch align-items-sm-center gap-2 flex-shrink-0">
+          <a class="btn btn-outline-secondary" href="{{ path('app_vehicle_index') }}">
+            {{ fa.icon('arrow-left', family: 'solid', fixed_width: true, additional_classes: ['me-1']) }}
+            Retour
+          </a>
+
+          <a
+            class="btn btn-primary {{ readOnly ? 'btn-disable' }}"
+            {% if not readOnly %}href="{{ path('app_vehicle_edit', {id: vehicle.id}) }}?show=true"{% endif %}
+          >
+            {{ fa.icon('pen', family: 'solid', fixed_width: true, additional_classes: ['me-1']) }}
+            Modifier
+          </a>
+
+          {% if is_granted('ROLE_ADMIN') %}
+            {% include "vehicle/_delete_form.html.twig" %}
+          {% endif %}
+        </div>
       </div>
 
-      <div class="text-body-secondary mt-1">
-        <span class="me-3"><strong>Immat.</strong> {{ vehicle.registration|upper }}</span>
-        {% if vehicle.year %}
-          <span class="me-3"><strong>Année</strong> {{ vehicle.year }}</span>
-        {% endif %}
-        {% if vehicle.lastMileage is not null %}
-          <span><strong>Km</strong> {{ vehicle.lastMileage|number_format(0, '.', ' ') }}</span>
-        {% endif %}
-      </div>
-    </div>
-
-    <div class="d-flex gap-2 flex-shrink-0">
-      <a class="btn btn-outline-secondary" href="{{ path('app_vehicle_index') }}">
-        {{ fa.icon('arrow-left', family: 'solid', fixed_width: true, additional_classes: ['me-1']) }}
-        Retour
-      </a>
-
-      <a class="btn btn-primary {{ readOnly ? "btn-disable" }}" {% if not readOnly %}href="{{ path('app_vehicle_edit', {id: vehicle.id}) }}?show=true"{% endif %}>
-        {{ fa.icon('pen', family: 'solid', fixed_width: true, additional_classes: ['me-1']) }}
-        Modifier
-      </a>
-
-      {% if is_granted('ROLE_ADMIN') %}
-        {% include "vehicle/_delete_form.html.twig" %}
-      {% endif %}
+      {# Mobile / tablette : on garde uniquement le nom, donc rien ici #}
     </div>
   </div>
 

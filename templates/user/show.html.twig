@@ -8,20 +8,28 @@
 
 {% block body %}
   {% set readOnly = not is_granted('ROLE_ADMIN') %}
-  <div class="d-flex align-items-center justify-content-between mb-3">
-    <div>
-      <h1 class="h3 mb-1">
-        {{ user.displayName }}
-      </h1>
-      <div class="text-body-secondary small">
-        Utilisateur #{{ user.id }}
+  <div class="mb-4">
+    <div class="d-flex flex-column flex-lg-row align-items-lg-start justify-content-between gap-3">
+      <div class="flex-grow-1 min-w-0">
+        <h1 class="h3 mb-1">
+          {{ user.displayName }}
+        </h1>
+
+        <div class="text-body-secondary small d-none d-lg-block">
+          Utilisateur #{{ user.id }}
+        </div>
+      </div>
+
+      <div class="d-flex flex-column flex-sm-row align-items-stretch align-items-sm-center gap-2 flex-shrink-0">
+        <a
+          class="btn btn-outline-secondary"
+          href="{{ path('app_user_index') }}"
+        >
+          {{ fa.icon('arrow-left', family: 'solid', fixed_width: true, additional_classes: ['me-1']) }}
+          Retour
+        </a>
       </div>
     </div>
-    <a class="btn btn-outline-secondary"
-      href="{{ path('app_user_index') }}">
-      {{ fa.icon('arrow-left', family: 'solid', fixed_width: true, additional_classes: ['me-1']) }}
-      Retour
-    </a>
   </div>
 
   <div class="card shadow-sm">
