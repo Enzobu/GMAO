@@ -8,16 +8,20 @@ use App\Form\DocumentType;
 use App\Form\UserType;
 use App\Repository\DocumentRepository;
 use App\Repository\UserRepository;
+use Symfony\Component\Mime\Address;
 use App\Service\DocumentManager;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bridge\Doctrine\Attribute\MapEntity;
+use Symfony\Bridge\Twig\Mime\TemplatedEmail;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\File\Exception\FileException;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\Routing\Attribute\Route;
-use Symfony\Component\Security\Http\Attribute\CurrentUser;
 use Symfony\Component\String\Slugger\SluggerInterface;
+use SymfonyCasts\Bundle\ResetPassword\Exception\ResetPasswordExceptionInterface;
+use SymfonyCasts\Bundle\ResetPassword\ResetPasswordHelperInterface;
 
 #[Route('/user')]
 final class UserController extends AbstractController
@@ -37,8 +41,12 @@ final class UserController extends AbstractController
     }
 
     #[Route('/new', name: 'app_user_new', methods: ['GET', 'POST'])]
-    public function new(Request $request, EntityManagerInterface $entityManager): Response
-    {
+    public function new(
+        Request $request, 
+        EntityManagerInterface $entityManager,
+        ResetPasswordHelperInterface $resetPasswordHelper,
+        MailerInterface $mailer,
+    ): Response {
         $user = new User();
         $user->setAddress(new \App\Entity\Address());
 
@@ -56,6 +64,25 @@ final class UserController extends AbstractController
         if ($form->isSubmitted() && $form->isValid()) {
             $entityManager->persist($user);
             $entityManager->flush();
+
+            try {
+                $resetToken = $resetPasswordHelper->generateResetToken($user);
+
+                $email = (new TemplatedEmail())
+                    ->from(new Address('no-reply@enzo-palermo.com', 'GMAO'))
+                    ->to((string) $user->getEmail())
+                    ->subject('Définissez votre mot de passe')
+                    ->htmlTemplate('reset_password/email.html.twig')
+                    ->context([
+                        'resetToken' => $resetToken,
+                    ]);
+
+                $mailer->send($email);
+
+                $this->addFlash('success', 'Utilisateur créé. Un email de définition du mot de passe a été envoyé.');
+            } catch (ResetPasswordExceptionInterface $e) {
+                $this->addFlash('warning', 'Utilisateur créé, mais le mail de définition du mot de passe n’a pas pu être envoyé.');
+            }
 
             return $this->redirectToRoute('app_user_index', [], Response::HTTP_SEE_OTHER);
         }
@@ -78,7 +105,7 @@ final class UserController extends AbstractController
         if ($response) {
             return $response;
         }
-
+        
         return $this->render('user/show.html.twig', [
             'user' => $user,
             'user_document' => $documentRepository->findByUser(user: $user, deleted: false),
@@ -107,6 +134,8 @@ final class UserController extends AbstractController
         if ($form->isSubmitted() && $form->isValid()) {
             $entityManager->flush();
 
+            $this->addFlash('success', 'Utilisateur modifié.');
+
             return $this->redirectToRoute('app_user_index', [], Response::HTTP_SEE_OTHER);
         }
 
@@ -131,6 +160,8 @@ final class UserController extends AbstractController
         if ($this->isCsrfTokenValid('delete'.$user->getId(), $request->getPayload()->getString('_token'))) {
             $entityManager->remove($user);
             $entityManager->flush();
+
+            $this->addFlash('success', 'Utilisateur supprimé.');
         }
 
         return $this->redirectToRoute('app_user_index', [], Response::HTTP_SEE_OTHER);

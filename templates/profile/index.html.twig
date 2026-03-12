@@ -14,10 +14,18 @@
           Gère tes informations personnelles.
         </div>
       </div>
-      <a class="btn btn-outline-secondary" href="{{ path(user_list ? 'app_user_index' : 'app_home') }}">
-        {{ fa.icon('arrow-left', family: 'solid', fixed_width: true, additional_classes: ['me-1']) }}
-        Retour
-      </a>
+      <div class="d-flex gap-2">
+        <a class="btn btn-outline-secondary" href="{{ path(user_list ? 'app_user_index' : 'app_home') }}">
+          {{ fa.icon('arrow-left', family: 'solid', fixed_width: true, additional_classes: ['me-1']) }}
+          Retour
+        </a>
+        <form method="post" action="{{ path('app_profile_password_reset_request') }}">
+          <input type="hidden" name="_token" value="{{ csrf_token('profile_password_reset_request') }}">
+          <button type="submit" class="btn btn-outline-primary">
+            Réinitialiser mon mot de passe
+          </button>
+        </form>
+      </div>
     </div>
 
     {{ include('profile/_form.html.twig') }}
