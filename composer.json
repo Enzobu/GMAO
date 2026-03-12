@@ -43,6 +43,7 @@
         "symfony/validator": "7.2.*",
         "symfony/web-link": "7.2.*",
         "symfony/yaml": "7.2.*",
+        "symfonycasts/reset-password-bundle": "^1.24",
         "symfonycasts/sass-bundle": "^0.8.2",
         "twbs/bootstrap": "^5.3",
         "twig/extra-bundle": "^2.12|^3.0",

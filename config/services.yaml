@@ -6,6 +6,7 @@
 parameters:
     documents_directory: '%kernel.project_dir%/public/uploads/documents'
     laod_datafixtures: '%env(LOAD_DATAFIXTURES)%'
+    mailer_sender: '%env(MAILER_SENDER)%'
 
 services:
     # default configuration for services in *this* file

@@ -12,9 +12,9 @@
     <div class="alert alert-{{ variant }} {{ dismissible ? 'alert-dismissible fade show':''}}" role="alert">
         <div class="row g-3">
             <div class="col-auto">
-                {{ fa.icon(icon) }}
+                {{ fa.icon(icon, family: 'solid', fixed_width: true, additional_classes: ['me-2']) }}
             </div>
-            <div class="col">
+            <div class="col markdown-content">
                 {{ content | markdown_to_html }}
             </div>
         </div>

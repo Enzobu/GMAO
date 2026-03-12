@@ -4,26 +4,40 @@
 
 <header class="sticky-top">
   <nav class="navbar navbar-expand-lg bg-body border-bottom shadow-sm" id="main-navbar">
-    <div class="d-flex justify-content-between w-100 px-3">
-      {# ----- Logo ----- #}
-      <a class="d-flex align-items-center gap-2 navbar-brand me-5" href="{{ path('app_home') }}" aria-label="Accueil">
+    <div class="container-fluid px-3">
+      <a class="navbar-brand d-flex align-items-center gap-2 me-0" href="{{ path('app_home') }}" aria-label="Accueil">
         <img src="{{ asset('images/logo.png') }}" alt="" style="max-width: 3rem;">
-        <p class="fs-4 p-0 m-0">Gestionnaire d'entretien</p>
+        <span class="fs-4 m-0">Gestionnaire d'entretien</span>
       </a>
-      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
+
+      <button
+        class="navbar-toggler"
+        type="button"
+        data-bs-toggle="collapse"
+        data-bs-target="#navbarSupportedContent"
+        aria-controls="navbarSupportedContent"
+        aria-expanded="false"
+        aria-label="Toggle navigation"
+      >
+        <span class="navbar-toggler-icon"></span>
+      </button>
 
       <div class="collapse navbar-collapse" id="navbarSupportedContent">
-        {# ----- Bouton de gauche ----- #}
-        <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-        </ul>
+        <ul class="navbar-nav me-auto mb-2 mb-lg-0"></ul>
 
-        {# ----- Bouton de droite ----- #}
         {% if is_granted('ROLE_USER') %}
-          <ul class="navbar-nav">
+          <ul class="navbar-nav ms-auto">
             <li class="nav-item dropdown">
-              <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+              <a
+                class="nav-link dropdown-toggle"
+                href="#"
+                role="button"
+                data-bs-toggle="dropdown"
+                aria-expanded="false"
+              >
                 {{ app.user.firstname|slice(0, 1)|upper }}{{ app.user.lastname|slice(0, 1)|upper }}
               </a>
+
               <ul class="dropdown-menu dropdown-menu-end">
                 {{ dropdown.item(
                   label: 'Profil',
@@ -31,10 +45,8 @@
                   icon: fa.icon(name: 'user', family: 'solid', size: 'sm', additional_classes: ['me-2']),
                 ) }}
 
-                <li>
-                  <hr class="dropdown-divider" />
-                </li>
-                
+                <li><hr class="dropdown-divider"></li>
+
                 {{ dropdown.item(
                   label: 'Déconnexion',
                   path: path('app_logout'),
@@ -45,6 +57,10 @@
             </li>
           </ul>
         {% endif %}
+
+        <div class="d-lg-none w-100 mt-3 pt-3 border-top">
+          {% include '_main_navigation.html.twig' %}
+        </div>
       </div>
     </div>
   </nav>

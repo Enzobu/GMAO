@@ -5,111 +5,53 @@
 {% block title %}Profil{% endblock %}
 
 {% block body %}
-<div class="container py-4 py-lg-5">
-  <div class="d-flex align-items-center justify-content-between mb-4">
-    <div>
-      <h1 class="h3 mb-1">Profil</h1>
-      <div class="text-body-secondary small">
-        Gère tes informations personnelles et ton mot de passe.
-      </div>
-    </div>
-    <a class="btn btn-outline-secondary" href="{{ path('app_home') }}">
-      {{ fa.icon('arrow-left', family: 'solid', fixed_width: true, additional_classes: ['me-1']) }}
-      Retour
-    </a>
-  </div>
+  {% set user_list = app.request.get('user-list') == 'true' %}
+  <div class="container py-4 py-lg-5">
+    <div class="mb-4">
+      <div class="d-flex flex-column flex-lg-row align-items-lg-start justify-content-between gap-3">
 
-  {% include "_flashes.html.twig" %}
+        <div class="flex-grow-1 min-w-0">
+          <h1 class="h3 mb-1">Profil</h1>
 
-  {{ form_start(form, { attr: { class: 'needs-validation' } }) }}
-
-  <div class="row g-3">
-    <div class="col-12 col-xl-6">
-      <div class="card shadow-sm h-100">
-        <div class="card-header bg-body">
-          <div class="fw-semibold">Informations</div>
-        </div>
-        <div class="card-body">
-          <div class="row g-3">
-            <div class="col-12">
-              {{ form_label(form.email, 'E-mail') }}
-              {{ form_widget(form.email, { attr: { class: 'form-control', autocomplete: 'email' } }) }}
-              {{ form_errors(form.email) }}
-            </div>
-            <div class="col-12 col-md-6">
-              {{ form_label(form.firstname, 'Prénom') }}
-              {{ form_widget(form.firstname, { attr: { class: 'form-control', autocomplete: 'given-name' } }) }}
-              {{ form_errors(form.firstname) }}
-            </div>
-            <div class="col-12 col-md-6">
-              {{ form_label(form.lastname, 'Nom') }}
-              {{ form_widget(form.lastname, { attr: { class: 'form-control', autocomplete: 'family-name' } }) }}
-              {{ form_errors(form.lastname) }}
-            </div>
+          <div class="text-body-secondary small d-none d-lg-block">
+            Gère tes informations personnelles.
           </div>
         </div>
+
+        <div class="d-flex flex-column flex-sm-row align-items-stretch align-items-sm-center gap-2 flex-shrink-0">
+          <a
+            class="btn btn-outline-secondary"
+            href="{{ path(user_list ? 'app_user_index' : 'app_home') }}"
+          >
+            {{ fa.icon('arrow-left', family: 'solid', fixed_width: true, additional_classes: ['me-1']) }}
+            Retour
+          </a>
+
+          <form method="post" action="{{ path('app_profile_password_reset_request') }}" class="d-flex">
+            <input type="hidden" name="_token" value="{{ csrf_token('profile_password_reset_request') }}">
+            <button type="submit" class="btn btn-outline-primary w-100">
+              Réinitialiser mon mot de passe
+            </button>
+          </form>
+        </div>
+
       </div>
     </div>
 
-    <div class="col-12 col-xl-6">
-      <div class="card shadow-sm h-100">
-        <div class="card-header bg-body d-flex align-items-center justify-content-between">
-          <div class="fw-semibold">Mot de passe</div>
-          <span class="badge text-bg-light">Optionnel</span>
-        </div>
-        <div class="card-body">
-          <div class="row g-3">
-            <div class="col-12">
-              {{ form_label(form.old_password, 'Ancien mot de passe') }}
-              {{ form_widget(form.old_password, { attr: { class: 'form-control', autocomplete: 'current-password' } }) }}
-              {{ form_errors(form.old_password) }}
-            </div>
-            <div class="col-12 col-md-6">
-              {{ form_label(form.new_password, 'Nouveau mot de passe') }}
-              {{ form_widget(form.new_password, { attr: { class: 'form-control', autocomplete: 'new-password' } }) }}
-              {{ form_errors(form.new_password) }}
-            </div>
-            <div class="col-12 col-md-6">
-              {{ form_label(form.new_password_retry, 'Confirmer le mot de passe') }}
-              {{ form_widget(form.new_password_retry, { attr: { class: 'form-control', autocomplete: 'new-password' } }) }}
-              {{ form_errors(form.new_password_retry) }}
-            </div>
-            <div class="col-12">
-              <div class="form-text">
-                Laisse les champs mot de passe vides si tu ne veux pas le modifier.
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-    <div class="col-12">
-      <div class="d-flex flex-column flex-sm-row gap-2 justify-content-end mt-2">
-        <a href="{{ path('app_home') }}" class="btn btn-outline-secondary">
-          {{ fa.icon('xmark', family: 'solid', fixed_width: true, additional_classes: ['me-1']) }}
-          Annuler
-        </a>
-        <button class="btn btn-primary" type="submit">
-          {{ fa.icon('floppy-disk', family: 'solid', fixed_width: true, additional_classes: ['me-1']) }}
-          Enregistrer
-        </button>
-      </div>
+    {{ include('profile/_form.html.twig') }}
+
+    <div class="mt-4">
+      {{ document.list(
+        documents: user_document,
+        newPath: path('app_profile_document_new'),
+        sourceRoute: path(app.request.attributes.get('_route')),
+        editRoute: 'app_profile_document_edit',
+        editParameters: {},
+        deleteRoute: 'app_profile_document_delete',
+        deleteParameters: {},
+        fallback: "Aucun document disponible pour cet utilisateur",
+        readOnly = false,
+      ) }}
     </div>
   </div>
-
-  {{ form_end(form) }}
-
-  <div class="mt-4">
-    {{ document.list(
-      documents: user_document,
-      newPath: path('app_profile_document_new'),
-      sourceRoute: path(app.request.attributes.get('_route')),
-      editRoute: 'app_profile_document_edit',
-      editParameters: {},
-      deleteRoute: 'app_profile_document_delete',
-      deleteParameters: {},
-      fallback: "Aucun document disponible pour cet utilisateur"
-    ) }}
-  </div>
-</div>
 {% endblock %}

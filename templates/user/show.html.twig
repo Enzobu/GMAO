@@ -1,0 +1,101 @@
+{% extends 'base.html.twig' %}
+
+{% import "macros/badge.html.twig" as badge %}
+{% import "macros/document.html.twig" as document %}
+{% import "macros/fontawesome.html.twig" as fa %}
+
+{% block title %}Utilisateur{% endblock %}
+
+{% block body %}
+  {% set readOnly = not is_granted('ROLE_ADMIN') %}
+  <div class="mb-4">
+    <div class="d-flex flex-column flex-lg-row align-items-lg-start justify-content-between gap-3">
+      <div class="flex-grow-1 min-w-0">
+        <h1 class="h3 mb-1">
+          {{ user.displayName }}
+        </h1>
+
+        <div class="text-body-secondary small d-none d-lg-block">
+          Utilisateur #{{ user.id }}
+        </div>
+      </div>
+
+      <div class="d-flex flex-column flex-sm-row align-items-stretch align-items-sm-center gap-2 flex-shrink-0">
+        <a
+          class="btn btn-outline-secondary"
+          href="{{ path('app_user_index') }}"
+        >
+          {{ fa.icon('arrow-left', family: 'solid', fixed_width: true, additional_classes: ['me-1']) }}
+          Retour
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <div class="card shadow-sm">
+    <div class="card-body">
+      <div class="row g-3">
+        <div class="col-md-6">
+          <div class="text-body-secondary small">Email</div>
+          <div><a href="mailto:{{ user.email }}">{{ user.email }}</a></div>
+        </div>
+        <div class="col-md-6">
+          <div class="text-body-secondary small">ID</div>
+          <div>{{ user.id }}</div>
+        </div>
+        <div class="col-md-6">
+          <div class="text-body-secondary small">Prénom</div>
+          <div>{{ user.firstname|capitalize ?: '—' }}</div>
+        </div>
+        <div class="col-md-6">
+          <div class="text-body-secondary small">Nom</div>
+          <div>{{ user.lastname|upper ?: '—' }}</div>
+        </div>
+        <div class="col-12">
+          <div class="text-body-secondary small mb-1">Rôles</div>
+          <div class="d-flex flex-wrap gap-2">
+            {% for role in user.roles %}
+              {% if role == 'ROLE_ADMIN' %}
+                {{ badge.default(label: 'Administrateur', variant: 'danger') }}
+              {% elseif role == 'ROLE_USER' %}
+                {{ badge.default(label: 'Utilisateur', variant: 'info') }}
+              {% else %}
+                {{ badge.default(label: role, variant: 'secondary') }}
+              {% endif %}
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card-footer bg-body d-flex justify-content-end">
+      {% if is_granted('ROLE_ADMIN') %}
+        <a class="btn btn-sm btn-outline-primary d-flex align-items-center me-2"
+          href="{{ path('app_user_edit', {id: user.id}) }}">
+            {{ fa.icon('pen', family: 'solid', fixed_width: true, additional_classes: ['me-1']) }}
+            Modifier
+        </a>
+        {% include "user/_delete_form.html.twig" %}
+      {% else %}
+        <span class="btn btn-sm btn-outline-primary btn-outline-disable d-flex align-items-center me-2">
+            {{ fa.icon('pen', family: 'solid', fixed_width: true, additional_classes: ['me-1']) }}
+            Modifier
+        </span>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="mt-4">
+    {{ document.list(
+      documents: user_document,
+      newPath: path('app_user_document_new', {userId: user.id}),
+      sourceRoute: path(app.request.attributes.get('_route'), {id: user.id}),
+      editRoute: 'app_user_document_edit',
+      editParameters: {userId: user.id},
+      deleteRoute: 'app_user_document_delete',
+      deleteParameters: {userId: user.id},
+      fallback: "Aucun document disponible pour cet utilisateur",
+      readOnly = false,
+    ) }}
+  </div>
+{% endblock %}

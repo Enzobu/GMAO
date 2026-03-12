@@ -1,0 +1,66 @@
+{% import 'macros/fontawesome.html.twig' as fa %}
+
+{{ form_start(form, { attr: { class: 'needs-validation' } }) }}
+  <div class="row g-3">
+    <div class="col-12 col-xl-6">
+      <div class="card shadow-sm h-100">
+        <div class="card-header bg-body">
+          <div class="fw-semibold">Informations</div>
+        </div>
+        <div class="card-body">
+          <div class="row g-3">
+            <div class="col-12">
+              {{ form_row(form.email) }}
+            </div>
+            <div class="col-12 col-md-6">
+              {{ form_row(form.firstname) }}
+            </div>
+            <div class="col-12 col-md-6">
+              {{ form_row(form.lastname) }}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12 col-xl-6">
+      <div class="card shadow-sm h-100">
+        <div class="card-header bg-body">
+          <div class="fw-semibold">Adresse</div>
+        </div>
+        <div class="card-body">
+          <div class="row g-3">
+            <div class="col-12">
+              {{ form_row(form.address.line1) }}
+            </div>
+            <div class="col-12">
+              {{ form_row(form.address.line2) }}
+            </div>
+            <div class="col-12 col-md-4">
+              {{ form_row(form.address.postalCode) }}
+            </div>
+            <div class="col-12 col-md-4">
+              {{ form_row(form.address.city) }}
+            </div>
+            <div class="col-12 col-md-4">
+              {{ form_row(form.address.country) }}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12">
+      <div class="d-flex flex-column flex-sm-row gap-2 justify-content-end mt-2">
+        <a href="{{ path(user_list ? 'app_user_index' : 'app_home') }}" class="btn btn-outline-secondary">
+          {{ fa.icon('xmark', family: 'solid', fixed_width: true, additional_classes: ['me-1']) }}
+          Annuler
+        </a>
+        <button class="btn btn-primary" type="submit">
+          {{ fa.icon('floppy-disk', family: 'solid', fixed_width: true, additional_classes: ['me-1']) }}
+          Enregistrer
+        </button>
+      </div>
+    </div>
+  </div>
+{{ form_end(form) }}

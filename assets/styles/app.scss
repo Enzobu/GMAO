@@ -153,6 +153,10 @@ label.required:after {
   background-color: transparent;
 }
 
+.markdown-content p {
+    margin: 0;
+}
+
 @import "../../vendor/twbs/bootstrap/scss/functions";
 @import "../../vendor/twbs/bootstrap/scss/variables";
 @import "../../vendor/twbs/bootstrap/scss/maps";
