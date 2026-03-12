@@ -1,0 +1,29 @@
+{% import 'macros/modal.html.twig' as modal %}
+{% import 'macros/fontawesome.html.twig' as fa %}
+
+<button type="button"
+  class="btn btn-outline-danger"
+  data-bs-toggle="modal"
+  data-bs-target="#deleteUserModal{{ user.id }}"
+>
+  {{ fa.icon('trash-can', family: 'solid', fixed_width: true, additional_classes: ['me-1']) }}
+  Supprimer
+</button>
+
+{{ modal.confirm(
+  id: 'deleteUserModal' ~ user.id,
+  title: 'Supprimer l\'utilisateur',
+  description: '
+    <p class="mb-2">Vous êtes sur le point de supprimer cet utilisateur :</p>
+    <div class="fw-semibold">' ~
+      user.displayName
+    ~ '</div>
+    <p class="mt-3 mb-0 text-danger">Cette action est définitive.</p>
+  ',
+  continueButton: 'Supprimer',
+  cancelButton: 'Annuler',
+  type: 'submit',
+  accent: 'danger',
+  action: path('app_user_delete', {'id': user.id}),
+  csrfToken: csrf_token('delete' ~ user.id)
+) }}

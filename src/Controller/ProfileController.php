@@ -14,7 +14,6 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\File\Exception\FileException;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\CurrentUser;
 use Symfony\Component\String\Slugger\SluggerInterface;
@@ -26,70 +25,50 @@ final class ProfileController extends AbstractController
     public function index(
         #[CurrentUser] User $currentUser,
         Request $request,
-        UserPasswordHasherInterface $passwordHasher,
         EntityManagerInterface $entityManager,
         DocumentRepository $documentRepository,
-    ): Response
-    {
+    ): Response {
+        if (!$currentUser->getAddress()) {
+            $currentUser->setAddress(new \App\Entity\Address());
+        }
+
+        $userSnapshot = [
+            'email' => $currentUser->getEmail(),
+            'firstname' => $currentUser->getFirstname(),
+            'lastname' => $currentUser->getLastname(),
+        ];
+
+        $addressSnapshot = [
+            'line1' => $currentUser->getAddress()?->getLine1(),
+            'line2' => $currentUser->getAddress()?->getLine2(),
+            'postalCode' => $currentUser->getAddress()?->getPostalCode(),
+            'city' => $currentUser->getAddress()?->getCity(),
+            'country' => $currentUser->getAddress()?->getCountry(),
+        ];
+
         $form = $this->createForm(UpdateProfileType::class, $currentUser);
-        $form->get('firstname')->setData($currentUser->getFirstname());
-        $form->get('lastname')->setData($currentUser->getLastname());
-        $form->get('email')->setData($currentUser->getEmail());
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            $oldPassword = $form->get('old_password')->getData();
-            $newPassword = $form->get('new_password')->getData();
-            $newPasswordRetry = $form->get('new_password_retry')->getData();
+            $userIsUpdated =
+                $userSnapshot['email'] !== $currentUser->getEmail() ||
+                $userSnapshot['firstname'] !== $currentUser->getFirstname() ||
+                $userSnapshot['lastname'] !== $currentUser->getLastname();
 
-            $email = $form->get('email')->getData();
-            $firstname = $form->get('firstname')->getData();
-            $lastname = $form->get('lastname')->getData();
-            
-            if (!(empty($oldPassword) && empty($newPassword) && empty($newPasswordRetry))) {
-                if (empty($oldPassword) || empty($newPassword) || empty($newPasswordRetry)) {
-                    $this->addFlash('danger', 'Veuillez remplir tous les champs pour mettre à jour votre mot de passe');
-                    return $this->redirectToRoute('app_profile');
-                }
+            $addressIsUpdated =
+                $addressSnapshot['line1'] !== $currentUser->getAddress()?->getLine1() ||
+                $addressSnapshot['line2'] !== $currentUser->getAddress()?->getLine2() ||
+                $addressSnapshot['postalCode'] !== $currentUser->getAddress()?->getPostalCode() ||
+                $addressSnapshot['city'] !== $currentUser->getAddress()?->getCity() ||
+                $addressSnapshot['country'] !== $currentUser->getAddress()?->getCountry();
 
-                if (!$passwordHasher->isPasswordValid($currentUser, $oldPassword)) {
-                    $this->addFlash('danger', 'Votre mot de passe actuel est incorrect.');
-                    return $this->redirectToRoute('app_profile');
-                }
-    
-                if ($newPassword !== $newPasswordRetry) {
-                    $this->addFlash('danger', 'Les nouveaux mots de passe ne correspondent pas.');
-                    return $this->redirectToRoute('app_profile');
-                }
-    
-                $hashedPassword = $passwordHasher->hashPassword($currentUser, $newPassword);
-                $currentUser->setPassword($hashedPassword);
-    
+            if ($userIsUpdated || $addressIsUpdated) {
                 $entityManager->flush();
-    
-                $this->addFlash('success', 'Mot de passe mis à jour avec succès.');
-            }
-            
-            if ((empty($email) && empty($firstname) && empty($lastname))) {
-                $this->addFlash('danger', 'L\'adresse mail, le nom et le prénom ne peuvent pas être vides.');
-                return $this->redirectToRoute('app_profile');
+                $this->addFlash('success', 'Modifications enregistrées.');
+            } else {
+                $this->addFlash('warning', 'Aucune modification à enregistrer.');
             }
 
-            if (
-                $email !== $currentUser->getEmail() || 
-                $firstname !== $currentUser->getFirstname() || 
-                $lastname !== $currentUser->getLastname()
-            )  {
-                $currentUser->setEmail($email);
-                $currentUser->setFirstname($firstname);
-                $currentUser->setLastname($lastname);
-
-                $entityManager->flush();
-
-                $this->addFlash('success', 'Données mise à jour.');
-            }
-                
-            $this->addFlash('warning', 'Aucune données n\'a été modifiées.');
             return $this->redirectToRoute('app_profile');
         }
 

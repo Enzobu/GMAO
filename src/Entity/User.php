@@ -72,7 +72,10 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         $this->email = $email;
 
         return $this;
-    }
+    }    
+    
+    #[ORM\Column(options: ['default' => false])]
+    private bool $isDeleted = false;
 
     /**
      * A visual identifier that represents this user.
@@ -225,5 +228,17 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function displayName(): string
     {
         return ucfirst($this->firstname) . ' ' . strtoupper($this->lastname);
+    }
+
+    public function isDeleted(): bool
+    {
+        return $this->isDeleted;
+    }
+
+    public function setIsDeleted(bool $isDeleted): static
+    {
+        $this->isDeleted = $isDeleted;
+
+        return $this;
     }
 }
