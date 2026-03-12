@@ -7,7 +7,7 @@
 {% block title %}Assurance{% endblock %}
 
 {% block body %}
-  {% set readOnly = vehicle.user != app.user %}
+  {% set readOnly = is_granted('ROLE_USER') ? false : vehicle.user != app.user %}
   <div class="d-flex align-items-start justify-content-between gap-3 mb-4">
     <div>
       <h1 class="h3 mb-1">{{ vehicle_insurance.providerName }}</h1>

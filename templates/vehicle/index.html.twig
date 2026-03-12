@@ -27,7 +27,7 @@
   {% else %}
     <div class="row g-3">
       {% for vehicle in vehicles %}
-        {% set readOnly = vehicle.user != app.user %}
+        {% set readOnly = is_granted('ROLE_USER') ? false : vehicle.user != app.user %}
         <div class="col-12 col-xl-6">
           <div class="card shadow-sm">
             <div class="card-body">
