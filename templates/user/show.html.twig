@@ -1,6 +1,7 @@
 {% extends 'base.html.twig' %}
 
 {% import "macros/badge.html.twig" as badge %}
+{% import "macros/document.html.twig" as document %}
 {% import "macros/fontawesome.html.twig" as fa %}
 
 {% block title %}Utilisateur{% endblock %}
@@ -74,5 +75,19 @@
         </span>
       {% endif %}
     </div>
+  </div>
+
+  <div class="mt-4">
+    {{ document.list(
+      documents: user_document,
+      newPath: path('app_user_document_new', {userId: user.id}),
+      sourceRoute: path(app.request.attributes.get('_route'), {id: user.id}),
+      editRoute: 'app_user_document_edit',
+      editParameters: {userId: user.id},
+      deleteRoute: 'app_user_document_delete',
+      deleteParameters: {userId: user.id},
+      fallback: "Aucun document disponible pour cet utilisateur",
+      readOnly = false,
+    ) }}
   </div>
 {% endblock %}
