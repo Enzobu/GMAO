@@ -69,7 +69,7 @@ final class UserController extends AbstractController
                 $resetToken = $resetPasswordHelper->generateResetToken($user);
 
                 $email = (new TemplatedEmail())
-                    ->from(new Address('no-reply@enzo-palermo.com', 'GMAO'))
+                    ->from(new Address('no-reply@enzo-palermo.com', 'Enzo PALERMO'))
                     ->to((string) $user->getEmail())
                     ->subject('Définissez votre mot de passe')
                     ->htmlTemplate('reset_password/email.html.twig')

@@ -31,7 +31,7 @@ final readonly class MailManager
     //     ];
 
     //     $email = (new TemplatedEmail())
-    //         ->from(new Address($this->mailerSender, 'GMAO'))
+    //         ->from(new Address($this->mailerSender, 'Enzo PALERMO'))
     //         ->to($user->getEmail())
     //         ->subject($subject)
     //         ->htmlTemplate($templateName)
