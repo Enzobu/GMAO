@@ -19,17 +19,15 @@
     {% include '_navbar.html.twig' %}
     {% set date_format = 'd/m/Y' %}
 
-    <div class="container-fluid">
-      <div class="row">
-        <aside class="d-none d-lg-block col-lg-3 col-xl-2 p-0 min-vh-100">
-          {% include '_sidebar.html.twig' %}
-        </aside>
+    <div class="app-layout">
+      <aside class="app-sidebar d-none d-lg-block">
+        {% include '_sidebar.html.twig' %}
+      </aside>
 
-        <main class="col-12 col-lg-9 col-xl-10 px-3 pt-2 pb-5">
-          {% include "_flashes.html.twig" %}
-          {% block body %}{% endblock %}
-        </main>
-      </div>
+      <main class="app-content">
+        {% include "_flashes.html.twig" %}
+        {% block body %}{% endblock %}
+      </main>
     </div>
   </body>
 </html>
