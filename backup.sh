@@ -5,7 +5,7 @@
 
 set -euo pipefail
 
-CONTAINER_NAME="gmao-database"
+CONTAINER_NAME="gmao-prod-database"
 DOCUMENTS_DIR="./public/uploads/documents"
 REMOTE_USER="ubuntu"
 REMOTE_HOST="enzo-palermo.com"
@@ -17,9 +17,9 @@ DB_NAME_DEFAULT="gmao"
 DB_USER_DEFAULT="root"
 DB_PASSWORD_DEFAULT=""
 
-if [ -f ".env.local" ]; then
+if [ -f ".env.prod" ]; then
   set -a
-  . ./.env.local
+  . ./.env.prod
   set +a
 fi
 
