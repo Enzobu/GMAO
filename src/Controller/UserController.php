@@ -36,7 +36,7 @@ final class UserController extends AbstractController
         }
 
         return $this->render('user/index.html.twig', [
-            'users' => $userRepository->findAll(),
+            'users' => $userRepository->findBy(['isDeleted' => false]),
         ]);
     }
 
@@ -158,7 +158,7 @@ final class UserController extends AbstractController
         }
 
         if ($this->isCsrfTokenValid('delete'.$user->getId(), $request->getPayload()->getString('_token'))) {
-            $entityManager->remove($user);
+            $user->setIsDeleted(true);
             $entityManager->flush();
 
             $this->addFlash('success', 'Utilisateur supprimé.');
