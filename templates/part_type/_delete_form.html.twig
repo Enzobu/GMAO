@@ -1,0 +1,28 @@
+{% import 'macros/modal.html.twig' as modal %}
+{% import 'macros/fontawesome.html.twig' as fa %}
+
+<button
+  type="button"
+  class="btn btn-sm btn-outline-danger"
+  data-bs-toggle="modal"
+  data-bs-target="#deletePartTypeModal{{ part_type.id }}"
+>
+  {{ fa.icon('trash-can', family: 'solid', fixed_width: true, additional_classes: ['me-1']) }}
+  Supprimer
+</button>
+
+{{ modal.confirm(
+  id: 'deletePartTypeModal' ~ part_type.id,
+  title: 'Supprimer le type de pièce ?',
+  description: '
+    <p class="mb-2">Vous êtes sur le point de supprimer :</p>
+    <div class="fw-semibold">' ~ part_type.name ~ '</div>
+    <p class="mt-3 mb-0 text-danger">Cette action est définitive.</p>
+  ',
+  continueButton: 'Supprimer',
+  cancelButton: 'Annuler',
+  type: 'submit',
+  accent: 'danger',
+  action: path('app_configuration_part_type_delete', { id: part_type.id }),
+  csrfToken: csrf_token('delete' ~ part_type.id)
+) }}
