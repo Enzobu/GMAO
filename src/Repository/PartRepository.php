@@ -16,28 +16,31 @@ class PartRepository extends ServiceEntityRepository
         parent::__construct($registry, Part::class);
     }
 
-    //    /**
-    //     * @return Part[] Returns an array of Part objects
-    //     */
-    //    public function findByExampleField($value): array
-    //    {
-    //        return $this->createQueryBuilder('p')
-    //            ->andWhere('p.exampleField = :val')
-    //            ->setParameter('val', $value)
-    //            ->orderBy('p.id', 'ASC')
-    //            ->setMaxResults(10)
-    //            ->getQuery()
-    //            ->getResult()
-    //        ;
-    //    }
+    public function findByFilters(?int $vehicleId = null, ?int $partTypeId = null): array
+    {
+        $qb = $this->createQueryBuilder('p')
+            ->leftJoin('p.vehicles', 'v')
+            ->addSelect('v')
+            ->leftJoin('p.partType', 'pt')
+            ->addSelect('pt');
 
-    //    public function findOneBySomeField($value): ?Part
-    //    {
-    //        return $this->createQueryBuilder('p')
-    //            ->andWhere('p.exampleField = :val')
-    //            ->setParameter('val', $value)
-    //            ->getQuery()
-    //            ->getOneOrNullResult()
-    //        ;
-    //    }
+        if ($vehicleId !== null) {
+            $qb
+                ->andWhere('v.id = :vehicleId')
+                ->setParameter('vehicleId', $vehicleId);
+        }
+
+        if ($partTypeId !== null) {
+            $qb
+                ->andWhere('pt.id = :partTypeId')
+                ->setParameter('partTypeId', $partTypeId);
+        }
+
+        return $qb
+            ->orderBy('p.quantity', 'ASC')
+            ->addOrderBy('pt.name', 'ASC')
+            ->addOrderBy('p.updatedAt', 'DESC')
+            ->getQuery()
+            ->getResult();
+    }
 }

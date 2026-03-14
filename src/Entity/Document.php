@@ -58,9 +58,6 @@ class Document
     private ?VehicleInspection $vehicleInspection = null;
 
     #[ORM\ManyToOne(inversedBy: 'documents')]
-    private ?VehicleMaintenance $vehicleMaintenance = null;
-
-    #[ORM\ManyToOne(inversedBy: 'documents')]
     private ?User $user = null;
 
     /*
@@ -219,17 +216,6 @@ class Document
         return $this;
     }
 
-    public function getVehicleMaintenance(): ?VehicleMaintenance
-    {
-        return $this->vehicleMaintenance;
-    }
-
-    public function setVehicleMaintenance(?VehicleMaintenance $vehicleMaintenance): static
-    {
-        $this->vehicleMaintenance = $vehicleMaintenance;
-        return $this;
-    }
-
     public function getUser(): ?User
     {
         return $this->user;
@@ -241,12 +227,11 @@ class Document
         return $this;
     }
     
-    public function getParent(): Vehicle|VehicleInsurance|VehicleInspection|VehicleMaintenance|User|null
+    public function getParent(): Vehicle|VehicleInsurance|VehicleInspection|User|null
     {
         return $this->vehicle
             ?? $this->vehicleInsurance
             ?? $this->vehicleInspection
-            ?? $this->vehicleMaintenance
             ?? $this->user;
     }
 

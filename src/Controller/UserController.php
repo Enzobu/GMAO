@@ -305,27 +305,27 @@ final class UserController extends AbstractController
         # -------------------- Authization --------------------
         if ($delete || $edit) {
             if (!$this->isGranted('ROLE_ADMIN')) {
-                $this->addFlash('danger', 'Vous n\'avez pas les autorisations nécessaire pour modifier ou supprimer un élément. Veuillez contacter un administrateur');
+                $this->addFlash('danger', 'Vous n\'avez pas les autorisations nécessaires pour modifier ou supprimer un élément. Veuillez contacter un administrateur');
                 return $this->redirectToRoute('app_user_index', [], Response::HTTP_SEE_OTHER);
             }
         }
         if (!$this->isGranted('ROLE_ADMIN')) {
-            $this->addFlash('warning', 'Vous avez un accès en lecture seule à la ressource demandé. Pour plus d\'information, contactez un administrateur');
+            $this->addFlash('warning', 'Vous avez un accès en lecture seule à la ressource demandée. ressoPour plus d\'informations, contactez un administrateururce demandée.');
             return null;
         }
         if ($user) {
             if ($user->isDeleted()) {
-                $this->addFlash('danger', 'L\'utilisateur a été supprimé. Pour plus d\'information, contactez un administrateur');
+                $this->addFlash('danger', 'L\'utilisateur a été supprimé. ressoPour plus d\'informations, contactez un administrateururce demandée.');
                 return $this->redirectToRoute('app_user_index', [], Response::HTTP_SEE_OTHER);
             }
         }
         if ($document) {
             if (!$this->isGranted('ROLE_ADMIN')) {
-                $this->addFlash('danger', 'Vous ne pouvez pas ajouter ou modifier un document sur la ressource demandé. Pour plus d\'information, contactez un administrateur');
+                $this->addFlash('danger', 'Vous ne pouvez pas ajouter ou modifier un document sur la ressource demandée. ressoPour plus d\'informations, contactez un administrateururce demandée.');
                 return $this->redirectToRoute('app_user_index', [], Response::HTTP_SEE_OTHER);
             }
             if ($document->isDeleted()) {
-                $this->addFlash('danger', 'Le document a été supprimé. Pour plus d\'information, contactez un administrateur');
+                $this->addFlash('danger', 'Le document a été supprimé. ressoPour plus d\'informations, contactez un administrateururce demandée.');
                 return $this->redirectToRoute('app_user_index', [], Response::HTTP_SEE_OTHER);
             }
         }

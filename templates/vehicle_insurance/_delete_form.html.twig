@@ -2,7 +2,7 @@
 {% import 'macros/fontawesome.html.twig' as fa %}
 
 <button type="button"
-  class="btn {{ witdh_sm ? "btn-sm" }} btn-outline-danger"
+  class="btn {{ width_sm ? "btn-sm" }} btn-outline-danger"
   data-bs-toggle="modal"
   data-bs-target="#deleteVehicleInsuranceModal{{ vehicle_insurance.id }}"
 >
@@ -14,7 +14,7 @@
   id: 'deleteVehicleInsuranceModal' ~ vehicle_insurance.id,
   title: 'Supprimer l’assurance',
   description: '
-    <p class="mb-2">Tu es sur le point de supprimer cette assurance :</p>
+    <p class="mb-2">Vous êtes sur le point de supprimer cette assurance :</p>
     <div class="fw-semibold">' ~ vehicle_insurance.providerName ~ '</div>
     <div class="small text-body-secondary mt-1">' ~ (vehicle_insurance.policyNumber ?: 'Sans numéro de police') ~ '</div>
     <p class="mt-3 mb-0 text-danger">Cette action est définitive.</p>

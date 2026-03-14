@@ -5,19 +5,14 @@ namespace App\DataFixtures;
 use App\Entity\Address;
 use App\Entity\Document;
 use App\Entity\InspectionCenter;
-use App\Entity\InventoryItem;
-use App\Entity\MaintenanceType;
-use App\Entity\MaintenanceTypePartRequirement;
 use App\Entity\Part;
+use App\Entity\PartType;
 use App\Entity\User;
 use App\Entity\Vehicle;
 use App\Entity\VehicleInspection;
 use App\Entity\VehicleInsurance;
-use App\Entity\VehicleMaintenance;
-use App\Entity\VehicleMaintenancePart;
 use App\Enum\InsurancePaymentFrequencyEnum;
 use App\Enum\InspectionResultEnum;
-use App\Enum\MaintenanceStatusEnum;
 use App\Enum\VehicleColorEnum;
 use App\Enum\VehicleFuelTypeEnum;
 use App\Enum\VehicleStatusEnum;
@@ -391,242 +386,6 @@ class AppFixtures extends Fixture
     
             $manager->flush();
     
-            // ============================================================
-            // =====================  PARTS / STOCK  =======================
-            // ============================================================
-    
-            // --------------------
-            // PARTS
-            // --------------------
-            $partsData = [
-                // Voiture
-                ['name' => 'Filtre à huile', 'category' => 'Filtration', 'unit' => 'pcs', 'brand' => 'Mann', 'reference' => 'W712/95', 'barcode' => null, 'notes' => null],
-                ['name' => 'Huile moteur 5W30', 'category' => 'Fluide', 'unit' => 'L', 'brand' => 'Total', 'reference' => 'INEO-5W30', 'barcode' => null, 'notes' => 'Bidon 5L'],
-                ['name' => 'Filtre à air', 'category' => 'Filtration', 'unit' => 'pcs', 'brand' => 'Bosch', 'reference' => 'F026400', 'barcode' => null, 'notes' => null],
-                ['name' => 'Liquide de frein DOT4', 'category' => 'Fluide', 'unit' => 'L', 'brand' => 'Motul', 'reference' => 'DOT4', 'barcode' => null, 'notes' => null],
-    
-                // Moto
-                ['name' => 'Filtre à huile moto', 'category' => 'Filtration', 'unit' => 'pcs', 'brand' => 'Hiflo', 'reference' => 'HF303', 'barcode' => null, 'notes' => null],
-                ['name' => 'Huile moto 10W40', 'category' => 'Fluide', 'unit' => 'L', 'brand' => 'Motul', 'reference' => '7100-10W40', 'barcode' => null, 'notes' => 'Bidon 4L'],
-                ['name' => 'Kit chaîne', 'category' => 'Transmission', 'unit' => 'pcs', 'brand' => 'DID', 'reference' => 'KIT-520', 'barcode' => null, 'notes' => 'Chaîne + pignon + couronne'],
-                ['name' => 'Plaquettes de frein avant', 'category' => 'Freinage', 'unit' => 'set', 'brand' => 'Brembo', 'reference' => '07BB04', 'barcode' => null, 'notes' => null],
-            ];
-    
-            $partsByKey = [];
-            foreach ($partsData as $p) {
-                $part = (new Part())
-                    ->setName($p['name'])
-                    ->setCategory($p['category'])
-                    ->setUnit($p['unit'])
-                    ->setBrand($p['brand'])
-                    ->setReference($p['reference'])
-                    ->setBarcode($p['barcode'])
-                    ->setNotes($p['notes'])
-                ;
-    
-                $manager->persist($part);
-    
-                // clé simple pour retrouver
-                $partsByKey[$p['brand'].'|'.$p['reference']] = $part;
-            }
-    
-            $manager->flush();
-    
-            // --------------------
-            // INVENTORY (stock)
-            // (unique par part_id)
-            // --------------------
-            $inventoryData = [
-                ['key' => 'Mann|W712/95', 'qty' => '2.00', 'min' => '1.00', 'loc' => 'Garage - étagère A', 'avg' => '8.50', 'last' => '8.90'],
-                ['key' => 'Total|INEO-5W30', 'qty' => '5.00', 'min' => '5.00', 'loc' => 'Garage - sol', 'avg' => '7.99', 'last' => '7.99'],
-                ['key' => 'Bosch|F026400', 'qty' => '1.00', 'min' => '1.00', 'loc' => 'Garage - étagère A', 'avg' => '18.00', 'last' => '18.00'],
-                ['key' => 'Motul|DOT4', 'qty' => '1.00', 'min' => '1.00', 'loc' => 'Garage - étagère B', 'avg' => '12.00', 'last' => '12.00'],
-                ['key' => 'Hiflo|HF303', 'qty' => '2.00', 'min' => '1.00', 'loc' => 'Garage - étagère A', 'avg' => '9.90', 'last' => '9.90'],
-                ['key' => 'Motul|7100-10W40', 'qty' => '4.00', 'min' => '4.00', 'loc' => 'Garage - sol', 'avg' => '10.50', 'last' => '10.50'],
-            ];
-    
-            foreach ($inventoryData as $i) {
-                $part = $partsByKey[$i['key']] ?? null;
-                if (!$part) {
-                    throw new \RuntimeException(sprintf('Part introuvable pour key "%s".', $i['key']));
-                }
-    
-                $inv = (new InventoryItem())
-                    ->setPart($part)
-                    ->setQuantity($i['qty'])
-                    ->setMinQuantity($i['min'])
-                    ->setLocation($i['loc'])
-                    ->setAverageUnitCost($i['avg'])
-                    ->setLastPurchaseUnitCost($i['last'])
-                ;
-    
-                $manager->persist($inv);
-            }
-    
-            $manager->flush();
-    
-            // --------------------
-            // MAINTENANCE TYPES
-            // --------------------
-            $maintenanceTypesData = [
-                ['name' => 'Vidange + filtre', 'km' => 15000, 'months' => 12, 'desc' => 'Vidange moteur + remplacement filtre à huile'],
-                ['name' => 'Filtre à air', 'km' => 30000, 'months' => 24, 'desc' => 'Remplacement filtre à air'],
-                ['name' => 'Liquide de frein', 'km' => null, 'months' => 24, 'desc' => 'Purge + remplacement liquide de frein'],
-                ['name' => 'Kit chaîne', 'km' => 20000, 'months' => null, 'desc' => 'Remplacement kit chaîne (moto)'],
-                ['name' => 'Plaquettes avant', 'km' => null, 'months' => null, 'desc' => 'Remplacement plaquettes avant (moto/auto selon modèle)'],
-            ];
-    
-            $maintenanceTypesByName = [];
-            foreach ($maintenanceTypesData as $t) {
-                $mt = (new MaintenanceType())
-                    ->setName($t['name'])
-                    ->setIntervalKm($t['km'])
-                    ->setIntervalMonths($t['months'])
-                    ->setDescription($t['desc'])
-                ;
-    
-                $manager->persist($mt);
-                $maintenanceTypesByName[$t['name']] = $mt;
-            }
-    
-            $manager->flush();
-    
-            // --------------------
-            // MAINTENANCE TYPE -> PART REQUIREMENTS (unique maintenance_type_id + part_id)
-            // --------------------
-            $requirementsData = [
-                // Vidange voiture
-                ['type' => 'Vidange + filtre', 'partKey' => 'Mann|W712/95', 'qty' => '1.00', 'optional' => false, 'notes' => null],
-                ['type' => 'Vidange + filtre', 'partKey' => 'Total|INEO-5W30', 'qty' => '4.50', 'optional' => false, 'notes' => 'approx'],
-    
-                // Vidange moto
-                ['type' => 'Vidange + filtre', 'partKey' => 'Hiflo|HF303', 'qty' => '1.00', 'optional' => false, 'notes' => null],
-                ['type' => 'Vidange + filtre', 'partKey' => 'Motul|7100-10W40', 'qty' => '2.10', 'optional' => false, 'notes' => 'Kawasaki 400 approx'],
-    
-                // Filtre à air
-                ['type' => 'Filtre à air', 'partKey' => 'Bosch|F026400', 'qty' => '1.00', 'optional' => false, 'notes' => null],
-    
-                // Liquide frein
-                ['type' => 'Liquide de frein', 'partKey' => 'Motul|DOT4', 'qty' => '1.00', 'optional' => false, 'notes' => null],
-    
-                // Kit chaine
-                ['type' => 'Kit chaîne', 'partKey' => 'DID|KIT-520', 'qty' => '1.00', 'optional' => false, 'notes' => null],
-    
-                // Plaquettes
-                ['type' => 'Plaquettes avant', 'partKey' => 'Brembo|07BB04', 'qty' => '1.00', 'optional' => false, 'notes' => null],
-            ];
-    
-            foreach ($requirementsData as $r) {
-                $mt = $maintenanceTypesByName[$r['type']] ?? null;
-                $part = $partsByKey[$r['partKey']] ?? null;
-    
-                if (!$mt || !$part) {
-                    throw new \RuntimeException(sprintf('Requirement invalide type="%s" part="%s"', $r['type'], $r['partKey']));
-                }
-    
-                $req = (new MaintenanceTypePartRequirement())
-                    ->setMaintenanceType($mt)
-                    ->setPart($part)
-                    ->setQuantityRequired($r['qty'])
-                    ->setIsOptional($r['optional'])
-                    ->setNotes($r['notes'])
-                ;
-    
-                $manager->persist($req);
-            }
-    
-            $manager->flush();
-    
-            // --------------------
-            // VEHICLE MAINTENANCES
-            // --------------------
-            $focus = $vehiclesByRegistration['AB-123-CD'];
-            $almera = $vehiclesByRegistration['EF-456-GH'];
-            $ninja = $vehiclesByRegistration['IJ-789-KL'];
-    
-            $vm1 = (new VehicleMaintenance())
-                ->setVehicle($focus)
-                ->setMaintenanceType($maintenanceTypesByName['Vidange + filtre'])
-                ->setPerformedAt(null)
-                ->setIsPlanned(true)
-                ->setNextDueDate(new DateTimeImmutable('2026-04-20'))
-                ->setMileage(183200)
-                ->setCost('89.90')
-                ->setNotes('Vidange + filtre à huile')
-                ->setStatus(MaintenanceStatusEnum::ToDo)
-            ;
-            $manager->persist($vm1);
-    
-            $vm2 = (new VehicleMaintenance())
-                ->setVehicle($focus)
-                ->setMaintenanceType($maintenanceTypesByName['Vidange + filtre'])
-                ->setPerformedAt(null)
-                ->setIsPlanned(true)
-                ->setNextDueDate(new DateTimeImmutable('2026-05-20'))
-                ->setMileage(183200)
-                ->setCost('89.90')
-                ->setNotes('Vidange + filtre à huile')
-                ->setStatus(MaintenanceStatusEnum::ToDo)
-            ;
-            $manager->persist($vm2);
-    
-            $vm3 = (new VehicleMaintenance())
-                ->setVehicle($ninja)
-                ->setMaintenanceType($maintenanceTypesByName['Vidange + filtre'])
-                ->setPerformedAt(new DateTimeImmutable('2026-02-10'))
-                ->setMileage(7800)
-                ->setCost('55.00')
-                ->setNotes('Vidange moto')
-                ->setStatus(MaintenanceStatusEnum::Completed)
-            ;
-            $manager->persist($vm3);
-    
-            $vm4 = (new VehicleMaintenance())
-                ->setVehicle($almera)
-                ->setMaintenanceType($maintenanceTypesByName['Liquide de frein'])
-                ->setPerformedAt(new DateTimeImmutable('now')) // planned
-                ->setMileage(184638)
-                ->setCost(null)
-                ->setNotes('À planifier')
-                ->setStatus(MaintenanceStatusEnum::ToDo)
-            ;
-            $manager->persist($vm4);
-    
-            $manager->flush();
-    
-            // --------------------
-            // VEHICLE MAINTENANCE PARTS (unique vehicle_maintenance_id + part_id)
-            // --------------------
-            $vmpData = [
-                // Focus vidange
-                ['vm' => $vm1, 'partKey' => 'Mann|W712/95', 'qty' => '1.00', 'price' => '8.90', 'fromStock' => true],
-                ['vm' => $vm1, 'partKey' => 'Total|INEO-5W30', 'qty' => '4.50', 'price' => '7.99', 'fromStock' => true],
-    
-                // Ninja vidange
-                ['vm' => $vm2, 'partKey' => 'Hiflo|HF303', 'qty' => '1.00', 'price' => '9.90', 'fromStock' => true],
-                ['vm' => $vm2, 'partKey' => 'Motul|7100-10W40', 'qty' => '2.10', 'price' => '10.50', 'fromStock' => true],
-            ];
-    
-            foreach ($vmpData as $x) {
-                $part = $partsByKey[$x['partKey']] ?? null;
-                if (!$part) {
-                    throw new \RuntimeException(sprintf('Part introuvable pour key "%s" (VMP).', $x['partKey']));
-                }
-    
-                $vmp = (new VehicleMaintenancePart())
-                    ->setVehicleMaintenance($x['vm'])
-                    ->setPart($part)
-                    ->setQuantityUsed($x['qty'])
-                    ->setUnitPrice($x['price'])
-                    ->setFromStock($x['fromStock'])
-                    ->setNotes(null)
-                ;
-    
-                $manager->persist($vmp);
-            }
-    
-            $manager->flush();
-    
             // --------------------
             // DOCUMENT
             // --------------------
@@ -658,6 +417,95 @@ class AppFixtures extends Fixture
             $manager->persist($document01);
             $manager->persist($document02);
     
+            $manager->flush();
+
+            // --------------------
+            // PART TYPES
+            // --------------------
+            $partTypesData = [
+                ['name' => 'Filtre à huile'],
+                ['name' => 'Filtre à air'],
+                ['name' => 'Filtre habitacle'],
+                ['name' => 'Bougie'],
+                ['name' => 'Plaquettes de frein avant'],
+                ['name' => 'Plaquettes de frein arrière'],
+                ['name' => 'Kit distribution'],
+                ['name' => 'Joint de bouchon de vidange'],
+            ];
+
+            $partTypes = [];
+
+            foreach ($partTypesData as $data) {
+                $partType = (new PartType())
+                    ->setName($data['name']);
+
+                $manager->persist($partType);
+
+                $partTypes[$data['name']] = $partType;
+            }
+
+            $manager->flush();
+
+
+            // --------------------
+            // PARTS (STOCK)
+            // --------------------
+            $partsData = [
+                [
+                    'type' => 'Filtre à huile',
+                    'quantity' => 2,
+                    'vehicles' => ['AB-123-CD', 'EF-456-GH'],
+                    'note' => 'Compatible moteurs essence Nissan/Ford',
+                ],
+                [
+                    'type' => 'Filtre à air',
+                    'quantity' => 1,
+                    'vehicles' => ['AB-123-CD'],
+                    'note' => null,
+                ],
+                [
+                    'type' => 'Plaquettes de frein avant',
+                    'quantity' => 0,
+                    'vehicles' => ['AB-123-CD', 'MN-321-OP'],
+                    'note' => 'À utiliser en priorité',
+                ],
+                [
+                    'type' => 'Bougie',
+                    'quantity' => 4,
+                    'vehicles' => ['EF-456-GH'],
+                    'note' => null,
+                ],
+                [
+                    'type' => 'Joint de bouchon de vidange',
+                    'quantity' => 5,
+                    'vehicles' => ['AB-123-CD', 'EF-456-GH', 'QR-654-ST'],
+                    'note' => null,
+                ],
+            ];
+
+            foreach ($partsData as $data) {
+
+                $part = (new Part())
+                    ->setPartType($partTypes[$data['type']])
+                    ->setQuantity($data['quantity'])
+                    ->setNote($data['note']);
+
+                foreach ($data['vehicles'] as $registration) {
+                    $vehicle = $vehiclesByRegistration[$registration] ?? null;
+
+                    if (!$vehicle) {
+                        throw new \RuntimeException(sprintf(
+                            'Véhicule introuvable pour la plaque "%s".',
+                            $registration
+                        ));
+                    }
+
+                    $part->addVehicle($vehicle);
+                }
+
+                $manager->persist($part);
+            }
+
             $manager->flush();
         }
     }

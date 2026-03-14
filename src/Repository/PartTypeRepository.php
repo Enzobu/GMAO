@@ -2,39 +2,39 @@
 
 namespace App\Repository;
 
-use App\Entity\VehicleMaintenance;
+use App\Entity\PartType;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
 /**
- * @extends ServiceEntityRepository<VehicleMaintenance>
+ * @extends ServiceEntityRepository<PartType>
  */
-class VehicleMaintenanceRepository extends ServiceEntityRepository
+class PartTypeRepository extends ServiceEntityRepository
 {
     public function __construct(ManagerRegistry $registry)
     {
-        parent::__construct($registry, VehicleMaintenance::class);
+        parent::__construct($registry, PartType::class);
     }
 
     //    /**
-    //     * @return VehicleMaintenance[] Returns an array of VehicleMaintenance objects
+    //     * @return PartType[] Returns an array of PartType objects
     //     */
     //    public function findByExampleField($value): array
     //    {
-    //        return $this->createQueryBuilder('v')
-    //            ->andWhere('v.exampleField = :val')
+    //        return $this->createQueryBuilder('p')
+    //            ->andWhere('p.exampleField = :val')
     //            ->setParameter('val', $value)
-    //            ->orderBy('v.id', 'ASC')
+    //            ->orderBy('p.id', 'ASC')
     //            ->setMaxResults(10)
     //            ->getQuery()
     //            ->getResult()
     //        ;
     //    }
 
-    //    public function findOneBySomeField($value): ?VehicleMaintenance
+    //    public function findOneBySomeField($value): ?PartType
     //    {
-    //        return $this->createQueryBuilder('v')
-    //            ->andWhere('v.exampleField = :val')
+    //        return $this->createQueryBuilder('p')
+    //            ->andWhere('p.exampleField = :val')
     //            ->setParameter('val', $value)
     //            ->getQuery()
     //            ->getOneOrNullResult()

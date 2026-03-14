@@ -14,7 +14,7 @@
   id: 'deleteVehicleModal' ~ vehicle.id,
   title: 'Supprimer le véhicule',
   description: '
-    <p class="mb-2">Tu es sur le point de supprimer ce véhicule :</p>
+    <p class="mb-2">Vous êtes sur le point de supprimer ce véhicule :</p>
     <div class="fw-semibold">' ~
       (vehicle.name ?: ((vehicle.brand ?: '') ~ ' ' ~ (vehicle.model ?: ''))|trim)
     ~ '</div>

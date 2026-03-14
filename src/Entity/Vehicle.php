@@ -82,24 +82,24 @@ class Vehicle
     #[ORM\OneToMany(targetEntity: VehicleInspection::class, mappedBy: 'vehicle')]
     private Collection $vehicleInspections;
 
-    /**
-     * @var Collection<int, VehicleMaintenance>
-     */
-    #[ORM\OneToMany(targetEntity: VehicleMaintenance::class, mappedBy: 'vehicle')]
-    private Collection $vehicleMaintenances;
-    
     #[ORM\OneToMany(mappedBy: 'vehicle', targetEntity: Document::class, orphanRemoval: true)]
     private Collection $documents;
 
     #[ORM\Column(options: ['default' => false])]
     private bool $isDeleted = false;
 
+    /**
+     * @var Collection<int, Part>
+     */
+    #[ORM\ManyToMany(targetEntity: Part::class, mappedBy: 'vehicles')]
+    private Collection $parts;
+
     public function __construct()
     {
         $this->vehicleInsurances = new ArrayCollection();
         $this->vehicleInspections = new ArrayCollection();
-        $this->vehicleMaintenances = new ArrayCollection();
         $this->documents = new ArrayCollection();
+        $this->parts = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -129,6 +129,11 @@ class Vehicle
         $this->registration = strtolower($registration);
 
         return $this;
+    }
+
+    public function displayName(): ?string
+    {
+        return ucfirst($this->name) . ' ・ ' . strtoupper($this->registration);
     }
 
     public function getBrand(): ?string
@@ -358,36 +363,6 @@ class Vehicle
     }
 
     /**
-     * @return Collection<int, VehicleMaintenance>
-     */
-    public function getVehicleMaintenances(): Collection
-    {
-        return $this->vehicleMaintenances;
-    }
-
-    public function addVehicleMaintenance(VehicleMaintenance $vehicleMaintenance): static
-    {
-        if (!$this->vehicleMaintenances->contains($vehicleMaintenance)) {
-            $this->vehicleMaintenances->add($vehicleMaintenance);
-            $vehicleMaintenance->setVehicle($this);
-        }
-
-        return $this;
-    }
-
-    public function removeVehicleMaintenance(VehicleMaintenance $vehicleMaintenance): static
-    {
-        if ($this->vehicleMaintenances->removeElement($vehicleMaintenance)) {
-            // set the owning side to null (unless already changed)
-            if ($vehicleMaintenance->getVehicle() === $this) {
-                $vehicleMaintenance->setVehicle(null);
-            }
-        }
-
-        return $this;
-    }
-
-    /**
      * @return Collection<int, Document>
      */
     public function getDocuments(): Collection
@@ -424,6 +399,33 @@ class Vehicle
     public function setIsDeleted(bool $isDeleted): static
     {
         $this->isDeleted = $isDeleted;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Part>
+     */
+    public function getParts(): Collection
+    {
+        return $this->parts;
+    }
+
+    public function addPart(Part $part): static
+    {
+        if (!$this->parts->contains($part)) {
+            $this->parts->add($part);
+            $part->addVehicle($this);
+        }
+
+        return $this;
+    }
+
+    public function removePart(Part $part): static
+    {
+        if ($this->parts->removeElement($part)) {
+            $part->removeVehicle($this);
+        }
 
         return $this;
     }

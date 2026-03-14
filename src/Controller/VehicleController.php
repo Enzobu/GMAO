@@ -5,13 +5,11 @@ namespace App\Controller;
 use App\Entity\Document;
 use App\Entity\User;
 use App\Entity\Vehicle;
-use App\Enum\MaintenanceStatusEnum;
 use App\Form\DocumentType;
 use App\Form\VehicleType;
 use App\Repository\DocumentRepository;
 use App\Repository\VehicleInspectionRepository;
 use App\Repository\VehicleInsuranceRepository;
-use App\Repository\VehicleMaintenanceRepository;
 use App\Repository\VehicleRepository;
 use App\Service\DocumentManager;
 use App\Service\VehicleManager;
@@ -70,7 +68,6 @@ final class VehicleController extends AbstractController
         VehicleManager $vehicleManager,
         VehicleInsuranceRepository $vehicleInsuranceRepository,
         VehicleInspectionRepository $vehicleInspectionRepository,
-        VehicleMaintenanceRepository $vehicleMaintenanceRepository,
         #[CurrentUser] User $currentUser,
         DocumentRepository $documentRepository,
     ): Response
@@ -95,16 +92,11 @@ final class VehicleController extends AbstractController
             "vehicle" => $vehicle,
             "isDeleted" => false,
         ], ['inspectionDate' => 'DESC']);
-        $maintenance = $vehicleMaintenanceRepository->findBy([
-            "vehicle" => $vehicle,
-            "status" => MaintenanceStatusEnum::ToDo,
-        ], ['nextDueDate' => 'ASC', 'createdAt' => 'ASC']);
 
         return $this->render('vehicle/show.html.twig', [
             'vehicle' => $vehicle,
             'insurance' => $insurance[0] ?? null,
             'inspection' => $inspection[0] ?? null,
-            'maintenance' => $maintenance,
             'vehicle_document' => $documentRepository->findByVehicle(vehicle: $vehicle, deleted: false),
         ]);
     }
@@ -134,6 +126,8 @@ final class VehicleController extends AbstractController
 
         if ($form->isSubmitted() && $form->isValid()) {
             $entityManager->flush();
+            
+            $this->addFlash('success', 'Modifications enregistrées.');
 
             return $request->query->get('show') == 'true' ?
                 $this->redirectToRoute('app_vehicle_show', ["id" => $vehicle->getId()], Response::HTTP_SEE_OTHER) :
@@ -355,29 +349,29 @@ final class VehicleController extends AbstractController
         # -------------------- Authization --------------------
         if (!$vehicleManager->isAuthorized($currentUser, $vehicle)) {
             $update ? 
-            $this->addFlash('danger', 'Vous ne pouvez pas modifier la ressource demandé. Pour plus d\'information, contactez un administrateur') : 
-            $this->addFlash('warning', 'Vous avez un accès en lecture seule à la ressource demandé. Pour plus d\'information, contactez un administrateur');
+            $this->addFlash('danger', 'Vous ne pouvez pas modifier la ressource demandée. ressoPour plus d\'informations, contactez un administrateururce demandée.') : 
+            $this->addFlash('warning', 'Vous avez un accès en lecture seule à la ressource demandée. ressoPour plus d\'informations, contactez un administrateururce demandée.');
             if ($update) {
                 return $this->redirectToRoute('app_vehicle_index', [], Response::HTTP_SEE_OTHER);
             }
         }
         if ($vehicle->isDeleted()) {
-            $this->addFlash('danger', 'Le véhicule a été supprimé. Pour plus d\'information, contactez un administrateur');
+            $this->addFlash('danger', 'Le véhicule a été supprimé. ressoPour plus d\'informations, contactez un administrateururce demandée.');
             return $this->redirectToRoute('app_vehicle_index', [], Response::HTTP_SEE_OTHER);
         }
         if ($document) {
             if (!$vehicleManager->isAuthorized($currentUser, $vehicle)) {
-                $this->addFlash('danger', 'Vous ne pouvez pas ajouter un document sur la ressource demandé. Pour plus d\'information, contactez un administrateur');
+                $this->addFlash('danger', 'Vous ne pouvez pas ajouter un document sur la ressource demandée. ressoPour plus d\'informations, contactez un administrateururce demandée.');
                 return $this->redirectToRoute('app_vehicle_index', [], Response::HTTP_SEE_OTHER);
             }
             if ($document->isDeleted()) {
-                $this->addFlash('danger', 'Le document a été supprimé. Pour plus d\'information, contactez un administrateur');
+                $this->addFlash('danger', 'Le document a été supprimé. ressoPour plus d\'informations, contactez un administrateururce demandée.');
                 return $this->redirectToRoute('app_vehicle_index', [], Response::HTTP_SEE_OTHER);
             }
         }
         if ($delete) {
             if (!$this->isGranted('ROLE_ADMIN')) {
-                $this->addFlash('danger', 'Vous n\'avez pas les autorisations nécessaire pour supprimer un document. Veuillez contacter un administrateur');
+                $this->addFlash('danger', 'Vous n\'avez pas les autorisations nécessaires pour supprimer un document. Veuillez contacter un administrateur');
                 return $this->redirectToRoute('app_vehicle_show', $params, Response::HTTP_SEE_OTHER);
             }
         }
