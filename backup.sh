@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
 
 # Cron :
-# 0 0 * * * /chemin/script.sh
+# 0 0 * * * /home/enzo/Dev/GMAO/public/uploads/documents
 
 set -euo pipefail
 
 CONTAINER_NAME="gmao-prod-database"
-DOCUMENTS_DIR="./public/uploads/documents"
+DOCUMENTS_DIR="/home/enzo/Dev/GMAO/public/uploads/documents"
 REMOTE_USER="ubuntu"
 REMOTE_HOST="enzo-palermo.com"
 REMOTE_DIR="/home/ubuntu/gmao/backup"
