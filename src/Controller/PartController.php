@@ -23,6 +23,14 @@ final class PartController extends AbstractController
         VehicleRepository $vehicleRepository,
         PartTypeRepository $partTypeRepository,
     ): Response {
+        $response = $this->checkAthorization(
+            roleAdminRequired: false,
+        );
+
+        if ($response) {
+            return $response;
+        }
+
         $vehicleId = $request->query->get('vehicle');
         $partTypeId = $request->query->get('partType');
 
@@ -42,6 +50,15 @@ final class PartController extends AbstractController
     public function new(Request $request, EntityManagerInterface $entityManager): Response
     {
         $part = new Part();
+
+        $response = $this->checkAthorization(
+            part: $part,
+        );
+
+        if ($response) {
+            return $response;
+        }
+
         $form = $this->createForm(PartFormType::class, $part);
         $form->handleRequest($request);
 
@@ -61,6 +78,15 @@ final class PartController extends AbstractController
     #[Route('/{id}', name: 'app_part_show', methods: ['GET'])]
     public function show(Part $part): Response
     {
+        $response = $this->checkAthorization(
+            roleAdminRequired: false,
+            part: $part,
+        );
+
+        if ($response) {
+            return $response;
+        }
+
         return $this->render('part/show.html.twig', [
             'part' => $part,
         ]);
@@ -69,6 +95,14 @@ final class PartController extends AbstractController
     #[Route('/{id}/edit', name: 'app_part_edit', methods: ['GET', 'POST'])]
     public function edit(Request $request, Part $part, EntityManagerInterface $entityManager): Response
     {
+        $response = $this->checkAthorization(
+            part: $part,
+        );
+
+        if ($response) {
+            return $response;
+        }
+
         $form = $this->createForm(PartFormType::class, $part);
         $form->handleRequest($request);
 
@@ -93,11 +127,44 @@ final class PartController extends AbstractController
     #[Route('/{id}', name: 'app_part_delete', methods: ['POST'])]
     public function delete(Request $request, Part $part, EntityManagerInterface $entityManager): Response
     {
+        $response = $this->checkAthorization(
+            part: $part,
+        );
+
+        if ($response) {
+            return $response;
+        }
+
         if ($this->isCsrfTokenValid('delete'.$part->getId(), $request->getPayload()->getString('_token'))) {
             $part->setIsDeleted(true);
             $entityManager->flush();
         }
 
         return $this->redirectToRoute('app_part_index', [], Response::HTTP_SEE_OTHER);
+    }
+
+    private function checkAthorization(
+        bool $roleAdminRequired = true,
+        ?Part $part = null,
+    ): ?Response {
+        # -------------------- Authization --------------------
+        if ($roleAdminRequired) {
+            if (!$this->isGranted('ROLE_ADMIN')) {
+                $this->addFlash('danger', 'Vous n\'avez pas les autorisations nécessaires pour accéder à la ressource demandée. Pour plus d\'information, contacter un administrateur');
+                return $this->redirectToRoute('app_part_index', [], Response::HTTP_SEE_OTHER);
+            }
+            
+        }
+        if ($part) {
+            if ($part->isDeleted()) {
+                $this->addFlash('danger', 'La ligne de stock à été supprimée. ressoPour plus d\'informations, contactez un administrateururce demandée.');
+                return $this->redirectToRoute('app_part_index', [], Response::HTTP_SEE_OTHER);
+            }
+        }
+        if (!$this->isGranted('ROLE_ADMIN')) {
+            $this->addFlash('warning', 'Vous avez un accès en lecture seule à la ressource demandée. ressoPour plus d\'informations, contactez un administrateururce demandée.');
+        }
+        # -----------------------------------------------------
+        return null;
     }
 }

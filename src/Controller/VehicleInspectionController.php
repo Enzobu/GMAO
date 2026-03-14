@@ -401,39 +401,39 @@ final class VehicleInspectionController extends AbstractController
         # -------------------- Authization --------------------
         if (!$vehicleManager->isAuthorized($currentUser, $vehicle)) {
             $update ? 
-            $this->addFlash('danger', 'Vous ne pouvez pas modifier la ressource demandé. Pour plus d\'information, contactez un administrateur') : 
-            $this->addFlash('warning', 'Vous avez un accès en lecture seule à la ressource demandé. Pour plus d\'information, contactez un administrateur');
+            $this->addFlash('danger', 'Vous ne pouvez pas modifier la ressource demandée. ressoPour plus d\'informations, contactez un administrateururce demandée.') : 
+            $this->addFlash('warning', 'Vous avez un accès en lecture seule à la ressource demandée. ressoPour plus d\'informations, contactez un administrateururce demandée.');
             if ($update) {
                 return $this->redirectToRoute('app_vehicle_index', [], Response::HTTP_SEE_OTHER);
             }
         }
         if ($vehicle->isDeleted()) {
-            $this->addFlash('danger', 'Le véhicule a été supprimé. Pour plus d\'information, contactez un administrateur');
+            $this->addFlash('danger', 'Le véhicule a été supprimé. ressoPour plus d\'informations, contactez un administrateururce demandée.');
             return $this->redirectToRoute('app_vehicle_index', [], Response::HTTP_SEE_OTHER);
         }
         if ($vehicleInspection->isDeleted()) {
-            $this->addFlash('warning', 'Le contrôle technique demandé a été supprimé. Pour plus d\'information, contactez un administrateur');
+            $this->addFlash('warning', 'Le contrôle technique demandé a été supprimé. ressoPour plus d\'informations, contactez un administrateururce demandée.');
             return $this->redirectToRoute('app_vehicle_inspection_index', $params, Response::HTTP_SEE_OTHER);
         }
         if ($new) {
             if (!$vehicleManager->isAuthorized($currentUser, $vehicle)) {
-                $this->addFlash('danger', 'Vous ne pouvez pas ajouter un contrôle technique pour ce vehicule. Pour plus d\'information, contactez un administrateur');
+                $this->addFlash('danger', 'Vous ne pouvez pas ajouter un contrôle technique pour ce vehicule. ressoPour plus d\'informations, contactez un administrateururce demandée.');
                 return $this->redirectToRoute('app_vehicle_index', [], Response::HTTP_SEE_OTHER);
             }
         }
         if ($document) {
             if (!$vehicleManager->isAuthorized($currentUser, $vehicle)) {
-                $this->addFlash('danger', 'Vous ne pouvez pas ajouter un document sur la ressource demandé. Pour plus d\'information, contactez un administrateur');
+                $this->addFlash('danger', 'Vous ne pouvez pas ajouter un document sur la ressource demandée. ressoPour plus d\'informations, contactez un administrateururce demandée.');
                 return $this->redirectToRoute('app_vehicle_index', [], Response::HTTP_SEE_OTHER);
             }
             if ($document->isDeleted()) {
-                $this->addFlash('danger', 'Le document a été supprimé. Pour plus d\'information, contactez un administrateur');
+                $this->addFlash('danger', 'Le document a été supprimé. ressoPour plus d\'informations, contactez un administrateururce demandée.');
                 return $this->redirectToRoute('app_vehicle_inspection_index', $params, Response::HTTP_SEE_OTHER);
             }
         }
         if ($delete) {
             if (!$this->isGranted('ROLE_ADMIN')) {
-                $this->addFlash('danger', 'Vous n\'avez pas les autorisations nécessaire pour supprimer un document. Veuillez contacter un administrateur');
+                $this->addFlash('danger', 'Vous n\'avez pas les autorisations nécessaires pour supprimer un document. Veuillez contacter un administrateur');
                 return $this->redirectToRoute('app_vehicle_show', ["id" => $params["vehicleId"]], Response::HTTP_SEE_OTHER);
             }
         }
