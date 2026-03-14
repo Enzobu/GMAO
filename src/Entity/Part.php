@@ -3,19 +3,14 @@
 namespace App\Entity;
 
 use App\Repository\PartRepository;
+use Symfony\Component\Validator\Constraints as Assert;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
-use Doctrine\ORM\Mapping\UniqueConstraint;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: PartRepository::class)]
-#[ORM\Table(
-    name: 'part',
-    uniqueConstraints: [
-        new UniqueConstraint(name: 'uniq_part_brand_reference', columns: ['brand', 'reference']),
-    ]
-)]
+#[ORM\HasLifecycleCallbacks]
 class Part
 {
     #[ORM\Id]
@@ -23,39 +18,32 @@ class Part
     #[ORM\Column]
     private ?int $id = null;
 
-    #[ORM\Column(length: 255)]
-    private ?string $name = null;
+    #[ORM\ManyToOne(inversedBy: 'parts')]
+    #[ORM\JoinColumn(nullable: false)]
+    private ?PartType $partType = null;
 
-    #[ORM\Column(length: 255)]
-    private ?string $category = null;
-
-    #[ORM\Column(length: 255)]
-    private ?string $unit = null;
-
-    #[ORM\Column(length: 255, nullable: true)]
-    private ?string $brand = null;
-
-    #[ORM\Column(length: 255, nullable: true)]
-    private ?string $reference = null;
-
-    #[ORM\Column(length: 255, nullable: true)]
-    private ?string $barcode = null;
-
-    #[ORM\Column(type: Types::TEXT, nullable: true)]
-    private ?string $notes = null;
-
-    #[ORM\Column(options: ['default' => true])]
-    private bool $isActive = true;
+    #[ORM\Column]
+    #[Assert\PositiveOrZero]
+    private ?int $quantity = null;
 
     /**
-     * @var Collection<int, InventoryItem>
+     * @var Collection<int, Vehicle>
      */
-    #[ORM\OneToMany(targetEntity: InventoryItem::class, mappedBy: 'part')]
-    private Collection $inventoryItems;
+    #[ORM\ManyToMany(targetEntity: Vehicle::class, inversedBy: 'parts')]
+    private Collection $vehicles;
+
+    #[ORM\Column(type: Types::TEXT, nullable: true)]
+    private ?string $note = null;
+
+    #[ORM\Column(type: Types::DATETIME_IMMUTABLE)]
+    private ?\DateTimeImmutable $createdAt = null;
+
+    #[ORM\Column(type: Types::DATETIME_IMMUTABLE)]
+    private ?\DateTimeImmutable $updatedAt = null;
 
     public function __construct()
     {
-        $this->inventoryItems = new ArrayCollection();
+        $this->vehicles = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -63,128 +51,102 @@ class Part
         return $this->id;
     }
 
-    public function getName(): ?string
+    public function getPartType(): ?PartType
     {
-        return $this->name;
+        return $this->partType;
     }
 
-    public function setName(string $name): static
+    public function setPartType(?PartType $partType): static
     {
-        $this->name = $name;
+        $this->partType = $partType;
 
         return $this;
     }
 
-    public function getCategory(): ?string
+    public function getQuantity(): ?int
     {
-        return $this->category;
+        return $this->quantity;
     }
 
-    public function setCategory(string $category): static
+    public function setQuantity(int $quantity): static
     {
-        $this->category = $category;
-
-        return $this;
-    }
-
-    public function getUnit(): ?string
-    {
-        return $this->unit;
-    }
-
-    public function setUnit(string $unit): static
-    {
-        $this->unit = $unit;
-
-        return $this;
-    }
-
-    public function getBrand(): ?string
-    {
-        return $this->brand;
-    }
-
-    public function setBrand(?string $brand): static
-    {
-        $this->brand = $brand;
-
-        return $this;
-    }
-
-    public function getReference(): ?string
-    {
-        return $this->reference;
-    }
-
-    public function setReference(?string $reference): static
-    {
-        $this->reference = $reference;
-
-        return $this;
-    }
-
-    public function getBarcode(): ?string
-    {
-        return $this->barcode;
-    }
-
-    public function setBarcode(?string $barcode): static
-    {
-        $this->barcode = $barcode;
-
-        return $this;
-    }
-
-    public function getNotes(): ?string
-    {
-        return $this->notes;
-    }
-
-    public function setNotes(?string $notes): static
-    {
-        $this->notes = $notes;
-
-        return $this;
-    }
-
-    public function isActive(): bool
-    {
-        return $this->isActive;
-    }
-
-    public function setIsActive(bool $isActive): static
-    {
-        $this->isActive = $isActive;
+        $this->quantity = $quantity;
 
         return $this;
     }
 
     /**
-     * @return Collection<int, InventoryItem>
+     * @return Collection<int, Vehicle>
      */
-    public function getInventoryItems(): Collection
+    public function getVehicles(): Collection
     {
-        return $this->inventoryItems;
+        return $this->vehicles;
     }
 
-    public function addInventoryItem(InventoryItem $inventoryItem): static
+    public function addVehicle(Vehicle $vehicle): static
     {
-        if (!$this->inventoryItems->contains($inventoryItem)) {
-            $this->inventoryItems->add($inventoryItem);
-            $inventoryItem->setPart($this);
+        if (!$this->vehicles->contains($vehicle)) {
+            $this->vehicles->add($vehicle);
         }
 
         return $this;
     }
 
-    public function removeInventoryItem(InventoryItem $inventoryItem): static
+    public function removeVehicle(Vehicle $vehicle): static
     {
-        if ($this->inventoryItems->removeElement($inventoryItem)) {
-            // set the owning side to null (unless already changed)
-            if ($inventoryItem->getPart() === $this) {
-            }
-        }
+        $this->vehicles->removeElement($vehicle);
 
         return $this;
+    }
+
+    public function getNote(): ?string
+    {
+        return $this->note;
+    }
+
+    public function setNote(?string $note): static
+    {
+        $this->note = $note;
+
+        return $this;
+    }
+
+    public function getCreatedAt(): ?\DateTimeImmutable
+    {
+        return $this->createdAt;
+    }
+
+    public function setCreatedAt(\DateTimeImmutable $createdAt): static
+    {
+        $this->createdAt = $createdAt;
+
+        return $this;
+    }
+
+    public function getUpdatedAt(): ?\DateTimeImmutable
+    {
+        return $this->updatedAt;
+    }
+
+    public function setUpdatedAt(\DateTimeImmutable $updatedAt): static
+    {
+        $this->updatedAt = $updatedAt;
+
+        return $this;
+    }
+
+    #[ORM\PrePersist]
+    public function setCreatedAtValue(): void
+    {
+        $now = new \DateTimeImmutable();
+
+        $this->createdAt = $now;
+        $this->updatedAt = $now;
+    }
+
+    #[ORM\PreUpdate]
+    public function setUpdatedAtValue(): void
+    {
+        $this->updatedAt = new \DateTimeImmutable();
     }
 }

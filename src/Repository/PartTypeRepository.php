@@ -2,39 +2,39 @@
 
 namespace App\Repository;
 
-use App\Entity\InventoryItem;
+use App\Entity\PartType;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
 /**
- * @extends ServiceEntityRepository<InventoryItem>
+ * @extends ServiceEntityRepository<PartType>
  */
-class InventoryItemRepository extends ServiceEntityRepository
+class PartTypeRepository extends ServiceEntityRepository
 {
     public function __construct(ManagerRegistry $registry)
     {
-        parent::__construct($registry, InventoryItem::class);
+        parent::__construct($registry, PartType::class);
     }
 
     //    /**
-    //     * @return InventoryItem[] Returns an array of InventoryItem objects
+    //     * @return PartType[] Returns an array of PartType objects
     //     */
     //    public function findByExampleField($value): array
     //    {
-    //        return $this->createQueryBuilder('i')
-    //            ->andWhere('i.exampleField = :val')
+    //        return $this->createQueryBuilder('p')
+    //            ->andWhere('p.exampleField = :val')
     //            ->setParameter('val', $value)
-    //            ->orderBy('i.id', 'ASC')
+    //            ->orderBy('p.id', 'ASC')
     //            ->setMaxResults(10)
     //            ->getQuery()
     //            ->getResult()
     //        ;
     //    }
 
-    //    public function findOneBySomeField($value): ?InventoryItem
+    //    public function findOneBySomeField($value): ?PartType
     //    {
-    //        return $this->createQueryBuilder('i')
-    //            ->andWhere('i.exampleField = :val')
+    //        return $this->createQueryBuilder('p')
+    //            ->andWhere('p.exampleField = :val')
     //            ->setParameter('val', $value)
     //            ->getQuery()
     //            ->getOneOrNullResult()

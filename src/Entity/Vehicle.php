@@ -88,11 +88,18 @@ class Vehicle
     #[ORM\Column(options: ['default' => false])]
     private bool $isDeleted = false;
 
+    /**
+     * @var Collection<int, Part>
+     */
+    #[ORM\ManyToMany(targetEntity: Part::class, mappedBy: 'vehicles')]
+    private Collection $parts;
+
     public function __construct()
     {
         $this->vehicleInsurances = new ArrayCollection();
         $this->vehicleInspections = new ArrayCollection();
         $this->documents = new ArrayCollection();
+        $this->parts = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -387,6 +394,33 @@ class Vehicle
     public function setIsDeleted(bool $isDeleted): static
     {
         $this->isDeleted = $isDeleted;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Part>
+     */
+    public function getParts(): Collection
+    {
+        return $this->parts;
+    }
+
+    public function addPart(Part $part): static
+    {
+        if (!$this->parts->contains($part)) {
+            $this->parts->add($part);
+            $part->addVehicle($this);
+        }
+
+        return $this;
+    }
+
+    public function removePart(Part $part): static
+    {
+        if ($this->parts->removeElement($part)) {
+            $part->removeVehicle($this);
+        }
 
         return $this;
     }

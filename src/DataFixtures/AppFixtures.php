@@ -5,8 +5,6 @@ namespace App\DataFixtures;
 use App\Entity\Address;
 use App\Entity\Document;
 use App\Entity\InspectionCenter;
-use App\Entity\InventoryItem;
-use App\Entity\Part;
 use App\Entity\User;
 use App\Entity\Vehicle;
 use App\Entity\VehicleInspection;
@@ -382,80 +380,6 @@ class AppFixtures extends Fixture
                 ;
     
                 $manager->persist($inspection);
-            }
-    
-            $manager->flush();
-    
-            // ============================================================
-            // =====================  PARTS / STOCK  =======================
-            // ============================================================
-    
-            // --------------------
-            // PARTS
-            // --------------------
-            $partsData = [
-                // Voiture
-                ['name' => 'Filtre à huile', 'category' => 'Filtration', 'unit' => 'pcs', 'brand' => 'Mann', 'reference' => 'W712/95', 'barcode' => null, 'notes' => null],
-                ['name' => 'Huile moteur 5W30', 'category' => 'Fluide', 'unit' => 'L', 'brand' => 'Total', 'reference' => 'INEO-5W30', 'barcode' => null, 'notes' => 'Bidon 5L'],
-                ['name' => 'Filtre à air', 'category' => 'Filtration', 'unit' => 'pcs', 'brand' => 'Bosch', 'reference' => 'F026400', 'barcode' => null, 'notes' => null],
-                ['name' => 'Liquide de frein DOT4', 'category' => 'Fluide', 'unit' => 'L', 'brand' => 'Motul', 'reference' => 'DOT4', 'barcode' => null, 'notes' => null],
-    
-                // Moto
-                ['name' => 'Filtre à huile moto', 'category' => 'Filtration', 'unit' => 'pcs', 'brand' => 'Hiflo', 'reference' => 'HF303', 'barcode' => null, 'notes' => null],
-                ['name' => 'Huile moto 10W40', 'category' => 'Fluide', 'unit' => 'L', 'brand' => 'Motul', 'reference' => '7100-10W40', 'barcode' => null, 'notes' => 'Bidon 4L'],
-                ['name' => 'Kit chaîne', 'category' => 'Transmission', 'unit' => 'pcs', 'brand' => 'DID', 'reference' => 'KIT-520', 'barcode' => null, 'notes' => 'Chaîne + pignon + couronne'],
-                ['name' => 'Plaquettes de frein avant', 'category' => 'Freinage', 'unit' => 'set', 'brand' => 'Brembo', 'reference' => '07BB04', 'barcode' => null, 'notes' => null],
-            ];
-    
-            $partsByKey = [];
-            foreach ($partsData as $p) {
-                $part = (new Part())
-                    ->setName($p['name'])
-                    ->setCategory($p['category'])
-                    ->setUnit($p['unit'])
-                    ->setBrand($p['brand'])
-                    ->setReference($p['reference'])
-                    ->setBarcode($p['barcode'])
-                    ->setNotes($p['notes'])
-                ;
-    
-                $manager->persist($part);
-    
-                // clé simple pour retrouver
-                $partsByKey[$p['brand'].'|'.$p['reference']] = $part;
-            }
-    
-            $manager->flush();
-    
-            // --------------------
-            // INVENTORY (stock)
-            // (unique par part_id)
-            // --------------------
-            $inventoryData = [
-                ['key' => 'Mann|W712/95', 'qty' => '2.00', 'min' => '1.00', 'loc' => 'Garage - étagère A', 'avg' => '8.50', 'last' => '8.90'],
-                ['key' => 'Total|INEO-5W30', 'qty' => '5.00', 'min' => '5.00', 'loc' => 'Garage - sol', 'avg' => '7.99', 'last' => '7.99'],
-                ['key' => 'Bosch|F026400', 'qty' => '1.00', 'min' => '1.00', 'loc' => 'Garage - étagère A', 'avg' => '18.00', 'last' => '18.00'],
-                ['key' => 'Motul|DOT4', 'qty' => '1.00', 'min' => '1.00', 'loc' => 'Garage - étagère B', 'avg' => '12.00', 'last' => '12.00'],
-                ['key' => 'Hiflo|HF303', 'qty' => '2.00', 'min' => '1.00', 'loc' => 'Garage - étagère A', 'avg' => '9.90', 'last' => '9.90'],
-                ['key' => 'Motul|7100-10W40', 'qty' => '4.00', 'min' => '4.00', 'loc' => 'Garage - sol', 'avg' => '10.50', 'last' => '10.50'],
-            ];
-    
-            foreach ($inventoryData as $i) {
-                $part = $partsByKey[$i['key']] ?? null;
-                if (!$part) {
-                    throw new \RuntimeException(sprintf('Part introuvable pour key "%s".', $i['key']));
-                }
-    
-                $inv = (new InventoryItem())
-                    ->setPart($part)
-                    ->setQuantity($i['qty'])
-                    ->setMinQuantity($i['min'])
-                    ->setLocation($i['loc'])
-                    ->setAverageUnitCost($i['avg'])
-                    ->setLastPurchaseUnitCost($i['last'])
-                ;
-    
-                $manager->persist($inv);
             }
     
             $manager->flush();
