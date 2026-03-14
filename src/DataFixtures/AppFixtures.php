@@ -5,6 +5,8 @@ namespace App\DataFixtures;
 use App\Entity\Address;
 use App\Entity\Document;
 use App\Entity\InspectionCenter;
+use App\Entity\Part;
+use App\Entity\PartType;
 use App\Entity\User;
 use App\Entity\Vehicle;
 use App\Entity\VehicleInspection;
@@ -415,6 +417,95 @@ class AppFixtures extends Fixture
             $manager->persist($document01);
             $manager->persist($document02);
     
+            $manager->flush();
+
+            // --------------------
+            // PART TYPES
+            // --------------------
+            $partTypesData = [
+                ['name' => 'Filtre à huile'],
+                ['name' => 'Filtre à air'],
+                ['name' => 'Filtre habitacle'],
+                ['name' => 'Bougie'],
+                ['name' => 'Plaquettes de frein avant'],
+                ['name' => 'Plaquettes de frein arrière'],
+                ['name' => 'Kit distribution'],
+                ['name' => 'Joint de bouchon de vidange'],
+            ];
+
+            $partTypes = [];
+
+            foreach ($partTypesData as $data) {
+                $partType = (new PartType())
+                    ->setName($data['name']);
+
+                $manager->persist($partType);
+
+                $partTypes[$data['name']] = $partType;
+            }
+
+            $manager->flush();
+
+
+            // --------------------
+            // PARTS (STOCK)
+            // --------------------
+            $partsData = [
+                [
+                    'type' => 'Filtre à huile',
+                    'quantity' => 2,
+                    'vehicles' => ['AB-123-CD', 'EF-456-GH'],
+                    'note' => 'Compatible moteurs essence Nissan/Ford',
+                ],
+                [
+                    'type' => 'Filtre à air',
+                    'quantity' => 1,
+                    'vehicles' => ['AB-123-CD'],
+                    'note' => null,
+                ],
+                [
+                    'type' => 'Plaquettes de frein avant',
+                    'quantity' => 0,
+                    'vehicles' => ['AB-123-CD', 'MN-321-OP'],
+                    'note' => 'À utiliser en priorité',
+                ],
+                [
+                    'type' => 'Bougie',
+                    'quantity' => 4,
+                    'vehicles' => ['EF-456-GH'],
+                    'note' => null,
+                ],
+                [
+                    'type' => 'Joint de bouchon de vidange',
+                    'quantity' => 5,
+                    'vehicles' => ['AB-123-CD', 'EF-456-GH', 'QR-654-ST'],
+                    'note' => null,
+                ],
+            ];
+
+            foreach ($partsData as $data) {
+
+                $part = (new Part())
+                    ->setPartType($partTypes[$data['type']])
+                    ->setQuantity($data['quantity'])
+                    ->setNote($data['note']);
+
+                foreach ($data['vehicles'] as $registration) {
+                    $vehicle = $vehiclesByRegistration[$registration] ?? null;
+
+                    if (!$vehicle) {
+                        throw new \RuntimeException(sprintf(
+                            'Véhicule introuvable pour la plaque "%s".',
+                            $registration
+                        ));
+                    }
+
+                    $part->addVehicle($vehicle);
+                }
+
+                $manager->persist($part);
+            }
+
             $manager->flush();
         }
     }

@@ -152,6 +152,8 @@ final class VehicleInspectionController extends AbstractController
         if ($form->isSubmitted() && $form->isValid()) {
             $entityManager->flush();
 
+            $this->addFlash('success', 'Modifications enregistrées.');
+
             return $request->query->get('show') == 'true' ?
                 $this->redirectToRoute('app_vehicle_inspection_show', [
                     "id" => $vehicleInspection->getId(),

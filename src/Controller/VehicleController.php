@@ -126,6 +126,8 @@ final class VehicleController extends AbstractController
 
         if ($form->isSubmitted() && $form->isValid()) {
             $entityManager->flush();
+            
+            $this->addFlash('success', 'Modifications enregistrées.');
 
             return $request->query->get('show') == 'true' ?
                 $this->redirectToRoute('app_vehicle_show', ["id" => $vehicle->getId()], Response::HTTP_SEE_OTHER) :

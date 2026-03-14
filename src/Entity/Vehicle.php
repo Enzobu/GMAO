@@ -131,6 +131,11 @@ class Vehicle
         return $this;
     }
 
+    public function displayName(): ?string
+    {
+        return ucfirst($this->name) . ' ・ ' . strtoupper($this->registration);
+    }
+
     public function getBrand(): ?string
     {
         return $this->brand;

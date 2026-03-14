@@ -150,6 +150,8 @@ final class VehicleInsuranceController extends AbstractController
         if ($form->isSubmitted() && $form->isValid()) {
             $entityManager->flush();
 
+            $this->addFlash('success', 'Modifications enregistrées.');
+
             return $request->query->get('show') == 'true' ?
                 $this->redirectToRoute('app_vehicle_insurance_show', [
                     "id" => $vehicleInsurance->getId(),

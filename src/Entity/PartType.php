@@ -28,6 +28,9 @@ class PartType
     #[ORM\OneToMany(targetEntity: Part::class, mappedBy: 'partType')]
     private Collection $parts;
 
+    #[ORM\Column(options: ['default' => false])]
+    private bool $isDeleted = false;
+
     public function __construct()
     {
         $this->parts = new ArrayCollection();
@@ -88,6 +91,18 @@ class PartType
                 $part->setPartType(null);
             }
         }
+
+        return $this;
+    }
+
+    public function isDeleted(): bool
+    {
+        return $this->isDeleted;
+    }
+
+    public function setIsDeleted(bool $isDeleted): static
+    {
+        $this->isDeleted = $isDeleted;
 
         return $this;
     }

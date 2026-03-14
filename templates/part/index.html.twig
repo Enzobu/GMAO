@@ -1,0 +1,349 @@
+{# {% extends 'base.html.twig' %}
+{% import 'macros/fontawesome.html.twig' as fa %}
+{% import "macros/badge.html.twig" as badge %}
+
+{% block title %}Stock{% endblock %}
+
+{% block body %}
+  <div class="container py-4 py-lg-5">
+    <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3 mb-4">
+      <div>
+        <h1 class="h3 mb-1">Stock</h1>
+        <div class="text-body-secondary small">
+          Consulte et gère les pièces compatibles avec les véhicules.
+        </div>
+      </div>
+
+      <div class="d-flex gap-2">
+        <a class="btn btn-primary" href="{{ path('app_part_new') }}">
+          {{ fa.icon('plus', family: 'solid', fixed_width: true, additional_classes: ['me-2']) }}
+          Ajouter un stock
+        </a>
+      </div>
+    </div>
+
+    <form method="get"
+          class="card border-0 shadow-sm mb-4"
+          data-controller="filtre-part-auto-submit">
+      <div class="card-body ps-0 ms-0">
+        <div class="row g-3 align-items-end">
+          <div class="col-12 col-lg-4">
+            <label for="vehicle" class="form-label">Filtrer par véhicule</label>
+            <select
+              id="vehicle"
+              name="vehicle"
+              class="form-select"
+              data-action="change->filtre-part-auto-submit#submit"
+            >
+              <option value="">Aucun</option>
+              {% for vehicle in vehicles %}
+                <option value="{{ vehicle.id }}" {{ selectedVehicleId == vehicle.id ? 'selected' }}>
+                  {{ vehicle.displayName }}
+                </option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+      </div>
+    </form>
+
+    <div class="card border-0 shadow-sm">
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table align-middle mb-0 {% if not (parts is empty) %}table-hover{% endif %}">
+            <thead>
+              <tr>
+                <th>Pièce</th>
+                <th>Véhicules compatibles</th>
+                <th>Quantité</th>
+                <th>Mise à jour</th>
+                <th class="text-end">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+            {% for part in parts %}
+              <tr>
+                <td>
+                  <div class="fw-semibold {{ part.quantity == 0 ? 'text-danger' }} {{ part.quantity == 1 ? 'text-warning' }}">
+                    {{ part.partType.name }}
+                  </div>
+                  {% if part.note %}
+                    <div class="small text-body-secondary text-truncate" style="max-width: 320px;">
+                      {{ part.note }}
+                    </div>
+                  {% endif %}
+                </td>
+                <td>
+                  {% if part.vehicles|length > 0 %}
+                    <div class="d-flex flex-wrap gap-1">
+                      {% for vehicle in part.vehicles %}
+                        {{ badge.emphasis(
+                          label: vehicle.displayName, 
+                          variant: part.quantity == 0 ? "danger" : part.quantity == 1 ? "warning" : "light"
+                        ) }}
+                      {% endfor %}
+                    </div>
+                  {% else %}
+                    <span class="text-body-secondary small">Aucun véhicule renseigné</span>
+                  {% endif %}
+                </td>
+                <td>
+                  <span class="fw-semibold {{ part.quantity == 0 ? 'text-danger' }} {{ part.quantity == 1 ? 'text-warning' }}">{{ part.quantity }}</span>
+                </td>
+                <td>
+                  <div>{{ part.updatedAt ? part.updatedAt|date('d/m/Y') : '—' }}</div>
+                  <div class="small text-body-secondary">
+                    {{ part.updatedAt ? part.updatedAt|date('H:i') : '' }}
+                  </div>
+                </td>
+                <td>
+                  <div class="d-flex justify-content-end gap-2">
+                    <a class="btn btn-sm btn-outline-secondary" href="{{ path('app_part_show', {id: part.id}) }}">
+                      {{ fa.icon('eye', family: 'solid', fixed_width: true, additional_classes: ['me-1']) }}
+                      Voir
+                    </a>
+                    <a class="btn btn-sm btn-outline-primary" href="{{ path('app_part_edit', {id: part.id}) }}">
+                      {{ fa.icon('pen', family: 'solid', fixed_width: true, additional_classes: ['me-1']) }}
+                      Modifier
+                    </a>
+                  </div>
+                </td>
+              </tr>
+            {% else %}
+              <tr>
+                <td colspan="5" class="text-center py-5">
+                  <div class="mb-2">
+                    {{ fa.icon('boxes-stacked', family: 'solid', fixed_width: true, additional_classes: ['fs-3', 'text-body-secondary']) }}
+                  </div>
+                  <div class="fw-semibold">Aucun stock enregistré</div>
+                  <div class="text-body-secondary small mb-3">
+                    Aucune pièce ne correspond au filtre actuel.
+                  </div>
+                  <a class="btn btn-primary" href="{{ path('app_part_new') }}">
+                    {{ fa.icon('plus', family: 'solid', fixed_width: true, additional_classes: ['me-2']) }}
+                    Ajouter un stock
+                  </a>
+                </td>
+              </tr>
+            {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}
+ #}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+{% extends 'base.html.twig' %}
+{% import 'macros/fontawesome.html.twig' as fa %}
+{% import "macros/badge.html.twig" as badge %}
+
+{% block title %}Stock{% endblock %}
+
+{% block body %}
+  <div class="container py-4 py-lg-5">
+    <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3 mb-4">
+      <div>
+        <h1 class="h3 mb-1">Stock</h1>
+        <div class="text-body-secondary small">
+          Consulte et gère les pièces compatibles avec les véhicules.
+        </div>
+      </div>
+
+      <div class="d-flex gap-2">
+        <a class="btn btn-primary" href="{{ path('app_part_new') }}">
+          {{ fa.icon('plus', family: 'solid', fixed_width: true, additional_classes: ['me-2']) }}
+          Ajouter un stock
+        </a>
+      </div>
+    </div>
+
+    <form
+      method="get"
+      class="card border-0 shadow-sm mb-4"
+      data-controller="auto-submit"
+    >
+      <div class="card-body">
+        <div class="row g-3 align-items-end">
+          <div class="col-12 col-lg-4">
+            <label for="vehicle" class="form-label">Filtrer par véhicule</label>
+            <select
+              id="vehicle"
+              name="vehicle"
+              class="form-select"
+              data-action="change->auto-submit#submit"
+            >
+              <option value="">Aucun</option>
+              {% for vehicle in vehicles %}
+                <option value="{{ vehicle.id }}" {{ selectedVehicleId == vehicle.id ? 'selected' }}>
+                  {{ vehicle.displayName }}
+                </option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="col-12 col-lg-4">
+            <label for="partType" class="form-label">Filtrer par type de pièce</label>
+            <select
+              id="partType"
+              name="partType"
+              class="form-select"
+              data-action="change->auto-submit#submit"
+            >
+              <option value="">Aucun</option>
+              {% for partType in partTypes %}
+                <option value="{{ partType.id }}" {{ selectedPartTypeId == partType.id ? 'selected' }}>
+                  {{ partType.name }}
+                </option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="col-12 col-lg-auto">
+            <a class="btn btn-outline-secondary w-100" href="{{ path('app_part_index') }}">
+              {{ fa.icon('rotate-left', family: 'solid', fixed_width: true, additional_classes: ['me-2']) }}
+              Réinitialiser
+            </a>
+          </div>
+        </div>
+      </div>
+    </form>
+
+    <div class="card border-0 shadow-sm">
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table align-middle mb-0 {% if not (parts is empty) %}table-hover{% endif %}">
+            <thead>
+              <tr>
+                <th>Pièce</th>
+                <th>Véhicules compatibles</th>
+                <th>Quantité</th>
+                <th>Mise à jour</th>
+                <th class="text-end">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+            {% for part in parts %}
+              {% set stockTextClass =
+                part.quantity == 0
+                  ? 'text-danger'
+                  : (part.quantity == 1 ? 'text-warning' : 'text-body')
+              %}
+
+              {% set stockBadgeClass =
+                part.quantity == 0
+                  ? 'text-bg-danger'
+                  : (part.quantity == 1 ? 'text-bg-warning' : 'text-bg-success')
+              %}
+
+              {% set stockBadgeLabel =
+                part.quantity == 0
+                  ? 'Rupture'
+                  : (part.quantity == 1 ? 'Stock faible' : 'OK')
+              %}
+
+              <tr>
+                <td>
+                  <div class="d-flex align-items-center gap-2 mb-1">
+                    <div class="fw-semibold {{ stockTextClass }}">
+                      {{ part.partType.name }}
+                    </div>
+                  </div>
+
+                  {% if part.note %}
+                    <div class="small text-body-secondary text-truncate" style="max-width: 320px;">
+                      {{ part.note }}
+                    </div>
+                  {% endif %}
+                </td>
+
+                <td>
+                  {% if part.vehicles|length > 0 %}
+                    <div class="d-flex flex-wrap gap-1">
+                      {% for vehicle in part.vehicles %}
+                        {{ badge.emphasis(
+                          label: vehicle.displayName, 
+                          variant: part.quantity == 0 ? "danger" : part.quantity == 1 ? "warning" : "light"
+                        ) }}
+                      {% endfor %}
+                    </div>
+                  {% else %}
+                    <span class="text-body-secondary small">Aucun véhicule renseigné</span>
+                  {% endif %}
+                </td>
+
+                <td>
+                  <span class="fw-semibold {{ stockTextClass }}">
+                    {{ part.quantity }}
+                  </span>
+                </td>
+
+                <td>
+                  <div>{{ part.updatedAt ? part.updatedAt|date('d/m/Y') : '—' }}</div>
+                  <div class="small text-body-secondary">
+                    {{ part.updatedAt ? part.updatedAt|date('H:i') : '' }}
+                  </div>
+                </td>
+
+                <td>
+                  <div class="d-flex justify-content-end gap-2">
+                    <a class="btn btn-sm btn-outline-secondary" href="{{ path('app_part_show', {id: part.id}) }}">
+                      {{ fa.icon('eye', family: 'solid', fixed_width: true, additional_classes: ['me-1']) }}
+                      Voir
+                    </a>
+                    <a class="btn btn-sm btn-outline-primary" href="{{ path('app_part_edit', {id: part.id}) }}">
+                      {{ fa.icon('pen', family: 'solid', fixed_width: true, additional_classes: ['me-1']) }}
+                      Modifier
+                    </a>
+                  </div>
+                </td>
+              </tr>
+            {% else %}
+              <tr>
+                <td colspan="5" class="text-center py-5">
+                  <div class="mb-2">
+                    {{ fa.icon('boxes-stacked', family: 'solid', fixed_width: true, additional_classes: ['fs-3', 'text-body-secondary']) }}
+                  </div>
+                  <div class="fw-semibold">Aucun stock enregistré</div>
+                  <div class="text-body-secondary small mb-3">
+                    Aucune pièce ne correspond aux filtres actuels.
+                  </div>
+                  <a class="btn btn-primary" href="{{ path('app_part_new') }}">
+                    {{ fa.icon('plus', family: 'solid', fixed_width: true, additional_classes: ['me-2']) }}
+                    Ajouter un stock
+                  </a>
+                </td>
+              </tr>
+            {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}
