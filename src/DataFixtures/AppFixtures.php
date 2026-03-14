@@ -6,18 +6,13 @@ use App\Entity\Address;
 use App\Entity\Document;
 use App\Entity\InspectionCenter;
 use App\Entity\InventoryItem;
-use App\Entity\MaintenanceType;
-use App\Entity\MaintenanceTypePartRequirement;
 use App\Entity\Part;
 use App\Entity\User;
 use App\Entity\Vehicle;
 use App\Entity\VehicleInspection;
 use App\Entity\VehicleInsurance;
-use App\Entity\VehicleMaintenance;
-use App\Entity\VehicleMaintenancePart;
 use App\Enum\InsurancePaymentFrequencyEnum;
 use App\Enum\InspectionResultEnum;
-use App\Enum\MaintenanceStatusEnum;
 use App\Enum\VehicleColorEnum;
 use App\Enum\VehicleFuelTypeEnum;
 use App\Enum\VehicleStatusEnum;
@@ -461,168 +456,6 @@ class AppFixtures extends Fixture
                 ;
     
                 $manager->persist($inv);
-            }
-    
-            $manager->flush();
-    
-            // --------------------
-            // MAINTENANCE TYPES
-            // --------------------
-            $maintenanceTypesData = [
-                ['name' => 'Vidange + filtre', 'km' => 15000, 'months' => 12, 'desc' => 'Vidange moteur + remplacement filtre à huile'],
-                ['name' => 'Filtre à air', 'km' => 30000, 'months' => 24, 'desc' => 'Remplacement filtre à air'],
-                ['name' => 'Liquide de frein', 'km' => null, 'months' => 24, 'desc' => 'Purge + remplacement liquide de frein'],
-                ['name' => 'Kit chaîne', 'km' => 20000, 'months' => null, 'desc' => 'Remplacement kit chaîne (moto)'],
-                ['name' => 'Plaquettes avant', 'km' => null, 'months' => null, 'desc' => 'Remplacement plaquettes avant (moto/auto selon modèle)'],
-            ];
-    
-            $maintenanceTypesByName = [];
-            foreach ($maintenanceTypesData as $t) {
-                $mt = (new MaintenanceType())
-                    ->setName($t['name'])
-                    ->setIntervalKm($t['km'])
-                    ->setIntervalMonths($t['months'])
-                    ->setDescription($t['desc'])
-                ;
-    
-                $manager->persist($mt);
-                $maintenanceTypesByName[$t['name']] = $mt;
-            }
-    
-            $manager->flush();
-    
-            // --------------------
-            // MAINTENANCE TYPE -> PART REQUIREMENTS (unique maintenance_type_id + part_id)
-            // --------------------
-            $requirementsData = [
-                // Vidange voiture
-                ['type' => 'Vidange + filtre', 'partKey' => 'Mann|W712/95', 'qty' => '1.00', 'optional' => false, 'notes' => null],
-                ['type' => 'Vidange + filtre', 'partKey' => 'Total|INEO-5W30', 'qty' => '4.50', 'optional' => false, 'notes' => 'approx'],
-    
-                // Vidange moto
-                ['type' => 'Vidange + filtre', 'partKey' => 'Hiflo|HF303', 'qty' => '1.00', 'optional' => false, 'notes' => null],
-                ['type' => 'Vidange + filtre', 'partKey' => 'Motul|7100-10W40', 'qty' => '2.10', 'optional' => false, 'notes' => 'Kawasaki 400 approx'],
-    
-                // Filtre à air
-                ['type' => 'Filtre à air', 'partKey' => 'Bosch|F026400', 'qty' => '1.00', 'optional' => false, 'notes' => null],
-    
-                // Liquide frein
-                ['type' => 'Liquide de frein', 'partKey' => 'Motul|DOT4', 'qty' => '1.00', 'optional' => false, 'notes' => null],
-    
-                // Kit chaine
-                ['type' => 'Kit chaîne', 'partKey' => 'DID|KIT-520', 'qty' => '1.00', 'optional' => false, 'notes' => null],
-    
-                // Plaquettes
-                ['type' => 'Plaquettes avant', 'partKey' => 'Brembo|07BB04', 'qty' => '1.00', 'optional' => false, 'notes' => null],
-            ];
-    
-            foreach ($requirementsData as $r) {
-                $mt = $maintenanceTypesByName[$r['type']] ?? null;
-                $part = $partsByKey[$r['partKey']] ?? null;
-    
-                if (!$mt || !$part) {
-                    throw new \RuntimeException(sprintf('Requirement invalide type="%s" part="%s"', $r['type'], $r['partKey']));
-                }
-    
-                $req = (new MaintenanceTypePartRequirement())
-                    ->setMaintenanceType($mt)
-                    ->setPart($part)
-                    ->setQuantityRequired($r['qty'])
-                    ->setIsOptional($r['optional'])
-                    ->setNotes($r['notes'])
-                ;
-    
-                $manager->persist($req);
-            }
-    
-            $manager->flush();
-    
-            // --------------------
-            // VEHICLE MAINTENANCES
-            // --------------------
-            $focus = $vehiclesByRegistration['AB-123-CD'];
-            $almera = $vehiclesByRegistration['EF-456-GH'];
-            $ninja = $vehiclesByRegistration['IJ-789-KL'];
-    
-            $vm1 = (new VehicleMaintenance())
-                ->setVehicle($focus)
-                ->setMaintenanceType($maintenanceTypesByName['Vidange + filtre'])
-                ->setPerformedAt(null)
-                ->setIsPlanned(true)
-                ->setNextDueDate(new DateTimeImmutable('2026-04-20'))
-                ->setMileage(183200)
-                ->setCost('89.90')
-                ->setNotes('Vidange + filtre à huile')
-                ->setStatus(MaintenanceStatusEnum::ToDo)
-            ;
-            $manager->persist($vm1);
-    
-            $vm2 = (new VehicleMaintenance())
-                ->setVehicle($focus)
-                ->setMaintenanceType($maintenanceTypesByName['Vidange + filtre'])
-                ->setPerformedAt(null)
-                ->setIsPlanned(true)
-                ->setNextDueDate(new DateTimeImmutable('2026-05-20'))
-                ->setMileage(183200)
-                ->setCost('89.90')
-                ->setNotes('Vidange + filtre à huile')
-                ->setStatus(MaintenanceStatusEnum::ToDo)
-            ;
-            $manager->persist($vm2);
-    
-            $vm3 = (new VehicleMaintenance())
-                ->setVehicle($ninja)
-                ->setMaintenanceType($maintenanceTypesByName['Vidange + filtre'])
-                ->setPerformedAt(new DateTimeImmutable('2026-02-10'))
-                ->setMileage(7800)
-                ->setCost('55.00')
-                ->setNotes('Vidange moto')
-                ->setStatus(MaintenanceStatusEnum::Completed)
-            ;
-            $manager->persist($vm3);
-    
-            $vm4 = (new VehicleMaintenance())
-                ->setVehicle($almera)
-                ->setMaintenanceType($maintenanceTypesByName['Liquide de frein'])
-                ->setPerformedAt(new DateTimeImmutable('now')) // planned
-                ->setMileage(184638)
-                ->setCost(null)
-                ->setNotes('À planifier')
-                ->setStatus(MaintenanceStatusEnum::ToDo)
-            ;
-            $manager->persist($vm4);
-    
-            $manager->flush();
-    
-            // --------------------
-            // VEHICLE MAINTENANCE PARTS (unique vehicle_maintenance_id + part_id)
-            // --------------------
-            $vmpData = [
-                // Focus vidange
-                ['vm' => $vm1, 'partKey' => 'Mann|W712/95', 'qty' => '1.00', 'price' => '8.90', 'fromStock' => true],
-                ['vm' => $vm1, 'partKey' => 'Total|INEO-5W30', 'qty' => '4.50', 'price' => '7.99', 'fromStock' => true],
-    
-                // Ninja vidange
-                ['vm' => $vm2, 'partKey' => 'Hiflo|HF303', 'qty' => '1.00', 'price' => '9.90', 'fromStock' => true],
-                ['vm' => $vm2, 'partKey' => 'Motul|7100-10W40', 'qty' => '2.10', 'price' => '10.50', 'fromStock' => true],
-            ];
-    
-            foreach ($vmpData as $x) {
-                $part = $partsByKey[$x['partKey']] ?? null;
-                if (!$part) {
-                    throw new \RuntimeException(sprintf('Part introuvable pour key "%s" (VMP).', $x['partKey']));
-                }
-    
-                $vmp = (new VehicleMaintenancePart())
-                    ->setVehicleMaintenance($x['vm'])
-                    ->setPart($part)
-                    ->setQuantityUsed($x['qty'])
-                    ->setUnitPrice($x['price'])
-                    ->setFromStock($x['fromStock'])
-                    ->setNotes(null)
-                ;
-    
-                $manager->persist($vmp);
             }
     
             $manager->flush();

@@ -5,13 +5,11 @@ namespace App\Controller;
 use App\Entity\Document;
 use App\Entity\User;
 use App\Entity\Vehicle;
-use App\Enum\MaintenanceStatusEnum;
 use App\Form\DocumentType;
 use App\Form\VehicleType;
 use App\Repository\DocumentRepository;
 use App\Repository\VehicleInspectionRepository;
 use App\Repository\VehicleInsuranceRepository;
-use App\Repository\VehicleMaintenanceRepository;
 use App\Repository\VehicleRepository;
 use App\Service\DocumentManager;
 use App\Service\VehicleManager;
@@ -70,7 +68,6 @@ final class VehicleController extends AbstractController
         VehicleManager $vehicleManager,
         VehicleInsuranceRepository $vehicleInsuranceRepository,
         VehicleInspectionRepository $vehicleInspectionRepository,
-        VehicleMaintenanceRepository $vehicleMaintenanceRepository,
         #[CurrentUser] User $currentUser,
         DocumentRepository $documentRepository,
     ): Response
@@ -95,16 +92,11 @@ final class VehicleController extends AbstractController
             "vehicle" => $vehicle,
             "isDeleted" => false,
         ], ['inspectionDate' => 'DESC']);
-        $maintenance = $vehicleMaintenanceRepository->findBy([
-            "vehicle" => $vehicle,
-            "status" => MaintenanceStatusEnum::ToDo,
-        ], ['nextDueDate' => 'ASC', 'createdAt' => 'ASC']);
 
         return $this->render('vehicle/show.html.twig', [
             'vehicle' => $vehicle,
             'insurance' => $insurance[0] ?? null,
             'inspection' => $inspection[0] ?? null,
-            'maintenance' => $maintenance,
             'vehicle_document' => $documentRepository->findByVehicle(vehicle: $vehicle, deleted: false),
         ]);
     }

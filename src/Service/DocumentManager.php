@@ -6,7 +6,6 @@ use App\Entity\Document;
 use App\Entity\Vehicle;
 use App\Entity\VehicleInsurance;
 use App\Entity\VehicleInspection;
-use App\Entity\VehicleMaintenance;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\DependencyInjection\ParameterBag\ContainerBagInterface;
@@ -23,7 +22,7 @@ class DocumentManager
     }
 
     public function createDocument(
-        Vehicle|VehicleInsurance|VehicleInspection|VehicleMaintenance $parent,
+        Vehicle|VehicleInsurance|VehicleInspection $parent,
         UploadedFile $file,
         string $name,
         ?string $description = null,
@@ -47,7 +46,6 @@ class DocumentManager
             Vehicle::class => $document->setVehicle($parent),
             VehicleInsurance::class => $document->setVehicleInsurance($parent),
             VehicleInspection::class => $document->setVehicleInspection($parent),
-            VehicleMaintenance::class => $document->setVehicleMaintenance($parent),
         };
 
         $this->entityManager->persist($document);

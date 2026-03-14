@@ -53,23 +53,9 @@ class Part
     #[ORM\OneToMany(targetEntity: InventoryItem::class, mappedBy: 'part')]
     private Collection $inventoryItems;
 
-    /**
-     * @var Collection<int, MaintenanceTypePartRequirement>
-     */
-    #[ORM\OneToMany(targetEntity: MaintenanceTypePartRequirement::class, mappedBy: 'part')]
-    private Collection $maintenanceTypePartRequirements;
-
-    /**
-     * @var Collection<int, VehicleMaintenancePart>
-     */
-    #[ORM\OneToMany(targetEntity: VehicleMaintenancePart::class, mappedBy: 'part')]
-    private Collection $vehicleMaintenanceParts;
-
     public function __construct()
     {
         $this->inventoryItems = new ArrayCollection();
-        $this->maintenanceTypePartRequirements = new ArrayCollection();
-        $this->vehicleMaintenanceParts = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -196,64 +182,6 @@ class Part
         if ($this->inventoryItems->removeElement($inventoryItem)) {
             // set the owning side to null (unless already changed)
             if ($inventoryItem->getPart() === $this) {
-            }
-        }
-
-        return $this;
-    }
-
-    /**
-     * @return Collection<int, MaintenanceTypePartRequirement>
-     */
-    public function getMaintenanceTypePartRequirements(): Collection
-    {
-        return $this->maintenanceTypePartRequirements;
-    }
-
-    public function addMaintenanceTypePartRequirement(MaintenanceTypePartRequirement $maintenanceTypePartRequirement): static
-    {
-        if (!$this->maintenanceTypePartRequirements->contains($maintenanceTypePartRequirement)) {
-            $this->maintenanceTypePartRequirements->add($maintenanceTypePartRequirement);
-            $maintenanceTypePartRequirement->setPart($this);
-        }
-
-        return $this;
-    }
-
-    public function removeMaintenanceTypePartRequirement(MaintenanceTypePartRequirement $maintenanceTypePartRequirement): static
-    {
-        if ($this->maintenanceTypePartRequirements->removeElement($maintenanceTypePartRequirement)) {
-            // set the owning side to null (unless already changed)
-            if ($maintenanceTypePartRequirement->getPart() === $this) {
-            }
-        }
-
-        return $this;
-    }
-
-    /**
-     * @return Collection<int, VehicleMaintenancePart>
-     */
-    public function getVehicleMaintenanceParts(): Collection
-    {
-        return $this->vehicleMaintenanceParts;
-    }
-
-    public function addVehicleMaintenancePart(VehicleMaintenancePart $vehicleMaintenancePart): static
-    {
-        if (!$this->vehicleMaintenanceParts->contains($vehicleMaintenancePart)) {
-            $this->vehicleMaintenanceParts->add($vehicleMaintenancePart);
-            $vehicleMaintenancePart->setPart($this);
-        }
-
-        return $this;
-    }
-
-    public function removeVehicleMaintenancePart(VehicleMaintenancePart $vehicleMaintenancePart): static
-    {
-        if ($this->vehicleMaintenanceParts->removeElement($vehicleMaintenancePart)) {
-            // set the owning side to null (unless already changed)
-            if ($vehicleMaintenancePart->getPart() === $this) {
             }
         }
 

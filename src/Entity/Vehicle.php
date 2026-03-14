@@ -82,12 +82,6 @@ class Vehicle
     #[ORM\OneToMany(targetEntity: VehicleInspection::class, mappedBy: 'vehicle')]
     private Collection $vehicleInspections;
 
-    /**
-     * @var Collection<int, VehicleMaintenance>
-     */
-    #[ORM\OneToMany(targetEntity: VehicleMaintenance::class, mappedBy: 'vehicle')]
-    private Collection $vehicleMaintenances;
-    
     #[ORM\OneToMany(mappedBy: 'vehicle', targetEntity: Document::class, orphanRemoval: true)]
     private Collection $documents;
 
@@ -98,7 +92,6 @@ class Vehicle
     {
         $this->vehicleInsurances = new ArrayCollection();
         $this->vehicleInspections = new ArrayCollection();
-        $this->vehicleMaintenances = new ArrayCollection();
         $this->documents = new ArrayCollection();
     }
 
@@ -351,36 +344,6 @@ class Vehicle
         if ($this->vehicleInspections->removeElement($vehicleInspection)) {
             // set the owning side to null (unless already changed)
             if ($vehicleInspection->getVehicle() === $this) {
-            }
-        }
-
-        return $this;
-    }
-
-    /**
-     * @return Collection<int, VehicleMaintenance>
-     */
-    public function getVehicleMaintenances(): Collection
-    {
-        return $this->vehicleMaintenances;
-    }
-
-    public function addVehicleMaintenance(VehicleMaintenance $vehicleMaintenance): static
-    {
-        if (!$this->vehicleMaintenances->contains($vehicleMaintenance)) {
-            $this->vehicleMaintenances->add($vehicleMaintenance);
-            $vehicleMaintenance->setVehicle($this);
-        }
-
-        return $this;
-    }
-
-    public function removeVehicleMaintenance(VehicleMaintenance $vehicleMaintenance): static
-    {
-        if ($this->vehicleMaintenances->removeElement($vehicleMaintenance)) {
-            // set the owning side to null (unless already changed)
-            if ($vehicleMaintenance->getVehicle() === $this) {
-                $vehicleMaintenance->setVehicle(null);
             }
         }
 
