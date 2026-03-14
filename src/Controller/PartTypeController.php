@@ -13,7 +13,6 @@ use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[Route('/configuration/part/type')]
-#[IsGranted('ROLE_ADMIN')]
 final class PartTypeController extends AbstractController
 {
     #[Route(name: 'app_configuration_part_type_index', methods: ['GET'])]
