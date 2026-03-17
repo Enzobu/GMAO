@@ -3,6 +3,7 @@
 namespace App\Repository;
 
 use App\Entity\Document;
+use App\Entity\Part;
 use App\Entity\User;
 use App\Entity\Vehicle;
 use App\Entity\VehicleInspection;
@@ -61,6 +62,18 @@ class DocumentRepository extends ServiceEntityRepository
         return $this->createQueryBuilder('d')
             ->andWhere('d.vehicleInsurance = :vehicleInsurance')
             ->setParameter('vehicleInsurance', $vehicleInsurance)
+            ->andWhere('d.isDeleted = :deleted')
+            ->setParameter('deleted', $deleted)
+            ->orderBy('d.createdAt', 'DESC')
+            ->getQuery()
+            ->getResult();
+    }
+
+    public function findByPart(Part $part, bool $deleted = false): array
+    {
+        return $this->createQueryBuilder('d')
+            ->andWhere('d.part = :part')
+            ->setParameter('part', $part)
             ->andWhere('d.isDeleted = :deleted')
             ->setParameter('deleted', $deleted)
             ->orderBy('d.createdAt', 'DESC')

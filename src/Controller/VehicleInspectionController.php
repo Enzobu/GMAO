@@ -301,7 +301,7 @@ final class VehicleInspectionController extends AbstractController
         EntityManagerInterface $entityManager,
         #[MapEntity(id: 'vehicleId')] Vehicle $vehicle,
         VehicleInspection $vehicleInspection,
-        #[MapEntity(id: 'documentId')] Document $document,
+        #[MapEntity(mapping: ['documentId' => 'publicId'])] Document $document,
         VehicleManager $vehicleManager,
         #[CurrentUser] User $currentUser,
     ): Response {
@@ -356,7 +356,7 @@ final class VehicleInspectionController extends AbstractController
         Request $request, 
         #[MapEntity(id: 'vehicleId')] Vehicle $vehicle,
         VehicleInspection $vehicleInspection,
-        #[MapEntity(id: 'documentId')] Document $document,
+        #[MapEntity(mapping: ['documentId' => 'publicId'])] Document $document,
         VehicleManager $vehicleManager,
         #[CurrentUser] User $currentUser,
         DocumentManager $documentManager,

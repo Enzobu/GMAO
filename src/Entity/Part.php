@@ -44,9 +44,13 @@ class Part
     #[ORM\Column(options: ['default' => false])]
     private bool $isDeleted = false;
 
+    #[ORM\OneToMany(mappedBy: 'part', targetEntity: Document::class, orphanRemoval: true)]
+    private Collection $documents;
+
     public function __construct()
     {
         $this->vehicles = new ArrayCollection();
+        $this->documents = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -164,4 +168,34 @@ class Part
 
         return $this;
     }
+
+    /**
+     * @return Collection<int, Document>
+     */
+    public function getDocuments(): Collection
+    {
+        return $this->documents;
+    }
+
+    public function addDocument(Document $document): static
+    {
+        if (!$this->documents->contains($document)) {
+            $this->documents->add($document);
+            $document->setPart($this);
+        }
+
+        return $this;
+    }
+
+    public function removeDocument(Document $document): static
+    {
+        if ($this->documents->removeElement($document)) {
+            if ($document->getPart() === $this) {
+                $document->setPart(null);
+            }
+        }
+
+        return $this;
+    }
+
 }
