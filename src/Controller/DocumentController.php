@@ -89,7 +89,7 @@ final class DocumentController extends AbstractController
             throw $this->createAccessDeniedException('Vous devez être connecté pour accéder à ce document.');
         }
 
-        if ($this->isGranted('ROLE_ADMIN')) {
+        if ($this->isGranted('ROLE_USER')) {
             return;
         }
 
