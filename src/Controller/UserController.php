@@ -244,9 +244,14 @@ final class UserController extends AbstractController
         #[MapEntity(id: 'userId')] User $user,
         #[MapEntity(mapping: ['documentId' => 'publicId'])] Document $document,
     ): Response {
-        $this->checkAthorization(
+        $response = $this->checkAthorization(
             document: $document,
+            edit: true,
         );
+
+        if ($response) {
+            return $response;
+        }
 
         $oldName = $document->getName();
         $oldDescription = $document->getDescription();
@@ -282,10 +287,14 @@ final class UserController extends AbstractController
         #[MapEntity(id: 'userId')] User $user,
         #[MapEntity(mapping: ['documentId' => 'publicId'])] Document $document,
     ): Response {
-        $this->checkAthorization(
+        $response = $this->checkAthorization(
             document: $document,
             delete: true,
         );
+
+        if ($response) {
+            return $response;
+        }
 
         if ($this->isCsrfTokenValid('delete'.$document->getId(), $request->getPayload()->getString('_token'))) {
             $documentManager->softDelete($document);
