@@ -230,9 +230,15 @@ final class PartController extends AbstractController
         Part $part,
         #[MapEntity(mapping: ['documentId' => 'publicId'])] Document $document,
     ): Response {
-        $this->checkAthorization(
+        $response = $this->checkAthorization(
             document: $document,
+            edit: true,
         );
+
+        if ($response) {
+            return $response;
+        }
+
 
         $oldName = $document->getName();
         $oldDescription = $document->getDescription();
@@ -268,10 +274,15 @@ final class PartController extends AbstractController
         Part $part,
         #[MapEntity(mapping: ['documentId' => 'publicId'])] Document $document,
     ): Response {
-        $this->checkAthorization(
+        $response = $this->checkAthorization(
             document: $document,
             delete: true,
         );
+
+        if ($response) {
+            return $response;
+        }
+
 
         if ($this->isCsrfTokenValid('delete'.$document->getId(), $request->getPayload()->getString('_token'))) {
             $documentManager->softDelete($document);
@@ -286,9 +297,16 @@ final class PartController extends AbstractController
         bool $roleAdminRequired = true,
         ?Part $part = null,
         ?Document $document = null,
-        bool $delete = true,
+        bool $delete = false,
+        bool $edit = false,
     ): ?Response {
         # -------------------- Authization --------------------
+        if ($delete || $edit) {
+            if (!$this->isGranted('ROLE_ADMIN')) {
+                $this->addFlash('danger', 'Vous n\'avez pas les autorisations nécessaires pour supprimer un document. Veuillez contacter un administrateur');
+                return $this->redirectToRoute('app_part_index', [], Response::HTTP_SEE_OTHER);
+            }
+        }
         if ($roleAdminRequired) {
             if (!$this->isGranted('ROLE_ADMIN')) {
                 $this->addFlash('danger', 'Vous n\'avez pas les autorisations nécessaires pour accéder à la ressource demandée. Pour plus d\'information, contacter un administrateur');
@@ -312,12 +330,6 @@ final class PartController extends AbstractController
             }
             if ($document->isDeleted()) {
                 $this->addFlash('danger', 'Le document a été supprimé. Pour plus d\'informations, contactez un administrateur.');
-                return $this->redirectToRoute('app_part_index', [], Response::HTTP_SEE_OTHER);
-            }
-        }
-        if ($delete) {
-            if (!$this->isGranted('ROLE_ADMIN')) {
-                $this->addFlash('danger', 'Vous n\'avez pas les autorisations nécessaires pour supprimer un document. Veuillez contacter un administrateur');
                 return $this->redirectToRoute('app_part_index', [], Response::HTTP_SEE_OTHER);
             }
         }
