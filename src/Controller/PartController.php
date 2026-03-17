@@ -283,7 +283,6 @@ final class PartController extends AbstractController
             return $response;
         }
 
-
         if ($this->isCsrfTokenValid('delete'.$document->getId(), $request->getPayload()->getString('_token'))) {
             $documentManager->softDelete($document);
 

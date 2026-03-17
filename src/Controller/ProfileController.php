@@ -156,9 +156,13 @@ final class ProfileController extends AbstractController
         #[CurrentUser] User $user,
         #[MapEntity(mapping: ['documentId' => 'publicId'])] Document $document,
     ): Response {
-        $this->checkAthorization(
+        $response = $this->checkAthorization(
             document: $document,
         );
+
+        if ($response) {
+            return $response;
+        }
 
         $oldName = $document->getName();
         $oldDescription = $document->getDescription();
@@ -195,10 +199,14 @@ final class ProfileController extends AbstractController
         DocumentManager $documentManager,
         #[MapEntity(mapping: ['documentId' => 'publicId'])] Document $document,
     ): Response {
-        $this->checkAthorization(
+        $response = $this->checkAthorization(
             document: $document,
             delete: true,
         );
+
+        if ($response) {
+            return $response;
+        }
 
         if ($this->isCsrfTokenValid('delete'.$document->getId(), $request->getPayload()->getString('_token'))) {
             $documentManager->softDelete($document);
