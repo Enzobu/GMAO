@@ -1,10 +1,11 @@
 {% extends 'base.html.twig' %}
 {% import 'macros/fontawesome.html.twig' as fa %}
+{% import 'macros/document.html.twig' as document %}
 
 {% block title %}Stock · {{ part.partType.name|capitalize }}{% endblock %}
 
 {% block body %}
-  <div class="container py-2 py-lg-3">
+  <div class="py-2 py-lg-3">
     <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3 mb-4">
       <div>
         <div class="text-body-secondary small mb-1">Stock</div>
@@ -108,5 +109,18 @@
         </div>
       </div>
     </div>
+    {{ document.list
+      (
+        documents: part_document,
+        newPath: path('app_part_document_new', {id: part.id}),
+        sourceRoute: path(app.request.attributes.get('_route'), {id: part.id}),
+        editRoute: 'app_part_document_edit',
+        editParameters: {id: part.id},
+        deleteRoute: 'app_part_document_delete',
+        deleteParameters: {id: part.id},
+        fallback: "Aucun document disponible pour cette pièce.",
+        readOnly: false,
+      )
+    }}
   </div>
 {% endblock %}

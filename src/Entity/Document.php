@@ -64,6 +64,9 @@ class Document
     #[ORM\ManyToOne(inversedBy: 'documents')]
     private ?User $user = null;
 
+    #[ORM\ManyToOne(inversedBy: 'documents')]
+    private ?Part $part = null;
+
     /*
     |----------------------------------------
     | Timestamps
@@ -231,13 +234,25 @@ class Document
         $this->user = $user;
         return $this;
     }
+
+    public function getPart(): ?Part
+    {
+        return $this->part;
+    }
+
+    public function setPart(?Part $part): static
+    {
+        $this->part = $part;
+        return $this;
+    }
     
-    public function getParent(): Vehicle|VehicleInsurance|VehicleInspection|User|null
+    public function getParent(): Vehicle|VehicleInsurance|VehicleInspection|User|Part|null
     {
         return $this->vehicle
             ?? $this->vehicleInsurance
             ?? $this->vehicleInspection
-            ?? $this->user;
+            ?? $this->user
+            ?? $this->part;
     }
 
     public function getCreatedAt(): \DateTimeImmutable

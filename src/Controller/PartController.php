@@ -2,16 +2,23 @@
 
 namespace App\Controller;
 
+use App\Entity\Document;
 use App\Entity\Part;
+use App\Form\DocumentType;
 use App\Form\PartFormType;
+use App\Repository\DocumentRepository;
 use App\Repository\PartRepository;
 use App\Repository\PartTypeRepository;
 use App\Repository\VehicleRepository;
+use App\Service\DocumentManager;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Bridge\Doctrine\Attribute\MapEntity;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\File\Exception\FileException;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\String\Slugger\SluggerInterface;
 
 #[Route('/part')]
 final class PartController extends AbstractController
@@ -76,8 +83,10 @@ final class PartController extends AbstractController
     }
 
     #[Route('/{id}', name: 'app_part_show', methods: ['GET'])]
-    public function show(Part $part): Response
-    {
+    public function show(
+        Part $part,
+        DocumentRepository $documentRepository,
+    ): Response {
         $response = $this->checkAthorization(
             roleAdminRequired: false,
             part: $part,
@@ -89,6 +98,7 @@ final class PartController extends AbstractController
 
         return $this->render('part/show.html.twig', [
             'part' => $part,
+            'part_document' => $documentRepository->findByPart(part: $part, deleted: false),
         ]);
     }
 
@@ -143,9 +153,140 @@ final class PartController extends AbstractController
         return $this->redirectToRoute('app_part_index', [], Response::HTTP_SEE_OTHER);
     }
 
+    #[Route('/{id}/document/new', name: 'app_part_document_new', methods: ['GET', 'POST'])]
+    public function newDocument(
+        Request $request, 
+        EntityManagerInterface $entityManager,
+        Part $part,
+        SluggerInterface $slugger,
+    ): Response {
+        $document = new Document();
+        $form = $this->createForm(DocumentType::class, $document);
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted() && $form->isValid()) {
+            $uploadedFile = $form->get('file')->getData();
+
+            if ($uploadedFile !== null) {
+                $originalFilename = pathinfo($uploadedFile->getClientOriginalName(), PATHINFO_FILENAME);
+                $safeFilename = $slugger->slug($originalFilename);
+                $extension = $uploadedFile->guessExtension() ?: $uploadedFile->getClientOriginalExtension() ?: 'bin';
+
+                $mimeType = $uploadedFile->getMimeType();
+                $size = $uploadedFile->getSize();
+
+                $storedFilename = sprintf('%s-%s.%s', $safeFilename, uniqid(), $extension);
+
+                try {
+                    $uploadedFile->move(
+                        $this->getParameter('documents_directory'),
+                        $storedFilename
+                    );
+                } catch (FileException $e) {
+                    $this->addFlash('danger', 'Le fichier n’a pas pu être envoyé.');
+
+                    return $this->render('document/new.html.twig', [
+                        'document' => $document,
+                        'form' => $form,
+                        'entity' => $part,
+                        'subtitle' => 'Pièce : ' . $part->getPartType()->getName(),
+                    ]);
+                }
+
+                $document
+                    ->setPart($part)
+                    ->setOriginalFilename($uploadedFile->getClientOriginalName())
+                    ->setStoredFilename($storedFilename)
+                    ->setMimeType($mimeType)
+                    ->setSize($size)
+                    ->setExtension($extension)
+                ;
+
+                if (!$document->getName()) {
+                    $document->setName($originalFilename);
+                }
+
+                $entityManager->persist($document);
+                $entityManager->flush();
+
+                $this->addFlash('success', 'Le document a bien été ajouté.');
+
+                return $this->redirectToRoute('app_part_show', ["id" => $part->getId()], Response::HTTP_SEE_OTHER);
+            }
+        }
+
+        return $this->render('document/new.html.twig', [
+            'document' => $document,
+            'form' => $form,
+            'entity' => $part,
+            'subtitle' => 'Pièce : ' . $part->getPartType()->getName(),
+        ]);
+    }
+
+    #[Route('/{id}/document/{documentId}/edit', name: 'app_part_document_edit', methods: ['GET', 'POST'])]
+    public function editDocument(
+        Request $request, 
+        EntityManagerInterface $entityManager,
+        Part $part,
+        #[MapEntity(mapping: ['documentId' => 'publicId'])] Document $document,
+    ): Response {
+        $this->checkAthorization(
+            document: $document,
+        );
+
+        $oldName = $document->getName();
+        $oldDescription = $document->getDescription();
+
+        $form = $this->createForm(DocumentType::class, $document, ['edit' => true]);
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted() && $form->isValid()) {
+            $entityManager->flush();
+
+            $name = $document->getName();
+            $description = $document->getDescription();
+
+            ($oldName != $name) || ($oldDescription != $description) ?
+            $this->addFlash('success', 'Le document a bien été modifié.') :
+            $this->addFlash('warning', 'Le document ne comporte aucune modification.');
+
+            return $this->redirectToRoute('app_part_show', ["id" => $part->getId()], Response::HTTP_SEE_OTHER);
+        }
+
+        return $this->render('document/edit.html.twig', [
+            'document' => $document,
+            'form' => $form,
+            'entity' => $part,
+            'subtitle' => 'Pièce : ' . $part->getPartType()->getName(),
+        ]);
+    }
+
+    #[Route('/{id}/document/{documentId}', name: 'app_part_document_delete', methods: ['POST'])]
+    public function deleteDocument(
+        Request $request, 
+        DocumentManager $documentManager,
+        Part $part,
+        #[MapEntity(mapping: ['documentId' => 'publicId'])] Document $document,
+    ): Response {
+        $this->checkAthorization(
+            document: $document,
+            delete: true,
+        );
+
+        if ($this->isCsrfTokenValid('delete'.$document->getId(), $request->getPayload()->getString('_token'))) {
+            $documentManager->softDelete($document);
+
+            $this->addFlash('success', 'Document supprimé avec succès.');
+        }
+
+        return $this->redirectToRoute('app_part_show', ["id" => $part->getId()], Response::HTTP_SEE_OTHER);
+    }
+
     private function checkAthorization(
         bool $roleAdminRequired = true,
         ?Part $part = null,
+        ?Document $document = null,
+        bool $delete = true,
     ): ?Response {
         # -------------------- Authization --------------------
         if ($roleAdminRequired) {
@@ -163,6 +304,22 @@ final class PartController extends AbstractController
         }
         if (!$this->isGranted('ROLE_ADMIN')) {
             $this->addFlash('warning', 'Vous avez un accès en lecture seule à la ressource demandée. ressoPour plus d\'informations, contactez un administrateururce demandée.');
+        }
+        if ($document) {
+            if (!$this->isGranted('ROLE_ADMIN')) {
+                $this->addFlash('danger', 'Vous ne pouvez pas ajouter un document sur la ressource demandée. Pour plus d\'informations, contactez un administrateur.');
+                return $this->redirectToRoute('app_part_index', [], Response::HTTP_SEE_OTHER);
+            }
+            if ($document->isDeleted()) {
+                $this->addFlash('danger', 'Le document a été supprimé. Pour plus d\'informations, contactez un administrateur.');
+                return $this->redirectToRoute('app_part_index', [], Response::HTTP_SEE_OTHER);
+            }
+        }
+        if ($delete) {
+            if (!$this->isGranted('ROLE_ADMIN')) {
+                $this->addFlash('danger', 'Vous n\'avez pas les autorisations nécessaires pour supprimer un document. Veuillez contacter un administrateur');
+                return $this->redirectToRoute('app_part_index', [], Response::HTTP_SEE_OTHER);
+            }
         }
         # -----------------------------------------------------
         return null;

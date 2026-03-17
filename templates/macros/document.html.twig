@@ -34,7 +34,7 @@
 
         {% if documents is empty %}
           <div class="text-body-secondary">
-            Aucun document lié directement au véhicule.
+            {{ fallback }}
           </div>
         {% else %}
           <div class="d-flex flex-column gap-2">
