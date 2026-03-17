@@ -6,7 +6,7 @@
 set -euo pipefail
 
 CONTAINER_NAME="gmao-prod-database"
-DOCUMENTS_DIR="/home/enzo/Dev/GMAO/public/uploads/documents"
+DOCUMENTS_DIR="/home/enzo/Dev/GMAO/var/storage/documents"
 REMOTE_USER="ubuntu"
 REMOTE_HOST="enzo-palermo.com"
 REMOTE_DIR="/home/ubuntu/gmao/backup"

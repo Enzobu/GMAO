@@ -154,7 +154,7 @@ final class ProfileController extends AbstractController
         Request $request, 
         EntityManagerInterface $entityManager,
         #[CurrentUser] User $user,
-        #[MapEntity(id: 'documentId')] Document $document,
+        #[MapEntity(mapping: ['documentId' => 'publicId'])] Document $document,
     ): Response {
         $this->checkAthorization(
             document: $document,
@@ -193,7 +193,7 @@ final class ProfileController extends AbstractController
     public function deleteDocument(
         Request $request, 
         DocumentManager $documentManager,
-        #[MapEntity(id: 'documentId')] Document $document,
+        #[MapEntity(mapping: ['documentId' => 'publicId'])] Document $document,
     ): Response {
         $this->checkAthorization(
             document: $document,

@@ -72,18 +72,19 @@
                 <div class="flex-shrink-0 d-flex gap-2">
                   {{ self.show(
                       document: document,
-                      url: path('app_document_show', {id: document.id}),
+                      url: path('app_document_show', {publicId: document.publicId}),
+                      downloadUrl: path('app_document_download', {publicId: document.publicId}),
                       label: 'Voir'
                   ) }}
                   <a
                     class="btn btn-sm btn-outline-secondary d-flex align-items-center {{ readOnly ? "btn-secondary-outline-disable" }}" 
-                    {% if not readOnly %}href="{{ path(editRoute, editParameters|merge({documentId: document.id})) }}?sourceRoute={{ sourceRoute }}"{% endif %}
+                    {% if not readOnly %}href="{{ path(editRoute, editParameters|merge({documentId: document.publicId})) }}?sourceRoute={{ sourceRoute }}"{% endif %}
                   >
                     {{ fa.icon('pen', family: 'solid', fixed_width: true, additional_classes: ['me-1']) }}
                     Modifier
                   </a>
                   {% if is_granted('ROLE_ADMIN') %}
-                    {% set deletePath = path(deleteRoute, deleteParameters|merge({documentId: document.id})) %}
+                    {% set deletePath = path(deleteRoute, deleteParameters|merge({documentId: document.publicId})) %}
                     {% include "document/_delete_form.html.twig" with { width_sm: true } %}
                   {% endif %}
                 </div>
@@ -97,11 +98,11 @@
   </div>
 {% endmacro %}
 
-{% macro show(document, url, label = 'Voir', buttonClass = 'btn btn-sm btn-outline-primary', modalSize = 'modal-xl') %}
+{% macro show(document, url, downloadUrl = null, label = 'Voir', buttonClass = 'btn btn-sm btn-outline-primary', modalSize = 'modal-xl') %}
   {% import "macros/fontawesome.html.twig" as fa %}
 
   {% if document is not null %}
-    {% set modalId = 'document-show-modal-' ~ document.id %}
+    {% set modalId = 'document-show-modal-' ~ document.publicId %}
 
     <button
       type="button"
@@ -165,7 +166,7 @@
                     {{ fa.icon('up-right-from-square', family: 'solid', fixed_width: true, additional_classes: ['me-1']) }}
                     Ouvrir le document
                   </a>
-                  <a href="{{ url }}" class="btn btn-primary" download>
+                  <a href="{{ downloadUrl ?: url }}" class="btn btn-primary">
                     {{ fa.icon('download', family: 'solid', fixed_width: true, additional_classes: ['me-1']) }}
                     Télécharger le document
                   </a>
@@ -175,9 +176,14 @@
           </div>
 
           <div class="modal-footer">
-            <a href="{{ url }}" target="_blank" class="btn btn-outline-secondary">
+            <a href="{{ url }}" target="_blank" rel="noopener noreferrer" class="btn btn-outline-secondary">
               {{ fa.icon('up-right-from-square', family: 'solid', fixed_width: true, additional_classes: ['me-1']) }}
               Ouvrir dans un nouvel onglet
+            </a>
+
+            <a href="{{ downloadUrl ?: url }}" class="btn btn-outline-primary">
+              {{ fa.icon('download', family: 'solid', fixed_width: true, additional_classes: ['me-1']) }}
+              Télécharger
             </a>
 
             <button type="button" class="btn btn-primary" data-bs-dismiss="modal">

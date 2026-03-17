@@ -3,6 +3,7 @@
 namespace App\Service;
 
 use App\Entity\Document;
+use App\Entity\User;
 use App\Entity\Vehicle;
 use App\Entity\VehicleInsurance;
 use App\Entity\VehicleInspection;
@@ -19,10 +20,14 @@ class DocumentManager
         private readonly ContainerBagInterface $params,
     ) {
         $this->uploadDirectory = $this->params->get('documents_directory');
+
+        if (!is_dir($this->uploadDirectory)) {
+            throw new \RuntimeException('Le dossier de stockage des documents est introuvable.');
+        }
     }
 
     public function createDocument(
-        Vehicle|VehicleInsurance|VehicleInspection $parent,
+        Vehicle|VehicleInsurance|VehicleInspection|User $parent,
         UploadedFile $file,
         string $name,
         ?string $description = null,
@@ -46,6 +51,7 @@ class DocumentManager
             Vehicle::class => $document->setVehicle($parent),
             VehicleInsurance::class => $document->setVehicleInsurance($parent),
             VehicleInspection::class => $document->setVehicleInspection($parent),
+            User::class => $document->setUser($parent),
         };
 
         $this->entityManager->persist($document);
@@ -85,6 +91,27 @@ class DocumentManager
             ->setIsDeleted(true);
 
         $this->entityManager->flush();
+    }
+
+    public function getAbsolutePath(Document $document): string
+    {
+        $filename = $document->getStoredFilename();
+
+        if (!$filename) {
+            throw new \RuntimeException('Le document ne possède pas de fichier stocké.');
+        }
+
+        return rtrim($this->uploadDirectory, '/').'/'.$filename;
+    }
+
+    public function fileExists(Document $document): bool
+    {
+        return is_file($this->getAbsolutePath($document));
+    }
+
+    public function getDownloadFilename(Document $document): string
+    {
+        return $document->getOriginalFilename() ?: $document->getStoredFilename() ?: 'document';
     }
 }
 

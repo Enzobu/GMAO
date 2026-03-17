@@ -242,7 +242,7 @@ final class UserController extends AbstractController
         Request $request, 
         EntityManagerInterface $entityManager,
         #[MapEntity(id: 'userId')] User $user,
-        #[MapEntity(id: 'documentId')] Document $document,
+        #[MapEntity(mapping: ['documentId' => 'publicId'])] Document $document,
     ): Response {
         $this->checkAthorization(
             document: $document,
@@ -280,7 +280,7 @@ final class UserController extends AbstractController
         Request $request, 
         DocumentManager $documentManager,
         #[MapEntity(id: 'userId')] User $user,
-        #[MapEntity(id: 'documentId')] Document $document,
+        #[MapEntity(mapping: ['documentId' => 'publicId'])] Document $document,
     ): Response {
         $this->checkAthorization(
             document: $document,

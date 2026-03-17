@@ -5,6 +5,7 @@ namespace App\Entity;
 use App\Repository\DocumentRepository;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Uid\Uuid;
 
 #[ORM\Entity(repositoryClass: DocumentRepository::class)]
 #[ORM\HasLifecycleCallbacks]
@@ -42,6 +43,9 @@ class Document
     #[ORM\Column(options: ['default' => false])]
     private bool $isDeleted = false;
 
+    #[ORM\Column(length: 36, unique: true)]
+    private ?string $publicId = null;
+
     /*
     |----------------------------------------
     | Relations parent (une seule doit exister)
@@ -76,6 +80,7 @@ class Document
     {
         $this->createdAt = new \DateTimeImmutable();
         $this->updatedAt = new \DateTimeImmutable();
+        $this->publicId = Uuid::v4()->toRfc4122();
     }
 
     #[ORM\PreUpdate]
@@ -265,6 +270,18 @@ class Document
     public function setIsDeleted(bool $isDeleted): static
     {
         $this->isDeleted = $isDeleted;
+
+        return $this;
+    }
+
+    public function getPublicId(): ?string
+    {
+        return $this->publicId;
+    }
+
+    public function setPublicId(?string $publicId): static
+    {
+        $this->publicId = $publicId;
 
         return $this;
     }

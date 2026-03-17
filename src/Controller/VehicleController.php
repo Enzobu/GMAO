@@ -21,7 +21,6 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\CurrentUser;
-use Symfony\Component\String\Slugger\SluggerInterface;
 
 #[Route('/vehicle')]
 final class VehicleController extends AbstractController
@@ -72,7 +71,7 @@ final class VehicleController extends AbstractController
         DocumentRepository $documentRepository,
     ): Response
     {
-        $response = $this->checkAthorization(
+        $response = $this->checkAuthorization(
             vehicleManager: $vehicleManager,
             currentUser: $currentUser,
             vehicle: $vehicle,
@@ -109,7 +108,7 @@ final class VehicleController extends AbstractController
         VehicleManager $vehicleManager,
         #[CurrentUser] User $currentUser,
     ): Response {
-        $response = $this->checkAthorization(
+        $response = $this->checkAuthorization(
             vehicleManager: $vehicleManager,
             currentUser: $currentUser,
             vehicle: $vehicle,
@@ -148,13 +147,17 @@ final class VehicleController extends AbstractController
         VehicleManager $vehicleManager,
         #[CurrentUser] User $currentUser,
     ): Response {
-        $response = $this->checkAthorization(
+        $response = $this->checkAuthorization(
             vehicleManager: $vehicleManager,
             currentUser: $currentUser,
             vehicle: $vehicle,
             delete: true,
             params: ["id" => $vehicle->getId()],
         );
+
+        if ($response) {
+            return $response;
+        }
 
         if ($this->isCsrfTokenValid('delete'.$vehicle->getId(), $request->getPayload()->getString('_token'))) {
             $vehicle->setIsDeleted(true);
@@ -171,13 +174,12 @@ final class VehicleController extends AbstractController
         Request $request,
         EntityManagerInterface $entityManager,
         Vehicle $vehicle,
-        SluggerInterface $slugger,
         VehicleManager $vehicleManager,
         #[CurrentUser] User $currentUser,
     ): Response {
         $document = new Document();
 
-        $response = $this->checkAthorization(
+        $response = $this->checkAuthorization(
             vehicleManager: $vehicleManager,
             currentUser: $currentUser,
             vehicle: $vehicle,
@@ -197,13 +199,12 @@ final class VehicleController extends AbstractController
 
             if ($uploadedFile !== null) {
                 $originalFilename = pathinfo($uploadedFile->getClientOriginalName(), PATHINFO_FILENAME);
-                $safeFilename = $slugger->slug($originalFilename);
-                $extension = $uploadedFile->guessExtension() ?: $uploadedFile->getClientOriginalExtension() ?: 'bin';
+                $extension = strtolower($uploadedFile->guessExtension() ?: $uploadedFile->getClientOriginalExtension() ?: 'bin');
 
                 $mimeType = $uploadedFile->getMimeType();
                 $size = $uploadedFile->getSize();
 
-                $storedFilename = sprintf('%s-%s.%s', $safeFilename, uniqid(), $extension);
+                $storedFilename = sprintf('%s.%s', bin2hex(random_bytes(16)), $extension);
 
                 try {
                     $uploadedFile->move(
@@ -258,11 +259,11 @@ final class VehicleController extends AbstractController
         Request $request, 
         EntityManagerInterface $entityManager,
         Vehicle $vehicle,
-        #[MapEntity(id: 'documentId')] Document $document,
+        #[MapEntity(mapping: ['documentId' => 'publicId'])] Document $document,
         VehicleManager $vehicleManager,
         #[CurrentUser] User $currentUser,
     ): Response {
-        $response = $this->checkAthorization(
+        $response = $this->checkAuthorization(
             vehicleManager: $vehicleManager,
             currentUser: $currentUser,
             vehicle: $vehicle,
@@ -310,12 +311,12 @@ final class VehicleController extends AbstractController
     public function deleteDocument(
         Request $request,
         Vehicle $vehicle,
-        #[MapEntity(id: 'documentId')] Document $document, 
+        #[MapEntity(mapping: ['documentId' => 'publicId'])] Document $document,
         DocumentManager $documentManager,
         VehicleManager $vehicleManager,
         #[CurrentUser] User $currentUser,
     ): Response {
-        $response = $this->checkAthorization(
+        $response = $this->checkAuthorization(
             vehicleManager: $vehicleManager,
             currentUser: $currentUser,
             vehicle: $vehicle,
@@ -337,7 +338,7 @@ final class VehicleController extends AbstractController
         return $this->redirectToRoute('app_vehicle_show', ["id" => $vehicle->getId()], Response::HTTP_SEE_OTHER);
     }
 
-    private function checkAthorization(
+    private function checkAuthorization(
         VehicleManager $vehicleManager,
         User $currentUser,
         Vehicle $vehicle,
@@ -348,24 +349,26 @@ final class VehicleController extends AbstractController
     ): ?Response {
         # -------------------- Authization --------------------
         if (!$vehicleManager->isAuthorized($currentUser, $vehicle)) {
-            $update ? 
-            $this->addFlash('danger', 'Vous ne pouvez pas modifier la ressource demandée. ressoPour plus d\'informations, contactez un administrateururce demandée.') : 
-            $this->addFlash('warning', 'Vous avez un accès en lecture seule à la ressource demandée. ressoPour plus d\'informations, contactez un administrateururce demandée.');
+            if ($update) {
+                $this->addFlash('danger', 'Vous ne pouvez pas modifier la ressource demandée. Pour plus d\'informations, contactez un administrateur.');
+            } else {
+                $this->addFlash('warning', 'Vous avez un accès en lecture seule à la ressource demandée. Pour plus d\'informations, contactez un administrateur.');
+            }
             if ($update) {
                 return $this->redirectToRoute('app_vehicle_index', [], Response::HTTP_SEE_OTHER);
             }
         }
         if ($vehicle->isDeleted()) {
-            $this->addFlash('danger', 'Le véhicule a été supprimé. ressoPour plus d\'informations, contactez un administrateururce demandée.');
+            $this->addFlash('danger', 'Le véhicule a été supprimé. Pour plus d\'informations, contactez un administrateur.');
             return $this->redirectToRoute('app_vehicle_index', [], Response::HTTP_SEE_OTHER);
         }
         if ($document) {
             if (!$vehicleManager->isAuthorized($currentUser, $vehicle)) {
-                $this->addFlash('danger', 'Vous ne pouvez pas ajouter un document sur la ressource demandée. ressoPour plus d\'informations, contactez un administrateururce demandée.');
+                $this->addFlash('danger', 'Vous ne pouvez pas ajouter un document sur la ressource demandée. Pour plus d\'informations, contactez un administrateur.');
                 return $this->redirectToRoute('app_vehicle_index', [], Response::HTTP_SEE_OTHER);
             }
             if ($document->isDeleted()) {
-                $this->addFlash('danger', 'Le document a été supprimé. ressoPour plus d\'informations, contactez un administrateururce demandée.');
+                $this->addFlash('danger', 'Le document a été supprimé. Pour plus d\'informations, contactez un administrateur.');
                 return $this->redirectToRoute('app_vehicle_index', [], Response::HTTP_SEE_OTHER);
             }
         }

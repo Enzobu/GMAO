@@ -19,6 +19,4 @@
 /assets/vendor/
 ###< symfony/asset-mapper ###
 
-public/uploads/
-
 TODO.md
