@@ -94,12 +94,19 @@ class Vehicle
     #[ORM\ManyToMany(targetEntity: Part::class, mappedBy: 'vehicles')]
     private Collection $parts;
 
+    /**
+     * @var Collection<int, Maintenance>
+     */
+    #[ORM\OneToMany(targetEntity: Maintenance::class, mappedBy: 'vehicle')]
+    private Collection $maintenances;
+
     public function __construct()
     {
         $this->vehicleInsurances = new ArrayCollection();
         $this->vehicleInspections = new ArrayCollection();
         $this->documents = new ArrayCollection();
         $this->parts = new ArrayCollection();
+        $this->maintenances = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -425,6 +432,35 @@ class Vehicle
     {
         if ($this->parts->removeElement($part)) {
             $part->removeVehicle($this);
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Maintenance>
+     */
+    public function getMaintenances(): Collection
+    {
+        return $this->maintenances;
+    }
+
+    public function addMaintenance(Maintenance $maintenance): static
+    {
+        if (!$this->maintenances->contains($maintenance)) {
+            $this->maintenances->add($maintenance);
+            $maintenance->setVehicle($this);
+        }
+
+        return $this;
+    }
+
+    public function removeMaintenance(Maintenance $maintenance): static
+    {
+        if ($this->maintenances->removeElement($maintenance)) {
+            // set the owning side to null (unless already changed)
+            if ($maintenance->getVehicle() === $this) {
+            }
         }
 
         return $this;

@@ -47,10 +47,17 @@ class Part
     #[ORM\OneToMany(mappedBy: 'part', targetEntity: Document::class, orphanRemoval: true)]
     private Collection $documents;
 
+    /**
+     * @var Collection<int, MaintenancePart>
+     */
+    #[ORM\OneToMany(targetEntity: MaintenancePart::class, mappedBy: 'part')]
+    private Collection $maintenanceParts;
+
     public function __construct()
     {
         $this->vehicles = new ArrayCollection();
         $this->documents = new ArrayCollection();
+        $this->maintenanceParts = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -192,6 +199,35 @@ class Part
         if ($this->documents->removeElement($document)) {
             if ($document->getPart() === $this) {
                 $document->setPart(null);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, MaintenancePart>
+     */
+    public function getMaintenanceParts(): Collection
+    {
+        return $this->maintenanceParts;
+    }
+
+    public function addMaintenancePart(MaintenancePart $maintenancePart): static
+    {
+        if (!$this->maintenanceParts->contains($maintenancePart)) {
+            $this->maintenanceParts->add($maintenancePart);
+            $maintenancePart->setPart($this);
+        }
+
+        return $this;
+    }
+
+    public function removeMaintenancePart(MaintenancePart $maintenancePart): static
+    {
+        if ($this->maintenanceParts->removeElement($maintenancePart)) {
+            // set the owning side to null (unless already changed)
+            if ($maintenancePart->getPart() === $this) {
             }
         }
 
