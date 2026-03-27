@@ -85,7 +85,9 @@
 
                         <a
                           class="btn btn-sm btn-outline-primary {{ readOnly ? "btn-outline-disable" }}"
-                          href="{{ path('app_maintenance_edit', { id: maintenance.id }) }}"
+                          {% if not readOnly %}
+                            href="{{ path('app_maintenance_edit', { id: maintenance.id }) }}"
+                          {% endif %}
                         >
                           {{ fa.icon('pen', family: 'solid', fixed_width: true, additional_classes: ['me-1']) }}
                           Modifier

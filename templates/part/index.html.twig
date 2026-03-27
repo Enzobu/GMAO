@@ -5,6 +5,7 @@
 {% block title %}Stock{% endblock %}
 
 {% block body %}
+  {% set readOnly = not is_granted('ROLE_ADMIN') %}
   <div class="container py-2 py-lg-3">
     <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3 mb-4">
       <div>
@@ -151,11 +152,25 @@
 
                 <td>
                   <div class="d-flex justify-content-end gap-2">
-                    <a class="btn btn-sm btn-outline-secondary" href="{{ path('app_part_show', {id: part.id}) }}">
+                    <a 
+                      class="btn btn-sm {{ readOnly ? "btn-outline-warning" : "btn-outline-secondary" }}"
+                      href="{{ path('app_part_show', {id: part.id}) }}"
+                      {% if readOnly %}
+                        data-bs-toggle="tooltip" data-bs-placement="top"
+                        data-bs-custom-class="custom-tooltip"
+                        data-bs-title="Lecture seule"
+                      {% endif %}
+                    >
                       {{ fa.icon('eye', family: 'solid', fixed_width: true, additional_classes: ['me-1']) }}
                       Voir
                     </a>
-                    <a class="btn btn-sm btn-outline-primary" href="{{ path('app_part_edit', {id: part.id}) }}">
+
+                    <a
+                      class="btn btn-sm btn-outline-primary {{ readOnly ? "btn-outline-disable" }}"
+                      {% if not readOnly %}
+                        href="{{ path('app_part_edit', {id: part.id}) }}"
+                      {% endif %}
+                    >
                       {{ fa.icon('pen', family: 'solid', fixed_width: true, additional_classes: ['me-1']) }}
                       Modifier
                     </a>
