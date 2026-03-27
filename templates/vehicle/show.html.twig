@@ -6,7 +6,7 @@
 {% block title %}Véhicule{% endblock %}
 
 {% block body %}
-  {% set readOnly = is_granted('ROLE_USER') ? false : vehicle.user != app.user %}
+  {% set readOnly = is_granted('ROLE_ADMIN') ? false : vehicle.user != app.user %}
   <div class="mb-4">
     <div class="d-flex flex-column gap-3">
       <div class="d-flex flex-column flex-lg-row align-items-lg-start justify-content-between gap-3">

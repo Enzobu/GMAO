@@ -125,7 +125,7 @@
 
                 <td>
                   {% if part.vehicles|length > 0 %}
-                    <div class="d-flex flex-wrap gap-1">
+                    <div class="d-flex flex-column flex-wrap gap-1">
                       {% for vehicle in part.vehicles %}
                         {{ badge.emphasis(
                           label: vehicle.displayName, 
@@ -154,7 +154,7 @@
                 <td>
                   <div class="d-flex justify-content-end gap-2">
                     <a 
-                      class="btn btn-sm {{ readOnly ? "btn-outline-warning" : "btn-outline-secondary" }}"
+                      class="btn btn-sm {{ readOnly ? "btn-outline-warning" : "btn-outline-secondary" }} d-flex align-items-center justify-content-center p-2"
                       href="{{ path('app_part_show', {id: part.id}) }}"
                       {% if readOnly %}
                         data-bs-toggle="tooltip" data-bs-placement="top"
@@ -162,30 +162,27 @@
                         data-bs-title="Lecture seule"
                       {% endif %}
                     >
-                      {{ fa.icon('eye', family: 'solid', fixed_width: true, additional_classes: ['me-1']) }}
-                      Voir
+                      {{ fa.icon('eye', family: 'solid', fixed_width: true) }}
                     </a>
 
                     <button
                       type="button"
-                      class="btn btn-sm btn-outline-success {{ readOnly ? 'btn-success-outline-disable' }}"
+                      class="btn btn-sm btn-outline-success {{ readOnly ? 'btn-success-outline-disable' }} d-flex align-items-center justify-content-center p-2"
                       {% if not readOnly %}
                         data-bs-toggle="modal"
                         data-bs-target="#addStockModal-{{ part.id }}"
                       {% endif %}
                     >
-                      {{ fa.icon('plus', family: 'solid', fixed_width: true, additional_classes: ['me-1']) }}
-                      Ajouter du stock
+                      {{ fa.icon('plus', family: 'solid', fixed_width: true) }}
                     </button>
 
                     <a
-                      class="btn btn-sm btn-outline-primary {{ readOnly ? "btn-outline-disable" }}"
+                      class="btn btn-sm btn-outline-primary {{ readOnly ? "btn-outline-disable" }} d-flex align-items-center justify-content-center p-2"
                       {% if not readOnly %}
                         href="{{ path('app_part_edit', {id: part.id}) }}"
                       {% endif %}
                     >
-                      {{ fa.icon('pen', family: 'solid', fixed_width: true, additional_classes: ['me-1']) }}
-                      Modifier
+                      {{ fa.icon('pen', family: 'solid', fixed_width: true) }}
                     </a>
                   </div>
                   {% if not readOnly %}

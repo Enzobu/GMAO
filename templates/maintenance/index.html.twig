@@ -37,7 +37,7 @@
               </thead>
               <tbody>
                 {% for maintenance in maintenances %}
-                {% set readOnly = is_granted('ROLE_USER') ? maintenance.vehicle.user != app.user : true %}
+                {% set readOnly = is_granted('ROLE_ADMIN') ? false : maintenance.vehicle.user != app.user %}
                   <tr>
                     <td class="fw-semibold">
                       {{ maintenance.vehicle.name ?? '—' }}
@@ -71,7 +71,7 @@
                     <td>
                       <div class="d-flex justify-content-end gap-2">
                         <a 
-                          class="btn btn-sm {{ readOnly ? "btn-outline-warning" : "btn-outline-secondary" }}"
+                          class="btn btn-sm {{ readOnly ? "btn-outline-warning" : "btn-outline-secondary" }} d-flex align-items-center justify-content-center p-2"
                           href="{{ path('app_maintenance_show', { id: maintenance.id }) }}"
                           {% if readOnly %}
                             data-bs-toggle="tooltip" data-bs-placement="top"
@@ -79,18 +79,16 @@
                             data-bs-title="Lecture seule"
                           {% endif %}
                         >
-                          {{ fa.icon('eye', family: 'solid', fixed_width: true, additional_classes: ['me-1']) }}
-                          Voir
+                          {{ fa.icon('eye', family: 'solid', fixed_width: true) }}
                         </a>
 
                         <a
-                          class="btn btn-sm btn-outline-primary {{ readOnly ? "btn-outline-disable" }}"
+                          class="btn btn-sm btn-outline-primary {{ readOnly ? "btn-outline-disable" }} d-flex align-items-center justify-content-center p-2"
                           {% if not readOnly %}
                             href="{{ path('app_maintenance_edit', { id: maintenance.id }) }}"
                           {% endif %}
                         >
-                          {{ fa.icon('pen', family: 'solid', fixed_width: true, additional_classes: ['me-1']) }}
-                          Modifier
+                          {{ fa.icon('pen', family: 'solid', fixed_width: true) }}
                         </a>
                       </div>
                     </td>
