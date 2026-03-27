@@ -1,12 +1,13 @@
 {% extends 'base.html.twig' %}
 {% import 'macros/fontawesome.html.twig' as fa %}
 {% import "macros/badge.html.twig" as badge %}
+{% import 'macros/modal.html.twig' as modal %}
 
 {% block title %}Stock{% endblock %}
 
 {% block body %}
   {% set readOnly = not is_granted('ROLE_ADMIN') %}
-  <div class="container py-2 py-lg-3">
+  <div class="py-2 py-lg-3">
     <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3 mb-4">
       <div>
         <h1 class="h3 mb-1">Stock</h1>
@@ -165,6 +166,18 @@
                       Voir
                     </a>
 
+                    <button
+                      type="button"
+                      class="btn btn-sm btn-outline-success {{ readOnly ? 'btn-success-outline-disable' }}"
+                      {% if not readOnly %}
+                        data-bs-toggle="modal"
+                        data-bs-target="#addStockModal-{{ part.id }}"
+                      {% endif %}
+                    >
+                      {{ fa.icon('plus', family: 'solid', fixed_width: true, additional_classes: ['me-1']) }}
+                      Ajouter du stock
+                    </button>
+
                     <a
                       class="btn btn-sm btn-outline-primary {{ readOnly ? "btn-outline-disable" }}"
                       {% if not readOnly %}
@@ -175,6 +188,50 @@
                       Modifier
                     </a>
                   </div>
+                  {% if not readOnly %}
+                    {% set addStockForm %}
+                      <form
+                        id="add-stock-form-{{ part.id }}"
+                        method="post"
+                        action="{{ path('app_part_add_stock', { id: part.id }) }}"
+                        class="mt-2"
+                      >
+                        <input type="hidden" name="_token" value="{{ csrf_token('add_stock' ~ part.id) }}">
+
+                        <div class="mb-3">
+                          <label for="quantity-{{ part.id }}" class="form-label">
+                            Nombre de pièces à ajouter
+                          </label>
+                          <input
+                            id="quantity-{{ part.id }}"
+                            name="quantity"
+                            type="number"
+                            min="1"
+                            step="1"
+                            value="1"
+                            class="form-control"
+                            required
+                          >
+                        </div>
+
+                        <div class="d-flex justify-content-end gap-2">
+                          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                            Annuler
+                          </button>
+                          <button type="submit" class="btn btn-success">
+                            Ajouter
+                          </button>
+                        </div>
+                      </form>
+                    {% endset %}
+
+                    {{ modal.confirm(
+                      id: 'addStockModal-' ~ part.id,
+                      title: 'Ajouter du stock - ' ~ part.partType.name,
+                      description: addStockForm,
+                      cancelButton: null,
+                    ) }}
+                  {% endif %}
                 </td>
               </tr>
             {% else %}
