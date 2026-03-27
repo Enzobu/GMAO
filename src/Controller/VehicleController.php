@@ -371,10 +371,16 @@ final class VehicleController extends AbstractController
                 $this->addFlash('danger', 'Le document a été supprimé. Pour plus d\'informations, contactez un administrateur.');
                 return $this->redirectToRoute('app_vehicle_index', [], Response::HTTP_SEE_OTHER);
             }
+            if ($delete) {
+                if (!$this->isGranted('ROLE_ADMIN')) {
+                    $this->addFlash('danger', 'Vous n\'avez pas les autorisations nécessaires pour supprimer un document. Veuillez contacter un administrateur');
+                    return $this->redirectToRoute('app_vehicle_show', $params, Response::HTTP_SEE_OTHER);
+                }
+            }
         }
         if ($delete) {
             if (!$this->isGranted('ROLE_ADMIN')) {
-                $this->addFlash('danger', 'Vous n\'avez pas les autorisations nécessaires pour supprimer un document. Veuillez contacter un administrateur');
+                $this->addFlash('danger', 'Vous n\'avez pas les autorisations nécessaires pour supprimer un véhicule. Veuillez contacter un administrateur');
                 return $this->redirectToRoute('app_vehicle_show', $params, Response::HTTP_SEE_OTHER);
             }
         }

@@ -3,6 +3,7 @@
 namespace App\Repository;
 
 use App\Entity\Document;
+use App\Entity\Maintenance;
 use App\Entity\Part;
 use App\Entity\User;
 use App\Entity\Vehicle;
@@ -74,6 +75,18 @@ class DocumentRepository extends ServiceEntityRepository
         return $this->createQueryBuilder('d')
             ->andWhere('d.part = :part')
             ->setParameter('part', $part)
+            ->andWhere('d.isDeleted = :deleted')
+            ->setParameter('deleted', $deleted)
+            ->orderBy('d.createdAt', 'DESC')
+            ->getQuery()
+            ->getResult();
+    }
+
+    public function findByMaintenance(Maintenance $maintenance, bool $deleted = false): array
+    {
+        return $this->createQueryBuilder('d')
+            ->andWhere('d.maintenance = :maintenance')
+            ->setParameter('maintenance', $maintenance)
             ->andWhere('d.isDeleted = :deleted')
             ->setParameter('deleted', $deleted)
             ->orderBy('d.createdAt', 'DESC')

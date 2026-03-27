@@ -65,10 +65,14 @@ class Maintenance
     #[ORM\Column(options: ['default' => false])]
     private bool $isDeleted = false;
 
+    #[ORM\OneToMany(mappedBy: 'part', targetEntity: Document::class, orphanRemoval: true)]
+    private Collection $documents;
+
     public function __construct()
     {
         $this->maintenanceParts = new ArrayCollection();
-    }
+        $this->documents = new ArrayCollection();
+        }
 
     public function getId(): ?int
     {
@@ -271,6 +275,35 @@ class Maintenance
     public function setIsDeleted(bool $isDeleted): static
     {
         $this->isDeleted = $isDeleted;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Document>
+     */
+    public function getDocuments(): Collection
+    {
+        return $this->documents;
+    }
+
+    public function addDocument(Document $document): static
+    {
+        if (!$this->documents->contains($document)) {
+            $this->documents->add($document);
+            $document->setMaintenance($this);
+        }
+
+        return $this;
+    }
+
+    public function removeDocument(Document $document): static
+    {
+        if ($this->documents->removeElement($document)) {
+            if ($document->getMaintenance() === $this) {
+                $document->setIsDeleted(true);
+            }
+        }
 
         return $this;
     }

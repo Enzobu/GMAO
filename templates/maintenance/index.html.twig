@@ -37,6 +37,7 @@
               </thead>
               <tbody>
                 {% for maintenance in maintenances %}
+                {% set readOnly = is_granted('ROLE_USER') ? maintenance.vehicle.user != app.user : true %}
                   <tr>
                     <td class="fw-semibold">
                       {{ maintenance.vehicle.name ?? '—' }}
@@ -69,16 +70,21 @@
 
                     <td>
                       <div class="d-flex justify-content-end gap-2">
-                        <a
-                          class="btn btn-sm btn-outline-secondary"
+                        <a 
+                          class="btn btn-sm {{ readOnly ? "btn-outline-warning" : "btn-outline-secondary" }}"
                           href="{{ path('app_maintenance_show', { id: maintenance.id }) }}"
+                          {% if readOnly %}
+                            data-bs-toggle="tooltip" data-bs-placement="top"
+                            data-bs-custom-class="custom-tooltip"
+                            data-bs-title="Lecture seule"
+                          {% endif %}
                         >
                           {{ fa.icon('eye', family: 'solid', fixed_width: true, additional_classes: ['me-1']) }}
                           Voir
                         </a>
 
                         <a
-                          class="btn btn-sm btn-outline-primary"
+                          class="btn btn-sm btn-outline-primary {{ readOnly ? "btn-outline-disable" }}"
                           href="{{ path('app_maintenance_edit', { id: maintenance.id }) }}"
                         >
                           {{ fa.icon('pen', family: 'solid', fixed_width: true, additional_classes: ['me-1']) }}

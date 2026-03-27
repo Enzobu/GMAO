@@ -391,7 +391,7 @@ class Vehicle
     {
         if ($this->documents->removeElement($document)) {
             if ($document->getVehicle() === $this) {
-                $document->setVehicle(null);
+                $document->setIsDeleted(true);
             }
         }
 

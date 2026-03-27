@@ -56,7 +56,7 @@ class MaintenanceType extends AbstractType
             ])
             ->add('mileage', IntegerType::class, [
                 'label' => 'Kilométrage',
-                'required' => false,
+                'required' => true,
                 'attr' => [
                     'class' => 'form-control',
                     'min' => 0,

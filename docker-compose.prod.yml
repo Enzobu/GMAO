@@ -43,7 +43,7 @@ services:
         depends_on:
             - database
         volumes:
-          - ./public/uploads/documents:/var/www/public/uploads/documents
+          - ./var/storage/documents:/var/www/var/storage/documents
         environment:
             APP_ENV: prod
             TRUSTED_PROXIES: ${TRUSTED_PROXIES}

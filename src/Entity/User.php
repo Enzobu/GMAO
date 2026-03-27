@@ -218,7 +218,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     {
         if ($this->documents->removeElement($document)) {
             if ($document->getUser() === $this) {
-                $document->setUser(null);
+                $document->setIsDeleted(true);
             }
         }
 

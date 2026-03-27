@@ -1,9 +1,11 @@
 {% extends 'base.html.twig' %}
 {% import 'macros/fontawesome.html.twig' as fa %}
+{% import 'macros/document.html.twig' as document %}
 
 {% block title %}Entretien{% endblock %}
 
 {% block body %}
+  {% set readOnly = is_granted('ROLE_USER') ? maintenance.vehicle.user != app.user : true %}
   <div class="container py-4 py-lg-5">
     <div class="d-flex align-items-center justify-content-between mb-4">
       <div>
@@ -18,11 +20,18 @@
           {{ fa.icon('arrow-left', family: 'solid', fixed_width: true, additional_classes: ['me-1']) }}
           Retour
         </a>
-        <a class="btn btn-primary" href="{{ path('app_maintenance_edit', {'id': maintenance.id}) }}?show=true">
+        <a
+          class="btn btn-primary {{ readOnly ? 'btn-disable' }}"
+          {% if not readOnly %}
+            href="{{ path('app_maintenance_edit', {'id': maintenance.id}) }}?show=true"
+          {% endif %}
+        >
           {{ fa.icon('pen', family: 'solid', fixed_width: true, additional_classes: ['me-1']) }}
           Modifier
         </a>
-        {{ include('maintenance/_delete_form.html.twig') }}
+        {% if is_granted('ROLE_ADMIN') %}
+          {{ include('maintenance/_delete_form.html.twig') }}
+        {% endif %}
       </div>
     </div>
 
@@ -114,5 +123,18 @@
         </div>
       </div>
     </div>
+    {{ document.list
+      (
+        documents: maintenance_document,
+        newPath: path('app_maintenance_document_new', {id: maintenance.id}),
+        sourceRoute: path(app.request.attributes.get('_route'), {id: maintenance.id}),
+        editRoute: 'app_maintenance_document_edit',
+        editParameters: {id: maintenance.id},
+        deleteRoute: 'app_maintenance_document_delete',
+        deleteParameters: {id: maintenance.id},
+        fallback: "Aucun document disponible pour cette maintenance.",
+        readOnly: false,
+      )
+    }}
   </div>
 {% endblock %}

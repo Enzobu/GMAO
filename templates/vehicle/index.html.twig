@@ -27,7 +27,7 @@
   {% else %}
     <div class="row g-3">
       {% for vehicle in vehicles %}
-        {% set readOnly = is_granted('ROLE_USER') ? false : vehicle.user != app.user %}
+        {% set readOnly = is_granted('ROLE_USER') ? vehicle.user != app.user : true %}
         <div class="col-12 col-xl-6">
           <div class="card shadow-sm">
             <div class="card-body">
@@ -76,7 +76,7 @@
 
                 <div class="d-flex gap-2 flex-shrink-0">
                   <a 
-                    class="btn btn-sm btn-outline-secondary {{ readOnly ? "btn-outline-warning" }}"
+                    class="btn btn-sm {{ readOnly ? "btn-outline-warning" : "btn-outline-secondary" }}"
                     href="{{ path('app_vehicle_show', {id: vehicle.id}) }}"
                     {% if readOnly %}
                       data-bs-toggle="tooltip" data-bs-placement="top"

@@ -198,7 +198,7 @@ class Part
     {
         if ($this->documents->removeElement($document)) {
             if ($document->getPart() === $this) {
-                $document->setPart(null);
+                $document->setIsDeleted(true);
             }
         }
 
