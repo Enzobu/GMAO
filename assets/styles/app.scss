@@ -119,6 +119,16 @@ $enable-shadows: true;
     }
 }
 
+.btn-success-outline-disable {
+    opacity: .40;
+    cursor: not-allowed !important;
+
+    &:hover {
+      background-color: transparent !important;
+      color: $success !important;
+    }
+}
+
 .card {
   border-radius: .75rem;
 }

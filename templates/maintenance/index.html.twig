@@ -1,0 +1,121 @@
+{% extends 'base.html.twig' %}
+{% import 'macros/fontawesome.html.twig' as fa %}
+
+{% block title %}Entretiens{% endblock %}
+
+{% block body %}
+  <div class="container py-4 py-lg-5">
+    <div class="d-flex align-items-center justify-content-between mb-4">
+      <div>
+        <h1 class="h3 mb-1">Entretiens</h1>
+        <div class="text-body-secondary small">
+          Gestion des entretiens des véhicules.
+        </div>
+      </div>
+
+      <a class="btn btn-primary" href="{{ path('app_maintenance_new') }}">
+        {{ fa.icon('plus', family: 'solid', fixed_width: true, additional_classes: ['me-2']) }}
+        Ajouter un entretien
+      </a>
+    </div>
+
+    <div class="card border-0 shadow-sm">
+      <div class="card-body p-0">
+        {% if maintenances|length > 0 %}
+          <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+              <thead>
+                <tr>
+                  <th>Véhicule</th>
+                  <th>Type</th>
+                  <th>Statut</th>
+                  <th>Kilométrage</th>
+                  <th>Prévu</th>
+                  <th>Réalisé</th>
+                  <th class="text-end">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for maintenance in maintenances %}
+                {% set readOnly = is_granted('ROLE_ADMIN') ? false : maintenance.vehicle.user != app.user %}
+                  <tr>
+                    <td class="fw-semibold">
+                      {{ maintenance.vehicle.name ?? '—' }}
+                      {% if maintenance.vehicle.registration %}
+                        <div class="text-body-secondary small">
+                          {{ maintenance.vehicle.registration|upper }}
+                        </div>
+                      {% endif %}
+                    </td>
+
+                    <td>
+                      {{ maintenance.maintenanceType.label ?? maintenance.maintenanceType.value ?? maintenance.maintenanceType }}
+                    </td>
+
+                    <td>
+                      {{ maintenance.status.label ?? maintenance.status.value ?? maintenance.status }}
+                    </td>
+
+                    <td>
+                      {{ maintenance.mileage ? maintenance.mileage|number_format(0, ',', ' ') ~ ' km' : '—' }}
+                    </td>
+
+                    <td>
+                      {{ maintenance.plannedAt ? maintenance.plannedAt|date('d/m/Y') : '—' }}
+                    </td>
+
+                    <td>
+                      {{ maintenance.performedAt ? maintenance.performedAt|date('d/m/Y') : '—' }}
+                    </td>
+
+                    <td>
+                      <div class="d-flex justify-content-end gap-2">
+                        <a 
+                          class="btn btn-sm {{ readOnly ? "btn-outline-warning" : "btn-outline-secondary" }} d-flex align-items-center justify-content-center p-2"
+                          href="{{ path('app_maintenance_show', { id: maintenance.id }) }}"
+                          {% if readOnly %}
+                            data-bs-toggle="tooltip" data-bs-placement="top"
+                            data-bs-custom-class="custom-tooltip"
+                            data-bs-title="Lecture seule"
+                          {% endif %}
+                        >
+                          {{ fa.icon('eye', family: 'solid', fixed_width: true) }}
+                        </a>
+
+                        <a
+                          class="btn btn-sm btn-outline-primary {{ readOnly ? "btn-outline-disable" }} d-flex align-items-center justify-content-center p-2"
+                          {% if not readOnly %}
+                            href="{{ path('app_maintenance_edit', { id: maintenance.id }) }}"
+                          {% endif %}
+                        >
+                          {{ fa.icon('pen', family: 'solid', fixed_width: true) }}
+                        </a>
+                      </div>
+                    </td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        {% else %}
+          <div class="text-center py-5">
+            <div class="mb-2">
+              {{ fa.icon('wrench', family: 'solid', fixed_width: true, additional_classes: ['fs-3', 'text-body-secondary']) }}
+            </div>
+
+            <div class="fw-semibold">Aucun entretien</div>
+
+            <div class="text-body-secondary small mb-3">
+              Commence par ajouter un entretien.
+            </div>
+
+            <a class="btn btn-primary" href="{{ path('app_maintenance_new') }}">
+              {{ fa.icon('plus', family: 'solid', fixed_width: true, additional_classes: ['me-2']) }}
+              Ajouter un entretien
+            </a>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+{% endblock %}

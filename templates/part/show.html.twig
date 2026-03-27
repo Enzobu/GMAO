@@ -5,6 +5,7 @@
 {% block title %}Stock · {{ part.partType.name|capitalize }}{% endblock %}
 
 {% block body %}
+  {% set readOnly = not is_granted('ROLE_ADMIN') %}
   <div class="py-2 py-lg-3">
     <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3 mb-4">
       <div>
@@ -20,11 +21,17 @@
           {{ fa.icon('arrow-left', family: 'solid', fixed_width: true, additional_classes: ['me-2']) }}
           Retour
         </a>
-        <a class="btn btn-primary" href="{{ path('app_part_edit', {id: part.id}) }}?show=true">
-          {{ fa.icon('pen', family: 'solid', fixed_width: true, additional_classes: ['me-2']) }}
+        <a
+          class="btn btn-primary {{ readOnly ? 'btn-disable' }}"
+          {% if not readOnly %}
+            href="{{ path('app_part_edit', {id: part.id}) }}?show=true"
+          {% endif %}
+        >
           Modifier
         </a>
-        {{ include('part/_delete_form.html.twig', { part: part }) }}
+        {% if not readOnly %}
+          {{ include('part/_delete_form.html.twig', { part: part }) }}
+        {% endif %}
       </div>
     </div>
 

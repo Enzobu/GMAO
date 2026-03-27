@@ -102,7 +102,7 @@ RUN php bin/console importmap:install --env=prod \
 ADD docker/apache/entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
-RUN mkdir -p /var/www/var/cache /var/www/var/log /var/www/public/uploads/ /var/www/public/uploads/documents/ /var/www/public/uploads/documents/deleted/ \
+RUN mkdir -p /var/www/var/cache /var/www/var/log /var/www/var/storage/documents/ /var/www/var/storage/documents/deleted/ \
     && chown -R www-data:www-data /var/www \
     && chmod -R 775 /var/www/var
 

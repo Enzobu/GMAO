@@ -1,11 +1,13 @@
 {% extends 'base.html.twig' %}
 {% import 'macros/fontawesome.html.twig' as fa %}
 {% import "macros/badge.html.twig" as badge %}
+{% import 'macros/modal.html.twig' as modal %}
 
 {% block title %}Stock{% endblock %}
 
 {% block body %}
-  <div class="container py-2 py-lg-3">
+  {% set readOnly = not is_granted('ROLE_ADMIN') %}
+  <div class="py-2 py-lg-3">
     <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3 mb-4">
       <div>
         <h1 class="h3 mb-1">Stock</h1>
@@ -123,7 +125,7 @@
 
                 <td>
                   {% if part.vehicles|length > 0 %}
-                    <div class="d-flex flex-wrap gap-1">
+                    <div class="d-flex flex-column flex-wrap gap-1">
                       {% for vehicle in part.vehicles %}
                         {{ badge.emphasis(
                           label: vehicle.displayName, 
@@ -151,15 +153,82 @@
 
                 <td>
                   <div class="d-flex justify-content-end gap-2">
-                    <a class="btn btn-sm btn-outline-secondary" href="{{ path('app_part_show', {id: part.id}) }}">
-                      {{ fa.icon('eye', family: 'solid', fixed_width: true, additional_classes: ['me-1']) }}
-                      Voir
+                    <a 
+                      class="btn btn-sm {{ readOnly ? "btn-outline-warning" : "btn-outline-secondary" }} d-flex align-items-center justify-content-center p-2"
+                      href="{{ path('app_part_show', {id: part.id}) }}"
+                      {% if readOnly %}
+                        data-bs-toggle="tooltip" data-bs-placement="top"
+                        data-bs-custom-class="custom-tooltip"
+                        data-bs-title="Lecture seule"
+                      {% endif %}
+                    >
+                      {{ fa.icon('eye', family: 'solid', fixed_width: true) }}
                     </a>
-                    <a class="btn btn-sm btn-outline-primary" href="{{ path('app_part_edit', {id: part.id}) }}">
-                      {{ fa.icon('pen', family: 'solid', fixed_width: true, additional_classes: ['me-1']) }}
-                      Modifier
+
+                    <button
+                      type="button"
+                      class="btn btn-sm btn-outline-success {{ readOnly ? 'btn-success-outline-disable' }} d-flex align-items-center justify-content-center p-2"
+                      {% if not readOnly %}
+                        data-bs-toggle="modal"
+                        data-bs-target="#addStockModal-{{ part.id }}"
+                      {% endif %}
+                    >
+                      {{ fa.icon('plus', family: 'solid', fixed_width: true) }}
+                    </button>
+
+                    <a
+                      class="btn btn-sm btn-outline-primary {{ readOnly ? "btn-outline-disable" }} d-flex align-items-center justify-content-center p-2"
+                      {% if not readOnly %}
+                        href="{{ path('app_part_edit', {id: part.id}) }}"
+                      {% endif %}
+                    >
+                      {{ fa.icon('pen', family: 'solid', fixed_width: true) }}
                     </a>
                   </div>
+                  {% if not readOnly %}
+                    {% set addStockForm %}
+                      <form
+                        id="add-stock-form-{{ part.id }}"
+                        method="post"
+                        action="{{ path('app_part_add_stock', { id: part.id }) }}"
+                        class="mt-2"
+                      >
+                        <input type="hidden" name="_token" value="{{ csrf_token('add_stock' ~ part.id) }}">
+
+                        <div class="mb-3">
+                          <label for="quantity-{{ part.id }}" class="form-label">
+                            Nombre de pièces à ajouter
+                          </label>
+                          <input
+                            id="quantity-{{ part.id }}"
+                            name="quantity"
+                            type="number"
+                            min="1"
+                            step="1"
+                            value="1"
+                            class="form-control"
+                            required
+                          >
+                        </div>
+
+                        <div class="d-flex justify-content-end gap-2">
+                          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                            Annuler
+                          </button>
+                          <button type="submit" class="btn btn-success">
+                            Ajouter
+                          </button>
+                        </div>
+                      </form>
+                    {% endset %}
+
+                    {{ modal.confirm(
+                      id: 'addStockModal-' ~ part.id,
+                      title: 'Ajouter du stock - ' ~ part.partType.name,
+                      description: addStockForm,
+                      cancelButton: null,
+                    ) }}
+                  {% endif %}
                 </td>
               </tr>
             {% else %}

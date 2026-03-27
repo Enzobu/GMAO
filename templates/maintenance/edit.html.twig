@@ -1,0 +1,32 @@
+{% extends 'base.html.twig' %}
+{% import 'macros/fontawesome.html.twig' as fa %}
+
+{% block title %}Modifier l’entretien{% endblock %}
+
+{% block body %}
+  <div class="container py-4 py-lg-5">
+    <div class="d-flex align-items-center justify-content-between mb-4">
+      <div>
+        <h1 class="h3 mb-1">Modifier l’entretien</h1>
+        <div class="text-body-secondary small">
+          Mets à jour les informations de cet entretien.
+        </div>
+      </div>
+
+      <a 
+        class="btn btn-outline-secondary" 
+        href="{{ 
+          app.request.query.get('show') == 'true' ? 
+          path('app_maintenance_show', {id: maintenance.id}) : 
+          path('app_maintenance_index') 
+        }}"
+      >
+        {{ fa.icon('arrow-left', family: 'solid', fixed_width: true, additional_classes: ['me-1']) }}
+        Retour à la liste
+      </a>
+      
+    </div>
+
+    {{ include('maintenance/_form.html.twig', {'button_label': 'Enregistrer'}) }}
+  </div>
+{% endblock %}

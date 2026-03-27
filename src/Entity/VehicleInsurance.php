@@ -205,7 +205,7 @@ class VehicleInsurance
     {
         if ($this->documents->removeElement($document)) {
             if ($document->getVehicleInsurance() === $this) {
-                $document->setVehicleInsurance(null);
+                $document->setIsDeleted(true);
             }
         }
 

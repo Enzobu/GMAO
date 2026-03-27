@@ -153,6 +153,46 @@ final class PartController extends AbstractController
         return $this->redirectToRoute('app_part_index', [], Response::HTTP_SEE_OTHER);
     }
 
+    #[Route('/{id}/add-stock', name: 'app_part_add_stock', methods: ['POST'])]
+    public function addStock(
+        Request $request,
+        Part $part,
+        EntityManagerInterface $entityManager,
+    ): Response {
+        $response = $this->checkAthorization(part: $part);
+
+        if ($response) {
+            return $response;
+        }
+
+        if (!$this->isCsrfTokenValid('add_stock'.$part->getId(), $request->request->get('_token'))) {
+            $this->addFlash('danger', 'Jeton CSRF invalide.');
+
+            return $this->redirectToRoute('app_part_index', [], Response::HTTP_SEE_OTHER);
+        }
+
+        $quantityToAdd = max(0, (int) $request->request->get('quantity'));
+
+        if ($quantityToAdd <= 0) {
+            $this->addFlash('warning', 'Veuillez saisir une quantité supérieure à 0.');
+
+            return $this->redirectToRoute('app_part_index', [], Response::HTTP_SEE_OTHER);
+        }
+
+        $part->setQuantity($part->getQuantity() + $quantityToAdd);
+
+        $entityManager->flush();
+
+        $this->addFlash('success', sprintf(
+            '%d pièce%s ajoutée%s au stock.',
+            $quantityToAdd,
+            $quantityToAdd > 1 ? 's' : '',
+            $quantityToAdd > 1 ? 's' : ''
+        ));
+
+        return $this->redirectToRoute('app_part_index', [], Response::HTTP_SEE_OTHER);
+    }
+
     #[Route('/{id}/document/new', name: 'app_part_document_new', methods: ['GET', 'POST'])]
     public function newDocument(
         Request $request, 

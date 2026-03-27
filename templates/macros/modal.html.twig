@@ -39,36 +39,39 @@
           </div>
         {% endif %}
 
-        <div class="modal-footer">
-          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
-            {{ cancelButton }}
-          </button>
-
-          {% if continueButton %}
-            {% if type == 'submit' %}
-              <form method="{{ method }}" action="{{ action }}" class="m-0">
-                {% if csrfToken %}
-                  <input type="hidden" name="{{ csrfFieldName }}" value="{{ csrfToken }}">
-                {% endif %}
-                {% if _route %}
-                  <input type="hidden" name="_route" value="{{ _route }}">
-                {% endif %}
-                {% if _entity_id %}
-                  <input type="hidden" name="_entity_id" value="{{ _entity_id }}">
-                {% endif %}
-
-
-                <button type="submit" class="btn btn-{{ accent }}">
-                  {{ continueButton }}
-                </button>
-              </form>
-            {% else %}
-              <a href="{{ href }}" class="btn btn-{{ accent }}">
-                {{ continueButton }}
-              </a>
+        {% if cancelButton or continueButton %}
+          <div class="modal-footer">
+            {% if cancelButton %}
+              <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                {{ cancelButton }}
+              </button>
             {% endif %}
-          {% endif %}
-        </div>
+
+            {% if continueButton %}
+              {% if type == 'submit' %}
+                <form method="{{ method }}" action="{{ action }}" class="m-0">
+                  {% if csrfToken %}
+                    <input type="hidden" name="{{ csrfFieldName }}" value="{{ csrfToken }}">
+                  {% endif %}
+                  {% if _route %}
+                    <input type="hidden" name="_route" value="{{ _route }}">
+                  {% endif %}
+                  {% if _entity_id %}
+                    <input type="hidden" name="_entity_id" value="{{ _entity_id }}">
+                  {% endif %}
+
+                  <button type="submit" class="btn btn-{{ accent }}">
+                    {{ continueButton }}
+                  </button>
+                </form>
+              {% else %}
+                <a href="{{ href }}" class="btn btn-{{ accent }}">
+                  {{ continueButton }}
+                </a>
+              {% endif %}
+            {% endif %}
+          </div>
+        {% endif %}
       </div>
     </div>
   </div>

@@ -5,6 +5,7 @@ namespace App\DataFixtures;
 use App\Entity\Address;
 use App\Entity\Document;
 use App\Entity\InspectionCenter;
+use App\Entity\MaintenancePart;
 use App\Entity\Part;
 use App\Entity\PartType;
 use App\Entity\User;
@@ -13,6 +14,8 @@ use App\Entity\VehicleInspection;
 use App\Entity\VehicleInsurance;
 use App\Enum\InsurancePaymentFrequencyEnum;
 use App\Enum\InspectionResultEnum;
+use App\Enum\MaintenanceStatusEnum;
+use App\Enum\MaintenanceTypeEnum;
 use App\Enum\VehicleColorEnum;
 use App\Enum\VehicleFuelTypeEnum;
 use App\Enum\VehicleStatusEnum;
@@ -504,6 +507,139 @@ class AppFixtures extends Fixture
                 }
 
                 $manager->persist($part);
+            }
+
+            $manager->flush();
+
+            // --------------------
+            // MAINTENANCES
+            // --------------------
+            $maintenancesData = [
+                [
+                    'vehicleRegistration' => 'AB-123-CD',
+                    'type' => MaintenanceTypeEnum::OIL_CHANGE,
+                    'mileage' => 180000,
+                    'performedAt' => new DateTimeImmutable('2025-01-10'),
+                    'plannedAt' => null,
+                    'status' => MaintenanceStatusEnum::Completed,
+                    'isExternal' => false,
+                    'notes' => 'Vidange + filtre à huile',
+                    'nextDueMileage' => 190000,
+                    'nextDueAt' => null,
+                    'parts' => [
+                        [
+                            'type' => 'Filtre à huile',
+                            'quantity' => 1,
+                            'notes' => null,
+                        ],
+                        [
+                            'type' => 'Joint de bouchon de vidange',
+                            'quantity' => 1,
+                            'notes' => null,
+                        ],
+                    ],
+                ],
+                [
+                    'vehicleRegistration' => 'EF-456-GH',
+                    'type' => MaintenanceTypeEnum::SPARK_PLUGS,
+                    'mileage' => 240000,
+                    'performedAt' => new DateTimeImmutable('2025-02-20'),
+                    'plannedAt' => null,
+                    'status' => MaintenanceStatusEnum::Completed,
+                    'isExternal' => true,
+                    'notes' => 'Changement bougies',
+                    'nextDueMileage' => 260000,
+                    'nextDueAt' => null,
+                    'parts' => [
+                        [
+                            'type' => 'Bougie',
+                            'quantity' => 4,
+                            'notes' => null,
+                        ],
+                    ],
+                ],
+                [
+                    'vehicleRegistration' => 'QR-654-ST',
+                    'type' => MaintenanceTypeEnum::BRAKE_PADS,
+                    'mileage' => 210000,
+                    'performedAt' => null,
+                    'plannedAt' => new DateTimeImmutable('2026-04-01'),
+                    'status' => MaintenanceStatusEnum::ToDo,
+                    'isExternal' => false,
+                    'notes' => 'Prévoir remplacement plaquettes avant',
+                    'nextDueMileage' => null,
+                    'nextDueAt' => null,
+                    'parts' => [
+                        [
+                            'type' => 'Plaquettes de frein avant',
+                            'quantity' => 1,
+                            'notes' => null,
+                        ],
+                    ],
+                ],
+            ];
+
+            foreach ($maintenancesData as $data) {
+                $vehicle = $vehiclesByRegistration[$data['vehicleRegistration']] ?? null;
+
+                if (!$vehicle) {
+                    throw new \RuntimeException(sprintf(
+                        'Véhicule introuvable pour la plaque "%s".',
+                        $data['vehicleRegistration']
+                    ));
+                }
+
+                $maintenance = (new \App\Entity\Maintenance())
+                    ->setVehicle($vehicle)
+                    ->setMaintenanceType($data['type'])
+                    ->setMileage($data['mileage'])
+                    ->setPerformedAt($data['performedAt'])
+                    ->setPlannedAt($data['plannedAt'])
+                    ->setStatus($data['status'])
+                    ->setIsExternal($data['isExternal'])
+                    ->setNotes($data['notes'])
+                    ->setNextDueMileage($data['nextDueMileage'])
+                    ->setNextDueAt($data['nextDueAt']);
+
+                // --------------------
+                // MAINTENANCE PARTS
+                // --------------------
+                foreach ($data['parts'] as $partData) {
+
+                    $part = null;
+
+                    // on récupère une part existante via son type
+                    foreach ($partTypes as $name => $partType) {
+                        if ($name === $partData['type']) {
+                            // on cherche une Part liée à ce type
+                            foreach ($manager->getRepository(Part::class)->findAll() as $existingPart) {
+                                if ($existingPart->getPartType() === $partType) {
+                                    $part = $existingPart;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+
+                    if (!$part) {
+                        throw new \RuntimeException(sprintf(
+                            'Part introuvable pour le type "%s".',
+                            $partData['type']
+                        ));
+                    }
+
+                    $maintenancePart = (new MaintenancePart())
+                        ->setMaintenance($maintenance)
+                        ->setPart($part)
+                        ->setQuantity($partData['quantity'])
+                        ->setNotes($partData['notes']);
+
+                    $maintenance->addMaintenancePart($maintenancePart);
+
+                    $manager->persist($maintenancePart);
+                }
+
+                $manager->persist($maintenance);
             }
 
             $manager->flush();
