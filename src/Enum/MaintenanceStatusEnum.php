@@ -24,7 +24,7 @@ enum MaintenanceStatusEnum: string
         return match ($this) {
             self::ToDo => 'danger',
             self::InProgress => 'warning',
-            self::Completed => 'succes',
+            self::Completed => 'success',
             self::Cancelled => 'dark',
         };
     }
