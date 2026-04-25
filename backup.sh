@@ -1,7 +1,16 @@
 #!/usr/bin/env bash
 
 # Cron :
-# 0 0 * * * /home/enzo/Dev/GMAO/public/uploads/documents
+# 0 0 * * * /home/enzo/Dev/GMAO/backup.sh > /home/enzo/Dev/GMAO/backup.log
+
+log() {
+  local level="$1"
+  shift
+  local message="$*"
+  local timestamp
+  timestamp="$(date '+%Y-%m-%d %H:%M:%S.%3N')"
+  echo "${timestamp} [${level}] ${message}"
+}
 
 set -euo pipefail
 
@@ -56,21 +65,21 @@ cleanup() {
 }
 trap cleanup EXIT
 
-command -v docker >/dev/null 2>&1 || { echo "Erreur : docker introuvable."; exit 1; }
-command -v zip >/dev/null 2>&1 || { echo "Erreur : zip introuvable."; exit 1; }
-command -v scp >/dev/null 2>&1 || { echo "Erreur : scp introuvable."; exit 1; }
+command -v docker >/dev/null 2>&1 || { log ERROR "Docker introuvable."; exit 1; }
+command -v zip >/dev/null 2>&1 || { log ERROR "zip introuvable."; exit 1; }
+command -v scp >/dev/null 2>&1 || { log ERROR "scp introuvable."; exit 1; }
 
 if [ ! -d "${DOCUMENTS_DIR}" ]; then
-  echo "Erreur : le dossier ${DOCUMENTS_DIR} n'existe pas."
+  log ERROR "Le dossier ${DOCUMENTS_DIR} n'existe pas."
   exit 1
 fi
 
 if ! docker ps --format '{{.Names}}' | grep -qx "${CONTAINER_NAME}"; then
-  echo "Erreur : le conteneur ${CONTAINER_NAME} n'est pas démarré."
+  log ERROR "Le conteneur ${CONTAINER_NAME} n'est pas démarré."
   exit 1
 fi
 
-echo "Création du dump dans le conteneur ${CONTAINER_NAME}..."
+log INFO "Création du dump dans le conteneur ${CONTAINER_NAME}..."
 docker exec "${CONTAINER_NAME}" sh -c "
   MYSQL_PWD='${DB_PASSWORD}' mariadb-dump \
     --host='${DB_HOST}' \
@@ -83,26 +92,26 @@ docker exec "${CONTAINER_NAME}" sh -c "
     '${DB_NAME}' > '${CONTAINER_DUMP_PATH}'
 "
 
-echo "Copie du dump en local..."
+log INFO "Copie du dump en local..."
 docker cp "${CONTAINER_NAME}:${CONTAINER_DUMP_PATH}" "${LOCAL_DUMP_PATH}"
 
-echo "Suppression du dump dans le conteneur..."
+log INFO "Suppression du dump dans le conteneur..."
 docker exec "${CONTAINER_NAME}" sh -c "rm -f '${CONTAINER_DUMP_PATH}'"
 
-echo "Copie du dossier ${DOCUMENTS_DIR}..."
+log INFO "Copie du dossier ${DOCUMENTS_DIR}..."
 mkdir -p "${LOCAL_DOCS_PARENT_PATH}"
 cp -R "${DOCUMENTS_DIR}" "${LOCAL_DOCS_PARENT_PATH}/"
 
-echo "Création de l'archive ${ZIP_PATH}..."
+log INFO "Création de l'archive ${ZIP_PATH}..."
 (
   cd "${WORK_DIR}"
   zip -r "${ZIP_PATH}" "database.sql" "uploads"
 )
 
-echo "Envoi vers ${REMOTE_USER}@${REMOTE_HOST}:${REMOTE_DIR}/ ..."
+log INFO "Envoi vers ${REMOTE_USER}@${REMOTE_HOST}:${REMOTE_DIR}/ ..."
 scp "${ZIP_PATH}" "${REMOTE_USER}@${REMOTE_HOST}:${REMOTE_DIR}/"
 
-echo "Suppression de l'archive locale..."
+log INFO "Suppression de l'archive locale..."
 rm -f "${ZIP_PATH}"
 
-echo "Backup terminé avec succès."
+log INFO "Backup terminé avec succès."
