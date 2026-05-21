@@ -23,6 +23,8 @@ security:
                 password_parameter: login[password]
                 default_target_path: app_home
                 enable_csrf: true
+                csrf_token_id: authenticate
+                csrf_parameter: _csrf_token
             logout:
                 path: app_logout
                 target: app_login
