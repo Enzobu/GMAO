@@ -9,6 +9,7 @@ use App\Form\DocumentType;
 use App\Form\MaintenanceType;
 use App\Repository\DocumentRepository;
 use App\Repository\MaintenanceRepository;
+use App\Repository\VehicleRepository;
 use App\Service\DocumentManager;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bridge\Doctrine\Attribute\MapEntity;
@@ -23,13 +24,19 @@ use Symfony\Component\Security\Http\Attribute\CurrentUser;
 final class MaintenanceController extends AbstractController
 {
     #[Route(name: 'app_maintenance_index', methods: ['GET'])]
-    public function index(MaintenanceRepository $maintenanceRepository): Response
-    {
+    public function index(
+        Request $request,
+        MaintenanceRepository $maintenanceRepository,
+        VehicleRepository $vehicleRepository,
+    ): Response {
+        $vehicleId = $request->query->get('vehicle');
+
         return $this->render('maintenance/index.html.twig', [
-            'maintenances' => $maintenanceRepository->findBy(
-                ['isDeleted' => false],
-                ['createdAt' => 'DESC']
+            'maintenances' => $maintenanceRepository->findByFilters(
+                $vehicleId ? (int) $vehicleId : null,
             ),
+            'vehicles' => $vehicleRepository->findAllNotDeleted(),
+            'selectedVehicleId' => $vehicleId,
         ]);
     }
 

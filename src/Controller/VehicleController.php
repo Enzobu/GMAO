@@ -8,6 +8,7 @@ use App\Entity\Vehicle;
 use App\Form\DocumentType;
 use App\Form\VehicleType;
 use App\Repository\DocumentRepository;
+use App\Repository\MaintenanceRepository;
 use App\Repository\VehicleInspectionRepository;
 use App\Repository\VehicleInsuranceRepository;
 use App\Repository\VehicleRepository;
@@ -69,6 +70,7 @@ final class VehicleController extends AbstractController
         VehicleInspectionRepository $vehicleInspectionRepository,
         #[CurrentUser] User $currentUser,
         DocumentRepository $documentRepository,
+        MaintenanceRepository $maintenanceRepository,
     ): Response
     {
         $response = $this->checkAuthorization(
@@ -96,6 +98,7 @@ final class VehicleController extends AbstractController
             'vehicle' => $vehicle,
             'insurance' => $insurance[0] ?? null,
             'inspection' => $inspection[0] ?? null,
+            'latest_maintenance' => $maintenanceRepository->findLatestPerformedByVehicle($vehicle),
             'vehicle_document' => $documentRepository->findByVehicle(vehicle: $vehicle, deleted: false),
         ]);
     }

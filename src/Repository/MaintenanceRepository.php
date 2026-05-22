@@ -3,6 +3,7 @@
 namespace App\Repository;
 
 use App\Entity\Maintenance;
+use App\Entity\Vehicle;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -16,28 +17,40 @@ class MaintenanceRepository extends ServiceEntityRepository
         parent::__construct($registry, Maintenance::class);
     }
 
-//    /**
-//     * @return Maintenance[] Returns an array of Maintenance objects
-//     */
-//    public function findByExampleField($value): array
-//    {
-//        return $this->createQueryBuilder('m')
-//            ->andWhere('m.exampleField = :val')
-//            ->setParameter('val', $value)
-//            ->orderBy('m.id', 'ASC')
-//            ->setMaxResults(10)
-//            ->getQuery()
-//            ->getResult()
-//        ;
-//    }
+    /**
+     * @return Maintenance[]
+     */
+    public function findByFilters(?int $vehicleId = null): array
+    {
+        $qb = $this->createQueryBuilder('m')
+            ->join('m.vehicle', 'v')
+            ->addSelect('v')
+            ->andWhere('m.isDeleted = :isDeleted')
+            ->setParameter('isDeleted', false);
 
-//    public function findOneBySomeField($value): ?Maintenance
-//    {
-//        return $this->createQueryBuilder('m')
-//            ->andWhere('m.exampleField = :val')
-//            ->setParameter('val', $value)
-//            ->getQuery()
-//            ->getOneOrNullResult()
-//        ;
-//    }
+        if ($vehicleId !== null) {
+            $qb
+                ->andWhere('v.id = :vehicleId')
+                ->setParameter('vehicleId', $vehicleId);
+        }
+
+        return $qb
+            ->orderBy('m.createdAt', 'DESC')
+            ->getQuery()
+            ->getResult();
+    }
+
+    public function findLatestPerformedByVehicle(Vehicle $vehicle): ?Maintenance
+    {
+        return $this->createQueryBuilder('m')
+            ->andWhere('m.vehicle = :vehicle')
+            ->andWhere('m.isDeleted = :isDeleted')
+            ->andWhere('m.performedAt IS NOT NULL')
+            ->setParameter('vehicle', $vehicle)
+            ->setParameter('isDeleted', false)
+            ->orderBy('m.performedAt', 'DESC')
+            ->setMaxResults(1)
+            ->getQuery()
+            ->getOneOrNullResult();
+    }
 }

@@ -19,6 +19,40 @@
       </a>
     </div>
 
+    <form
+      method="get"
+      class="card border-0 shadow-sm mb-4"
+      data-controller="auto-submit"
+    >
+      <div class="card-body">
+        <div class="row g-3 align-items-end">
+          <div class="col-12 col-lg-5">
+            <label for="vehicle" class="form-label">Filtrer par véhicule</label>
+            <select
+              id="vehicle"
+              name="vehicle"
+              class="form-select"
+              data-action="change->auto-submit#submit"
+            >
+              <option value="">Tous les véhicules</option>
+              {% for vehicle in vehicles %}
+                <option value="{{ vehicle.id }}" {{ selectedVehicleId == vehicle.id ? 'selected' }}>
+                  {{ vehicle.displayName }}
+                </option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="col-12 col-lg-auto">
+            <a class="btn btn-outline-secondary w-100" href="{{ path('app_maintenance_index') }}">
+              {{ fa.icon('rotate-left', family: 'solid', fixed_width: true, additional_classes: ['me-2']) }}
+              Réinitialiser
+            </a>
+          </div>
+        </div>
+      </div>
+    </form>
+
     <div class="card border-0 shadow-sm">
       <div class="card-body p-0">
         {% if maintenances|length > 0 %}
@@ -106,7 +140,7 @@
             <div class="fw-semibold">Aucun entretien</div>
 
             <div class="text-body-secondary small mb-3">
-              Commence par ajouter un entretien.
+              Aucun entretien ne correspond aux filtres actuels.
             </div>
 
             <a class="btn btn-primary" href="{{ path('app_maintenance_new') }}">

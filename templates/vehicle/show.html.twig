@@ -342,6 +342,89 @@
       </div>
     </div>
 
+    <h3 class="fw-semibold mt-4 mb-2">Entretien</h3>
+    <div class="col-12">
+      <div class="card shadow-sm h-100">
+        <div class="card-header bg-body d-flex align-items-center justify-content-between">
+          <div class="fw-semibold">
+            <span>
+              Dernier entretien ・
+              <a href="{{ path('app_maintenance_index', {vehicle: vehicle.id}) }}">
+                {{ fa.icon(name: 'arrow-up-right-from-square', family: 'solid', size: 'sm') }}
+              </a>
+            </span>
+          </div>
+          {{ badge.emphasis(label: 'Dernier réalisé', variant: 'info') }}
+        </div>
+
+        <div class="card-body">
+          {% if latest_maintenance is null %}
+            <div class="text-body-secondary">
+              Aucun entretien réalisé.
+            </div>
+          {% else %}
+            <div class="row gy-3">
+              <div class="col-12">
+                <div class="small text-body-secondary mb-1">Type</div>
+                <div>
+                  {{ badge.emphasis(label: latest_maintenance.maintenanceType.label, variant: 'info') }}
+                </div>
+              </div>
+
+              <div class="col-12 col-md-6 col-xl-3">
+                <div class="small text-body-secondary mb-1">Statut</div>
+                <div>
+                  {{ badge.emphasis(
+                    label: latest_maintenance.status.label,
+                    variant: latest_maintenance.status.variant
+                  ) }}
+                </div>
+              </div>
+
+              <div class="col-12 col-md-6 col-xl-3">
+                <div class="small text-body-secondary mb-1">Réalisé le</div>
+                <div>{{ latest_maintenance.performedAt|date(date_format) }}</div>
+              </div>
+
+              <div class="col-12 col-md-6 col-xl-3">
+                <div class="small text-body-secondary mb-1">Kilométrage</div>
+                <div>{{ latest_maintenance.mileage is not null ? latest_maintenance.mileage|number_format(0, ',', ' ') ~ ' km' : '—' }}</div>
+              </div>
+
+              <div class="col-12 col-md-6 col-xl-3">
+                <div class="small text-body-secondary mb-1">Mode</div>
+                <div>
+                  {{ badge.emphasis(
+                    latest_maintenance.isExternal ? 'Externe' : 'Interne',
+                    latest_maintenance.isExternal ? 'info' : 'secondary'
+                  ) }}
+                </div>
+              </div>
+
+              <div class="col-12 col-md-6">
+                <div class="small text-body-secondary mb-1">Prochaine échéance kilométrique</div>
+                <div>
+                  {{ latest_maintenance.nextDueMileage is not null ? latest_maintenance.nextDueMileage|number_format(0, ',', ' ') ~ ' km' : '—' }}
+                </div>
+              </div>
+
+              <div class="col-12 col-md-6">
+                <div class="small text-body-secondary mb-1">Prochaine échéance date</div>
+                <div>{{ latest_maintenance.nextDueAt ? latest_maintenance.nextDueAt|date(date_format) : '—' }}</div>
+              </div>
+
+              {% if latest_maintenance.notes %}
+                <div class="col-12">
+                  <div class="small text-body-secondary mb-1">Notes</div>
+                  <div class="lh-sm">{{ latest_maintenance.notes }}</div>
+                </div>
+              {% endif %}
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
     {{ document.list
       (
         documents: vehicle_document, 
