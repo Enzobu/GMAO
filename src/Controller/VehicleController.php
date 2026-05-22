@@ -17,6 +17,8 @@ use App\Service\VehicleManager;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bridge\Doctrine\Attribute\MapEntity;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\Form\FormError;
+use Symfony\Component\Form\FormInterface;
 use Symfony\Component\HttpFoundation\File\Exception\FileException;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -123,10 +125,23 @@ final class VehicleController extends AbstractController
             return $response;
         }
 
+        $oldMileage = $vehicle->getLastMileage();
+        $mileageWarning = null;
+
         $form = $this->createForm(VehicleType::class, $vehicle, ['edit' => true]);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
+            $warning = $vehicleManager->buildVehicleMileageWarning($oldMileage, $vehicle->getLastMileage());
+
+            if ($this->shouldStopForMileageWarning($request, $form, $warning, $mileageWarning)) {
+                return $this->render('vehicle/edit.html.twig', [
+                    'vehicle' => $vehicle,
+                    'form' => $form,
+                    'mileage_warning' => $mileageWarning,
+                ]);
+            }
+
             $entityManager->flush();
             
             $this->addFlash('success', 'Modifications enregistrées.');
@@ -339,6 +354,31 @@ final class VehicleController extends AbstractController
         }
 
         return $this->redirectToRoute('app_vehicle_show', ["id" => $vehicle->getId()], Response::HTTP_SEE_OTHER);
+    }
+
+    private function shouldStopForMileageWarning(
+        Request $request,
+        FormInterface $form,
+        ?array $warning,
+        ?array &$mileageWarning,
+    ): bool {
+        $mileageWarning = null;
+
+        if ($warning === null) {
+            return false;
+        }
+
+        if ($this->isGranted('ROLE_ADMIN') && $request->request->get(VehicleManager::FORCE_MILEAGE_FIELD) === '1') {
+            return false;
+        }
+
+        $form->get('lastMileage')->addError(new FormError($warning['fieldError']));
+
+        if ($this->isGranted('ROLE_ADMIN')) {
+            $mileageWarning = $warning;
+        }
+
+        return true;
     }
 
     private function checkAuthorization(

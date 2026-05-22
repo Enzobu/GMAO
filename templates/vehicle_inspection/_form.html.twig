@@ -1,8 +1,9 @@
 {% import 'macros/fontawesome.html.twig' as fa %}
-{% import 'macros/fontawesome.html.twig' as fa %}
+{% import 'macros/modal.html.twig' as modal %}
 
 {{ form_start(form, {
     attr: {
+      id: 'vehicle-inspection-form',
       'data-turbo': 'false'
     }
 }) }}
@@ -92,3 +93,11 @@
 </div>
 
 {{ form_end(form) }}
+
+{% if mileage_warning|default(null) %}
+  {{ modal.mileage_warning(
+    id: 'vehicleInspectionMileageWarningModal',
+    formId: 'vehicle-inspection-form',
+    warning: mileage_warning,
+  ) }}
+{% endif %}

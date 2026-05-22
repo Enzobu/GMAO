@@ -15,6 +15,8 @@ use App\Service\VehicleManager;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bridge\Doctrine\Attribute\MapEntity;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\Form\FormError;
+use Symfony\Component\Form\FormInterface;
 use Symfony\Component\HttpFoundation\File\Exception\FileException;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -62,6 +64,7 @@ final class VehicleInspectionController extends AbstractController
         #[MapEntity(id: 'vehicleId')] Vehicle $vehicle,
     ): Response {
         $vehicleInspection = new VehicleInspection();
+        $mileageWarning = null;
         
         $response = $this->checkAthorization(
             vehicleManager: $vehicleManager,
@@ -81,9 +84,29 @@ final class VehicleInspectionController extends AbstractController
 
         if ($form->isSubmitted() && $form->isValid()) {
             $vehicleInspection->setVehicle($vehicle);
+            $newMileage = $vehicleInspection->getMileage();
+            $warning = $vehicleManager->buildEventMileageWarning(
+                oldVehicle: null,
+                oldMileage: null,
+                newVehicle: $vehicle,
+                newMileage: $newMileage,
+            );
+
+            if ($this->shouldStopForMileageWarning($request, $form, $warning, $mileageWarning)) {
+                return $this->render('vehicle_inspection/new.html.twig', [
+                    'vehicle_inspection' => $vehicleInspection,
+                    'form' => $form,
+                    'vehicle' => $vehicle,
+                    'mileage_warning' => $mileageWarning,
+                ]);
+            }
 
             $entityManager->persist($vehicleInspection);
             $entityManager->flush();
+
+            if ($vehicleManager->syncAfterEventMileageChange(null, null, $vehicle, $newMileage, null)) {
+                $entityManager->flush();
+            }
 
             return $this->redirectToRoute('app_vehicle_inspection_index', [
                 'vehicleId' => $vehicle->getId(),
@@ -146,11 +169,37 @@ final class VehicleInspectionController extends AbstractController
             return $response;
         }
 
+        $oldVehicle = $vehicleInspection->getVehicle();
+        $oldMileage = $vehicleInspection->getMileage();
+        $oldVehicleLastMileage = $oldVehicle?->getLastMileage();
+        $mileageWarning = null;
+
         $form = $this->createForm(VehicleInspectionType::class, $vehicleInspection, ['edit' => true]);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
+            $newMileage = $vehicleInspection->getMileage();
+            $warning = $vehicleManager->buildEventMileageWarning(
+                oldVehicle: $oldVehicle,
+                oldMileage: $oldMileage,
+                newVehicle: $vehicleInspection->getVehicle(),
+                newMileage: $newMileage,
+            );
+
+            if ($this->shouldStopForMileageWarning($request, $form, $warning, $mileageWarning)) {
+                return $this->render('vehicle_inspection/edit.html.twig', [
+                    'vehicle_inspection' => $vehicleInspection,
+                    'form' => $form,
+                    'vehicle' => $vehicle,
+                    'mileage_warning' => $mileageWarning,
+                ]);
+            }
+
             $entityManager->flush();
+
+            if ($vehicleManager->syncAfterEventMileageChange($oldVehicle, $oldMileage, $vehicleInspection->getVehicle(), $newMileage, $oldVehicleLastMileage)) {
+                $entityManager->flush();
+            }
 
             $this->addFlash('success', 'Modifications enregistrées.');
 
@@ -193,9 +242,17 @@ final class VehicleInspectionController extends AbstractController
             return $response;
         }
 
+        $oldVehicle = $vehicleInspection->getVehicle();
+        $oldMileage = $vehicleInspection->getMileage();
+        $oldVehicleLastMileage = $oldVehicle?->getLastMileage();
+
         if ($this->isCsrfTokenValid('delete' . $vehicleInspection->getId(), $request->getPayload()->getString('_token'))) {
             $vehicleInspection->setIsDeleted(true);
             $entityManager->flush();
+
+            if ($vehicleManager->syncAfterEventMileageChange($oldVehicle, $oldMileage, null, null, $oldVehicleLastMileage)) {
+                $entityManager->flush();
+            }
 
             $this->addFlash('success', 'Contrôle technique supprimé avec succès.');
         }
@@ -385,6 +442,31 @@ final class VehicleInspectionController extends AbstractController
             'vehicleId' => $vehicle->getId(),
             'id' => $vehicleInspection->getId(),
         ], Response::HTTP_SEE_OTHER);
+    }
+
+    private function shouldStopForMileageWarning(
+        Request $request,
+        FormInterface $form,
+        ?array $warning,
+        ?array &$mileageWarning,
+    ): bool {
+        $mileageWarning = null;
+
+        if ($warning === null) {
+            return false;
+        }
+
+        if ($this->isGranted('ROLE_ADMIN') && $request->request->get(VehicleManager::FORCE_MILEAGE_FIELD) === '1') {
+            return false;
+        }
+
+        $form->get('mileage')->addError(new FormError($warning['fieldError']));
+
+        if ($this->isGranted('ROLE_ADMIN')) {
+            $mileageWarning = $warning;
+        }
+
+        return true;
     }
 
     private function checkAthorization(

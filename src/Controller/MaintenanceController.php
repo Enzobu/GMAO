@@ -11,9 +11,12 @@ use App\Repository\DocumentRepository;
 use App\Repository\MaintenanceRepository;
 use App\Repository\VehicleRepository;
 use App\Service\DocumentManager;
+use App\Service\VehicleManager;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bridge\Doctrine\Attribute\MapEntity;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\Form\FormError;
+use Symfony\Component\Form\FormInterface;
 use Symfony\Component\HttpFoundation\File\Exception\FileException;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -44,9 +47,11 @@ final class MaintenanceController extends AbstractController
     public function new(
         Request $request, 
         EntityManagerInterface $entityManager,
+        VehicleManager $vehicleManager,
         #[CurrentUser] User $currentUser,
     ): Response {
         $maintenance = new Maintenance();
+        $mileageWarning = null;
 
         $response = $this->checkAuthorization(
             currentUser: $currentUser,
@@ -63,12 +68,33 @@ final class MaintenanceController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
+            $newVehicle = $maintenance->getVehicle();
+            $newMileage = $this->getMileageContribution($maintenance);
+            $warning = $vehicleManager->buildEventMileageWarning(
+                oldVehicle: null,
+                oldMileage: null,
+                newVehicle: $newVehicle,
+                newMileage: $newMileage,
+            );
+
+            if ($this->shouldStopForMileageWarning($request, $form, $warning, $mileageWarning)) {
+                return $this->render('maintenance/new.html.twig', [
+                    'maintenance' => $maintenance,
+                    'form' => $form,
+                    'mileage_warning' => $mileageWarning,
+                ]);
+            }
+
             foreach ($maintenance->getMaintenanceParts() as $maintenancePart) {
                 $maintenancePart->setMaintenance($maintenance);
             }
 
             $entityManager->persist($maintenance);
             $entityManager->flush();
+
+            if ($vehicleManager->syncAfterEventMileageChange(null, null, $newVehicle, $newMileage, null)) {
+                $entityManager->flush();
+            }
 
             $this->addFlash('success', 'L’entretien a bien été créé.');
 
@@ -108,6 +134,7 @@ final class MaintenanceController extends AbstractController
         Request $request, 
         Maintenance $maintenance, 
         EntityManagerInterface $entityManager,
+        VehicleManager $vehicleManager,
         #[CurrentUser] User $currentUser,
     ): Response {
         $response = $this->checkAuthorization(
@@ -121,15 +148,41 @@ final class MaintenanceController extends AbstractController
             return $response;
         }
 
+        $oldVehicle = $maintenance->getVehicle();
+        $oldMileage = $this->getMileageContribution($maintenance);
+        $oldVehicleLastMileage = $oldVehicle?->getLastMileage();
+        $mileageWarning = null;
+
         $form = $this->createForm(MaintenanceType::class, $maintenance);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
+            $newVehicle = $maintenance->getVehicle();
+            $newMileage = $this->getMileageContribution($maintenance);
+            $warning = $vehicleManager->buildEventMileageWarning(
+                oldVehicle: $oldVehicle,
+                oldMileage: $oldMileage,
+                newVehicle: $newVehicle,
+                newMileage: $newMileage,
+            );
+
+            if ($this->shouldStopForMileageWarning($request, $form, $warning, $mileageWarning)) {
+                return $this->render('maintenance/edit.html.twig', [
+                    'maintenance' => $maintenance,
+                    'form' => $form,
+                    'mileage_warning' => $mileageWarning,
+                ]);
+            }
+
             foreach ($maintenance->getMaintenanceParts() as $maintenancePart) {
                 $maintenancePart->setMaintenance($maintenance);
             }
 
             $entityManager->flush();
+
+            if ($vehicleManager->syncAfterEventMileageChange($oldVehicle, $oldMileage, $newVehicle, $newMileage, $oldVehicleLastMileage)) {
+                $entityManager->flush();
+            }
 
             $this->addFlash('success', 'L’entretien a bien été modifié.');
 
@@ -151,6 +204,7 @@ final class MaintenanceController extends AbstractController
         Request $request, 
         Maintenance $maintenance, 
         EntityManagerInterface $entityManager,
+        VehicleManager $vehicleManager,
         #[CurrentUser] User $currentUser,
     ): Response {
         $response = $this->checkAuthorization(
@@ -164,6 +218,10 @@ final class MaintenanceController extends AbstractController
             return $response;
         }
 
+        $oldVehicle = $maintenance->getVehicle();
+        $oldMileage = $this->getMileageContribution($maintenance);
+        $oldVehicleLastMileage = $oldVehicle?->getLastMileage();
+
         if (
             $this->isCsrfTokenValid(
                 'delete' . $maintenance->getId(),
@@ -172,6 +230,10 @@ final class MaintenanceController extends AbstractController
         ) {
             $maintenance->setIsDeleted(true);
             $entityManager->flush();
+
+            if ($vehicleManager->syncAfterEventMileageChange($oldVehicle, $oldMileage, null, null, $oldVehicleLastMileage)) {
+                $entityManager->flush();
+            }
 
             $this->addFlash('success', 'L’entretien a bien été supprimé.');
         }
@@ -340,6 +402,36 @@ final class MaintenanceController extends AbstractController
         }
 
         return $this->redirectToRoute('app_maintenance_show', ["id" => $maintenance->getId()], Response::HTTP_SEE_OTHER);
+    }
+
+    private function getMileageContribution(Maintenance $maintenance): ?int
+    {
+        return $maintenance->getPerformedAt() !== null ? $maintenance->getMileage() : null;
+    }
+
+    private function shouldStopForMileageWarning(
+        Request $request,
+        FormInterface $form,
+        ?array $warning,
+        ?array &$mileageWarning,
+    ): bool {
+        $mileageWarning = null;
+
+        if ($warning === null) {
+            return false;
+        }
+
+        if ($this->isGranted('ROLE_ADMIN') && $request->request->get(VehicleManager::FORCE_MILEAGE_FIELD) === '1') {
+            return false;
+        }
+
+        $form->get('mileage')->addError(new FormError($warning['fieldError']));
+
+        if ($this->isGranted('ROLE_ADMIN')) {
+            $mileageWarning = $warning;
+        }
+
+        return true;
     }
 
     private function checkAuthorization(

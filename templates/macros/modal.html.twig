@@ -13,6 +13,10 @@
   csrfFieldName = '_token',
   _route = null,
   _entity_id = null,
+  formId = null,
+  buttonName = null,
+  buttonValue = null,
+  autoShow = false,
 ) %}
 
   <div class="modal fade"
@@ -48,7 +52,17 @@
             {% endif %}
 
             {% if continueButton %}
-              {% if type == 'submit' %}
+              {% if type == 'submit' and formId %}
+                <button
+                  type="submit"
+                  form="{{ formId }}"
+                  class="btn btn-{{ accent }}"
+                  {% if buttonName %}name="{{ buttonName }}"{% endif %}
+                  {% if buttonValue is not null %}value="{{ buttonValue }}"{% endif %}
+                >
+                  {{ continueButton }}
+                </button>
+              {% elseif type == 'submit' %}
                 <form method="{{ method }}" action="{{ action }}" class="m-0">
                   {% if csrfToken %}
                     <input type="hidden" name="{{ csrfFieldName }}" value="{{ csrfToken }}">
@@ -75,4 +89,68 @@
       </div>
     </div>
   </div>
+
+  {% if autoShow %}
+    <script>
+      (() => {
+        const showModal = () => {
+          const modalElement = document.getElementById('{{ id }}');
+
+          if (!modalElement || !window.bootstrap) {
+            return;
+          }
+
+          window.bootstrap.Modal.getOrCreateInstance(modalElement).show();
+        };
+
+        if (document.readyState === 'loading') {
+          document.addEventListener('DOMContentLoaded', showModal, { once: true });
+        } else {
+          showModal();
+        }
+
+        document.addEventListener('turbo:load', showModal, { once: true });
+      })();
+    </script>
+  {% endif %}
+{% endmacro %}
+
+{% macro mileage_warning(id, formId, warning, title = 'Kilométrage incohérent') %}
+  {% import _self as modal %}
+
+  {% set description %}
+    <p class="mb-2">
+      Cette modification n’augmente pas le dernier kilométrage connu du véhicule.
+    </p>
+
+    <div class="border rounded p-3 my-3">
+      <div class="d-flex justify-content-between gap-3">
+        <span>Dernier kilométrage connu</span>
+        <strong>{{ warning.currentMileage|number_format(0, ',', ' ') }} km</strong>
+      </div>
+
+      <div class="d-flex justify-content-between gap-3 mt-2">
+        <span>Kilométrage saisi</span>
+        <strong>{{ warning.submittedMileage|number_format(0, ',', ' ') }} km</strong>
+      </div>
+    </div>
+
+    <p class="mb-0">
+      En forçant, l’élément sera enregistré. Le kilométrage du véhicule ne sera mis à jour que si cette valeur devient la plus élevée connue.
+    </p>
+  {% endset %}
+
+  {{ modal.confirm(
+    id: id,
+    title: title,
+    description: description,
+    continueButton: 'Forcer l’enregistrement',
+    cancelButton: 'Corriger',
+    type: 'submit',
+    accent: 'warning',
+    formId: formId,
+    buttonName: constant('App\\Service\\VehicleManager::FORCE_MILEAGE_FIELD'),
+    buttonValue: '1',
+    autoShow: true,
+  ) }}
 {% endmacro %}

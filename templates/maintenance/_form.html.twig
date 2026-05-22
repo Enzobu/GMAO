@@ -1,6 +1,12 @@
 {% import 'macros/fontawesome.html.twig' as fa %}
+{% import 'macros/modal.html.twig' as modal %}
 
-{{ form_start(form) }}
+{{ form_start(form, {
+  attr: {
+    id: 'maintenance-form',
+    'data-turbo': 'false',
+  }
+}) }}
   <div class="row g-3">
     <div class="col-md-6">
       {{ form_row(form.vehicle) }}
@@ -77,3 +83,11 @@
     </button>
   </div>
 {{ form_end(form) }}
+
+{% if mileage_warning|default(null) %}
+  {{ modal.mileage_warning(
+    id: 'maintenanceMileageWarningModal',
+    formId: 'maintenance-form',
+    warning: mileage_warning,
+  ) }}
+{% endif %}
