@@ -1,5 +1,6 @@
 {% extends 'base.html.twig' %}
 {% import 'macros/fontawesome.html.twig' as fa %}
+{% import 'macros/badge.html.twig' as badge %}
 
 {% block title %}Entretiens{% endblock %}
 
@@ -9,14 +10,9 @@
       <div>
         <h1 class="h3 mb-1">Entretiens</h1>
         <div class="text-body-secondary small">
-          Gestion des entretiens des véhicules.
+          Recherche et suivi global des entretiens des véhicules.
         </div>
       </div>
-
-      <a class="btn btn-primary" href="{{ path('app_maintenance_new') }}">
-        {{ fa.icon('plus', family: 'solid', fixed_width: true, additional_classes: ['me-2']) }}
-        Ajouter un entretien
-      </a>
     </div>
 
     <form
@@ -26,7 +22,19 @@
     >
       <div class="card-body">
         <div class="row g-3 align-items-end">
-          <div class="col-12 col-lg-5">
+          <div class="col-12 col-lg-4">
+            <label for="q" class="form-label">Recherche</label>
+            <input
+              id="q"
+              name="q"
+              type="search"
+              value="{{ searchQuery }}"
+              class="form-control"
+              placeholder="Véhicule, immatriculation, note…"
+            >
+          </div>
+
+          <div class="col-12 col-lg-4">
             <label for="vehicle" class="form-label">Filtrer par véhicule</label>
             <select
               id="vehicle"
@@ -41,6 +49,78 @@
                 </option>
               {% endfor %}
             </select>
+          </div>
+
+          <div class="col-12 col-md-6 col-lg-2">
+            <label for="type" class="form-label">Type</label>
+            <select
+              id="type"
+              name="type"
+              class="form-select"
+              data-action="change->auto-submit#submit"
+            >
+              <option value="">Tous</option>
+              {% for maintenanceType in maintenance_types %}
+                <option value="{{ maintenanceType.value }}" {{ selectedType == maintenanceType.value ? 'selected' }}>
+                  {{ maintenanceType.label }}
+                </option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="col-12 col-md-6 col-lg-2">
+            <label for="status" class="form-label">Statut</label>
+            <select
+              id="status"
+              name="status"
+              class="form-select"
+              data-action="change->auto-submit#submit"
+            >
+              <option value="">Tous</option>
+              {% for maintenanceStatus in maintenance_statuses %}
+                <option value="{{ maintenanceStatus.value }}" {{ selectedStatus == maintenanceStatus.value ? 'selected' }}>
+                  {{ maintenanceStatus.label }}
+                </option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="col-12 col-md-6 col-lg-3">
+            <label for="sort" class="form-label">Trier par</label>
+            <select
+              id="sort"
+              name="sort"
+              class="form-select"
+              data-action="change->auto-submit#submit"
+            >
+              <option value="createdAt" {{ selectedSort == 'createdAt' ? 'selected' }}>Création</option>
+              <option value="performedAt" {{ selectedSort == 'performedAt' ? 'selected' }}>Date réalisée</option>
+              <option value="plannedAt" {{ selectedSort == 'plannedAt' ? 'selected' }}>Date prévue</option>
+              <option value="mileage" {{ selectedSort == 'mileage' ? 'selected' }}>Kilométrage</option>
+              <option value="vehicle" {{ selectedSort == 'vehicle' ? 'selected' }}>Véhicule</option>
+              <option value="status" {{ selectedSort == 'status' ? 'selected' }}>Statut</option>
+              <option value="type" {{ selectedSort == 'type' ? 'selected' }}>Type</option>
+            </select>
+          </div>
+
+          <div class="col-12 col-md-6 col-lg-3">
+            <label for="direction" class="form-label">Ordre</label>
+            <select
+              id="direction"
+              name="direction"
+              class="form-select"
+              data-action="change->auto-submit#submit"
+            >
+              <option value="DESC" {{ selectedDirection == 'DESC' ? 'selected' }}>Décroissant</option>
+              <option value="ASC" {{ selectedDirection == 'ASC' ? 'selected' }}>Croissant</option>
+            </select>
+          </div>
+
+          <div class="col-12 col-lg-auto">
+            <button class="btn btn-primary w-100" type="submit">
+              {{ fa.icon('magnifying-glass', family: 'solid', fixed_width: true, additional_classes: ['me-2']) }}
+              Rechercher
+            </button>
           </div>
 
           <div class="col-12 col-lg-auto">
@@ -71,10 +151,10 @@
               </thead>
               <tbody>
                 {% for maintenance in maintenances %}
-                {% set readOnly = is_granted('ROLE_ADMIN') ? false : maintenance.vehicle.user != app.user %}
+                {% set canEdit = is_granted('ROLE_ADMIN') or maintenance.vehicle.user == app.user %}
                   <tr>
                     <td class="fw-semibold">
-                      {{ maintenance.vehicle.name ?? '—' }}
+                      {{ maintenance.vehicle.displayName ?? '—' }}
                       {% if maintenance.vehicle.registration %}
                         <div class="text-body-secondary small">
                           {{ maintenance.vehicle.registration|upper }}
@@ -83,11 +163,14 @@
                     </td>
 
                     <td>
-                      {{ maintenance.maintenanceType.label ?? maintenance.maintenanceType.value ?? maintenance.maintenanceType }}
+                      {{ badge.emphasis(maintenance.maintenanceType.label ?? maintenance.maintenanceType.value ?? maintenance.maintenanceType, 'info') }}
                     </td>
 
                     <td>
-                      {{ maintenance.status.label ?? maintenance.status.value ?? maintenance.status }}
+                      {{ badge.emphasis(
+                        label: maintenance.status.label,
+                        variant: maintenance.status.variant
+                      ) }}
                     </td>
 
                     <td>
@@ -105,21 +188,20 @@
                     <td>
                       <div class="d-flex justify-content-end gap-2">
                         <a 
-                          class="btn btn-sm {{ readOnly ? "btn-outline-warning" : "btn-outline-secondary" }} d-flex align-items-center justify-content-center p-2"
+                          class="btn btn-sm btn-outline-secondary d-flex align-items-center justify-content-center p-2"
                           href="{{ path('app_maintenance_show', { id: maintenance.id }) }}"
-                          {% if readOnly %}
-                            data-bs-toggle="tooltip" data-bs-placement="top"
-                            data-bs-custom-class="custom-tooltip"
-                            data-bs-title="Lecture seule"
-                          {% endif %}
                         >
                           {{ fa.icon('eye', family: 'solid', fixed_width: true) }}
                         </a>
 
                         <a
-                          class="btn btn-sm btn-outline-primary {{ readOnly ? "btn-outline-disable" }} d-flex align-items-center justify-content-center p-2"
-                          {% if not readOnly %}
-                            href="{{ path('app_maintenance_edit', { id: maintenance.id }) }}"
+                          class="btn btn-sm btn-outline-primary {{ not canEdit ? 'btn-outline-disable' }} d-flex align-items-center justify-content-center p-2"
+                          {% if canEdit %}
+                            href="{{
+                              is_granted('ROLE_ADMIN')
+                                ? path('app_maintenance_edit', { id: maintenance.id })
+                                : path('app_vehicle_maintenance_edit', { vehicleId: maintenance.vehicle.id, id: maintenance.id })
+                            }}"
                           {% endif %}
                         >
                           {{ fa.icon('pen', family: 'solid', fixed_width: true) }}
@@ -142,11 +224,6 @@
             <div class="text-body-secondary small mb-3">
               Aucun entretien ne correspond aux filtres actuels.
             </div>
-
-            <a class="btn btn-primary" href="{{ path('app_maintenance_new') }}">
-              {{ fa.icon('plus', family: 'solid', fixed_width: true, additional_classes: ['me-2']) }}
-              Ajouter un entretien
-            </a>
           </div>
         {% endif %}
       </div>

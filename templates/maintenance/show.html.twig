@@ -6,7 +6,9 @@
 {% block title %}Entretien{% endblock %}
 
 {% block body %}
-  {% set readOnly = is_granted('ROLE_USER') ? maintenance.vehicle.user != app.user : true %}
+  {% set vehicleContext = vehicle_context|default(false) %}
+  {% set canEdit = is_granted('ROLE_ADMIN') or (vehicleContext and maintenance.vehicle.user == app.user) %}
+  {% set readOnly = not canEdit %}
 
   <div class="container py-4 py-lg-5">
     <div class="d-flex flex-column flex-lg-row align-items-lg-start justify-content-between gap-3 mb-4">
@@ -37,7 +39,14 @@
       </div>
 
       <div class="d-flex flex-wrap gap-2">
-        <a class="btn btn-outline-secondary" href="{{ path('app_maintenance_index') }}">
+        <a
+          class="btn btn-outline-secondary"
+          href="{{
+            vehicleContext
+              ? path('app_vehicle_maintenance_index', {vehicleId: maintenance.vehicle.id})
+              : path('app_maintenance_index')
+          }}"
+        >
           {{ fa.icon('arrow-left', family: 'solid', fixed_width: true, additional_classes: ['me-1']) }}
           Retour
         </a>
@@ -45,7 +54,11 @@
         <a
           class="btn btn-primary {{ readOnly ? 'btn-disable' }}"
           {% if not readOnly %}
-            href="{{ path('app_maintenance_edit', {'id': maintenance.id}) }}?show=true"
+            href="{{
+              vehicleContext
+                ? path('app_vehicle_maintenance_edit', {vehicleId: maintenance.vehicle.id, id: maintenance.id}) ~ '?show=true'
+                : path('app_maintenance_edit', {'id': maintenance.id}) ~ '?show=true'
+            }}"
           {% endif %}
         >
           {{ fa.icon('pen', family: 'solid', fixed_width: true, additional_classes: ['me-1']) }}
@@ -281,7 +294,9 @@
         {{ document.list(
           documents: maintenance_document,
           newPath: path('app_maintenance_document_new', {id: maintenance.id}),
-          sourceRoute: path(app.request.attributes.get('_route'), {id: maintenance.id}),
+          sourceRoute: vehicleContext
+            ? path('app_vehicle_maintenance_show', {vehicleId: maintenance.vehicle.id, id: maintenance.id})
+            : path('app_maintenance_show', {id: maintenance.id}),
           editRoute: 'app_maintenance_document_edit',
           editParameters: {id: maintenance.id},
           deleteRoute: 'app_maintenance_document_delete',

@@ -5,6 +5,8 @@ namespace App\Controller;
 use App\Entity\Document;
 use App\Entity\Maintenance;
 use App\Entity\User;
+use App\Enum\MaintenanceStatusEnum;
+use App\Enum\MaintenanceTypeEnum;
 use App\Form\DocumentType;
 use App\Form\MaintenanceType;
 use App\Repository\DocumentRepository;
@@ -33,78 +35,39 @@ final class MaintenanceController extends AbstractController
         VehicleRepository $vehicleRepository,
     ): Response {
         $vehicleId = $request->query->get('vehicle');
+        $type = $request->query->get('type') ? MaintenanceTypeEnum::tryFrom((string) $request->query->get('type')) : null;
+        $status = $request->query->get('status') ? MaintenanceStatusEnum::tryFrom((string) $request->query->get('status')) : null;
+        $query = $request->query->get('q');
+        $sort = (string) $request->query->get('sort', 'createdAt');
+        $direction = (string) $request->query->get('direction', 'DESC');
 
         return $this->render('maintenance/index.html.twig', [
             'maintenances' => $maintenanceRepository->findByFilters(
-                $vehicleId ? (int) $vehicleId : null,
+                vehicleId: $vehicleId ? (int) $vehicleId : null,
+                type: $type,
+                status: $status,
+                query: $query,
+                sort: $sort,
+                direction: $direction,
             ),
             'vehicles' => $vehicleRepository->findAllNotDeleted(),
+            'maintenance_types' => MaintenanceTypeEnum::cases(),
+            'maintenance_statuses' => MaintenanceStatusEnum::cases(),
             'selectedVehicleId' => $vehicleId,
+            'selectedType' => $type?->value,
+            'selectedStatus' => $status?->value,
+            'searchQuery' => $query,
+            'selectedSort' => $sort,
+            'selectedDirection' => strtoupper($direction) === 'ASC' ? 'ASC' : 'DESC',
         ]);
     }
 
     #[Route('/new', name: 'app_maintenance_new', methods: ['GET', 'POST'])]
-    public function new(
-        Request $request, 
-        EntityManagerInterface $entityManager,
-        VehicleManager $vehicleManager,
-        #[CurrentUser] User $currentUser,
-    ): Response {
-        $maintenance = new Maintenance();
-        $mileageWarning = null;
+    public function new(): Response
+    {
+        $this->addFlash('warning', 'La création d’un entretien se fait depuis la fiche du véhicule concerné.');
 
-        $response = $this->checkAuthorization(
-            currentUser: $currentUser,
-            maintenance: $maintenance,
-            params: ["id" => $maintenance->getId()],
-            new: true,
-        );
-
-        if ($response) {
-            return $response;
-        }
-
-        $form = $this->createForm(MaintenanceType::class, $maintenance);
-        $form->handleRequest($request);
-
-        if ($form->isSubmitted() && $form->isValid()) {
-            $newVehicle = $maintenance->getVehicle();
-            $newMileage = $this->getMileageContribution($maintenance);
-            $warning = $vehicleManager->buildEventMileageWarning(
-                oldVehicle: null,
-                oldMileage: null,
-                newVehicle: $newVehicle,
-                newMileage: $newMileage,
-            );
-
-            if ($this->shouldStopForMileageWarning($request, $form, $warning, $mileageWarning)) {
-                return $this->render('maintenance/new.html.twig', [
-                    'maintenance' => $maintenance,
-                    'form' => $form,
-                    'mileage_warning' => $mileageWarning,
-                ]);
-            }
-
-            foreach ($maintenance->getMaintenanceParts() as $maintenancePart) {
-                $maintenancePart->setMaintenance($maintenance);
-            }
-
-            $entityManager->persist($maintenance);
-            $entityManager->flush();
-
-            if ($vehicleManager->syncAfterEventMileageChange(null, null, $newVehicle, $newMileage, null)) {
-                $entityManager->flush();
-            }
-
-            $this->addFlash('success', 'L’entretien a bien été créé.');
-
-            return $this->redirectToRoute('app_maintenance_index', [], Response::HTTP_SEE_OTHER);
-        }
-
-        return $this->render('maintenance/new.html.twig', [
-            'maintenance' => $maintenance,
-            'form' => $form,
-        ]);
+        return $this->redirectToRoute('app_maintenance_index', [], Response::HTTP_SEE_OTHER);
     }
 
     #[Route('/{id}', name: 'app_maintenance_show', methods: ['GET'])]
@@ -146,6 +109,14 @@ final class MaintenanceController extends AbstractController
 
         if ($response) {
             return $response;
+        }
+
+        if (!$this->isGranted('ROLE_ADMIN')) {
+            $this->addFlash('danger', 'Seul un administrateur peut modifier un entretien depuis la liste globale.');
+
+            return $this->redirectToRoute('app_maintenance_show', [
+                'id' => $maintenance->getId(),
+            ], Response::HTTP_SEE_OTHER);
         }
 
         $oldVehicle = $maintenance->getVehicle();
@@ -447,7 +418,7 @@ final class MaintenanceController extends AbstractController
         if($new) {
             return null;
         }
-        if (!($maintenance->getVehicle()?->getUser() == $currentUser)) {
+        if (!$this->isGranted('ROLE_ADMIN') && !($maintenance->getVehicle()?->getUser() == $currentUser)) {
             if ($update) {
                 $this->addFlash('danger', 'Vous ne pouvez pas modifier la ressource demandée. Pour plus d\'informations, contactez un administrateur.');
             } else {
@@ -462,7 +433,7 @@ final class MaintenanceController extends AbstractController
             return $this->redirectToRoute('app_maintenance_index', [], Response::HTTP_SEE_OTHER);
         }
         if ($document) {
-            if (!$maintenance->getVehicle()->getUser() == $currentUser) {
+            if (!$this->isGranted('ROLE_ADMIN') && !($maintenance->getVehicle()->getUser() == $currentUser)) {
                 $this->addFlash('danger', 'Vous ne pouvez pas ajouter un document sur la ressource demandée. Pour plus d\'informations, contactez un administrateur.');
                 return $this->redirectToRoute('app_maintenance_index', [], Response::HTTP_SEE_OTHER);
             }

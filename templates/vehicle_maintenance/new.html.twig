@@ -1,0 +1,24 @@
+{% extends 'base.html.twig' %}
+{% import 'macros/fontawesome.html.twig' as fa %}
+
+{% block title %}Nouvel entretien{% endblock %}
+
+{% block body %}
+  <div class="container py-4 py-lg-5">
+    <div class="d-flex align-items-center justify-content-between mb-4">
+      <div>
+        <h1 class="h3 mb-1">Nouvel entretien</h1>
+        <div class="text-body-secondary small">
+          Véhicule : <span class="fw-semibold text-body">{{ vehicle.displayName }}</span>
+        </div>
+      </div>
+
+      <a class="btn btn-outline-secondary" href="{{ path('app_vehicle_maintenance_index', {vehicleId: vehicle.id}) }}">
+        {{ fa.icon('arrow-left', family: 'solid', fixed_width: true, additional_classes: ['me-1']) }}
+        Retour aux entretiens
+      </a>
+    </div>
+
+    {{ include('maintenance/_form.html.twig') }}
+  </div>
+{% endblock %}

@@ -21,8 +21,8 @@ class MaintenanceType extends AbstractType
 {
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
-        $builder
-            ->add('vehicle', EntityType::class, [
+        if (!$options['vehicle_locked']) {
+            $builder->add('vehicle', EntityType::class, [
                 'class' => Vehicle::class,
                 'choice_label' => function (Vehicle $vehicle): string {
                     return sprintf(
@@ -35,7 +35,10 @@ class MaintenanceType extends AbstractType
                 'row_attr' => ['class' => 'mb-3'],
                 'label_attr' => ['class' => 'form-label'],
                 'attr' => ['class' => 'form-select'],
-            ])
+            ]);
+        }
+
+        $builder
             ->add('maintenanceType', EnumType::class, [
                 'class' => MaintenanceTypeEnum::class,
                 'choice_label' => fn (MaintenanceTypeEnum $choice) => $choice->label(),
@@ -136,6 +139,7 @@ class MaintenanceType extends AbstractType
     {
         $resolver->setDefaults([
             'data_class' => Maintenance::class,
+            'vehicle_locked' => false,
         ]);
     }
 }

@@ -349,7 +349,7 @@
           <div class="fw-semibold">
             <span>
               Dernier entretien ・
-              <a href="{{ path('app_maintenance_index', {vehicle: vehicle.id}) }}">
+              <a href="{{ path('app_vehicle_maintenance_index', {vehicleId: vehicle.id}) }}">
                 {{ fa.icon(name: 'arrow-up-right-from-square', family: 'solid', size: 'sm') }}
               </a>
             </span>
@@ -419,6 +419,16 @@
                   <div class="lh-sm">{{ latest_maintenance.notes }}</div>
                 </div>
               {% endif %}
+
+              <div class="col-12">
+                <a
+                  class="btn btn-outline-secondary btn-sm"
+                  href="{{ path('app_vehicle_maintenance_show', {vehicleId: vehicle.id, id: latest_maintenance.id}) }}"
+                >
+                  {{ fa.icon('eye', family: 'solid', fixed_width: true, additional_classes: ['me-1']) }}
+                  Voir l’entretien
+                </a>
+              </div>
             </div>
           {% endif %}
         </div>

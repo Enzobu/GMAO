@@ -8,10 +8,12 @@
   }
 }) }}
   <div class="row g-3">
-    <div class="col-md-6">
-      {{ form_row(form.vehicle) }}
-    </div>
-    <div class="col-md-6">
+    {% if form.vehicle is defined %}
+      <div class="col-md-6">
+        {{ form_row(form.vehicle) }}
+      </div>
+    {% endif %}
+    <div class="{{ form.vehicle is defined ? 'col-md-6' : 'col-12' }}">
       {{ form_row(form.maintenanceType) }}
     </div>
 
@@ -79,7 +81,7 @@
   <div class="text-end">
     <button type="submit" class="btn btn-primary">
       {{ fa.icon('save') }}
-      Enregistrer
+      {{ button_label|default('Enregistrer') }}
     </button>
   </div>
 {{ form_end(form) }}
