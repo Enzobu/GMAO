@@ -3,9 +3,9 @@
 namespace App\Repository;
 
 use App\Entity\Maintenance;
+use App\Entity\MaintenanceType;
 use App\Entity\Vehicle;
 use App\Enum\MaintenanceStatusEnum;
-use App\Enum\MaintenanceTypeEnum;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -24,7 +24,7 @@ class MaintenanceRepository extends ServiceEntityRepository
      */
     public function findByFilters(
         ?int $vehicleId = null,
-        ?MaintenanceTypeEnum $type = null,
+        ?MaintenanceType $type = null,
         ?MaintenanceStatusEnum $status = null,
         ?string $query = null,
         string $sort = 'createdAt',
@@ -34,6 +34,8 @@ class MaintenanceRepository extends ServiceEntityRepository
         $qb = $this->createQueryBuilder('m')
             ->join('m.vehicle', 'v')
             ->addSelect('v')
+            ->join('m.maintenanceType', 'mt')
+            ->addSelect('mt')
             ->andWhere('m.isDeleted = :isDeleted')
             ->setParameter('isDeleted', false);
 
@@ -68,7 +70,7 @@ class MaintenanceRepository extends ServiceEntityRepository
             'mileage' => 'm.mileage',
             'vehicle' => 'v.name',
             'status' => 'm.status',
-            'type' => 'm.maintenanceType',
+            'type' => 'mt.name',
         ];
 
         $sortField = $sortFields[$sort] ?? $sortFields['createdAt'];
@@ -87,6 +89,8 @@ class MaintenanceRepository extends ServiceEntityRepository
     public function findForVehicle(Vehicle $vehicle): array
     {
         return $this->createQueryBuilder('m')
+            ->join('m.maintenanceType', 'mt')
+            ->addSelect('mt')
             ->andWhere('m.vehicle = :vehicle')
             ->andWhere('m.isDeleted = :isDeleted')
             ->setParameter('vehicle', $vehicle)
@@ -101,6 +105,8 @@ class MaintenanceRepository extends ServiceEntityRepository
     public function findLatestPerformedByVehicle(Vehicle $vehicle): ?Maintenance
     {
         return $this->createQueryBuilder('m')
+            ->join('m.maintenanceType', 'mt')
+            ->addSelect('mt')
             ->andWhere('m.vehicle = :vehicle')
             ->andWhere('m.isDeleted = :isDeleted')
             ->andWhere('m.performedAt IS NOT NULL')

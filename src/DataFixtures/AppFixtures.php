@@ -6,6 +6,7 @@ use App\Entity\Address;
 use App\Entity\Document;
 use App\Entity\InspectionCenter;
 use App\Entity\MaintenancePart;
+use App\Entity\MaintenanceType;
 use App\Entity\Part;
 use App\Entity\PartType;
 use App\Entity\User;
@@ -15,7 +16,6 @@ use App\Entity\VehicleInsurance;
 use App\Enum\InsurancePaymentFrequencyEnum;
 use App\Enum\InspectionResultEnum;
 use App\Enum\MaintenanceStatusEnum;
-use App\Enum\MaintenanceTypeEnum;
 use App\Enum\VehicleColorEnum;
 use App\Enum\VehicleFuelTypeEnum;
 use App\Enum\VehicleStatusEnum;
@@ -512,12 +512,52 @@ class AppFixtures extends Fixture
             $manager->flush();
 
             // --------------------
+            // MAINTENANCE TYPES
+            // --------------------
+            $maintenanceTypesData = [
+                ['name' => 'Vidange'],
+                ['name' => 'Filtre à huile'],
+                ['name' => 'Filtre à air'],
+                ['name' => 'Filtre d’habitacle'],
+                ['name' => 'Filtre à carburant'],
+                ['name' => 'Bougies'],
+                ['name' => 'Bougies de préchauffage'],
+                ['name' => 'Plaquettes de frein'],
+                ['name' => 'Disques de frein'],
+                ['name' => 'Liquide de frein'],
+                ['name' => 'Liquide de refroidissement'],
+                ['name' => 'Courroie de distribution'],
+                ['name' => 'Courroie accessoire'],
+                ['name' => 'Embrayage'],
+                ['name' => 'Huile de boîte'],
+                ['name' => 'Suspension'],
+                ['name' => 'Batterie'],
+                ['name' => 'Pneus'],
+                ['name' => 'Kit chaîne'],
+                ['name' => 'Préparation contrôle technique'],
+                ['name' => 'Autre'],
+            ];
+
+            $maintenanceTypes = [];
+
+            foreach ($maintenanceTypesData as $data) {
+                $maintenanceType = (new MaintenanceType())
+                    ->setName($data['name']);
+
+                $manager->persist($maintenanceType);
+
+                $maintenanceTypes[$data['name']] = $maintenanceType;
+            }
+
+            $manager->flush();
+
+            // --------------------
             // MAINTENANCES
             // --------------------
             $maintenancesData = [
                 [
                     'vehicleRegistration' => 'AB-123-CD',
-                    'type' => MaintenanceTypeEnum::OIL_CHANGE,
+                    'type' => 'Vidange',
                     'mileage' => 180000,
                     'performedAt' => new DateTimeImmutable('2025-01-10'),
                     'plannedAt' => null,
@@ -541,7 +581,7 @@ class AppFixtures extends Fixture
                 ],
                 [
                     'vehicleRegistration' => 'EF-456-GH',
-                    'type' => MaintenanceTypeEnum::SPARK_PLUGS,
+                    'type' => 'Bougies',
                     'mileage' => 240000,
                     'performedAt' => new DateTimeImmutable('2025-02-20'),
                     'plannedAt' => null,
@@ -560,7 +600,7 @@ class AppFixtures extends Fixture
                 ],
                 [
                     'vehicleRegistration' => 'QR-654-ST',
-                    'type' => MaintenanceTypeEnum::BRAKE_PADS,
+                    'type' => 'Plaquettes de frein',
                     'mileage' => 210000,
                     'performedAt' => null,
                     'plannedAt' => new DateTimeImmutable('2026-04-01'),
@@ -591,7 +631,8 @@ class AppFixtures extends Fixture
 
                 $maintenance = (new \App\Entity\Maintenance())
                     ->setVehicle($vehicle)
-                    ->setMaintenanceType($data['type'])
+                    ->setMaintenanceType($maintenanceTypes[$data['type']]
+                        ?? throw new \RuntimeException(sprintf('Type d’entretien introuvable pour "%s".', $data['type'])))
                     ->setMileage($data['mileage'])
                     ->setPerformedAt($data['performedAt'])
                     ->setPlannedAt($data['plannedAt'])

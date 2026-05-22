@@ -52,7 +52,7 @@
                 {% for maintenance in maintenances %}
                   <tr>
                     <td class="fw-semibold">
-                      {{ maintenance.maintenanceType.label ?? maintenance.maintenanceType.value ?? maintenance.maintenanceType }}
+                      {{ maintenance.maintenanceType.name }}
                       {% if maintenance.isExternal %}
                         <div class="mt-1">
                           {{ badge.emphasis('Externe', 'info') }}

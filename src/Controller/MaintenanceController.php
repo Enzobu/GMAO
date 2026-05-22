@@ -6,11 +6,11 @@ use App\Entity\Document;
 use App\Entity\Maintenance;
 use App\Entity\User;
 use App\Enum\MaintenanceStatusEnum;
-use App\Enum\MaintenanceTypeEnum;
 use App\Form\DocumentType;
 use App\Form\MaintenanceType;
 use App\Repository\DocumentRepository;
 use App\Repository\MaintenanceRepository;
+use App\Repository\MaintenanceTypeRepository;
 use App\Repository\VehicleRepository;
 use App\Service\DocumentManager;
 use App\Service\VehicleManager;
@@ -32,10 +32,12 @@ final class MaintenanceController extends AbstractController
     public function index(
         Request $request,
         MaintenanceRepository $maintenanceRepository,
+        MaintenanceTypeRepository $maintenanceTypeRepository,
         VehicleRepository $vehicleRepository,
     ): Response {
         $vehicleId = $request->query->get('vehicle');
-        $type = $request->query->get('type') ? MaintenanceTypeEnum::tryFrom((string) $request->query->get('type')) : null;
+        $typeId = $request->query->get('type');
+        $type = $typeId ? $maintenanceTypeRepository->find((int) $typeId) : null;
         $status = $request->query->get('status') ? MaintenanceStatusEnum::tryFrom((string) $request->query->get('status')) : null;
         $query = $request->query->get('q');
         $sort = (string) $request->query->get('sort', 'createdAt');
@@ -51,10 +53,10 @@ final class MaintenanceController extends AbstractController
                 direction: $direction,
             ),
             'vehicles' => $vehicleRepository->findAllNotDeleted(),
-            'maintenance_types' => MaintenanceTypeEnum::cases(),
+            'maintenance_types' => $maintenanceTypeRepository->findAllNotDeleted(),
             'maintenance_statuses' => MaintenanceStatusEnum::cases(),
             'selectedVehicleId' => $vehicleId,
-            'selectedType' => $type?->value,
+            'selectedType' => $type?->getId(),
             'selectedStatus' => $status?->value,
             'searchQuery' => $query,
             'selectedSort' => $sort,

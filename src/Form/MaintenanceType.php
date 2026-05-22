@@ -3,9 +3,10 @@
 namespace App\Form;
 
 use App\Entity\Maintenance;
+use App\Entity\MaintenanceType as MaintenanceTypeEntity;
 use App\Entity\Vehicle;
 use App\Enum\MaintenanceStatusEnum;
-use App\Enum\MaintenanceTypeEnum;
+use App\Repository\MaintenanceTypeRepository;
 use Symfony\Bridge\Doctrine\Form\Type\EntityType;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
@@ -21,6 +22,9 @@ class MaintenanceType extends AbstractType
 {
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
+        $maintenance = $options['data'];
+        $currentMaintenanceType = $maintenance instanceof Maintenance ? $maintenance->getMaintenanceType() : null;
+
         if (!$options['vehicle_locked']) {
             $builder->add('vehicle', EntityType::class, [
                 'class' => Vehicle::class,
@@ -39,9 +43,24 @@ class MaintenanceType extends AbstractType
         }
 
         $builder
-            ->add('maintenanceType', EnumType::class, [
-                'class' => MaintenanceTypeEnum::class,
-                'choice_label' => fn (MaintenanceTypeEnum $choice) => $choice->label(),
+            ->add('maintenanceType', EntityType::class, [
+                'class' => MaintenanceTypeEntity::class,
+                'choice_label' => 'name',
+                'query_builder' => static function (MaintenanceTypeRepository $repository) use ($currentMaintenanceType) {
+                    $queryBuilder = $repository
+                        ->createQueryBuilder('mt')
+                        ->andWhere('mt.isDeleted = :isDeleted')
+                        ->setParameter('isDeleted', false)
+                        ->orderBy('mt.name', 'ASC');
+
+                    if ($currentMaintenanceType?->getId() !== null) {
+                        $queryBuilder
+                            ->orWhere('mt.id = :currentMaintenanceTypeId')
+                            ->setParameter('currentMaintenanceTypeId', $currentMaintenanceType->getId());
+                    }
+
+                    return $queryBuilder;
+                },
                 'label' => 'Type d’entretien',
                 'placeholder' => 'Sélectionner un type',
                 'row_attr' => ['class' => 'mb-3'],

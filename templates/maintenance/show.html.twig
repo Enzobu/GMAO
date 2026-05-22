@@ -15,7 +15,7 @@
       <div>
         <div class="text-body-secondary small mb-1">Entretien</div>
         <h1 class="h3 mb-2">
-          {{ maintenance.maintenanceType.label }}
+          {{ maintenance.maintenanceType.name }}
         </h1>
 
         <div class="d-flex flex-wrap align-items-center gap-2">
@@ -29,7 +29,7 @@
             maintenance.isExternal ? 'info' : 'secondary'
           ) }}
 
-          {{ badge.emphasis(maintenance.maintenanceType.label, 'info') }}
+          {{ badge.emphasis(maintenance.maintenanceType.name, 'info') }}
         </div>
 
         <div class="text-body-secondary small mt-2">
@@ -182,7 +182,7 @@
               <div class="border rounded-3 p-3">
                 <div class="small text-body-secondary mb-1">Type d’entretien</div>
                 <div class="fw-semibold">
-                  {{ badge.emphasis(maintenance.maintenanceType.label, 'info') }}
+                  {{ badge.emphasis(maintenance.maintenanceType.name, 'info') }}
                 </div>
               </div>
             </div>

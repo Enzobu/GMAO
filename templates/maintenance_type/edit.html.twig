@@ -1,0 +1,34 @@
+{% extends 'base.html.twig' %}
+{% import 'macros/fontawesome.html.twig' as fa %}
+
+{% block title %}Modifier le type d’entretien{% endblock %}
+
+{% block body %}
+  <div class="container py-4 py-lg-5">
+    <div class="d-flex align-items-center justify-content-between mb-4">
+      <div>
+        <h1 class="h3 mb-1">Modifier le type d’entretien</h1>
+      </div>
+
+      <div class="d-flex gap-2">
+        <a
+          class="btn btn-outline-secondary"
+          href="{{
+            app.request.query.get('show') == 'true'
+              ? path('app_configuration_maintenance_type_show', {id: maintenance_type.id})
+              : path('app_configuration_maintenance_type_index')
+          }}"
+        >
+          {{ fa.icon('arrow-left', family: 'solid', fixed_width: true, additional_classes: ['me-2']) }}
+          Retour
+        </a>
+      </div>
+    </div>
+
+    <div class="card border-0 shadow-sm">
+      <div class="card-body">
+        {{ include('maintenance_type/_form.html.twig', { button_label: 'Enregistrer' }) }}
+      </div>
+    </div>
+  </div>
+{% endblock %}

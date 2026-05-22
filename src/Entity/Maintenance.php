@@ -3,7 +3,6 @@
 namespace App\Entity;
 
 use App\Enum\MaintenanceStatusEnum;
-use App\Enum\MaintenanceTypeEnum;
 use App\Repository\MaintenanceRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
@@ -23,8 +22,9 @@ class Maintenance
     #[ORM\JoinColumn(nullable: false)]
     private ?Vehicle $vehicle = null;
 
-    #[ORM\Column(enumType: MaintenanceTypeEnum::class)]
-    private ?MaintenanceTypeEnum $maintenanceType = null;
+    #[ORM\ManyToOne(inversedBy: 'maintenances')]
+    #[ORM\JoinColumn(nullable: false)]
+    private ?MaintenanceType $maintenanceType = null;
 
     #[ORM\Column]
     private ?int $mileage = null;
@@ -65,14 +65,14 @@ class Maintenance
     #[ORM\Column(options: ['default' => false])]
     private bool $isDeleted = false;
 
-    #[ORM\OneToMany(mappedBy: 'part', targetEntity: Document::class, orphanRemoval: true)]
+    #[ORM\OneToMany(mappedBy: 'maintenance', targetEntity: Document::class, orphanRemoval: true)]
     private Collection $documents;
 
     public function __construct()
     {
         $this->maintenanceParts = new ArrayCollection();
         $this->documents = new ArrayCollection();
-        }
+    }
 
     public function getId(): ?int
     {
@@ -91,12 +91,12 @@ class Maintenance
         return $this;
     }
 
-    public function getMaintenanceType(): ?MaintenanceTypeEnum
+    public function getMaintenanceType(): ?MaintenanceType
     {
         return $this->maintenanceType;
     }
 
-    public function setMaintenanceType(MaintenanceTypeEnum $maintenanceType): static
+    public function setMaintenanceType(?MaintenanceType $maintenanceType): static
     {
         $this->maintenanceType = $maintenanceType;
 

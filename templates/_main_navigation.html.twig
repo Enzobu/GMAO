@@ -75,6 +75,13 @@
         icon: fa.icon('atom', family: 'solid', fixed_width: true, additional_classes: ['me-2']),
         check_paths: ['app_configuration_part_type_'],
       ) }}
+
+      {{ navigation.sidebar_item(
+        label: 'Types d’entretiens',
+        path: path('app_configuration_maintenance_type_index'),
+        icon: fa.icon('screwdriver-wrench', family: 'solid', fixed_width: true, additional_classes: ['me-2']),
+        check_paths: ['app_configuration_maintenance_type_'],
+      ) }}
     </div>
   </div>
 {% endif %}

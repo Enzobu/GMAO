@@ -61,8 +61,8 @@
             >
               <option value="">Tous</option>
               {% for maintenanceType in maintenance_types %}
-                <option value="{{ maintenanceType.value }}" {{ selectedType == maintenanceType.value ? 'selected' }}>
-                  {{ maintenanceType.label }}
+                <option value="{{ maintenanceType.id }}" {{ selectedType == maintenanceType.id ? 'selected' }}>
+                  {{ maintenanceType.name }}
                 </option>
               {% endfor %}
             </select>
@@ -163,7 +163,7 @@
                     </td>
 
                     <td>
-                      {{ badge.emphasis(maintenance.maintenanceType.label ?? maintenance.maintenanceType.value ?? maintenance.maintenanceType, 'info') }}
+                      {{ badge.emphasis(maintenance.maintenanceType.name, 'info') }}
                     </td>
 
                     <td>
