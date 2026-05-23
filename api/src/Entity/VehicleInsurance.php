@@ -38,7 +38,7 @@ class VehicleInsurance
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
-    #[Groups(['vehicle_insurance:read', 'document:read'])]
+    #[Groups(['vehicle_insurance:read', 'vehicle:read', 'document:read'])]
     private ?int $id = null;
 
     #[ORM\ManyToOne(inversedBy: 'vehicleInsurances')]
@@ -47,27 +47,27 @@ class VehicleInsurance
     private ?Vehicle $vehicle = null;
 
     #[ORM\Column(length: 255)]
-    #[Groups(['vehicle_insurance:read', 'vehicle_insurance:write'])]
+    #[Groups(['vehicle_insurance:read', 'vehicle_insurance:write', 'vehicle:read'])]
     private string $providerName;
 
     #[ORM\Column(length: 255, nullable: true)]
-    #[Groups(['vehicle_insurance:read', 'vehicle_insurance:write'])]
+    #[Groups(['vehicle_insurance:read', 'vehicle_insurance:write', 'vehicle:read'])]
     private ?string $policyNumber = null;
 
     #[ORM\Column(type: Types::DATE_IMMUTABLE, nullable: true)]
-    #[Groups(['vehicle_insurance:read', 'vehicle_insurance:write'])]
+    #[Groups(['vehicle_insurance:read', 'vehicle_insurance:write', 'vehicle:read'])]
     private ?\DateTimeImmutable $startDate = null;
 
     #[ORM\Column(type: Types::DATE_IMMUTABLE, nullable: true)]
-    #[Groups(['vehicle_insurance:read', 'vehicle_insurance:write'])]
+    #[Groups(['vehicle_insurance:read', 'vehicle_insurance:write', 'vehicle:read'])]
     private ?\DateTimeImmutable $endDate = null;
 
     #[ORM\Column(enumType: InsurancePaymentFrequencyEnum::class)]
-    #[Groups(['vehicle_insurance:read', 'vehicle_insurance:write'])]
+    #[Groups(['vehicle_insurance:read', 'vehicle_insurance:write', 'vehicle:read'])]
     private InsurancePaymentFrequencyEnum $paymentFrequency = InsurancePaymentFrequencyEnum::Monthly;
 
     #[ORM\Column(options: ['default' => true])]
-    #[Groups(['vehicle_insurance:read', 'vehicle_insurance:write'])]
+    #[Groups(['vehicle_insurance:read', 'vehicle_insurance:write', 'vehicle:read'])]
     private bool $isActive = true;
 
     #[ORM\Column(type: Types::DATETIME_IMMUTABLE)]
@@ -83,7 +83,7 @@ class VehicleInsurance
     private Collection $documents;
 
     #[ORM\Column(options: ['default' => false])]
-    #[Groups(['vehicle_insurance:read', 'vehicle_insurance:write'])]
+    #[Groups(['vehicle_insurance:read', 'vehicle_insurance:write', 'vehicle:read'])]
     private bool $isDeleted = false;
 
     public function __construct()

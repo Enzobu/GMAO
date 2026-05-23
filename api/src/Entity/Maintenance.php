@@ -38,7 +38,7 @@ class Maintenance
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
-    #[Groups(['maintenance:read', 'maintenance_part:read', 'document:read'])]
+    #[Groups(['maintenance:read', 'vehicle:read', 'maintenance_part:read', 'document:read'])]
     private ?int $id = null;
 
     #[ORM\ManyToOne(inversedBy: 'maintenances')]
@@ -48,39 +48,39 @@ class Maintenance
 
     #[ORM\ManyToOne(inversedBy: 'maintenances')]
     #[ORM\JoinColumn(nullable: false)]
-    #[Groups(['maintenance:read', 'maintenance:write'])]
+    #[Groups(['maintenance:read', 'maintenance:write', 'vehicle:read'])]
     private ?MaintenanceType $maintenanceType = null;
 
     #[ORM\Column]
-    #[Groups(['maintenance:read', 'maintenance:write'])]
+    #[Groups(['maintenance:read', 'maintenance:write', 'vehicle:read'])]
     private ?int $mileage = null;
 
     #[ORM\Column(nullable: true)]
-    #[Groups(['maintenance:read', 'maintenance:write'])]
+    #[Groups(['maintenance:read', 'maintenance:write', 'vehicle:read'])]
     private ?\DateTimeImmutable $performedAt = null;
 
     #[ORM\Column(nullable: true)]
-    #[Groups(['maintenance:read', 'maintenance:write'])]
+    #[Groups(['maintenance:read', 'maintenance:write', 'vehicle:read'])]
     private ?\DateTimeImmutable $plannedAt = null;
 
     #[ORM\Column(enumType: MaintenanceStatusEnum::class)]
-    #[Groups(['maintenance:read', 'maintenance:write'])]
+    #[Groups(['maintenance:read', 'maintenance:write', 'vehicle:read'])]
     private ?MaintenanceStatusEnum $status = null;
 
     #[ORM\Column(options: ['default' => false])]
-    #[Groups(['maintenance:read', 'maintenance:write'])]
+    #[Groups(['maintenance:read', 'maintenance:write', 'vehicle:read'])]
     private ?bool $isExternal = null;
 
     #[ORM\Column(type: Types::TEXT, nullable: true)]
-    #[Groups(['maintenance:read', 'maintenance:write'])]
+    #[Groups(['maintenance:read', 'maintenance:write', 'vehicle:read'])]
     private ?string $notes = null;
 
     #[ORM\Column(nullable: true)]
-    #[Groups(['maintenance:read', 'maintenance:write'])]
+    #[Groups(['maintenance:read', 'maintenance:write', 'vehicle:read'])]
     private ?int $nextDueMileage = null;
 
     #[ORM\Column(nullable: true)]
-    #[Groups(['maintenance:read', 'maintenance:write'])]
+    #[Groups(['maintenance:read', 'maintenance:write', 'vehicle:read'])]
     private ?\DateTimeImmutable $nextDueAt = null;
 
     #[ORM\Column(type: 'datetime_immutable')]
@@ -99,7 +99,7 @@ class Maintenance
     private Collection $maintenanceParts;
 
     #[ORM\Column(options: ['default' => false])]
-    #[Groups(['maintenance:read', 'maintenance:write'])]
+    #[Groups(['maintenance:read', 'maintenance:write', 'vehicle:read'])]
     private bool $isDeleted = false;
 
     #[ORM\OneToMany(mappedBy: 'maintenance', targetEntity: Document::class, orphanRemoval: true)]

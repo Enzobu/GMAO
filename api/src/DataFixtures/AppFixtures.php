@@ -25,11 +25,13 @@ use DateTimeImmutable;
 use Doctrine\Bundle\FixturesBundle\Fixture;
 use Doctrine\Persistence\ObjectManager;
 use Symfony\Component\DependencyInjection\ParameterBag\ContainerBagInterface;
+use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
 class AppFixtures extends Fixture
 {
     public function __construct(
         private readonly ContainerBagInterface $params,
+        private readonly UserPasswordHasherInterface $passwordHasher,
     ) {}
 
     public function load(ObjectManager $manager): void
@@ -66,7 +68,6 @@ class AppFixtures extends Fixture
             ->setFirstname('enzo')
             ->setLastname('palermo')
             ->setEmail('palermo.enzo.ep@gmail.com')
-            ->setPassword('$2y$13$GKJo1Sdw4/FhIL821Nz3bujHBv3mz/VsiRRLPU.H0B6PCxonDR9w2')
             ->setRoles(['ROLE_USER', 'ROLE_ADMIN'])
             ->setAddress(
                 (new Address())
@@ -74,13 +75,15 @@ class AppFixtures extends Fixture
                     ->setPostalCode('11100')
                     ->setCity('Narbonne')
                     ->setCountry('FR')
-            );
+            )
+        ;
+
+        $admin->setPassword($this->passwordHasher->hashPassword($admin, "vR2gP5kykK"));
 
         $user = (new User())
             ->setFirstname('alexandra')
             ->setLastname('palermo')
             ->setEmail('gio.alex.pa@gmail.com')
-            ->setPassword('$2y$13$GKJo1Sdw4/FhIL821Nz3bujHBv3mz/VsiRRLPU.H0B6PCxonDR9w2')
             ->setRoles(['ROLE_USER'])
             ->setAddress(
                 (new Address())
@@ -88,7 +91,10 @@ class AppFixtures extends Fixture
                     ->setPostalCode('34000')
                     ->setCity('Montpellier')
                     ->setCountry('FR')
-            );
+            )
+        ;
+
+        $user->setPassword($this->passwordHasher->hashPassword($user, "vR2gP5kykK"));
 
         $manager->persist($admin);
         $manager->persist($user);

@@ -40,7 +40,7 @@ class VehicleInspection
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
-    #[Groups(['vehicle_inspection:read', 'document:read'])]
+    #[Groups(['vehicle_inspection:read', 'vehicle:read', 'document:read'])]
     private ?int $id = null;
 
     #[ORM\ManyToOne(inversedBy: 'vehicleInspections')]
@@ -49,31 +49,31 @@ class VehicleInspection
     private ?Vehicle $vehicle = null;
 
     #[ORM\Column(type: Types::DATE_IMMUTABLE)]
-    #[Groups(['vehicle_inspection:read', 'vehicle_inspection:write'])]
+    #[Groups(['vehicle_inspection:read', 'vehicle_inspection:write', 'vehicle:read'])]
     private ?\DateTimeImmutable $inspectionDate = null;
 
     #[ORM\Column(type: Types::DATE_IMMUTABLE)]
-    #[Groups(['vehicle_inspection:read', 'vehicle_inspection:write'])]
+    #[Groups(['vehicle_inspection:read', 'vehicle_inspection:write', 'vehicle:read'])]
     private ?\DateTimeImmutable $validUntil = null;
 
     #[ORM\Column(nullable: true)]
-    #[Groups(['vehicle_inspection:read', 'vehicle_inspection:write'])]
+    #[Groups(['vehicle_inspection:read', 'vehicle_inspection:write', 'vehicle:read'])]
     private ?int $mileage = null;
 
     #[ORM\Column(enumType: InspectionResultEnum::class)]
-    #[Groups(['vehicle_inspection:read', 'vehicle_inspection:write'])]
+    #[Groups(['vehicle_inspection:read', 'vehicle_inspection:write', 'vehicle:read'])]
     private InspectionResultEnum $result;
 
     #[ORM\Column(options: ['default' => false])]
-    #[Groups(['vehicle_inspection:read', 'vehicle_inspection:write'])]
+    #[Groups(['vehicle_inspection:read', 'vehicle_inspection:write', 'vehicle:read'])]
     private bool $counterVisitRequired = false;
 
     #[ORM\Column(type: Types::DATE_IMMUTABLE, nullable: true)]
-    #[Groups(['vehicle_inspection:read', 'vehicle_inspection:write'])]
+    #[Groups(['vehicle_inspection:read', 'vehicle_inspection:write', 'vehicle:read'])]
     private ?\DateTimeImmutable $counterVisitDueAt = null;
 
     #[ORM\Column(type: Types::TEXT, nullable: true)]
-    #[Groups(['vehicle_inspection:read', 'vehicle_inspection:write'])]
+    #[Groups(['vehicle_inspection:read', 'vehicle_inspection:write', 'vehicle:read'])]
     private ?string $notes = null;
 
     #[ORM\Column(type: Types::DATETIME_IMMUTABLE)]
@@ -86,7 +86,7 @@ class VehicleInspection
 
     #[ORM\ManyToOne(inversedBy: 'vehicleInspections')]
     #[ORM\JoinColumn(nullable: false)]
-    #[Groups(['vehicle_inspection:read', 'vehicle_inspection:write'])]
+    #[Groups(['vehicle_inspection:read', 'vehicle_inspection:write', 'vehicle:read'])]
     private ?InspectionCenter $center = null;
 
     #[ORM\OneToMany(mappedBy: 'vehicleInspection', targetEntity: Document::class, orphanRemoval: true)]
@@ -94,7 +94,7 @@ class VehicleInspection
     private Collection $documents;
 
     #[ORM\Column(options: ['default' => false])]
-    #[Groups(['vehicle_inspection:read', 'vehicle_inspection:write'])]
+    #[Groups(['vehicle_inspection:read', 'vehicle_inspection:write', 'vehicle:read'])]
     private bool $isDeleted = false;
 
     #[Assert\Callback]

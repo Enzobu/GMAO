@@ -1,0 +1,335 @@
+import { useEffect, useMemo, useState } from "react"
+import { Link } from "react-router-dom"
+import { Plus, Search, Trash2, X } from "lucide-react"
+
+import { deleteVehicle, getVehicles } from "@/api/vehicles"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import { NativeSelect } from "@/components/ui/native-select"
+import { useAuthStore } from "@/stores/auth-store"
+import type { Vehicle } from "@/types/vehicle"
+import {
+  VEHICLE_COLORS,
+  VEHICLE_FUEL_TYPES,
+  VEHICLE_STATUSES,
+  VEHICLE_TRANSMISSIONS,
+  VEHICLE_TYPES,
+  vehicleBadgeVariant,
+  vehicleOption,
+} from "@/lib/vehicle-labels"
+
+type SortValue = "name" | "registration" | "year-desc" | "mileage-desc"
+type EditabilityFilter = "all" | "editable" | "readonly"
+
+export default function VehiclesPage() {
+  const currentUser = useAuthStore((state) => state.user)
+  const isAdmin = currentUser?.roles.includes("ROLE_ADMIN") ?? false
+  const [vehicles, setVehicles] = useState<Vehicle[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [search, setSearch] = useState("")
+  const [typeFilter, setTypeFilter] = useState("all")
+  const [statusFilter, setStatusFilter] = useState("all")
+  const [editabilityFilter, setEditabilityFilter] = useState<EditabilityFilter>("all")
+  const [sort, setSort] = useState<SortValue>("name")
+
+  const filteredVehicles = useMemo(() => {
+    const normalizedSearch = normalize(search)
+
+    return vehicles
+      .filter((vehicle) => {
+        const canEdit = canEditVehicle(vehicle, currentUser?.id, isAdmin)
+        const searchable = normalize([
+          vehicle.name,
+          vehicle.registration,
+          vehicle.brand,
+          vehicle.model,
+          vehicle.year,
+          vehicle.lastMileage,
+          vehicle.user.email,
+          vehicle.user.firstname,
+          vehicle.user.lastname,
+        ].filter(Boolean).join(" "))
+
+        if (normalizedSearch && !searchable.includes(normalizedSearch)) {
+          return false
+        }
+
+        if (typeFilter !== "all" && vehicle.type !== typeFilter) {
+          return false
+        }
+
+        if (statusFilter !== "all" && vehicle.status !== statusFilter) {
+          return false
+        }
+
+        if (editabilityFilter === "editable" && !canEdit) {
+          return false
+        }
+
+        if (editabilityFilter === "readonly" && canEdit) {
+          return false
+        }
+
+        return true
+      })
+      .sort((first, second) => compareVehicles(first, second, sort))
+  }, [vehicles, search, typeFilter, statusFilter, editabilityFilter, sort, currentUser?.id, isAdmin])
+
+  const hasActiveFilters = search || typeFilter !== "all" || statusFilter !== "all" || editabilityFilter !== "all" || sort !== "name"
+
+  useEffect(() => {
+    let ignore = false
+
+    async function loadVehicles() {
+      try {
+        const data = await getVehicles()
+
+        if (!ignore) {
+          setVehicles(data)
+        }
+      } catch {
+        if (!ignore) {
+          setError("Impossible de charger les véhicules.")
+        }
+      } finally {
+        if (!ignore) {
+          setIsLoading(false)
+        }
+      }
+    }
+
+    loadVehicles()
+
+    return () => {
+      ignore = true
+    }
+  }, [])
+
+  async function handleDelete(vehicle: Vehicle) {
+    if (!window.confirm(`Archiver ${displayVehicleName(vehicle)} ?`)) {
+      return
+    }
+
+    await deleteVehicle(vehicle.id)
+    setVehicles((current) => current.filter((item) => item.id !== vehicle.id))
+  }
+
+  function resetFilters() {
+    setSearch("")
+    setTypeFilter("all")
+    setStatusFilter("all")
+    setEditabilityFilter("all")
+    setSort("name")
+  }
+
+  if (isLoading) {
+    return <div className="text-sm text-muted-foreground">Chargement des véhicules...</div>
+  }
+
+  if (error) {
+    return <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive">{error}</div>
+  }
+
+  return (
+    <div className="space-y-6">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight">Véhicules</h1>
+          <p className="text-sm text-muted-foreground">
+            {filteredVehicles.length} sur {vehicles.length} véhicule(s)
+          </p>
+        </div>
+
+        <Button asChild>
+          <Link to="/vehicles/new">
+            <Plus />
+            Ajouter un véhicule
+          </Link>
+        </Button>
+      </div>
+
+      <Card>
+        <CardContent className="grid min-w-0 gap-3 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-6">
+          <label className="grid min-w-0 gap-1.5 text-sm font-medium sm:col-span-2 lg:col-span-3 2xl:col-span-1">
+            <span>Recherche</span>
+            <div className="relative min-w-0">
+              <Search className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                value={search}
+                onChange={(event) => setSearch(event.target.value)}
+                placeholder="Nom, immat., marque..."
+                className="pl-8"
+              />
+            </div>
+          </label>
+
+          <NativeSelect
+            label="Type"
+            value={typeFilter}
+            onChange={(event) => setTypeFilter(event.target.value)}
+            options={[{ value: "all", label: "Tous" }, ...VEHICLE_TYPES]}
+          />
+
+          <NativeSelect
+            label="Statut"
+            value={statusFilter}
+            onChange={(event) => setStatusFilter(event.target.value)}
+            options={[{ value: "all", label: "Tous" }, ...VEHICLE_STATUSES]}
+          />
+
+          <NativeSelect
+            label="Droit"
+            value={editabilityFilter}
+            onChange={(event) => setEditabilityFilter(event.target.value as EditabilityFilter)}
+            options={[
+              { value: "all", label: "Tous" },
+              { value: "editable", label: "Modifiables" },
+              { value: "readonly", label: "Lecture seule" },
+            ]}
+          />
+
+          <NativeSelect
+            label="Tri"
+            value={sort}
+            onChange={(event) => setSort(event.target.value as SortValue)}
+            options={[
+              { value: "name", label: "Nom A-Z" },
+              { value: "registration", label: "Immat." },
+              { value: "year-desc", label: "Année récente" },
+              { value: "mileage-desc", label: "Km décroissant" },
+            ]}
+          />
+
+          <div className="flex items-end">
+            <Button variant="outline" className="w-full" onClick={resetFilters} disabled={!hasActiveFilters}>
+              <X />
+              Réinitialiser
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      {vehicles.length === 0 ? (
+        <Card>
+          <CardContent className="py-8 text-center text-sm text-muted-foreground">Aucun véhicule pour le moment.</CardContent>
+        </Card>
+      ) : filteredVehicles.length === 0 ? (
+        <Card>
+          <CardContent className="py-8 text-center text-sm text-muted-foreground">
+            Aucun véhicule ne correspond à ces critères.
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="grid gap-4 xl:grid-cols-2">
+          {filteredVehicles.map((vehicle) => {
+            const canEdit = canEditVehicle(vehicle, currentUser?.id, isAdmin)
+
+            return (
+              <Card
+                key={vehicle.id}
+                className="relative border border-foreground/10 ring-0 transition-colors hover:border-primary/35 hover:bg-muted/30"
+              >
+                <Link
+                  to={`/vehicles/${vehicle.id}`}
+                  className="absolute inset-0 z-10 rounded-xl focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+                  aria-label={`Voir ${displayVehicleName(vehicle)}`}
+                />
+                <CardHeader>
+                  <CardTitle className="flex flex-wrap items-center gap-2">
+                    <span>{displayVehicleName(vehicle)}</span>
+                    <VehicleBadge collection={VEHICLE_TYPES} value={vehicle.type} />
+                    <VehicleBadge collection={VEHICLE_STATUSES} value={vehicle.status} />
+                    {!canEdit && (
+                      <Badge
+                        variant="outline"
+                        className="border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-300"
+                      >
+                        Lecture seule
+                      </Badge>
+                    )}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted-foreground">
+                    <span><strong className="text-foreground">Immat.</strong> {vehicle.registration.toUpperCase()}</span>
+                    {vehicle.year && <span><strong className="text-foreground">Année</strong> {vehicle.year}</span>}
+                    {vehicle.lastMileage !== null && vehicle.lastMileage !== undefined && (
+                      <span><strong className="text-foreground">Km</strong> {formatNumber(vehicle.lastMileage)}</span>
+                    )}
+                  </div>
+
+                  <div className="flex flex-wrap gap-2">
+                    <VehicleBadge collection={VEHICLE_FUEL_TYPES} value={vehicle.fuelType} />
+                    <VehicleBadge collection={VEHICLE_TRANSMISSIONS} value={vehicle.transmission} />
+                    <VehicleBadge collection={VEHICLE_COLORS} value={vehicle.color} />
+                  </div>
+                </CardContent>
+                <CardFooter className="relative z-20 justify-end gap-2">
+                  {canEdit && (
+                    <Button variant="outline" size="sm" asChild>
+                      <Link to={`/vehicles/${vehicle.id}/edit`}>Modifier</Link>
+                    </Button>
+                  )}
+                  {isAdmin && (
+                    <Button variant="destructive" size="sm" onClick={() => handleDelete(vehicle)}>
+                      <Trash2 />
+                      Supprimer
+                    </Button>
+                  )}
+                </CardFooter>
+              </Card>
+            )
+          })}
+        </div>
+      )}
+    </div>
+  )
+}
+
+function VehicleBadge({ collection, value }: { collection: readonly { value: string; label: string; variant: string }[]; value?: string | null }) {
+  const option = vehicleOption(collection, value)
+
+  if (!option) {
+    return null
+  }
+
+  return <Badge variant={vehicleBadgeVariant(option.variant)}>{option.label}</Badge>
+}
+
+function displayVehicleName(vehicle: Vehicle) {
+  return vehicle.name || `${vehicle.brand} ${vehicle.model}`.trim()
+}
+
+function canEditVehicle(vehicle: Vehicle, currentUserId: number | undefined, isAdmin: boolean) {
+  return isAdmin || vehicle.user.id === currentUserId
+}
+
+function compareVehicles(first: Vehicle, second: Vehicle, sort: SortValue) {
+  if (sort === "registration") {
+    return first.registration.localeCompare(second.registration, "fr")
+  }
+
+  if (sort === "year-desc") {
+    return (second.year ?? 0) - (first.year ?? 0)
+  }
+
+  if (sort === "mileage-desc") {
+    return (second.lastMileage ?? 0) - (first.lastMileage ?? 0)
+  }
+
+  return displayVehicleName(first).localeCompare(displayVehicleName(second), "fr")
+}
+
+function normalize(value: string) {
+  return value
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+}
+
+function formatNumber(value: number) {
+  return new Intl.NumberFormat("fr-FR").format(value)
+}

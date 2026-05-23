@@ -4,6 +4,8 @@ namespace App\Entity;
 
 use ApiPlatform\Metadata\ApiResource;
 
+use ApiPlatform\Metadata\Delete;
+
 use ApiPlatform\Metadata\Get;
 
 use ApiPlatform\Metadata\GetCollection;
@@ -14,6 +16,7 @@ use ApiPlatform\Metadata\Post;
 
 use Symfony\Component\Serializer\Annotation\Groups;
 
+use App\ApiPlatform\State\VehicleStateProcessor;
 use App\Enum\VehicleColorEnum;
 use App\Enum\VehicleFuelTypeEnum;
 use App\Enum\VehicleStatusEnum;
@@ -29,11 +32,13 @@ use Doctrine\ORM\Mapping as ORM;
     operations: [
         new GetCollection(security: "is_granted('ROLE_USER')"),
         new Get(security: "is_granted('ROLE_USER')"),
-        new Post(security: "is_granted('ROLE_ADMIN')"),
-        new Patch(security: "is_granted('ROLE_ADMIN')"),
+        new Post(security: "is_granted('ROLE_USER')"),
+        new Patch(security: "is_granted('ROLE_ADMIN') or object.getUser() == user"),
+        new Delete(security: "is_granted('ROLE_ADMIN')"),
     ],
     normalizationContext: ['groups' => ['vehicle:read']],
-    denormalizationContext: ['groups' => ['vehicle:write']]
+    denormalizationContext: ['groups' => ['vehicle:write']],
+    processor: VehicleStateProcessor::class,
 )]
 #[ORM\Entity(repositoryClass: VehicleRepository::class)]
 class Vehicle
@@ -106,7 +111,7 @@ class Vehicle
 
     #[ORM\ManyToOne(inversedBy: 'vehicles')]
     #[ORM\JoinColumn(nullable: false)]
-    #[Groups(['vehicle:read'])]
+    #[Groups(['vehicle:read', 'vehicle:write'])]
     private ?User $user = null;
 
     /**

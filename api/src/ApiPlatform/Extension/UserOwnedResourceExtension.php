@@ -91,7 +91,7 @@ final readonly class UserOwnedResourceExtension implements QueryCollectionExtens
         match ($resourceClass) {
             User::class => $this->restrictUser($queryBuilder, $rootAlias, $user),
             Address::class => $this->restrictAddress($queryBuilder, $rootAlias, $user),
-            Vehicle::class => $this->restrictVehicle($queryBuilder, $rootAlias, $user),
+            Vehicle::class => null,
             Maintenance::class,
             VehicleInsurance::class,
             VehicleInspection::class => $this->restrictThroughVehicle($queryBuilder, $queryNameGenerator, $rootAlias, $user),
@@ -114,13 +114,6 @@ final readonly class UserOwnedResourceExtension implements QueryCollectionExtens
         $queryBuilder
             ->andWhere(sprintf('%s = :api_current_user_address', $rootAlias))
             ->setParameter('api_current_user_address', $user->getAddress());
-    }
-
-    private function restrictVehicle(QueryBuilder $queryBuilder, string $rootAlias, User $user): void
-    {
-        $queryBuilder
-            ->andWhere(sprintf('%s.user = :api_current_user', $rootAlias))
-            ->setParameter('api_current_user', $user);
     }
 
     private function restrictThroughVehicle(

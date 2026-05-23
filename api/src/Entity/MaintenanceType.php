@@ -36,11 +36,11 @@ class MaintenanceType
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
-    #[Groups(['maintenance_type:read', 'maintenance:read'])]
+    #[Groups(['maintenance_type:read', 'maintenance:read', 'vehicle:read'])]
     private ?int $id = null;
 
     #[ORM\Column(length: 255, unique: true)]
-    #[Groups(['maintenance_type:read', 'maintenance_type:write', 'maintenance:read'])]
+    #[Groups(['maintenance_type:read', 'maintenance_type:write', 'maintenance:read', 'vehicle:read'])]
     private ?string $name = null;
 
     #[ORM\Column(type: Types::TEXT, nullable: true)]
