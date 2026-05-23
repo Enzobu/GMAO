@@ -40,7 +40,7 @@ class VehicleInspection
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
-    #[Groups(['vehicle_inspection:read'])]
+    #[Groups(['vehicle_inspection:read', 'document:read'])]
     private ?int $id = null;
 
     #[ORM\ManyToOne(inversedBy: 'vehicleInspections')]
@@ -49,6 +49,7 @@ class VehicleInspection
     private ?Vehicle $vehicle = null;
 
     #[ORM\Column(type: Types::DATE_IMMUTABLE)]
+    #[Groups(['vehicle_inspection:read', 'vehicle_inspection:write'])]
     private ?\DateTimeImmutable $inspectionDate = null;
 
     #[ORM\Column(type: Types::DATE_IMMUTABLE)]
@@ -56,6 +57,7 @@ class VehicleInspection
     private ?\DateTimeImmutable $validUntil = null;
 
     #[ORM\Column(nullable: true)]
+    #[Groups(['vehicle_inspection:read', 'vehicle_inspection:write'])]
     private ?int $mileage = null;
 
     #[ORM\Column(enumType: InspectionResultEnum::class)]
@@ -63,6 +65,7 @@ class VehicleInspection
     private InspectionResultEnum $result;
 
     #[ORM\Column(options: ['default' => false])]
+    #[Groups(['vehicle_inspection:read', 'vehicle_inspection:write'])]
     private bool $counterVisitRequired = false;
 
     #[ORM\Column(type: Types::DATE_IMMUTABLE, nullable: true)]
@@ -70,6 +73,7 @@ class VehicleInspection
     private ?\DateTimeImmutable $counterVisitDueAt = null;
 
     #[ORM\Column(type: Types::TEXT, nullable: true)]
+    #[Groups(['vehicle_inspection:read', 'vehicle_inspection:write'])]
     private ?string $notes = null;
 
     #[ORM\Column(type: Types::DATETIME_IMMUTABLE)]
@@ -77,6 +81,7 @@ class VehicleInspection
     private \DateTimeImmutable $createdAt;
 
     #[ORM\Column(type: Types::DATETIME_IMMUTABLE)]
+    #[Groups(['vehicle_inspection:read'])]
     private \DateTimeImmutable $updatedAt;
 
     #[ORM\ManyToOne(inversedBy: 'vehicleInspections')]

@@ -41,6 +41,7 @@ class Address
     private ?string $line1 = null;
 
     #[ORM\Column(length: 255, nullable: true)]
+    #[Groups(['address:read', 'address:write'])]
     private ?string $line2 = null;
 
     #[ORM\Column(length: 255)]
@@ -48,6 +49,7 @@ class Address
     private ?string $postalCode = null;
 
     #[ORM\Column(length: 255)]
+    #[Groups(['address:read', 'address:write'])]
     private ?string $city = null;
 
     #[ORM\Column(length: 255)]

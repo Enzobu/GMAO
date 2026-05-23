@@ -38,7 +38,7 @@ class Part
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
-    #[Groups(['part:read'])]
+    #[Groups(['part:read', 'maintenance_part:read', 'document:read'])]
     private ?int $id = null;
 
     #[ORM\ManyToOne(inversedBy: 'parts')]
@@ -48,6 +48,7 @@ class Part
 
     #[ORM\Column]
     #[Assert\PositiveOrZero]
+    #[Groups(['part:read', 'part:write'])]
     private ?int $quantity = null;
 
     /**
@@ -66,6 +67,7 @@ class Part
     private ?\DateTimeImmutable $createdAt = null;
 
     #[ORM\Column(type: Types::DATETIME_IMMUTABLE)]
+    #[Groups(['part:read'])]
     private ?\DateTimeImmutable $updatedAt = null;
 
     #[ORM\Column(options: ['default' => false])]

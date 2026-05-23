@@ -35,7 +35,7 @@ class MaintenancePart
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
-    #[Groups(['maintenance_part:read'])]
+    #[Groups(['maintenance_part:read', 'maintenance:read'])]
     private ?int $id = null;
 
     #[ORM\ManyToOne(inversedBy: 'maintenanceParts')]
@@ -45,13 +45,15 @@ class MaintenancePart
 
     #[ORM\ManyToOne(inversedBy: 'maintenanceParts')]
     #[ORM\JoinColumn(nullable: false)]
+    #[Groups(['maintenance_part:read', 'maintenance_part:write', 'maintenance:read'])]
     private ?Part $part = null;
 
     #[ORM\Column]
-    #[Groups(['maintenance_part:read', 'maintenance_part:write'])]
+    #[Groups(['maintenance_part:read', 'maintenance_part:write', 'maintenance:read'])]
     private ?int $quantity = null;
 
     #[ORM\Column(type: Types::TEXT, nullable: true)]
+    #[Groups(['maintenance_part:read', 'maintenance_part:write', 'maintenance:read'])]
     private ?string $notes = null;
 
     #[ORM\Column(type: 'datetime_immutable')]
@@ -59,6 +61,7 @@ class MaintenancePart
     private \DateTimeImmutable $createdAt;
 
     #[ORM\Column(type: 'datetime_immutable')]
+    #[Groups(['maintenance_part:read'])]
     private \DateTimeImmutable $updatedAt;
 
     public function getId(): ?int

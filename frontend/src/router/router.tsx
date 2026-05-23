@@ -5,6 +5,7 @@ import AuthLayout from "@/layouts/AuthLayout"
 
 import LoginPage from "@/pages/login/LoginPage"
 import DashboardPage from "@/pages/dashboard/DashboardPage"
+import SettingsPage from "@/pages/settings/SettingsPage"
 
 import ProtectedRoute from "@/router/ProtectedRoute"
 
@@ -32,6 +33,10 @@ export const router = createBrowserRouter([
           {
             path: "/dashboard",
             element: <DashboardPage />,
+          },
+          {
+            path: "/settings",
+            element: <SettingsPage />,
           },
         ],
       },

@@ -35,22 +35,24 @@ class InspectionCenter
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
-    #[Groups(['inspection_center:read'])]
+    #[Groups(['inspection_center:read', 'vehicle_inspection:read'])]
     private ?int $id = null;
 
     #[ORM\Column(length: 255)]
-    #[Groups(['inspection_center:read', 'inspection_center:write'])]
+    #[Groups(['inspection_center:read', 'inspection_center:write', 'vehicle_inspection:read'])]
     private ?string $name = null;
 
     #[ORM\Column(length: 255, nullable: true)]
+    #[Groups(['inspection_center:read', 'inspection_center:write', 'vehicle_inspection:read'])]
     private ?string $phone = null;
 
     #[ORM\Column(length: 255, nullable: true)]
-    #[Groups(['inspection_center:read', 'inspection_center:write'])]
+    #[Groups(['inspection_center:read', 'inspection_center:write', 'vehicle_inspection:read'])]
     private ?string $email = null;
 
     #[ORM\OneToOne(cascade: ['persist', 'remove'])]
     #[ORM\JoinColumn(nullable: false)]
+    #[Groups(['inspection_center:read', 'inspection_center:write'])]
     private ?Address $address = null;
 
     /**

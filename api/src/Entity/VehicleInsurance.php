@@ -38,7 +38,7 @@ class VehicleInsurance
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
-    #[Groups(['vehicle_insurance:read'])]
+    #[Groups(['vehicle_insurance:read', 'document:read'])]
     private ?int $id = null;
 
     #[ORM\ManyToOne(inversedBy: 'vehicleInsurances')]
@@ -47,6 +47,7 @@ class VehicleInsurance
     private ?Vehicle $vehicle = null;
 
     #[ORM\Column(length: 255)]
+    #[Groups(['vehicle_insurance:read', 'vehicle_insurance:write'])]
     private string $providerName;
 
     #[ORM\Column(length: 255, nullable: true)]
@@ -54,6 +55,7 @@ class VehicleInsurance
     private ?string $policyNumber = null;
 
     #[ORM\Column(type: Types::DATE_IMMUTABLE, nullable: true)]
+    #[Groups(['vehicle_insurance:read', 'vehicle_insurance:write'])]
     private ?\DateTimeImmutable $startDate = null;
 
     #[ORM\Column(type: Types::DATE_IMMUTABLE, nullable: true)]
@@ -61,6 +63,7 @@ class VehicleInsurance
     private ?\DateTimeImmutable $endDate = null;
 
     #[ORM\Column(enumType: InsurancePaymentFrequencyEnum::class)]
+    #[Groups(['vehicle_insurance:read', 'vehicle_insurance:write'])]
     private InsurancePaymentFrequencyEnum $paymentFrequency = InsurancePaymentFrequencyEnum::Monthly;
 
     #[ORM\Column(options: ['default' => true])]
@@ -72,6 +75,7 @@ class VehicleInsurance
     private \DateTimeImmutable $createdAt;
 
     #[ORM\Column(type: Types::DATETIME_IMMUTABLE)]
+    #[Groups(['vehicle_insurance:read'])]
     private \DateTimeImmutable $updatedAt;
 
     #[ORM\OneToMany(mappedBy: 'vehicleInsurance', targetEntity: Document::class, orphanRemoval: true)]

@@ -44,6 +44,7 @@ class Document
     private string $name;
 
     #[ORM\Column(length: 255, nullable: true)]
+    #[Groups(['document:read'])]
     private string $originalFilename;
 
     #[ORM\Column(length: 255, nullable: true)]
@@ -57,6 +58,7 @@ class Document
     private string $mimeType;
 
     #[ORM\Column(nullable: true)]
+    #[Groups(['document:read'])]
     private int $size;
 
     #[ORM\Column(length: 20, nullable: true)]
@@ -64,6 +66,7 @@ class Document
     private string $extension;
 
     #[ORM\Column(type: Types::TEXT, nullable: true)]
+    #[Groups(['document:read', 'document:write'])]
     private ?string $description = null;
 
     #[ORM\Column(options: ['default' => false])]
@@ -85,6 +88,7 @@ class Document
     private ?Vehicle $vehicle = null;
 
     #[ORM\ManyToOne(inversedBy: 'documents')]
+    #[Groups(['document:read', 'document:write'])]
     private ?VehicleInsurance $vehicleInsurance = null;
 
     #[ORM\ManyToOne(inversedBy: 'documents')]
@@ -92,6 +96,7 @@ class Document
     private ?VehicleInspection $vehicleInspection = null;
 
     #[ORM\ManyToOne(inversedBy: 'documents')]
+    #[Groups(['document:read', 'document:write'])]
     private ?User $user = null;
 
     #[ORM\ManyToOne(inversedBy: 'documents')]
@@ -99,6 +104,7 @@ class Document
     private ?Part $part = null;
 
     #[ORM\ManyToOne(inversedBy: 'documents')]
+    #[Groups(['document:read', 'document:write'])]
     private ?Maintenance $maintenance = null;
 
     /*
@@ -112,6 +118,7 @@ class Document
     private \DateTimeImmutable $createdAt;
 
     #[ORM\Column(type: Types::DATETIME_IMMUTABLE)]
+    #[Groups(['document:read'])]
     private \DateTimeImmutable $updatedAt;
 
     public function __construct()

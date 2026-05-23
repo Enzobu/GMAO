@@ -41,28 +41,31 @@ class Vehicle
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
-    #[Groups(['vehicle:read'])]
+    #[Groups(['vehicle:read', 'maintenance:read', 'vehicle_insurance:read', 'vehicle_inspection:read', 'document:read', 'part:read'])]
     private ?int $id = null;
 
     #[ORM\Column(length: 255)]
-    #[Groups(['vehicle:read', 'vehicle:write'])]
+    #[Groups(['vehicle:read', 'vehicle:write', 'maintenance:read', 'vehicle_insurance:read', 'vehicle_inspection:read', 'document:read', 'part:read'])]
     private ?string $name = null;
 
     #[ORM\Column(length: 20, unique: true)]
+    #[Groups(['vehicle:read', 'vehicle:write', 'maintenance:read', 'vehicle_insurance:read', 'vehicle_inspection:read', 'document:read', 'part:read'])]
     private ?string $registration = null;
 
     #[ORM\Column(length: 100)]
-    #[Groups(['vehicle:read', 'vehicle:write'])]
+    #[Groups(['vehicle:read', 'vehicle:write', 'maintenance:read', 'vehicle_insurance:read', 'vehicle_inspection:read', 'document:read', 'part:read'])]
     private ?string $brand = null;
 
     #[ORM\Column(length: 150)]
+    #[Groups(['vehicle:read', 'vehicle:write', 'maintenance:read', 'vehicle_insurance:read', 'vehicle_inspection:read', 'document:read', 'part:read'])]
     private ?string $model = null;
 
     #[ORM\Column(enumType: VehicleTypeEnum::class, nullable: true)]
-    #[Groups(['vehicle:read', 'vehicle:write'])]
+    #[Groups(['vehicle:read', 'vehicle:write', 'maintenance:read', 'vehicle_insurance:read', 'vehicle_inspection:read', 'document:read', 'part:read'])]
     private ?VehicleTypeEnum $type = null;
 
     #[ORM\Column(type: Types::SMALLINT, nullable: true)]
+    #[Groups(['vehicle:read', 'vehicle:write'])]
     private ?int $year = null;
 
     #[ORM\Column(length: 17, nullable: true, unique: true)]
@@ -70,6 +73,7 @@ class Vehicle
     private ?string $vin = null;
 
     #[ORM\Column(length: 255, nullable: true)]
+    #[Groups(['vehicle:read', 'vehicle:write'])]
     private ?string $engine = null;
 
     #[ORM\Column(enumType: VehicleFuelTypeEnum::class, nullable: true)]
@@ -77,13 +81,15 @@ class Vehicle
     private ?VehicleFuelTypeEnum $fuelType = null;
 
     #[ORM\Column(enumType: VehicleTransmissionTypeEnum::class, nullable: true)]
+    #[Groups(['vehicle:read', 'vehicle:write'])]
     private ?VehicleTransmissionTypeEnum $transmission = null;
 
     #[ORM\Column(nullable: true)]
-    #[Groups(['vehicle:read', 'vehicle:write'])]
+    #[Groups(['vehicle:read', 'vehicle:write', 'maintenance:read', 'vehicle_insurance:read', 'vehicle_inspection:read'])]
     private ?int $lastMileage = null;
 
     #[ORM\Column(enumType: VehicleColorEnum::class, nullable: true)]
+    #[Groups(['vehicle:read', 'vehicle:write'])]
     private ?VehicleColorEnum $color = null;
 
     #[ORM\Column(type: Types::DATE_IMMUTABLE, nullable: true)]
@@ -91,14 +97,16 @@ class Vehicle
     private ?\DateTimeImmutable $purchaseDate = null;
 
     #[ORM\Column(type: Types::DECIMAL, precision: 10, scale: 2, nullable: true)]
+    #[Groups(['vehicle:read', 'vehicle:write'])]
     private ?string $purchasePrice = null;
 
     #[ORM\Column(enumType: VehicleStatusEnum::class, options: ['default' => VehicleStatusEnum::Active->value])]
-    #[Groups(['vehicle:read', 'vehicle:write'])]
+    #[Groups(['vehicle:read', 'vehicle:write', 'maintenance:read', 'vehicle_insurance:read', 'vehicle_inspection:read'])]
     private VehicleStatusEnum $status = VehicleStatusEnum::Active;
 
     #[ORM\ManyToOne(inversedBy: 'vehicles')]
     #[ORM\JoinColumn(nullable: false)]
+    #[Groups(['vehicle:read'])]
     private ?User $user = null;
 
     /**

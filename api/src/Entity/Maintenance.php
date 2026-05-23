@@ -38,7 +38,7 @@ class Maintenance
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
-    #[Groups(['maintenance:read'])]
+    #[Groups(['maintenance:read', 'maintenance_part:read', 'document:read'])]
     private ?int $id = null;
 
     #[ORM\ManyToOne(inversedBy: 'maintenances')]
@@ -48,6 +48,7 @@ class Maintenance
 
     #[ORM\ManyToOne(inversedBy: 'maintenances')]
     #[ORM\JoinColumn(nullable: false)]
+    #[Groups(['maintenance:read', 'maintenance:write'])]
     private ?MaintenanceType $maintenanceType = null;
 
     #[ORM\Column]
@@ -55,6 +56,7 @@ class Maintenance
     private ?int $mileage = null;
 
     #[ORM\Column(nullable: true)]
+    #[Groups(['maintenance:read', 'maintenance:write'])]
     private ?\DateTimeImmutable $performedAt = null;
 
     #[ORM\Column(nullable: true)]
@@ -62,6 +64,7 @@ class Maintenance
     private ?\DateTimeImmutable $plannedAt = null;
 
     #[ORM\Column(enumType: MaintenanceStatusEnum::class)]
+    #[Groups(['maintenance:read', 'maintenance:write'])]
     private ?MaintenanceStatusEnum $status = null;
 
     #[ORM\Column(options: ['default' => false])]
@@ -69,6 +72,7 @@ class Maintenance
     private ?bool $isExternal = null;
 
     #[ORM\Column(type: Types::TEXT, nullable: true)]
+    #[Groups(['maintenance:read', 'maintenance:write'])]
     private ?string $notes = null;
 
     #[ORM\Column(nullable: true)]
@@ -76,6 +80,7 @@ class Maintenance
     private ?int $nextDueMileage = null;
 
     #[ORM\Column(nullable: true)]
+    #[Groups(['maintenance:read', 'maintenance:write'])]
     private ?\DateTimeImmutable $nextDueAt = null;
 
     #[ORM\Column(type: 'datetime_immutable')]
@@ -83,6 +88,7 @@ class Maintenance
     private \DateTimeImmutable $createdAt;
 
     #[ORM\Column(type: 'datetime_immutable')]
+    #[Groups(['maintenance:read'])]
     private \DateTimeImmutable $updatedAt;
 
     /**
