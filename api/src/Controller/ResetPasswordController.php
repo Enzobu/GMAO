@@ -163,6 +163,7 @@ class ResetPasswordController extends AbstractController
             ->htmlTemplate('reset_password/email.html.twig')
             ->context([
                 'resetToken' => $resetToken,
+                'frontendResetUrl' => $this->buildFrontendResetUrl($resetToken->getToken()),
             ])
         ;
 
@@ -202,6 +203,7 @@ class ResetPasswordController extends AbstractController
                 ->context([
                     'user' => $user,
                     'resetToken' => $resetToken,
+                    'frontendResetUrl' => $this->buildFrontendResetUrl($resetToken->getToken()),
                 ]);
 
             $mailer->send($email);
@@ -212,5 +214,10 @@ class ResetPasswordController extends AbstractController
         }
 
         return $this->redirectToRoute('app_profile', [], Response::HTTP_SEE_OTHER);
+    }
+
+    private function buildFrontendResetUrl(string $token): string
+    {
+        return rtrim((string) $this->getParameter('frontend_url'), '/') . '/reset-password/reset/' . rawurlencode($token);
     }
 }

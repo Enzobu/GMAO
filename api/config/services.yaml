@@ -7,6 +7,7 @@ parameters:
     documents_directory: '%kernel.project_dir%/%env(resolve:DOCUMENT_DIRECTORY)%'
     laod_datafixtures: '%env(LOAD_DATAFIXTURES)%'
     mailer_sender: '%env(MAILER_SENDER)%'
+    frontend_url: '%env(FRONTEND_URL)%'
 
 services:
     # default configuration for services in *this* file

@@ -4,8 +4,10 @@ import AppLayout from "@/layouts/AppLayout"
 import AuthLayout from "@/layouts/AuthLayout"
 
 import LoginPage from "@/pages/login/LoginPage"
+import ResetPasswordPage from "@/pages/reset-password/ResetPasswordPage"
 import DashboardPage from "@/pages/dashboard/DashboardPage"
 import SettingsPage from "@/pages/settings/SettingsPage"
+import ProfilePage from "@/pages/profile/ProfilePage"
 
 import ProtectedRoute from "@/router/ProtectedRoute"
 
@@ -16,6 +18,10 @@ export const router = createBrowserRouter([
       {
         path: "/login",
         element: <LoginPage />,
+      },
+      {
+        path: "/reset-password/reset/:token",
+        element: <ResetPasswordPage />,
       },
     ],
   },
@@ -37,6 +43,10 @@ export const router = createBrowserRouter([
           {
             path: "/settings",
             element: <SettingsPage />,
+          },
+          {
+            path: "/profile",
+            element: <ProfilePage />,
           },
         ],
       },

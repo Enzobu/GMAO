@@ -11,14 +11,19 @@ function App() {
   const token = useAuthStore((state) => state.token)
   const user = useAuthStore((state) => state.user)
   const setUser = useAuthStore((state) => state.setUser)
+  const logout = useAuthStore((state) => state.logout)
 
   useEffect(() => {
-    if (!token || user) {
+    const isPublicRoute = window.location.pathname === "/login" || window.location.pathname.startsWith("/reset-password")
+
+    if (!token || user || isPublicRoute) {
       return
     }
 
-    void getMe().then(setUser)
-  }, [setUser, token, user])
+    void getMe()
+      .then(setUser)
+      .catch(logout)
+  }, [logout, setUser, token, user])
 
   return (
     <ThemeProvider>

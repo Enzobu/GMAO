@@ -210,8 +210,10 @@ export default function AppLayout() {
                     className="w-56 rounded-m p-2"
                   >
                     <DropdownMenuItem className="cursor-pointer">
-                      <Settings className="mr-2 h-4 w-4" />
-                      Paramètres du profil
+                      <NavLink to="/profile" className="flex w-full items-center">
+                        <Settings className="mr-2 h-4 w-4" />
+                        Paramètres du profil
+                      </NavLink>
                     </DropdownMenuItem>
 
                     <DropdownMenuSeparator />
