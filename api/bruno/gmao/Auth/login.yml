@@ -1,0 +1,36 @@
+info:
+  name: login
+  type: http
+  seq: 1
+
+http:
+  method: POST
+  url: "{{apiUrl}}{{apiPrefix}}/login"
+  headers:
+    - name: Content-Type
+      value: application/json
+    - name: Accept
+      value: application/json
+  body:
+    type: json
+    data: |-
+      {
+        "email": "gmao@gmail.com",
+        "password": "vR2gP5kykK"
+      }
+  auth: inherit
+
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        const body = res.getBody();
+        const json = typeof body === "string" ? JSON.parse(body) : body;
+
+        bru.setVar("API_Token", json.token);
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
