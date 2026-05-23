@@ -3,8 +3,8 @@
 namespace App\DataFixtures;
 
 use App\Entity\Address;
-use App\Entity\Document;
 use App\Entity\InspectionCenter;
+use App\Entity\Maintenance;
 use App\Entity\MaintenancePart;
 use App\Entity\MaintenanceType;
 use App\Entity\Part;
@@ -13,8 +13,8 @@ use App\Entity\User;
 use App\Entity\Vehicle;
 use App\Entity\VehicleInspection;
 use App\Entity\VehicleInsurance;
-use App\Enum\InsurancePaymentFrequencyEnum;
 use App\Enum\InspectionResultEnum;
+use App\Enum\InsurancePaymentFrequencyEnum;
 use App\Enum\MaintenanceStatusEnum;
 use App\Enum\VehicleColorEnum;
 use App\Enum\VehicleFuelTypeEnum;
@@ -29,661 +29,562 @@ use Symfony\Component\DependencyInjection\ParameterBag\ContainerBagInterface;
 class AppFixtures extends Fixture
 {
     public function __construct(
-        private ContainerBagInterface $params,
+        private readonly ContainerBagInterface $params,
     ) {}
 
     public function load(ObjectManager $manager): void
     {
-        if ($this->params->get('laod_datafixtures') === 'all' || $this->params->get('laod_datafixtures') === 'user_only') {
-            // --------------------
-            // USERS
-            // --------------------
-            $userAdmin = (new User())
-                ->setFirstname('enzo')
-                ->setLastname('palermo')
-                ->setEmail('gmao@gmail.com')
-                ->setPassword('$2y$13$GKJo1Sdw4/FhIL821Nz3bujHBv3mz/VsiRRLPU.H0B6PCxonDR9w2')
-                ->setRoles(['ROLE_USER', 'ROLE_ADMIN'])
-            ;
-    
-            $user = (new User())
-                ->setFirstname('alexandra')
-                ->setLastname('palermo')
-                ->setEmail('gio.alex.pa@gmail.com')
-                ->setPassword('$2y$13$GKJo1Sdw4/FhIL821Nz3bujHBv3mz/VsiRRLPU.H0B6PCxonDR9w2')
-                ->setRoles(['ROLE_USER'])
-            ;
-    
-            $userAdmin->setAddress(
+        $mode = $this->params->get('laod_datafixtures');
+
+        if ($mode !== 'all' && $mode !== 'user_only') {
+            return;
+        }
+
+        $users = $this->loadUsers($manager);
+
+        if ($mode === 'user_only') {
+            return;
+        }
+
+        $vehicles = $this->loadVehicles($manager, $users['admin']);
+        $inspectionCenters = $this->loadInspectionCenters($manager);
+        $partTypes = $this->loadPartTypes($manager);
+        $parts = $this->loadParts($manager, $partTypes, $vehicles);
+        $maintenanceTypes = $this->loadMaintenanceTypes($manager);
+
+        $this->loadInsurances($manager, $vehicles);
+        $this->loadInspections($manager, $vehicles, $inspectionCenters);
+        $this->loadMaintenances($manager, $vehicles, $maintenanceTypes, $parts);
+    }
+
+    /**
+     * @return array{admin:User,user:User}
+     */
+    private function loadUsers(ObjectManager $manager): array
+    {
+        $admin = (new User())
+            ->setFirstname('enzo')
+            ->setLastname('palermo')
+            ->setEmail('gmao@gmail.com')
+            ->setPassword('$2y$13$GKJo1Sdw4/FhIL821Nz3bujHBv3mz/VsiRRLPU.H0B6PCxonDR9w2')
+            ->setRoles(['ROLE_USER', 'ROLE_ADMIN'])
+            ->setAddress(
                 (new Address())
                     ->setLine1('1 rue du Dev')
                     ->setPostalCode('11100')
                     ->setCity('Narbonne')
                     ->setCountry('FR')
             );
-    
-            $user->setAddress(
+
+        $user = (new User())
+            ->setFirstname('alexandra')
+            ->setLastname('palermo')
+            ->setEmail('gio.alex.pa@gmail.com')
+            ->setPassword('$2y$13$GKJo1Sdw4/FhIL821Nz3bujHBv3mz/VsiRRLPU.H0B6PCxonDR9w2')
+            ->setRoles(['ROLE_USER'])
+            ->setAddress(
                 (new Address())
                     ->setLine1('2 avenue du Soleil')
                     ->setPostalCode('34000')
                     ->setCity('Montpellier')
                     ->setCountry('FR')
             );
-    
-            $manager->persist($userAdmin);
-            $manager->persist($user);
-    
-            $manager->flush();
+
+        $manager->persist($admin);
+        $manager->persist($user);
+        $manager->flush();
+
+        return [
+            'admin' => $admin,
+            'user' => $user,
+        ];
+    }
+
+    /**
+     * @return array<string, Vehicle>
+     */
+    private function loadVehicles(ObjectManager $manager, User $owner): array
+    {
+        $vehiclesData = [
+            [
+                'key' => 'porsche-911',
+                'name' => '911 Carrera S',
+                'registration' => 'GT-911-CS',
+                'brand' => 'Porsche',
+                'model' => '911 Carrera S 991.2',
+                'type' => VehicleTypeEnum::Car,
+                'year' => 2017,
+                'vin' => 'WP0ZZZ99ZHS123456',
+                'engine' => '3.0 flat-six biturbo',
+                'fuelType' => VehicleFuelTypeEnum::Petrol,
+                'transmission' => VehicleTransmissionTypeEnum::DualClutch,
+                'lastMileage' => 68400,
+                'color' => VehicleColorEnum::Gray,
+                'purchaseDate' => '2017-09-18',
+                'purchasePrice' => '87500.00',
+            ],
+            [
+                'key' => 'bmw-m3',
+                'name' => 'M3 Competition',
+                'registration' => 'BM-003-M3',
+                'brand' => 'BMW',
+                'model' => 'M3 Competition G80',
+                'type' => VehicleTypeEnum::Car,
+                'year' => 2021,
+                'vin' => 'WBS33AY090FM12345',
+                'engine' => '3.0 S58 biturbo',
+                'fuelType' => VehicleFuelTypeEnum::Petrol,
+                'transmission' => VehicleTransmissionTypeEnum::Automatic,
+                'lastMileage' => 39200,
+                'color' => VehicleColorEnum::Green,
+                'purchaseDate' => '2021-04-12',
+                'purchasePrice' => '78500.00',
+            ],
+            [
+                'key' => 'audi-rs3',
+                'name' => 'RS3 Sportback',
+                'registration' => 'RS-003-AU',
+                'brand' => 'Audi',
+                'model' => 'RS3 8Y',
+                'type' => VehicleTypeEnum::Car,
+                'year' => 2022,
+                'vin' => 'WUAZZZ8Y5NA123456',
+                'engine' => '2.5 TFSI',
+                'fuelType' => VehicleFuelTypeEnum::Petrol,
+                'transmission' => VehicleTransmissionTypeEnum::DualClutch,
+                'lastMileage' => 27800,
+                'color' => VehicleColorEnum::Black,
+                'purchaseDate' => '2022-07-28',
+                'purchasePrice' => '68200.00',
+            ],
+            [
+                'key' => 'alpine-a110',
+                'name' => 'A110 S',
+                'registration' => 'AL-110-AS',
+                'brand' => 'Alpine',
+                'model' => 'A110 S',
+                'type' => VehicleTypeEnum::Car,
+                'year' => 2019,
+                'vin' => 'VF1AEFDZZK0123456',
+                'engine' => '1.8 turbo',
+                'fuelType' => VehicleFuelTypeEnum::Petrol,
+                'transmission' => VehicleTransmissionTypeEnum::DualClutch,
+                'lastMileage' => 45200,
+                'color' => VehicleColorEnum::Blue,
+                'purchaseDate' => '2019-11-05',
+                'purchasePrice' => '62500.00',
+            ],
+            [
+                'key' => 'nissan-gtr',
+                'name' => 'GT-R',
+                'registration' => 'GT-035-RR',
+                'brand' => 'Nissan',
+                'model' => 'GT-R R35',
+                'type' => VehicleTypeEnum::Car,
+                'year' => 2016,
+                'vin' => 'JN1GANR35U0123456',
+                'engine' => '3.8 V6 biturbo',
+                'fuelType' => VehicleFuelTypeEnum::Petrol,
+                'transmission' => VehicleTransmissionTypeEnum::DualClutch,
+                'lastMileage' => 91200,
+                'color' => VehicleColorEnum::white,
+                'purchaseDate' => '2016-03-22',
+                'purchasePrice' => '74200.00',
+            ],
+            [
+                'key' => 's1000rr',
+                'name' => 'S1000RR',
+                'registration' => 'RR-1000-BM',
+                'brand' => 'BMW Motorrad',
+                'model' => 'S1000RR',
+                'type' => VehicleTypeEnum::Motorcycle,
+                'year' => 2020,
+                'vin' => 'WB10E2100LZ123456',
+                'engine' => '999cc 4 cylindres',
+                'fuelType' => VehicleFuelTypeEnum::Petrol,
+                'transmission' => VehicleTransmissionTypeEnum::Manual,
+                'lastMileage' => 18400,
+                'color' => VehicleColorEnum::Red,
+                'purchaseDate' => '2020-06-16',
+                'purchasePrice' => '19800.00',
+            ],
+            [
+                'key' => 'zx6r',
+                'name' => 'ZX-6R',
+                'registration' => 'ZX-636-KW',
+                'brand' => 'Kawasaki',
+                'model' => 'Ninja ZX-6R 636',
+                'type' => VehicleTypeEnum::Motorcycle,
+                'year' => 2024,
+                'vin' => 'JKBZX636PPA123456',
+                'engine' => '636cc 4 cylindres',
+                'fuelType' => VehicleFuelTypeEnum::Petrol,
+                'transmission' => VehicleTransmissionTypeEnum::Manual,
+                'lastMileage' => 6200,
+                'color' => VehicleColorEnum::Green,
+                'purchaseDate' => '2024-02-09',
+                'purchasePrice' => '12990.00',
+            ],
+        ];
+
+        $vehicles = [];
+
+        foreach ($vehiclesData as $data) {
+            $vehicle = (new Vehicle())
+                ->setName($data['name'])
+                ->setRegistration($data['registration'])
+                ->setBrand($data['brand'])
+                ->setModel($data['model'])
+                ->setType($data['type'])
+                ->setYear($data['year'])
+                ->setVin($data['vin'])
+                ->setEngine($data['engine'])
+                ->setFuelType($data['fuelType'])
+                ->setTransmission($data['transmission'])
+                ->setLastMileage($data['lastMileage'])
+                ->setColor($data['color'])
+                ->setPurchaseDate(new DateTimeImmutable($data['purchaseDate']))
+                ->setPurchasePrice($data['purchasePrice'])
+                ->setStatus(VehicleStatusEnum::Active)
+                ->setUser($owner);
+
+            $manager->persist($vehicle);
+            $vehicles[$data['key']] = $vehicle;
         }
 
-        if ($this->params->get('laod_datafixtures') === 'all') {
-            // --------------------
-            // VEHICLES
-            // --------------------
-            $vehiclesData = [
-                [
-                    'name' => 'Focus',
-                    'registration' => 'AB-123-CD',
-                    'brand' => 'Ford',
-                    'model' => 'Focus 2',
-                    'type' => VehicleTypeEnum::Car,
-                    'year' => 2006,
-                    'vin' => 'WF0WXXGCDW6A12345',
-                    'engine' => '1.6 TDCI 90',
-                    'fuel' => VehicleFuelTypeEnum::Diesel,
-                    'transmission' => VehicleTransmissionTypeEnum::Manual,
-                    'km' => 187500,
-                    'color' => VehicleColorEnum::Black,
-                    'status' => VehicleStatusEnum::Active,
-                    'purchaseDate' => new DateTimeImmutable('2023-06-12'),
-                    'purchasePrice' => '2499.00',
-                    'user' => $userAdmin,
-                ],
-                [
-                    'name' => 'Almera',
-                    'registration' => 'EF-456-GH',
-                    'brand' => 'Nissan',
-                    'model' => 'Almera 1.5',
-                    'type' => VehicleTypeEnum::Car,
-                    'year' => 1998,
-                    'vin' => 'JN1BBAN16U0123456',
-                    'engine' => '1.5 Essence',
-                    'fuel' => VehicleFuelTypeEnum::Petrol,
-                    'transmission' => VehicleTransmissionTypeEnum::Automatic,
-                    'km' => 243000,
-                    'color' => VehicleColorEnum::Gray,
-                    'status' => VehicleStatusEnum::Active,
-                    'purchaseDate' => null,
-                    'purchasePrice' => null,
-                    'user' => $userAdmin,
-                ],
-                [
-                    'name' => 'Ninja',
-                    'registration' => 'IJ-789-KL',
-                    'brand' => 'Kawasaki',
-                    'model' => 'Ninja 400',
-                    'type' => VehicleTypeEnum::Motorcycle,
-                    'year' => 2023,
-                    'vin' => 'JKAEX400AAA123456',
-                    'engine' => '399cc',
-                    'fuel' => VehicleFuelTypeEnum::Petrol,
-                    'transmission' => VehicleTransmissionTypeEnum::Manual,
-                    'km' => 8200,
-                    'color' => VehicleColorEnum::Green,
-                    'status' => VehicleStatusEnum::Active,
-                    'purchaseDate' => new DateTimeImmutable('2025-12-10'),
-                    'purchasePrice' => '5000.00',
-                    'user' => $userAdmin,
-                ],
-                [
-                    'name' => 'Partner',
-                    'registration' => 'MN-321-OP',
-                    'brand' => 'Peugeot',
-                    'model' => 'Partner',
-                    'type' => VehicleTypeEnum::Utility,
-                    'year' => 2015,
-                    'vin' => 'VF3GJKHZ6FJ123456',
-                    'engine' => '1.6 HDI',
-                    'fuel' => VehicleFuelTypeEnum::Diesel,
-                    'transmission' => VehicleTransmissionTypeEnum::Manual,
-                    'km' => 156000,
-                    'color' => VehicleColorEnum::white,
-                    'status' => VehicleStatusEnum::Inactive,
-                    'purchaseDate' => null,
-                    'purchasePrice' => null,
-                    'user' => $user,
-                ],
-                [
-                    'name' => 'Clio',
-                    'registration' => 'QR-654-ST',
-                    'brand' => 'Renault',
-                    'model' => 'Clio 4',
-                    'type' => VehicleTypeEnum::Car,
-                    'year' => 2018,
-                    'vin' => 'VF1RBB00659012345',
-                    'engine' => '0.9 TCe',
-                    'fuel' => VehicleFuelTypeEnum::Petrol,
-                    'transmission' => VehicleTransmissionTypeEnum::Manual,
-                    'km' => 94500,
-                    'color' => VehicleColorEnum::Red,
-                    'status' => VehicleStatusEnum::Active,
-                    'purchaseDate' => null,
-                    'purchasePrice' => null,
-                    'user' => $user,
-                ],
-            ];
-    
-            $vehiclesByRegistration = [];
-    
-            foreach ($vehiclesData as $data) {
-                $vehicle = (new Vehicle())
-                    ->setName($data['name'])
-                    ->setRegistration($data['registration'])
-                    ->setBrand($data['brand'])
-                    ->setModel($data['model'])
-                    ->setType($data['type'])
-                    ->setYear($data['year'])
-                    ->setVin($data['vin'])
-                    ->setEngine($data['engine'])
-                    ->setFuelType($data['fuel'])
-                    ->setTransmission($data['transmission'])
-                    ->setLastMileage($data['km'])
-                    ->setColor($data['color'])
-                    ->setStatus($data['status'])
-                    ->setPurchaseDate($data['purchaseDate'])
-                    ->setPurchasePrice($data['purchasePrice'])
-                    ->setUser($data['user'])
-                ;
-    
-                $manager->persist($vehicle);
-                $vehiclesByRegistration[$data['registration']] = $vehicle;
-            }
-    
-            $manager->flush();
-    
-            // --------------------
-            // INSURANCE
-            // --------------------
-            $insurancesData = [
-                [
-                    'vehicleRegistration' => 'AB-123-CD',
-                    'providerName' => 'MAIF',
-                    'policyNumber' => 'MAIF-FOCUS-2026-001',
-                    'startDate' => new DateTimeImmutable('2026-01-01'),
-                    'endDate' => new DateTimeImmutable('2026-12-31'),
-                    'paymentFrequency' => InsurancePaymentFrequencyEnum::Monthly,
-                    'isActive' => true,
-                ],
-                [
-                    'vehicleRegistration' => 'EF-456-GH',
-                    'providerName' => 'AXA',
-                    'policyNumber' => 'AXA-ALMERA-2026-014',
-                    'startDate' => new DateTimeImmutable('2026-02-15'),
-                    'endDate' => new DateTimeImmutable('2027-02-14'),
-                    'paymentFrequency' => InsurancePaymentFrequencyEnum::Yearly,
-                    'isActive' => true,
-                ],
-                [
-                    'vehicleRegistration' => 'IJ-789-KL',
-                    'providerName' => 'AMV',
-                    'policyNumber' => 'AMV-NINJA-2026-777',
-                    'startDate' => new DateTimeImmutable('2026-03-01'),
-                    'endDate' => new DateTimeImmutable('2027-02-28'),
-                    'paymentFrequency' => InsurancePaymentFrequencyEnum::Monthly,
-                    'isActive' => true,
-                ],
-                [
-                    'vehicleRegistration' => 'MN-321-OP',
-                    'providerName' => 'GMF',
-                    'policyNumber' => 'GMF-PARTNER-2025-332',
-                    'startDate' => new DateTimeImmutable('2025-09-01'),
-                    'endDate' => new DateTimeImmutable('2026-08-31'),
-                    'paymentFrequency' => InsurancePaymentFrequencyEnum::Monthly,
-                    'isActive' => true,
-                ],
-                [
-                    'vehicleRegistration' => 'QR-654-ST',
-                    'providerName' => 'Allianz',
-                    'policyNumber' => 'ALLIANZ-CLIO-2026-090',
-                    'startDate' => new DateTimeImmutable('2026-02-01'),
-                    'endDate' => new DateTimeImmutable('2027-01-31'),
-                    'paymentFrequency' => InsurancePaymentFrequencyEnum::Yearly,
-                    'isActive' => true,
-                ],
-                [
-                    'vehicleRegistration' => 'AB-123-CD',
-                    'providerName' => 'Direct Assurance',
-                    'policyNumber' => 'DA-FOCUS-2025-099',
-                    'startDate' => new DateTimeImmutable('2025-01-01'),
-                    'endDate' => new DateTimeImmutable('2025-12-31'),
-                    'paymentFrequency' => InsurancePaymentFrequencyEnum::Monthly,
-                    'isActive' => false,
-                ],
-            ];
-    
-            foreach ($insurancesData as $data) {
-                $vehicle = $vehiclesByRegistration[$data['vehicleRegistration']] ?? null;
-                if (!$vehicle) {
-                    throw new \RuntimeException(sprintf('Véhicule introuvable pour la plaque "%s".', $data['vehicleRegistration']));
-                }
-    
-                $insurance = (new VehicleInsurance())
-                    ->setVehicle($vehicle)
-                    ->setProviderName($data['providerName'])
-                    ->setPolicyNumber($data['policyNumber'])
-                    ->setStartDate($data['startDate'])
-                    ->setEndDate($data['endDate'])
-                    ->setPaymentFrequency($data['paymentFrequency'])
-                    ->setIsActive($data['isActive'])
-                ;
-    
-                $manager->persist($insurance);
-            }
-    
-            $manager->flush();
-    
-            // --------------------
-            // INSPECTION CENTERS + ADDRESSES
-            // --------------------
-            $centerNarbonne = (new InspectionCenter())
-                ->setName('AutoSécurité Narbonne')
-                ->setPhone('0468000000')
-                ->setEmail('narbonne@autosecurite.example')
+        $manager->flush();
+
+        return $vehicles;
+    }
+
+    /**
+     * @return array<string, InspectionCenter>
+     */
+    private function loadInspectionCenters(ObjectManager $manager): array
+    {
+        $centers = [
+            'narbonne' => (new InspectionCenter())
+                ->setName('Autosur Narbonne Performance')
+                ->setPhone('0468900000')
+                ->setEmail('narbonne-performance@autosur.example')
                 ->setAddress(
                     (new Address())
-                        ->setLine1('10 Avenue du Contrôle')
+                        ->setLine1('14 avenue des Ateliers')
                         ->setPostalCode('11100')
                         ->setCity('Narbonne')
                         ->setCountry('FR')
-                )
-            ;
-    
-            $centerMontpellier = (new InspectionCenter())
-                ->setName('Dekra Montpellier')
+                ),
+            'montpellier' => (new InspectionCenter())
+                ->setName('Dekra Montpellier Sud')
                 ->setPhone('0467000000')
-                ->setEmail('montpellier@dekra.example')
+                ->setEmail('montpellier-sud@dekra.example')
                 ->setAddress(
                     (new Address())
-                        ->setLine1('5 Rue des Tests')
+                        ->setLine1('5 rue du Controle')
                         ->setPostalCode('34000')
                         ->setCity('Montpellier')
                         ->setCountry('FR')
-                )
-            ;
-    
-            $manager->persist($centerNarbonne);
-            $manager->persist($centerMontpellier);
-    
-            $manager->flush();
-    
-            // --------------------
-            // VEHICLE INSPECTIONS (CT)
-            // --------------------
-            $inspectionsData = [
-                [
-                    'vehicleRegistration' => 'AB-123-CD',
-                    'center' => $centerNarbonne,
-                    'inspectionDate' => new DateTimeImmutable('2023-06-10'),
-                    'validUntil' => new DateTimeImmutable('2025-06-09'),
-                    'mileage' => 172000,
-                    'result' => InspectionResultEnum::Pass,
-                    'counterVisitRequired' => false,
-                    'counterVisitDueAt' => null,
-                    'notes' => 'RAS',
-                ],
-                [
-                    'vehicleRegistration' => 'AB-123-CD',
-                    'center' => $centerNarbonne,
-                    'inspectionDate' => new DateTimeImmutable('2025-06-02'),
-                    'validUntil' => new DateTimeImmutable('2027-06-03'),
-                    'mileage' => 206000,
-                    'result' => InspectionResultEnum::Pass,
-                    'counterVisitRequired' => false,
-                    'counterVisitDueAt' => null,
-                    'notes' => 'Parre boue AVD endomagé',
-                ],
-                [
-                    'vehicleRegistration' => 'EF-456-GH',
-                    'center' => $centerNarbonne,
-                    'inspectionDate' => new DateTimeImmutable('2024-11-05'),
-                    'validUntil' => new DateTimeImmutable('2026-11-04'),
-                    'mileage' => 235000,
-                    'result' => InspectionResultEnum::CounterVisit,
-                    'counterVisitRequired' => true,
-                    'counterVisitDueAt' => new DateTimeImmutable('2024-12-05'),
-                    'notes' => 'Contre-visite pour éclairage',
-                ],
-                [
-                    'vehicleRegistration' => 'QR-654-ST',
-                    'center' => $centerMontpellier,
-                    'inspectionDate' => new DateTimeImmutable('2025-02-20'),
-                    'validUntil' => new DateTimeImmutable('2027-02-19'),
-                    'mileage' => 87000,
-                    'result' => InspectionResultEnum::Pass,
-                    'counterVisitRequired' => false,
-                    'counterVisitDueAt' => null,
-                    'notes' => null,
-                ],
-            ];
-    
-            foreach ($inspectionsData as $data) {
-                $vehicle = $vehiclesByRegistration[$data['vehicleRegistration']] ?? null;
-                if (!$vehicle) {
-                    throw new \RuntimeException(sprintf('Véhicule introuvable pour la plaque "%s".', $data['vehicleRegistration']));
-                }
-    
-                $inspection = (new VehicleInspection())
+                ),
+        ];
+
+        foreach ($centers as $center) {
+            $manager->persist($center);
+        }
+
+        $manager->flush();
+
+        return $centers;
+    }
+
+    /**
+     * @return array<string, PartType>
+     */
+    private function loadPartTypes(ObjectManager $manager): array
+    {
+        $names = [
+            'Huile moteur 5W40',
+            'Huile moteur 10W50',
+            'Filtre a huile',
+            'Filtre a air sport',
+            'Plaquettes frein sport avant',
+            'Plaquettes frein sport arriere',
+            'Liquide de frein RBF660',
+            'Pneus Michelin Pilot Sport 4S',
+            'Pneus Pirelli Diablo Rosso IV',
+            'Bougies iridium',
+            'Kit chaine renforcé',
+            'Batterie lithium',
+        ];
+
+        $partTypes = [];
+
+        foreach ($names as $name) {
+            $partType = (new PartType())->setName($name);
+            $manager->persist($partType);
+            $partTypes[$name] = $partType;
+        }
+
+        $manager->flush();
+
+        return $partTypes;
+    }
+
+    /**
+     * @param array<string, PartType> $partTypes
+     * @param array<string, Vehicle> $vehicles
+     * @return array<string, Part>
+     */
+    private function loadParts(ObjectManager $manager, array $partTypes, array $vehicles): array
+    {
+        $partsData = [
+            ['type' => 'Huile moteur 5W40', 'quantity' => 8, 'vehicles' => ['porsche-911', 'bmw-m3', 'audi-rs3', 'alpine-a110', 'nissan-gtr'], 'note' => 'Bidons 1L pour appoints et vidanges voitures sportives'],
+            ['type' => 'Huile moteur 10W50', 'quantity' => 5, 'vehicles' => ['s1000rr', 'zx6r'], 'note' => 'Usage motos sportives'],
+            ['type' => 'Filtre a huile', 'quantity' => 7, 'vehicles' => ['porsche-911', 'bmw-m3', 'audi-rs3', 'alpine-a110', 'nissan-gtr', 's1000rr', 'zx6r'], 'note' => null],
+            ['type' => 'Filtre a air sport', 'quantity' => 3, 'vehicles' => ['bmw-m3', 'audi-rs3', 'alpine-a110'], 'note' => 'Filtres performance nettoyables'],
+            ['type' => 'Plaquettes frein sport avant', 'quantity' => 4, 'vehicles' => ['porsche-911', 'bmw-m3', 'audi-rs3', 'nissan-gtr'], 'note' => 'Jeux avant route/trackday'],
+            ['type' => 'Plaquettes frein sport arriere', 'quantity' => 3, 'vehicles' => ['porsche-911', 'bmw-m3', 'nissan-gtr'], 'note' => null],
+            ['type' => 'Liquide de frein RBF660', 'quantity' => 6, 'vehicles' => ['porsche-911', 'bmw-m3', 'audi-rs3', 'alpine-a110', 'nissan-gtr', 's1000rr', 'zx6r'], 'note' => 'Flacons haute température'],
+            ['type' => 'Pneus Michelin Pilot Sport 4S', 'quantity' => 4, 'vehicles' => ['porsche-911', 'bmw-m3', 'audi-rs3', 'alpine-a110'], 'note' => 'Train complet mixte route'],
+            ['type' => 'Pneus Pirelli Diablo Rosso IV', 'quantity' => 2, 'vehicles' => ['s1000rr', 'zx6r'], 'note' => 'Train moto'],
+            ['type' => 'Bougies iridium', 'quantity' => 12, 'vehicles' => ['audi-rs3', 'nissan-gtr', 's1000rr', 'zx6r'], 'note' => null],
+            ['type' => 'Kit chaine renforcé', 'quantity' => 1, 'vehicles' => ['s1000rr', 'zx6r'], 'note' => 'Kit 525 renforcé'],
+            ['type' => 'Batterie lithium', 'quantity' => 2, 'vehicles' => ['s1000rr', 'zx6r', 'alpine-a110'], 'note' => null],
+        ];
+
+        $parts = [];
+
+        foreach ($partsData as $data) {
+            $part = (new Part())
+                ->setPartType($partTypes[$data['type']])
+                ->setQuantity($data['quantity'])
+                ->setNote($data['note']);
+
+            foreach ($data['vehicles'] as $vehicleKey) {
+                $part->addVehicle($vehicles[$vehicleKey]);
+            }
+
+            $manager->persist($part);
+            $parts[$data['type']] = $part;
+        }
+
+        $manager->flush();
+
+        return $parts;
+    }
+
+    /**
+     * @return array<string, MaintenanceType>
+     */
+    private function loadMaintenanceTypes(ObjectManager $manager): array
+    {
+        $types = [
+            'Vidange annuelle',
+            'Freinage',
+            'Pneumatiques',
+            'Controle piste',
+            'Transmission',
+            'Diagnostic moteur',
+            'Reparation carrosserie',
+            'Reparation mecanique',
+            'Controle technique',
+        ];
+
+        $maintenanceTypes = [];
+
+        foreach ($types as $type) {
+            $maintenanceType = (new MaintenanceType())->setName($type);
+            $manager->persist($maintenanceType);
+            $maintenanceTypes[$type] = $maintenanceType;
+        }
+
+        $manager->flush();
+
+        return $maintenanceTypes;
+    }
+
+    /**
+     * @param array<string, Vehicle> $vehicles
+     */
+    private function loadInsurances(ObjectManager $manager, array $vehicles): void
+    {
+        $providers = ['AXA Passion', 'Allianz Performance', 'MAIF Collection', 'AMV Racing', 'Mutuelle des Motards'];
+        $index = 0;
+
+        foreach ($vehicles as $key => $vehicle) {
+            $purchaseYear = (int) $vehicle->getPurchaseDate()?->format('Y');
+            $provider = $providers[$index % count($providers)];
+            $index++;
+
+            if ($purchaseYear < 2025) {
+                $oldInsurance = (new VehicleInsurance())
                     ->setVehicle($vehicle)
-                    ->setCenter($data['center'])
-                    ->setInspectionDate($data['inspectionDate'])
-                    ->setValidUntil($data['validUntil'])
-                    ->setMileage($data['mileage'])
-                    ->setResult($data['result'])
-                    ->setCounterVisitRequired($data['counterVisitRequired'])
-                    ->setCounterVisitDueAt($data['counterVisitDueAt'])
-                    ->setNotes($data['notes'])
-                ;
-    
-                $manager->persist($inspection);
-            }
-    
-            $manager->flush();
-    
-            // --------------------
-            // DOCUMENT
-            // --------------------
-            $document01 = new Document();
-            $document02 = new Document();
-    
-            $document01
-                ->setName('Carte grise')
-                ->setOriginalFilename('carte_grise_focus.pdf')
-                ->setStoredFilename('carte_grise_focus.pdf')
-                ->setMimeType('application/pdf')
-                ->setExtension('pdf')
-                ->setSize(245000)
-                ->setDescription('Carte grise')
-                ->setVehicle($vehiclesByRegistration['AB-123-CD'])
-            ;
-    
-            $document02
-                ->setName('Certificat de cession')
-                ->setOriginalFilename('cetificat_session.pdf')
-                ->setStoredFilename('cetificat_session.pdf')
-                ->setMimeType('application/pdf')
-                ->setExtension('pdf')
-                ->setSize(245000)
-                ->setDescription('Certificat de cession')
-                ->setVehicle($vehiclesByRegistration['AB-123-CD'])
-            ;
-    
-            $manager->persist($document01);
-            $manager->persist($document02);
-    
-            $manager->flush();
+                    ->setProviderName($provider)
+                    ->setPolicyNumber(sprintf('OLD-%s-%d', strtoupper($key), $purchaseYear))
+                    ->setStartDate(new DateTimeImmutable(sprintf('%d-01-01', max($purchaseYear, 2016))))
+                    ->setEndDate(new DateTimeImmutable('2025-12-31'))
+                    ->setPaymentFrequency(InsurancePaymentFrequencyEnum::Yearly)
+                    ->setIsActive(false);
 
-            // --------------------
-            // PART TYPES
-            // --------------------
-            $partTypesData = [
-                ['name' => 'Filtre à huile'],
-                ['name' => 'Filtre à air'],
-                ['name' => 'Filtre habitacle'],
-                ['name' => 'Bougie'],
-                ['name' => 'Plaquettes de frein avant'],
-                ['name' => 'Plaquettes de frein arrière'],
-                ['name' => 'Kit distribution'],
-                ['name' => 'Joint de bouchon de vidange'],
-            ];
-
-            $partTypes = [];
-
-            foreach ($partTypesData as $data) {
-                $partType = (new PartType())
-                    ->setName($data['name']);
-
-                $manager->persist($partType);
-
-                $partTypes[$data['name']] = $partType;
+                $manager->persist($oldInsurance);
             }
 
-            $manager->flush();
+            $activeEndDate = match ($key) {
+                'porsche-911' => '2026-06-12',
+                'zx6r' => '2026-06-18',
+                default => '2026-12-31',
+            };
 
+            $activeInsurance = (new VehicleInsurance())
+                ->setVehicle($vehicle)
+                ->setProviderName($provider)
+                ->setPolicyNumber(sprintf('ACT-%s-2026', strtoupper($key)))
+                ->setStartDate(new DateTimeImmutable('2026-01-01'))
+                ->setEndDate(new DateTimeImmutable($activeEndDate))
+                ->setPaymentFrequency(InsurancePaymentFrequencyEnum::Monthly)
+                ->setIsActive(true);
 
-            // --------------------
-            // PARTS (STOCK)
-            // --------------------
-            $partsData = [
-                [
-                    'type' => 'Filtre à huile',
-                    'quantity' => 2,
-                    'vehicles' => ['AB-123-CD', 'EF-456-GH'],
-                    'note' => 'Compatible moteurs essence Nissan/Ford',
-                ],
-                [
-                    'type' => 'Filtre à air',
-                    'quantity' => 1,
-                    'vehicles' => ['AB-123-CD'],
-                    'note' => null,
-                ],
-                [
-                    'type' => 'Plaquettes de frein avant',
-                    'quantity' => 0,
-                    'vehicles' => ['AB-123-CD', 'MN-321-OP'],
-                    'note' => 'À utiliser en priorité',
-                ],
-                [
-                    'type' => 'Bougie',
-                    'quantity' => 4,
-                    'vehicles' => ['EF-456-GH'],
-                    'note' => null,
-                ],
-                [
-                    'type' => 'Joint de bouchon de vidange',
-                    'quantity' => 5,
-                    'vehicles' => ['AB-123-CD', 'EF-456-GH', 'QR-654-ST'],
-                    'note' => null,
-                ],
-            ];
+            $manager->persist($activeInsurance);
+        }
 
-            foreach ($partsData as $data) {
+        $manager->flush();
+    }
 
-                $part = (new Part())
-                    ->setPartType($partTypes[$data['type']])
-                    ->setQuantity($data['quantity'])
-                    ->setNote($data['note']);
+    /**
+     * @param array<string, Vehicle> $vehicles
+     * @param array<string, InspectionCenter> $centers
+     */
+    private function loadInspections(ObjectManager $manager, array $vehicles, array $centers): void
+    {
+        $inspectionsData = [
+            ['vehicle' => 'porsche-911', 'date' => '2024-06-10', 'validUntil' => '2026-06-10', 'mileage' => 61000, 'center' => 'narbonne', 'result' => InspectionResultEnum::Pass],
+            ['vehicle' => 'bmw-m3', 'date' => '2025-04-12', 'validUntil' => '2027-04-12', 'mileage' => 34100, 'center' => 'montpellier', 'result' => InspectionResultEnum::Pass],
+            ['vehicle' => 'audi-rs3', 'date' => '2025-08-02', 'validUntil' => '2027-08-02', 'mileage' => 22800, 'center' => 'narbonne', 'result' => InspectionResultEnum::Pass],
+            ['vehicle' => 'alpine-a110', 'date' => '2025-11-20', 'validUntil' => '2027-11-20', 'mileage' => 41100, 'center' => 'montpellier', 'result' => InspectionResultEnum::Pass],
+            ['vehicle' => 'nissan-gtr', 'date' => '2023-12-05', 'validUntil' => '2025-12-05', 'mileage' => 83500, 'center' => 'narbonne', 'result' => InspectionResultEnum::CounterVisit],
+        ];
 
-                foreach ($data['vehicles'] as $registration) {
-                    $vehicle = $vehiclesByRegistration[$registration] ?? null;
+        foreach ($inspectionsData as $data) {
+            $inspection = (new VehicleInspection())
+                ->setVehicle($vehicles[$data['vehicle']])
+                ->setCenter($centers[$data['center']])
+                ->setInspectionDate(new DateTimeImmutable($data['date']))
+                ->setValidUntil(new DateTimeImmutable($data['validUntil']))
+                ->setMileage($data['mileage'])
+                ->setResult($data['result'])
+                ->setCounterVisitRequired($data['result'] === InspectionResultEnum::CounterVisit)
+                ->setCounterVisitDueAt($data['result'] === InspectionResultEnum::CounterVisit ? new DateTimeImmutable('2026-01-05') : null)
+                ->setNotes($data['result'] === InspectionResultEnum::CounterVisit ? 'Contre-visite ancienne, points de freinage a reprendre.' : 'RAS');
 
-                    if (!$vehicle) {
-                        throw new \RuntimeException(sprintf(
-                            'Véhicule introuvable pour la plaque "%s".',
-                            $registration
-                        ));
-                    }
+            $manager->persist($inspection);
+        }
 
-                    $part->addVehicle($vehicle);
+        $manager->flush();
+    }
+
+    /**
+     * @param array<string, Vehicle> $vehicles
+     * @param array<string, MaintenanceType> $maintenanceTypes
+     * @param array<string, Part> $parts
+     */
+    private function loadMaintenances(ObjectManager $manager, array $vehicles, array $maintenanceTypes, array $parts): void
+    {
+        $annualTypes = ['Vidange annuelle', 'Freinage', 'Pneumatiques', 'Controle piste', 'Transmission', 'Diagnostic moteur'];
+        $partRotation = ['Filtre a huile', 'Huile moteur 5W40', 'Liquide de frein RBF660', 'Plaquettes frein sport avant', 'Pneus Michelin Pilot Sport 4S'];
+        $currentYear = 2026;
+
+        foreach ($vehicles as $vehicleIndex => $vehicle) {
+            $purchaseYear = (int) $vehicle->getPurchaseDate()?->format('Y');
+            $yearOffset = 0;
+
+            for ($year = max($purchaseYear, 2016); $year <= $currentYear; $year++) {
+                $month = (($yearOffset * 3) + crc32($vehicleIndex)) % 12 + 1;
+                $day = (($yearOffset * 7) + 8) % 22 + 1;
+                $performedAt = new DateTimeImmutable(sprintf('%d-%02d-%02d', $year, $month, $day));
+
+                if ($performedAt > new DateTimeImmutable('2026-05-23')) {
+                    continue;
                 }
 
-                $manager->persist($part);
-            }
+                $typeName = $annualTypes[$yearOffset % count($annualTypes)];
+                $mileage = max(1000, ((int) $vehicle->getLastMileage()) - (($currentYear - $year) * ($vehicle->getType() === VehicleTypeEnum::Motorcycle ? 3200 : 7800)));
+                $partName = $vehicle->getType() === VehicleTypeEnum::Motorcycle && $typeName === 'Transmission'
+                    ? 'Kit chaine renforcé'
+                    : $partRotation[$yearOffset % count($partRotation)];
 
-            $manager->flush();
-
-            // --------------------
-            // MAINTENANCE TYPES
-            // --------------------
-            $maintenanceTypesData = [
-                ['name' => 'Vidange'],
-                ['name' => 'Filtre à huile'],
-                ['name' => 'Filtre à air'],
-                ['name' => 'Filtre d’habitacle'],
-                ['name' => 'Filtre à carburant'],
-                ['name' => 'Bougies'],
-                ['name' => 'Bougies de préchauffage'],
-                ['name' => 'Plaquettes de frein'],
-                ['name' => 'Disques de frein'],
-                ['name' => 'Liquide de frein'],
-                ['name' => 'Liquide de refroidissement'],
-                ['name' => 'Courroie de distribution'],
-                ['name' => 'Courroie accessoire'],
-                ['name' => 'Embrayage'],
-                ['name' => 'Huile de boîte'],
-                ['name' => 'Suspension'],
-                ['name' => 'Batterie'],
-                ['name' => 'Pneus'],
-                ['name' => 'Kit chaîne'],
-                ['name' => 'Préparation contrôle technique'],
-                ['name' => 'Autre'],
-            ];
-
-            $maintenanceTypes = [];
-
-            foreach ($maintenanceTypesData as $data) {
-                $maintenanceType = (new MaintenanceType())
-                    ->setName($data['name']);
-
-                $manager->persist($maintenanceType);
-
-                $maintenanceTypes[$data['name']] = $maintenanceType;
-            }
-
-            $manager->flush();
-
-            // --------------------
-            // MAINTENANCES
-            // --------------------
-            $maintenancesData = [
-                [
-                    'vehicleRegistration' => 'AB-123-CD',
-                    'type' => 'Vidange',
-                    'mileage' => 180000,
-                    'performedAt' => new DateTimeImmutable('2025-01-10'),
-                    'plannedAt' => null,
-                    'status' => MaintenanceStatusEnum::Completed,
-                    'isExternal' => false,
-                    'notes' => 'Vidange + filtre à huile',
-                    'nextDueMileage' => 190000,
-                    'nextDueAt' => null,
-                    'parts' => [
-                        [
-                            'type' => 'Filtre à huile',
-                            'quantity' => 1,
-                            'notes' => null,
-                        ],
-                        [
-                            'type' => 'Joint de bouchon de vidange',
-                            'quantity' => 1,
-                            'notes' => null,
-                        ],
-                    ],
-                ],
-                [
-                    'vehicleRegistration' => 'EF-456-GH',
-                    'type' => 'Bougies',
-                    'mileage' => 240000,
-                    'performedAt' => new DateTimeImmutable('2025-02-20'),
-                    'plannedAt' => null,
-                    'status' => MaintenanceStatusEnum::Completed,
-                    'isExternal' => true,
-                    'notes' => 'Changement bougies',
-                    'nextDueMileage' => 260000,
-                    'nextDueAt' => null,
-                    'parts' => [
-                        [
-                            'type' => 'Bougie',
-                            'quantity' => 4,
-                            'notes' => null,
-                        ],
-                    ],
-                ],
-                [
-                    'vehicleRegistration' => 'QR-654-ST',
-                    'type' => 'Plaquettes de frein',
-                    'mileage' => 210000,
-                    'performedAt' => null,
-                    'plannedAt' => new DateTimeImmutable('2026-04-01'),
-                    'status' => MaintenanceStatusEnum::ToDo,
-                    'isExternal' => false,
-                    'notes' => 'Prévoir remplacement plaquettes avant',
-                    'nextDueMileage' => null,
-                    'nextDueAt' => null,
-                    'parts' => [
-                        [
-                            'type' => 'Plaquettes de frein avant',
-                            'quantity' => 1,
-                            'notes' => null,
-                        ],
-                    ],
-                ],
-            ];
-
-            foreach ($maintenancesData as $data) {
-                $vehicle = $vehiclesByRegistration[$data['vehicleRegistration']] ?? null;
-
-                if (!$vehicle) {
-                    throw new \RuntimeException(sprintf(
-                        'Véhicule introuvable pour la plaque "%s".',
-                        $data['vehicleRegistration']
-                    ));
-                }
-
-                $maintenance = (new \App\Entity\Maintenance())
+                $maintenance = (new Maintenance())
                     ->setVehicle($vehicle)
-                    ->setMaintenanceType($maintenanceTypes[$data['type']]
-                        ?? throw new \RuntimeException(sprintf('Type d’entretien introuvable pour "%s".', $data['type'])))
-                    ->setMileage($data['mileage'])
-                    ->setPerformedAt($data['performedAt'])
-                    ->setPlannedAt($data['plannedAt'])
-                    ->setStatus($data['status'])
-                    ->setIsExternal($data['isExternal'])
-                    ->setNotes($data['notes'])
-                    ->setNextDueMileage($data['nextDueMileage'])
-                    ->setNextDueAt($data['nextDueAt']);
+                    ->setMaintenanceType($maintenanceTypes[$typeName])
+                    ->setMileage($mileage)
+                    ->setPerformedAt($performedAt)
+                    ->setPlannedAt(null)
+                    ->setStatus(MaintenanceStatusEnum::Completed)
+                    ->setIsExternal($yearOffset % 3 === 0)
+                    ->setNotes(sprintf('%s realisee sur %s.', $typeName, $vehicle->displayName()))
+                    ->setNextDueMileage($mileage + ($vehicle->getType() === VehicleTypeEnum::Motorcycle ? 6000 : 10000))
+                    ->setNextDueAt($performedAt->modify('+1 year'));
 
-                // --------------------
-                // MAINTENANCE PARTS
-                // --------------------
-                foreach ($data['parts'] as $partData) {
+                $manager->persist($maintenance);
 
-                    $part = null;
-
-                    // on récupère une part existante via son type
-                    foreach ($partTypes as $name => $partType) {
-                        if ($name === $partData['type']) {
-                            // on cherche une Part liée à ce type
-                            foreach ($manager->getRepository(Part::class)->findAll() as $existingPart) {
-                                if ($existingPart->getPartType() === $partType) {
-                                    $part = $existingPart;
-                                    break;
-                                }
-                            }
-                        }
-                    }
-
-                    if (!$part) {
-                        throw new \RuntimeException(sprintf(
-                            'Part introuvable pour le type "%s".',
-                            $partData['type']
-                        ));
-                    }
-
+                if (isset($parts[$partName])) {
                     $maintenancePart = (new MaintenancePart())
                         ->setMaintenance($maintenance)
-                        ->setPart($part)
-                        ->setQuantity($partData['quantity'])
-                        ->setNotes($partData['notes']);
+                        ->setPart($parts[$partName])
+                        ->setQuantity($partName === 'Huile moteur 5W40' ? 5 : 1)
+                        ->setNotes(null);
 
                     $maintenance->addMaintenancePart($maintenancePart);
-
                     $manager->persist($maintenancePart);
                 }
 
-                $manager->persist($maintenance);
+                $yearOffset++;
             }
-
-            $manager->flush();
         }
+
+        $repairs = [
+            ['vehicle' => 'nissan-gtr', 'type' => 'Reparation mecanique', 'date' => '2024-10-18', 'mileage' => 87200, 'notes' => 'Remplacement capteur pression turbo.'],
+            ['vehicle' => 'porsche-911', 'type' => 'Reparation carrosserie', 'date' => '2025-03-04', 'mileage' => 64200, 'notes' => 'Correction impact bas de caisse.'],
+            ['vehicle' => 'bmw-m3', 'type' => 'Diagnostic moteur', 'date' => '2025-12-12', 'mileage' => 36500, 'notes' => 'Diagnostic voyant moteur intermittent.'],
+            ['vehicle' => 's1000rr', 'type' => 'Reparation mecanique', 'date' => '2026-02-22', 'mileage' => 17600, 'notes' => 'Remplacement levier embrayage et purge.'],
+        ];
+
+        foreach ($repairs as $data) {
+            $maintenance = (new Maintenance())
+                ->setVehicle($vehicles[$data['vehicle']])
+                ->setMaintenanceType($maintenanceTypes[$data['type']])
+                ->setMileage($data['mileage'])
+                ->setPerformedAt(new DateTimeImmutable($data['date']))
+                ->setPlannedAt(null)
+                ->setStatus(MaintenanceStatusEnum::Completed)
+                ->setIsExternal(true)
+                ->setNotes($data['notes'])
+                ->setNextDueMileage(null)
+                ->setNextDueAt(null);
+
+            $manager->persist($maintenance);
+        }
+
+        $planned = [
+            ['vehicle' => 'porsche-911', 'type' => 'Freinage', 'date' => '2026-06-08', 'mileage' => 69000, 'notes' => 'Prevoir plaquettes avant avant sortie circuit.'],
+            ['vehicle' => 'zx6r', 'type' => 'Transmission', 'date' => '2026-06-16', 'mileage' => 6800, 'notes' => 'Controle tension chaine et kit transmission.'],
+            ['vehicle' => 'nissan-gtr', 'type' => 'Controle technique', 'date' => '2026-04-12', 'mileage' => 91000, 'notes' => 'Preparation CT en retard.'],
+        ];
+
+        foreach ($planned as $data) {
+            $maintenance = (new Maintenance())
+                ->setVehicle($vehicles[$data['vehicle']])
+                ->setMaintenanceType($maintenanceTypes[$data['type']])
+                ->setMileage($data['mileage'])
+                ->setPerformedAt(null)
+                ->setPlannedAt(new DateTimeImmutable($data['date']))
+                ->setStatus(MaintenanceStatusEnum::ToDo)
+                ->setIsExternal(false)
+                ->setNotes($data['notes'])
+                ->setNextDueMileage(null)
+                ->setNextDueAt(null);
+
+            $manager->persist($maintenance);
+        }
+
+        $manager->flush();
     }
 }
