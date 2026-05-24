@@ -33,27 +33,27 @@ class Address
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
-    #[Groups(['address:read'])]
+    #[Groups(['address:read', 'user:read'])]
     private ?int $id = null;
 
     #[ORM\Column(length: 255)]
-    #[Groups(['address:read', 'address:write'])]
+    #[Groups(['address:read', 'address:write', 'user:read', 'user:write'])]
     private ?string $line1 = null;
 
     #[ORM\Column(length: 255, nullable: true)]
-    #[Groups(['address:read', 'address:write'])]
+    #[Groups(['address:read', 'address:write', 'user:read', 'user:write'])]
     private ?string $line2 = null;
 
     #[ORM\Column(length: 255)]
-    #[Groups(['address:read', 'address:write'])]
+    #[Groups(['address:read', 'address:write', 'user:read', 'user:write'])]
     private ?string $postalCode = null;
 
     #[ORM\Column(length: 255)]
-    #[Groups(['address:read', 'address:write'])]
+    #[Groups(['address:read', 'address:write', 'user:read', 'user:write'])]
     private ?string $city = null;
 
     #[ORM\Column(length: 255)]
-    #[Groups(['address:read', 'address:write'])]
+    #[Groups(['address:read', 'address:write', 'user:read', 'user:write'])]
     private ?string $country = null;
 
     public function getId(): ?int

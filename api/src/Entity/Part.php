@@ -4,6 +4,8 @@ namespace App\Entity;
 
 use ApiPlatform\Metadata\ApiResource;
 
+use ApiPlatform\Metadata\Delete;
+
 use ApiPlatform\Metadata\Get;
 
 use ApiPlatform\Metadata\GetCollection;
@@ -14,6 +16,7 @@ use ApiPlatform\Metadata\Post;
 
 use Symfony\Component\Serializer\Annotation\Groups;
 
+use App\ApiPlatform\State\PartStateProcessor;
 use App\Repository\PartRepository;
 use Symfony\Component\Validator\Constraints as Assert;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -27,9 +30,11 @@ use Doctrine\ORM\Mapping as ORM;
         new Get(security: "is_granted('ROLE_USER')"),
         new Post(security: "is_granted('ROLE_ADMIN')"),
         new Patch(security: "is_granted('ROLE_ADMIN')"),
+        new Delete(security: "is_granted('ROLE_ADMIN')"),
     ],
     normalizationContext: ['groups' => ['part:read']],
-    denormalizationContext: ['groups' => ['part:write']]
+    denormalizationContext: ['groups' => ['part:write']],
+    processor: PartStateProcessor::class,
 )]
 #[ORM\Entity(repositoryClass: PartRepository::class)]
 #[ORM\HasLifecycleCallbacks]
@@ -55,7 +60,7 @@ class Part
      * @var Collection<int, Vehicle>
      */
     #[ORM\ManyToMany(targetEntity: Vehicle::class, inversedBy: 'parts')]
-    #[Groups(['part:read'])]
+    #[Groups(['part:read', 'part:write'])]
     private Collection $vehicles;
 
     #[ORM\Column(type: Types::TEXT, nullable: true)]

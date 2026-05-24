@@ -6,6 +6,7 @@ import { deleteVehicle, getVehicle } from "@/api/vehicles"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { ConfirmDialog } from "@/components/ui/confirm-dialog"
 import { useAuthStore } from "@/stores/auth-store"
 import type { Vehicle, VehicleInsurance, VehicleInspection, VehicleMaintenance } from "@/types/vehicle"
 import {
@@ -26,6 +27,8 @@ export default function VehicleDetailPage() {
   const [vehicle, setVehicle] = useState<Vehicle | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
 
   useEffect(() => {
     let ignore = false
@@ -73,17 +76,37 @@ export default function VehicleDetailPage() {
 
   const canEdit = isAdmin || vehicle.user.id === currentUser?.id
 
-  async function handleDelete() {
-    if (!vehicle || !window.confirm(`Archiver ${displayVehicleName(vehicle)} ?`)) {
+  async function confirmDelete() {
+    if (!vehicle) {
       return
     }
 
-    await deleteVehicle(vehicle.id)
-    navigate("/vehicles")
+    setIsDeleting(true)
+
+    try {
+      await deleteVehicle(vehicle.id)
+      navigate("/vehicles")
+    } finally {
+      setIsDeleting(false)
+    }
   }
 
   return (
     <div className="space-y-6">
+      <ConfirmDialog
+        open={isDeleteDialogOpen}
+        title="Archiver le véhicule ?"
+        description={`${displayVehicleName(vehicle)} sera masqué de la plateforme. Aucune donnée ne sera supprimée définitivement.`}
+        confirmLabel="Supprimer"
+        isLoading={isDeleting}
+        onOpenChange={(open) => {
+          if (!isDeleting) {
+            setIsDeleteDialogOpen(open)
+          }
+        }}
+        onConfirm={confirmDelete}
+      />
+
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div className="space-y-2">
           <h1 className="text-2xl font-semibold tracking-tight">{displayVehicleName(vehicle)}</h1>
@@ -114,7 +137,7 @@ export default function VehicleDetailPage() {
             </Link>
           </Button>
           {isAdmin && (
-            <Button variant="destructive" onClick={handleDelete}>
+            <Button variant="destructive" onClick={() => setIsDeleteDialogOpen(true)}>
               <Trash2 />
               Supprimer
             </Button>

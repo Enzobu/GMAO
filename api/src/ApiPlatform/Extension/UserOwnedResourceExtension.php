@@ -89,24 +89,17 @@ final readonly class UserOwnedResourceExtension implements QueryCollectionExtens
         User $user,
     ): void {
         match ($resourceClass) {
-            User::class => $this->restrictUser($queryBuilder, $rootAlias, $user),
+            User::class => null,
             Address::class => $this->restrictAddress($queryBuilder, $rootAlias, $user),
             Vehicle::class => null,
             Maintenance::class,
             VehicleInsurance::class,
             VehicleInspection::class => $this->restrictThroughVehicle($queryBuilder, $queryNameGenerator, $rootAlias, $user),
             MaintenancePart::class => $this->restrictMaintenancePart($queryBuilder, $queryNameGenerator, $rootAlias, $user),
-            Part::class => $this->restrictPart($queryBuilder, $queryNameGenerator, $rootAlias, $user),
+            Part::class => null,
             Document::class => $this->restrictDocument($queryBuilder, $queryNameGenerator, $rootAlias, $user),
             default => null,
         };
-    }
-
-    private function restrictUser(QueryBuilder $queryBuilder, string $rootAlias, User $user): void
-    {
-        $queryBuilder
-            ->andWhere(sprintf('%s = :api_current_user', $rootAlias))
-            ->setParameter('api_current_user', $user);
     }
 
     private function restrictAddress(QueryBuilder $queryBuilder, string $rootAlias, User $user): void
@@ -142,20 +135,6 @@ final readonly class UserOwnedResourceExtension implements QueryCollectionExtens
         $queryBuilder
             ->join(sprintf('%s.maintenance', $rootAlias), $maintenanceAlias)
             ->join(sprintf('%s.vehicle', $maintenanceAlias), $vehicleAlias)
-            ->andWhere(sprintf('%s.user = :api_current_user', $vehicleAlias))
-            ->setParameter('api_current_user', $user);
-    }
-
-    private function restrictPart(
-        QueryBuilder $queryBuilder,
-        QueryNameGeneratorInterface $queryNameGenerator,
-        string $rootAlias,
-        User $user,
-    ): void {
-        $vehicleAlias = $queryNameGenerator->generateJoinAlias('vehicle');
-
-        $queryBuilder
-            ->join(sprintf('%s.vehicles', $rootAlias), $vehicleAlias)
             ->andWhere(sprintf('%s.user = :api_current_user', $vehicleAlias))
             ->setParameter('api_current_user', $user);
     }

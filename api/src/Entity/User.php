@@ -4,6 +4,8 @@ namespace App\Entity;
 
 use ApiPlatform\Metadata\ApiResource;
 
+use ApiPlatform\Metadata\Delete;
+
 use ApiPlatform\Metadata\Get;
 
 use ApiPlatform\Metadata\GetCollection;
@@ -14,6 +16,7 @@ use ApiPlatform\Metadata\Post;
 
 use Symfony\Component\Serializer\Annotation\Groups;
 
+use App\ApiPlatform\State\UserStateProcessor;
 use App\Repository\UserRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
@@ -27,9 +30,11 @@ use Symfony\Component\Security\Core\User\UserInterface;
         new Get(security: "is_granted('ROLE_USER')"),
         new Post(security: "is_granted('ROLE_ADMIN')"),
         new Patch(security: "is_granted('ROLE_ADMIN')"),
+        new Delete(security: "is_granted('ROLE_ADMIN')"),
     ],
     normalizationContext: ['groups' => ['user:read']],
-    denormalizationContext: ['groups' => ['user:write']]
+    denormalizationContext: ['groups' => ['user:write']],
+    processor: UserStateProcessor::class,
 )]
 #[ORM\Entity(repositoryClass: UserRepository::class)]
 #[ORM\UniqueConstraint(name: 'UNIQ_IDENTIFIER_EMAIL', fields: ['email'])]
@@ -49,7 +54,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
      * @var list<string> The user roles
      */
     #[ORM\Column]
-    #[Groups(['user:read'])]
+    #[Groups(['user:read', 'user:write'])]
     private array $roles = [];
 
     /**

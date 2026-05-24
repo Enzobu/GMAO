@@ -4,6 +4,8 @@ namespace App\Entity;
 
 use ApiPlatform\Metadata\ApiResource;
 
+use ApiPlatform\Metadata\Delete;
+
 use ApiPlatform\Metadata\Get;
 
 use ApiPlatform\Metadata\GetCollection;
@@ -14,6 +16,7 @@ use ApiPlatform\Metadata\Post;
 
 use Symfony\Component\Serializer\Annotation\Groups;
 
+use App\ApiPlatform\State\MaintenanceTypeStateProcessor;
 use App\Repository\MaintenanceTypeRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
@@ -26,9 +29,11 @@ use Doctrine\ORM\Mapping as ORM;
         new Get(security: "is_granted('ROLE_USER')"),
         new Post(security: "is_granted('ROLE_ADMIN')"),
         new Patch(security: "is_granted('ROLE_ADMIN')"),
+        new Delete(security: "is_granted('ROLE_ADMIN')"),
     ],
     normalizationContext: ['groups' => ['maintenance_type:read']],
-    denormalizationContext: ['groups' => ['maintenance_type:write']]
+    denormalizationContext: ['groups' => ['maintenance_type:write']],
+    processor: MaintenanceTypeStateProcessor::class,
 )]
 #[ORM\Entity(repositoryClass: MaintenanceTypeRepository::class)]
 class MaintenanceType

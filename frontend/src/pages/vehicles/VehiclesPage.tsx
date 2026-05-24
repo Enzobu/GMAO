@@ -6,8 +6,11 @@ import { deleteVehicle, getVehicles } from "@/api/vehicles"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { ConfirmDialog } from "@/components/ui/confirm-dialog"
 import { Input } from "@/components/ui/input"
 import { NativeSelect } from "@/components/ui/native-select"
+import { PaginationControls } from "@/components/ui/pagination-controls"
+import { useLocalStorageState } from "@/hooks/use-local-storage-state"
 import { useAuthStore } from "@/stores/auth-store"
 import type { Vehicle } from "@/types/vehicle"
 import {
@@ -22,6 +25,14 @@ import {
 
 type SortValue = "name" | "registration" | "year-desc" | "mileage-desc"
 type EditabilityFilter = "all" | "editable" | "readonly"
+type ItemsPerPageValue = "6" | "12" | "24" | "all"
+
+const ITEMS_PER_PAGE_OPTIONS = [
+  { value: "6", label: "6" },
+  { value: "12", label: "12" },
+  { value: "24", label: "24" },
+  { value: "all", label: "Tous" },
+] as const
 
 export default function VehiclesPage() {
   const currentUser = useAuthStore((state) => state.user)
@@ -34,6 +45,10 @@ export default function VehiclesPage() {
   const [statusFilter, setStatusFilter] = useState("all")
   const [editabilityFilter, setEditabilityFilter] = useState<EditabilityFilter>("all")
   const [sort, setSort] = useState<SortValue>("name")
+  const [itemsPerPage, setItemsPerPage] = useLocalStorageState<ItemsPerPageValue>("vehicles.itemsPerPage", "6")
+  const [page, setPage] = useState(1)
+  const [vehicleToDelete, setVehicleToDelete] = useState<Vehicle | null>(null)
+  const [isDeleting, setIsDeleting] = useState(false)
 
   const filteredVehicles = useMemo(() => {
     const normalizedSearch = normalize(search)
@@ -78,7 +93,25 @@ export default function VehiclesPage() {
       .sort((first, second) => compareVehicles(first, second, sort))
   }, [vehicles, search, typeFilter, statusFilter, editabilityFilter, sort, currentUser?.id, isAdmin])
 
+  const pageSize = itemsPerPage === "all" ? filteredVehicles.length || 1 : Number(itemsPerPage)
+  const pageCount = Math.max(1, Math.ceil(filteredVehicles.length / pageSize))
+  const currentPage = Math.min(page, pageCount)
+  const pageStart = (currentPage - 1) * pageSize
+  const pageEnd = pageStart + pageSize
+  const paginatedVehicles = itemsPerPage === "all" ? filteredVehicles : filteredVehicles.slice(pageStart, pageEnd)
+  const visibleStart = filteredVehicles.length === 0 ? 0 : pageStart + 1
+  const visibleEnd = itemsPerPage === "all" ? filteredVehicles.length : Math.min(pageEnd, filteredVehicles.length)
   const hasActiveFilters = search || typeFilter !== "all" || statusFilter !== "all" || editabilityFilter !== "all" || sort !== "name"
+
+  useEffect(() => {
+    setPage(1)
+  }, [search, typeFilter, statusFilter, editabilityFilter, sort, itemsPerPage])
+
+  useEffect(() => {
+    if (page > pageCount) {
+      setPage(pageCount)
+    }
+  }, [page, pageCount])
 
   useEffect(() => {
     let ignore = false
@@ -108,13 +141,20 @@ export default function VehiclesPage() {
     }
   }, [])
 
-  async function handleDelete(vehicle: Vehicle) {
-    if (!window.confirm(`Archiver ${displayVehicleName(vehicle)} ?`)) {
+  async function confirmDelete() {
+    if (!vehicleToDelete) {
       return
     }
 
-    await deleteVehicle(vehicle.id)
-    setVehicles((current) => current.filter((item) => item.id !== vehicle.id))
+    setIsDeleting(true)
+
+    try {
+      await deleteVehicle(vehicleToDelete.id)
+      setVehicles((current) => current.filter((item) => item.id !== vehicleToDelete.id))
+      setVehicleToDelete(null)
+    } finally {
+      setIsDeleting(false)
+    }
   }
 
   function resetFilters() {
@@ -123,6 +163,14 @@ export default function VehiclesPage() {
     setStatusFilter("all")
     setEditabilityFilter("all")
     setSort("name")
+  }
+
+  function previousPage() {
+    setPage((current) => Math.max(1, current - 1))
+  }
+
+  function nextPage() {
+    setPage((current) => Math.min(pageCount, current + 1))
   }
 
   if (isLoading) {
@@ -135,6 +183,20 @@ export default function VehiclesPage() {
 
   return (
     <div className="space-y-6">
+      <ConfirmDialog
+        open={vehicleToDelete !== null}
+        title="Archiver le véhicule ?"
+        description={vehicleToDelete ? `${displayVehicleName(vehicleToDelete)} sera masqué de la plateforme. Aucune donnée ne sera supprimée définitivement.` : ""}
+        confirmLabel="Supprimer"
+        isLoading={isDeleting}
+        onOpenChange={(open) => {
+          if (!open && !isDeleting) {
+            setVehicleToDelete(null)
+          }
+        }}
+        onConfirm={confirmDelete}
+      />
+
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">Véhicules</h1>
@@ -152,8 +214,8 @@ export default function VehiclesPage() {
       </div>
 
       <Card>
-        <CardContent className="grid min-w-0 gap-3 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-6">
-          <label className="grid min-w-0 gap-1.5 text-sm font-medium sm:col-span-2 lg:col-span-3 2xl:col-span-1">
+        <CardContent className="grid min-w-0 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+          <label className="grid min-w-0 gap-1.5 text-sm font-medium sm:col-span-2 lg:col-span-3 xl:col-span-1">
             <span>Recherche</span>
             <div className="relative min-w-0">
               <Search className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" />
@@ -223,8 +285,23 @@ export default function VehiclesPage() {
           </CardContent>
         </Card>
       ) : (
-        <div className="grid gap-4 xl:grid-cols-2">
-          {filteredVehicles.map((vehicle) => {
+        <>
+          <PaginationControls
+            currentPage={currentPage}
+            pageCount={pageCount}
+            totalItems={filteredVehicles.length}
+            visibleStart={visibleStart}
+            visibleEnd={visibleEnd}
+            itemsPerPage={itemsPerPage}
+            itemsPerPageOptions={ITEMS_PER_PAGE_OPTIONS}
+            onItemsPerPageChange={(value) => setItemsPerPage(value as ItemsPerPageValue)}
+            onPreviousPage={previousPage}
+            onNextPage={nextPage}
+            itemLabel="véhicule(s)"
+          />
+
+          <div className="grid gap-4 xl:grid-cols-2">
+          {paginatedVehicles.map((vehicle) => {
             const canEdit = canEditVehicle(vehicle, currentUser?.id, isAdmin)
 
             return (
@@ -274,7 +351,7 @@ export default function VehiclesPage() {
                     </Button>
                   )}
                   {isAdmin && (
-                    <Button variant="destructive" size="sm" onClick={() => handleDelete(vehicle)}>
+                    <Button variant="destructive" size="sm" onClick={() => setVehicleToDelete(vehicle)}>
                       <Trash2 />
                       Supprimer
                     </Button>
@@ -283,7 +360,24 @@ export default function VehiclesPage() {
               </Card>
             )
           })}
-        </div>
+          </div>
+
+          {pageCount > 1 && (
+            <PaginationControls
+              currentPage={currentPage}
+              pageCount={pageCount}
+              totalItems={filteredVehicles.length}
+              visibleStart={visibleStart}
+              visibleEnd={visibleEnd}
+              itemsPerPage={itemsPerPage}
+              itemsPerPageOptions={ITEMS_PER_PAGE_OPTIONS}
+              onItemsPerPageChange={(value) => setItemsPerPage(value as ItemsPerPageValue)}
+              onPreviousPage={previousPage}
+              onNextPage={nextPage}
+              itemLabel="véhicule(s)"
+            />
+          )}
+        </>
       )}
     </div>
   )

@@ -11,6 +11,14 @@ import ProfilePage from "@/pages/profile/ProfilePage"
 import VehiclesPage from "@/pages/vehicles/VehiclesPage"
 import VehicleDetailPage from "@/pages/vehicles/VehicleDetailPage"
 import VehicleFormPage from "@/pages/vehicles/VehicleFormPage"
+import ConfigurationPage from "@/pages/configuration/ConfigurationPage"
+import NotFoundPage from "@/pages/not-found/NotFoundPage"
+import PartsPage from "@/pages/parts/PartsPage"
+import PartDetailPage from "@/pages/parts/PartDetailPage"
+import PartFormPage from "@/pages/parts/PartFormPage"
+import UsersPage from "@/pages/users/UsersPage"
+import UserDetailPage from "@/pages/users/UserDetailPage"
+import UserFormPage from "@/pages/users/UserFormPage"
 
 import ProtectedRoute from "@/router/ProtectedRoute"
 
@@ -66,6 +74,46 @@ export const router = createBrowserRouter([
           {
             path: "/vehicles/:id/edit",
             element: <VehicleFormPage />,
+          },
+          {
+            path: "/configuration",
+            element: <ConfigurationPage />,
+          },
+          {
+            path: "/parts",
+            element: <PartsPage />,
+          },
+          {
+            path: "/parts/new",
+            element: <PartFormPage />,
+          },
+          {
+            path: "/parts/:id",
+            element: <PartDetailPage />,
+          },
+          {
+            path: "/parts/:id/edit",
+            element: <PartFormPage />,
+          },
+          {
+            path: "/users",
+            element: <UsersPage />,
+          },
+          {
+            path: "/users/new",
+            element: <UserFormPage />,
+          },
+          {
+            path: "/users/:id",
+            element: <UserDetailPage />,
+          },
+          {
+            path: "/users/:id/edit",
+            element: <UserFormPage />,
+          },
+          {
+            path: "*",
+            element: <NotFoundPage />,
           },
         ],
       },
