@@ -236,9 +236,10 @@ final class DashboardController extends AbstractController
             ->from(VehicleInsurance::class, 'i')
             ->join('i.vehicle', 'v')
             ->andWhere('i.isDeleted = false')
-            ->andWhere('i.isActive = true')
             ->andWhere('i.endDate IS NOT NULL')
+            ->andWhere('i.endDate > :today')
             ->andWhere('i.endDate <= :next30Days')
+            ->setParameter('today', new \DateTimeImmutable('today'))
             ->setParameter('next30Days', $next30Days);
 
         $this->restrictVehicleToCurrentUser($qb, 'v', $user);

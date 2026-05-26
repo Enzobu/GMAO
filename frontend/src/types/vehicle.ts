@@ -13,7 +13,8 @@ export interface VehicleInsurance {
   startDate?: string | null
   endDate?: string | null
   paymentFrequency?: string | null
-  isActive: boolean
+  active?: boolean
+  isActive?: boolean
   isDeleted?: boolean
 }
 

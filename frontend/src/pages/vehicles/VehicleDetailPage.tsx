@@ -18,6 +18,7 @@ import {
   vehicleBadgeVariant,
   vehicleOption,
 } from "@/lib/vehicle-labels"
+import { INSPECTION_RESULTS, isInsuranceActive, optionLabel, PAYMENT_FREQUENCIES } from "@/lib/vehicle-events"
 
 export default function VehicleDetailPage() {
   const { id } = useParams()
@@ -181,8 +182,12 @@ export default function VehicleDetailPage() {
       <section className="space-y-3">
         <h2 className="text-lg font-semibold">Assurance & Contrôle technique</h2>
         <div className="grid gap-4 xl:grid-cols-2">
-          <InsuranceCard insurance={latestInsurance} />
-          <InspectionCard inspection={latestInspection} />
+          <InsuranceCard
+            vehicleId={vehicle.id}
+            insurance={latestInsurance}
+            hasActiveInsurance={hasActiveInsurance(vehicle.vehicleInsurances)}
+          />
+          <InspectionCard vehicleId={vehicle.id} inspection={latestInspection} />
         </div>
       </section>
 
@@ -223,7 +228,15 @@ function Metric({ label, value }: { label: string; value: string }) {
   )
 }
 
-function InsuranceCard({ insurance }: { insurance?: VehicleInsurance }) {
+function InsuranceCard({
+  vehicleId,
+  insurance,
+  hasActiveInsurance,
+}: {
+  vehicleId: number
+  insurance?: VehicleInsurance
+  hasActiveInsurance: boolean
+}) {
   return (
     <Card>
       <CardHeader>
@@ -233,22 +246,34 @@ function InsuranceCard({ insurance }: { insurance?: VehicleInsurance }) {
         </CardTitle>
       </CardHeader>
       <CardContent>
+        {!hasActiveInsurance && (
+          <div className="mb-4 rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 text-sm text-amber-700 dark:text-amber-300">
+            Ce véhicule n’a aucune assurance active.
+          </div>
+        )}
         {!insurance ? <EmptyText>Aucune assurance renseignée.</EmptyText> : (
           <div className="grid gap-3 text-sm md:grid-cols-2">
             <Detail label="Assureur" value={insurance.providerName} />
             <Detail label="Police" value={insurance.policyNumber || "—"} />
-            <Detail label="Statut" value={insurance.isActive ? "Active" : "Inactive"} />
+            <Detail label="Statut" value={isInsuranceActive(insurance) ? "Active" : "Inactive"} />
             <Detail label="Début" value={formatDate(insurance.startDate)} />
             <Detail label="Fin" value={formatDate(insurance.endDate)} />
-            <Detail label="Paiement" value={insurance.paymentFrequency ?? "—"} />
+            <Detail label="Paiement" value={optionLabel(PAYMENT_FREQUENCIES, insurance.paymentFrequency)} />
           </div>
         )}
+        <Button variant="outline" className="mt-4" asChild>
+          <Link to={`/vehicles/${vehicleId}/insurances`}>Voir les assurances</Link>
+        </Button>
       </CardContent>
     </Card>
   )
 }
 
-function InspectionCard({ inspection }: { inspection?: VehicleInspection }) {
+function hasActiveInsurance(insurances: VehicleInsurance[] | undefined) {
+  return insurances?.some((insurance) => !insurance.isDeleted && isInsuranceActive(insurance)) ?? false
+}
+
+function InspectionCard({ vehicleId, inspection }: { vehicleId: number; inspection?: VehicleInspection }) {
   return (
     <Card>
       <CardHeader>
@@ -260,7 +285,7 @@ function InspectionCard({ inspection }: { inspection?: VehicleInspection }) {
       <CardContent>
         {!inspection ? <EmptyText>Aucun contrôle technique renseigné.</EmptyText> : (
           <div className="grid gap-3 text-sm md:grid-cols-2">
-            <Detail label="Résultat" value={inspection.result ?? "—"} />
+            <Detail label="Résultat" value={optionLabel(INSPECTION_RESULTS, inspection.result)} />
             <Detail label="Date" value={formatDate(inspection.inspectionDate)} />
             <Detail label="Valide jusqu’au" value={formatDate(inspection.validUntil)} />
             <Detail label="Kilométrage" value={inspection.mileage !== null && inspection.mileage !== undefined ? `${formatNumber(inspection.mileage)} km` : "—"} />
@@ -268,6 +293,9 @@ function InspectionCard({ inspection }: { inspection?: VehicleInspection }) {
             <Detail label="Centre" value={inspection.center?.name ?? "Non renseigné"} />
           </div>
         )}
+        <Button variant="outline" className="mt-4" asChild>
+          <Link to={`/vehicles/${vehicleId}/inspections`}>Voir les contrôles</Link>
+        </Button>
       </CardContent>
     </Card>
   )

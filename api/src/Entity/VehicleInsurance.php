@@ -4,6 +4,8 @@ namespace App\Entity;
 
 use ApiPlatform\Metadata\ApiResource;
 
+use ApiPlatform\Metadata\Delete;
+
 use ApiPlatform\Metadata\Get;
 
 use ApiPlatform\Metadata\GetCollection;
@@ -14,6 +16,7 @@ use ApiPlatform\Metadata\Post;
 
 use Symfony\Component\Serializer\Annotation\Groups;
 
+use App\ApiPlatform\State\VehicleInsuranceStateProcessor;
 use App\Enum\InsurancePaymentFrequencyEnum;
 use App\Repository\VehicleInsuranceRepository;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -25,11 +28,13 @@ use Doctrine\ORM\Mapping as ORM;
     operations: [
         new GetCollection(security: "is_granted('ROLE_USER')"),
         new Get(security: "is_granted('ROLE_USER')"),
-        new Post(security: "is_granted('ROLE_ADMIN')"),
-        new Patch(security: "is_granted('ROLE_ADMIN')"),
+        new Post(security: "is_granted('ROLE_USER')"),
+        new Patch(security: "is_granted('ROLE_ADMIN') or object.getVehicle().getUser() == user"),
+        new Delete(security: "is_granted('ROLE_ADMIN')"),
     ],
     normalizationContext: ['groups' => ['vehicle_insurance:read']],
-    denormalizationContext: ['groups' => ['vehicle_insurance:write']]
+    denormalizationContext: ['groups' => ['vehicle_insurance:write']],
+    processor: VehicleInsuranceStateProcessor::class,
 )]
 #[ORM\Entity(repositoryClass: VehicleInsuranceRepository::class)]
 #[ORM\HasLifecycleCallbacks]
@@ -67,7 +72,7 @@ class VehicleInsurance
     private InsurancePaymentFrequencyEnum $paymentFrequency = InsurancePaymentFrequencyEnum::Monthly;
 
     #[ORM\Column(options: ['default' => true])]
-    #[Groups(['vehicle_insurance:read', 'vehicle_insurance:write', 'vehicle:read'])]
+    #[Groups(['vehicle_insurance:read', 'vehicle:read'])]
     private bool $isActive = true;
 
     #[ORM\Column(type: Types::DATETIME_IMMUTABLE)]
@@ -170,7 +175,11 @@ class VehicleInsurance
 
     public function isActive(): bool
     {
-        return $this->isActive;
+        if ($this->endDate === null) {
+            return true;
+        }
+
+        return $this->endDate > new \DateTimeImmutable('today');
     }
 
     public function setIsActive(bool $isActive): static

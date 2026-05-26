@@ -4,6 +4,8 @@ namespace App\Entity;
 
 use ApiPlatform\Metadata\ApiResource;
 
+use ApiPlatform\Metadata\Delete;
+
 use ApiPlatform\Metadata\Get;
 
 use ApiPlatform\Metadata\GetCollection;
@@ -14,6 +16,7 @@ use ApiPlatform\Metadata\Post;
 
 use Symfony\Component\Serializer\Annotation\Groups;
 
+use App\ApiPlatform\State\VehicleInspectionStateProcessor;
 use App\Enum\InspectionResultEnum;
 use App\Repository\VehicleInspectionRepository;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -27,11 +30,13 @@ use Symfony\Component\Validator\Constraints as Assert;
     operations: [
         new GetCollection(security: "is_granted('ROLE_USER')"),
         new Get(security: "is_granted('ROLE_USER')"),
-        new Post(security: "is_granted('ROLE_ADMIN')"),
-        new Patch(security: "is_granted('ROLE_ADMIN')"),
+        new Post(security: "is_granted('ROLE_USER')"),
+        new Patch(security: "is_granted('ROLE_ADMIN') or object.getVehicle().getUser() == user"),
+        new Delete(security: "is_granted('ROLE_ADMIN')"),
     ],
     normalizationContext: ['groups' => ['vehicle_inspection:read']],
-    denormalizationContext: ['groups' => ['vehicle_inspection:write']]
+    denormalizationContext: ['groups' => ['vehicle_inspection:write']],
+    processor: VehicleInspectionStateProcessor::class,
 )]
 #[ORM\Entity(repositoryClass: VehicleInspectionRepository::class)]
 #[ORM\HasLifecycleCallbacks]

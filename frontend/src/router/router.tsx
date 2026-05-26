@@ -19,6 +19,12 @@ import PartFormPage from "@/pages/parts/PartFormPage"
 import UsersPage from "@/pages/users/UsersPage"
 import UserDetailPage from "@/pages/users/UserDetailPage"
 import UserFormPage from "@/pages/users/UserFormPage"
+import VehicleInsuranceDetailPage from "@/pages/vehicle-events/VehicleInsuranceDetailPage"
+import VehicleInsuranceFormPage from "@/pages/vehicle-events/VehicleInsuranceFormPage"
+import VehicleInsurancesPage from "@/pages/vehicle-events/VehicleInsurancesPage"
+import VehicleInspectionDetailPage from "@/pages/vehicle-events/VehicleInspectionDetailPage"
+import VehicleInspectionFormPage from "@/pages/vehicle-events/VehicleInspectionFormPage"
+import VehicleInspectionsPage from "@/pages/vehicle-events/VehicleInspectionsPage"
 
 import ProtectedRoute from "@/router/ProtectedRoute"
 
@@ -74,6 +80,38 @@ export const router = createBrowserRouter([
           {
             path: "/vehicles/:id/edit",
             element: <VehicleFormPage />,
+          },
+          {
+            path: "/vehicles/:vehicleId/insurances",
+            element: <VehicleInsurancesPage />,
+          },
+          {
+            path: "/vehicles/:vehicleId/insurances/new",
+            element: <VehicleInsuranceFormPage />,
+          },
+          {
+            path: "/vehicles/:vehicleId/insurances/:insuranceId",
+            element: <VehicleInsuranceDetailPage />,
+          },
+          {
+            path: "/vehicles/:vehicleId/insurances/:insuranceId/edit",
+            element: <VehicleInsuranceFormPage />,
+          },
+          {
+            path: "/vehicles/:vehicleId/inspections",
+            element: <VehicleInspectionsPage />,
+          },
+          {
+            path: "/vehicles/:vehicleId/inspections/new",
+            element: <VehicleInspectionFormPage />,
+          },
+          {
+            path: "/vehicles/:vehicleId/inspections/:inspectionId",
+            element: <VehicleInspectionDetailPage />,
+          },
+          {
+            path: "/vehicles/:vehicleId/inspections/:inspectionId/edit",
+            element: <VehicleInspectionFormPage />,
           },
           {
             path: "/configuration",
