@@ -153,13 +153,13 @@ final class DashboardController extends AbstractController
         $end = $now->modify('first day of next month');
 
         $qb = $this->entityManager->createQueryBuilder()
-            ->select('m.performedAt')
+            ->select('m.finishedAt')
             ->from(Maintenance::class, 'm')
             ->join('m.vehicle', 'v')
             ->andWhere('m.isDeleted = false')
-            ->andWhere('m.performedAt IS NOT NULL')
-            ->andWhere('m.performedAt >= :start')
-            ->andWhere('m.performedAt < :end')
+            ->andWhere('m.finishedAt IS NOT NULL')
+            ->andWhere('m.finishedAt >= :start')
+            ->andWhere('m.finishedAt < :end')
             ->setParameter('start', $start)
             ->setParameter('end', $end);
 
@@ -168,7 +168,7 @@ final class DashboardController extends AbstractController
         $counts = [];
 
         foreach ($qb->getQuery()->getResult() as $row) {
-            $date = $row['performedAt'] ?? null;
+            $date = $row['finishedAt'] ?? null;
 
             if ($date instanceof \DateTimeInterface) {
                 $key = $date->format('Y-m');
@@ -298,7 +298,7 @@ final class DashboardController extends AbstractController
             ->join('m.vehicle', 'v')
             ->join('m.maintenanceType', 'mt')
             ->andWhere('m.isDeleted = false')
-            ->andWhere('m.performedAt BETWEEN :last30Days AND :now')
+            ->andWhere('m.finishedAt BETWEEN :last30Days AND :now')
             ->setParameter('last30Days', $last30Days)
             ->setParameter('now', $now->modify('+1 day'));
 
@@ -309,7 +309,7 @@ final class DashboardController extends AbstractController
                 type: 'maintenance',
                 title: sprintf('Entretien %s réalisé', $maintenance->getMaintenanceType()?->getName() ?? ''),
                 subtitle: $maintenance->getVehicle()?->displayName() ?? 'Véhicule inconnu',
-                date: $maintenance->getPerformedAt(),
+                date: $maintenance->getFinishedAt(),
             ),
             $qb->getQuery()->getResult(),
         );

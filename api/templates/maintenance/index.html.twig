@@ -94,7 +94,7 @@
               data-action="change->auto-submit#submit"
             >
               <option value="createdAt" {{ selectedSort == 'createdAt' ? 'selected' }}>Création</option>
-              <option value="performedAt" {{ selectedSort == 'performedAt' ? 'selected' }}>Date réalisée</option>
+              <option value="finishedAt" {{ selectedSort in ['performedAt', 'finishedAt'] ? 'selected' }}>Date de fin</option>
               <option value="plannedAt" {{ selectedSort == 'plannedAt' ? 'selected' }}>Date prévue</option>
               <option value="mileage" {{ selectedSort == 'mileage' ? 'selected' }}>Kilométrage</option>
               <option value="vehicle" {{ selectedSort == 'vehicle' ? 'selected' }}>Véhicule</option>
@@ -182,7 +182,7 @@
                     </td>
 
                     <td>
-                      {{ maintenance.performedAt ? maintenance.performedAt|date('d/m/Y') : '—' }}
+                      {{ maintenance.finishedAt ? maintenance.finishedAt|date('d/m/Y') : '—' }}
                     </td>
 
                     <td>

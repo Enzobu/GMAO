@@ -43,17 +43,17 @@ class Part
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
-    #[Groups(['part:read', 'maintenance_part:read', 'document:read'])]
+    #[Groups(['part:read', 'maintenance:read', 'maintenance_part:read', 'document:read'])]
     private ?int $id = null;
 
     #[ORM\ManyToOne(inversedBy: 'parts')]
     #[ORM\JoinColumn(nullable: false)]
-    #[Groups(['part:read', 'part:write'])]
+    #[Groups(['part:read', 'part:write', 'maintenance:read', 'maintenance_part:read'])]
     private ?PartType $partType = null;
 
     #[ORM\Column]
     #[Assert\PositiveOrZero]
-    #[Groups(['part:read', 'part:write'])]
+    #[Groups(['part:read', 'part:write', 'maintenance:read', 'maintenance_part:read'])]
     private ?int $quantity = null;
 
     /**

@@ -36,7 +36,7 @@ const navigation = [
   {
     label: "Interventions",
     icon: Wrench,
-    path: "/maintenances",
+    path: "/interventions",
   },
   {
     label: "Stock",

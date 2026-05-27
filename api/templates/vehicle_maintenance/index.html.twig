@@ -67,7 +67,7 @@
                     </td>
                     <td>{{ maintenance.mileage is not null ? maintenance.mileage|number_format(0, ',', ' ') ~ ' km' : '—' }}</td>
                     <td>{{ maintenance.plannedAt ? maintenance.plannedAt|date('d/m/Y') : '—' }}</td>
-                    <td>{{ maintenance.performedAt ? maintenance.performedAt|date('d/m/Y') : '—' }}</td>
+                    <td>{{ maintenance.finishedAt ? maintenance.finishedAt|date('d/m/Y') : '—' }}</td>
                     <td>
                       <div class="d-flex justify-content-end gap-2">
                         <a

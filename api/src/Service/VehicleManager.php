@@ -59,7 +59,7 @@ class VehicleManager
 
         $currentMileage = $newVehicle->getLastMileage();
 
-        if ($currentMileage === null || $newMileage > $currentMileage) {
+        if ($currentMileage === null || $newMileage >= $currentMileage) {
             return null;
         }
 
@@ -75,7 +75,7 @@ class VehicleManager
             return null;
         }
 
-        if ($newMileage > $oldMileage) {
+        if ($newMileage >= $oldMileage) {
             return null;
         }
 
@@ -133,7 +133,7 @@ class VehicleManager
             ->from(Maintenance::class, 'm')
             ->andWhere('m.vehicle = :vehicle')
             ->andWhere('m.isDeleted = :isDeleted')
-            ->andWhere('m.performedAt IS NOT NULL')
+            ->andWhere('m.finishedAt IS NOT NULL')
             ->setParameter('vehicle', $vehicle)
             ->setParameter('isDeleted', false)
             ->getQuery()

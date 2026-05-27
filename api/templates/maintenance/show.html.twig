@@ -120,9 +120,9 @@
 
               <div class="col-6 col-md-6 col-xl">
                 <div class="border rounded-3 p-3 h-100 bg-body-tertiary">
-                  <div class="small text-body-secondary mb-1">Réalisé le</div>
+                  <div class="small text-body-secondary mb-1">Terminé le</div>
                   <div class="fw-semibold">
-                    {{ maintenance.performedAt ? maintenance.performedAt|date('d/m/Y H:i') : '—' }}
+                    {{ maintenance.finishedAt ? maintenance.finishedAt|date('d/m/Y H:i') : '—' }}
                   </div>
                 </div>
               </div>
@@ -173,9 +173,9 @@
               </div>
 
               <div class="border rounded-3 p-3">
-                <div class="small text-body-secondary mb-1">Date de réalisation</div>
+                <div class="small text-body-secondary mb-1">Date de fin</div>
                 <div class="fw-semibold">
-                  {{ maintenance.performedAt ? maintenance.performedAt|date('d/m/Y H:i') : '—' }}
+                  {{ maintenance.finishedAt ? maintenance.finishedAt|date('d/m/Y H:i') : '—' }}
                 </div>
               </div>
 

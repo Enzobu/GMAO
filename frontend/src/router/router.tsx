@@ -25,6 +25,9 @@ import VehicleInsurancesPage from "@/pages/vehicle-events/VehicleInsurancesPage"
 import VehicleInspectionDetailPage from "@/pages/vehicle-events/VehicleInspectionDetailPage"
 import VehicleInspectionFormPage from "@/pages/vehicle-events/VehicleInspectionFormPage"
 import VehicleInspectionsPage from "@/pages/vehicle-events/VehicleInspectionsPage"
+import InterventionDetailPage from "@/pages/interventions/InterventionDetailPage"
+import InterventionFormPage from "@/pages/interventions/InterventionFormPage"
+import InterventionsPage from "@/pages/interventions/InterventionsPage"
 
 import ProtectedRoute from "@/router/ProtectedRoute"
 
@@ -112,6 +115,30 @@ export const router = createBrowserRouter([
           {
             path: "/vehicles/:vehicleId/inspections/:inspectionId/edit",
             element: <VehicleInspectionFormPage />,
+          },
+          {
+            path: "/vehicles/:vehicleId/interventions",
+            element: <InterventionsPage vehicleScoped />,
+          },
+          {
+            path: "/vehicles/:vehicleId/interventions/new",
+            element: <InterventionFormPage />,
+          },
+          {
+            path: "/vehicles/:vehicleId/interventions/:interventionId",
+            element: <InterventionDetailPage vehicleScoped />,
+          },
+          {
+            path: "/vehicles/:vehicleId/interventions/:interventionId/edit",
+            element: <InterventionFormPage />,
+          },
+          {
+            path: "/interventions",
+            element: <InterventionsPage />,
+          },
+          {
+            path: "/interventions/:id",
+            element: <InterventionDetailPage />,
           },
           {
             path: "/configuration",

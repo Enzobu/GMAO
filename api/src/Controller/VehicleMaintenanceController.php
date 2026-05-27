@@ -198,7 +198,7 @@ final class VehicleMaintenanceController extends AbstractController
 
     private function getMileageContribution(Maintenance $maintenance): ?int
     {
-        return $maintenance->getPerformedAt() !== null ? $maintenance->getMileage() : null;
+        return $maintenance->getFinishedAt() !== null ? $maintenance->getMileage() : null;
     }
 
     private function shouldStopForMileageWarning(

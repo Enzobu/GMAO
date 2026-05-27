@@ -92,7 +92,7 @@ final readonly class UserOwnedResourceExtension implements QueryCollectionExtens
             User::class => null,
             Address::class => $this->restrictAddress($queryBuilder, $rootAlias, $user),
             Vehicle::class => null,
-            Maintenance::class,
+            Maintenance::class => null,
             VehicleInsurance::class,
             VehicleInspection::class => $this->restrictThroughVehicle($queryBuilder, $queryNameGenerator, $rootAlias, $user),
             MaintenancePart::class => $this->restrictMaintenancePart($queryBuilder, $queryNameGenerator, $rootAlias, $user),

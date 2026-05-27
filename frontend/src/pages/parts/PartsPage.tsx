@@ -241,23 +241,24 @@ export default function PartsPage() {
               const status = stockStatus(part.quantity)
 
               return (
-                <Card key={part.id} className="relative border border-foreground/10 ring-0 transition-colors hover:border-primary/35 hover:bg-muted/30">
+                <Card key={part.id} className="relative flex h-full flex-col border border-foreground/10 ring-0 transition-colors hover:border-primary/35 hover:bg-muted/30">
                   <Link to={`/parts/${part.id}`} className="absolute inset-0 z-10 rounded-xl focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50" aria-label={`Voir ${partName(part)}`} />
                   <CardHeader>
                     <CardTitle className="flex flex-wrap items-center gap-2">
                       <span>{partName(part)}</span>
                       <Badge variant={status.variant} className={status.value === "low" ? "border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-300" : undefined}>{status.label}</Badge>
+                      {part.vehicles.length === 0 && <Badge variant="destructive">Aucun véhicule compatible</Badge>}
                       {!isAdmin && <Badge variant="outline" className="border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-300">Lecture seule</Badge>}
                     </CardTitle>
                   </CardHeader>
-                  <CardContent className="space-y-3">
+                  <CardContent className="flex-1 space-y-3">
                     <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted-foreground">
                       <span><strong className="text-foreground">Quantité</strong> {part.quantity}</span>
                       <span><strong className="text-foreground">Màj</strong> {formatDateTime(part.updatedAt)}</span>
                     </div>
                     {part.note && <p className="line-clamp-2 text-sm text-muted-foreground">{part.note}</p>}
                     <div className="flex flex-wrap gap-2">
-                      {part.vehicles.length > 0 ? part.vehicles.map((vehicle) => <Badge key={vehicle.id} variant="outline">{vehicleDisplayName(vehicle)}</Badge>) : <span className="text-sm text-muted-foreground">Aucun véhicule renseigné</span>}
+                      {part.vehicles.length > 0 ? part.vehicles.map((vehicle) => <Badge key={vehicle.id} variant="outline">{vehicleDisplayName(vehicle)}</Badge>) : <span className="text-sm text-destructive">Cette pièce ne pourra être utilisée sur aucune intervention.</span>}
                     </div>
                   </CardContent>
                   {isAdmin && (

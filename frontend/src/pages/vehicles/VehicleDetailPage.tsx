@@ -65,7 +65,7 @@ export default function VehicleDetailPage() {
 
   const latestInsurance = useMemo(() => latestByDate(vehicle?.vehicleInsurances, "startDate"), [vehicle])
   const latestInspection = useMemo(() => latestByDate(vehicle?.vehicleInspections, "inspectionDate"), [vehicle])
-  const latestMaintenance = useMemo(() => latestByDate(vehicle?.maintenances?.filter((maintenance) => maintenance.performedAt), "performedAt"), [vehicle])
+  const latestMaintenance = useMemo(() => latestByDate(vehicle?.maintenances?.filter((maintenance) => maintenance.finishedAt), "finishedAt"), [vehicle])
 
   if (isLoading) {
     return <div className="text-sm text-muted-foreground">Chargement du véhicule...</div>
@@ -192,8 +192,8 @@ export default function VehicleDetailPage() {
       </section>
 
       <section className="space-y-3">
-        <h2 className="text-lg font-semibold">Entretien</h2>
-        <MaintenanceCard maintenance={latestMaintenance} />
+        <h2 className="text-lg font-semibold">Interventions</h2>
+        <MaintenanceCard vehicleId={vehicle.id} maintenance={latestMaintenance} canEdit={canEdit} />
       </section>
     </div>
   )
@@ -301,27 +301,38 @@ function InspectionCard({ vehicleId, inspection }: { vehicleId: number; inspecti
   )
 }
 
-function MaintenanceCard({ maintenance }: { maintenance?: VehicleMaintenance }) {
+function MaintenanceCard({ vehicleId, maintenance, canEdit }: { vehicleId: number; maintenance?: VehicleMaintenance; canEdit: boolean }) {
   return (
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center justify-between gap-2">
-          Dernier entretien
-          <Badge variant="outline">Dernier réalisé</Badge>
+          Dernière intervention
+          <Badge variant="outline">Dernière réalisée</Badge>
         </CardTitle>
       </CardHeader>
       <CardContent>
-        {!maintenance ? <EmptyText>Aucun entretien réalisé.</EmptyText> : (
+        {!maintenance ? <EmptyText>Aucune intervention réalisée.</EmptyText> : (
           <div className="grid gap-3 text-sm md:grid-cols-2 xl:grid-cols-4">
             <Detail label="Type" value={maintenance.maintenanceType?.name ?? "—"} />
             <Detail label="Statut" value={maintenance.status ?? "—"} />
-            <Detail label="Réalisé le" value={formatDate(maintenance.performedAt)} />
+            <Detail label="Début" value={formatDate(maintenance.startedAt)} />
+            <Detail label="Fin" value={formatDate(maintenance.finishedAt)} />
             <Detail label="Kilométrage" value={maintenance.mileage !== null && maintenance.mileage !== undefined ? `${formatNumber(maintenance.mileage)} km` : "—"} />
             <Detail label="Mode" value={maintenance.isExternal ? "Externe" : "Interne"} />
             <Detail label="Prochaine échéance km" value={maintenance.nextDueMileage !== null && maintenance.nextDueMileage !== undefined ? `${formatNumber(maintenance.nextDueMileage)} km` : "—"} />
             <Detail label="Prochaine échéance date" value={formatDate(maintenance.nextDueAt)} />
           </div>
         )}
+        <div className="mt-4 flex flex-wrap gap-2">
+          <Button variant="outline" asChild>
+            <Link to={`/vehicles/${vehicleId}/interventions`}>Voir les interventions</Link>
+          </Button>
+          {canEdit && (
+            <Button asChild>
+              <Link to={`/vehicles/${vehicleId}/interventions/new`}>Ajouter une intervention</Link>
+            </Button>
+          )}
+        </div>
       </CardContent>
     </Card>
   )

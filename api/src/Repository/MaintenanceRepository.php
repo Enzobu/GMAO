@@ -65,7 +65,8 @@ class MaintenanceRepository extends ServiceEntityRepository
 
         $sortFields = [
             'createdAt' => 'm.createdAt',
-            'performedAt' => 'm.performedAt',
+            'performedAt' => 'm.finishedAt',
+            'finishedAt' => 'm.finishedAt',
             'plannedAt' => 'm.plannedAt',
             'mileage' => 'm.mileage',
             'vehicle' => 'v.name',
@@ -95,7 +96,7 @@ class MaintenanceRepository extends ServiceEntityRepository
             ->andWhere('m.isDeleted = :isDeleted')
             ->setParameter('vehicle', $vehicle)
             ->setParameter('isDeleted', false)
-            ->orderBy('m.performedAt', 'DESC')
+            ->orderBy('m.finishedAt', 'DESC')
             ->addOrderBy('m.plannedAt', 'DESC')
             ->addOrderBy('m.createdAt', 'DESC')
             ->getQuery()
@@ -109,10 +110,10 @@ class MaintenanceRepository extends ServiceEntityRepository
             ->addSelect('mt')
             ->andWhere('m.vehicle = :vehicle')
             ->andWhere('m.isDeleted = :isDeleted')
-            ->andWhere('m.performedAt IS NOT NULL')
+            ->andWhere('m.finishedAt IS NOT NULL')
             ->setParameter('vehicle', $vehicle)
             ->setParameter('isDeleted', false)
-            ->orderBy('m.performedAt', 'DESC')
+            ->orderBy('m.finishedAt', 'DESC')
             ->setMaxResults(1)
             ->getQuery()
             ->getOneOrNullResult();

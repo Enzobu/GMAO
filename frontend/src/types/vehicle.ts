@@ -34,7 +34,8 @@ export interface VehicleInspection {
 export interface VehicleMaintenance {
   id: number
   mileage?: number | null
-  performedAt?: string | null
+  startedAt?: string | null
+  finishedAt?: string | null
   plannedAt?: string | null
   status?: string | null
   isExternal?: boolean | null

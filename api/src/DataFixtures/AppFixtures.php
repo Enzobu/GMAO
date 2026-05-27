@@ -505,9 +505,9 @@ class AppFixtures extends Fixture
             for ($year = max($purchaseYear, 2016); $year <= $currentYear; $year++) {
                 $month = (($yearOffset * 3) + crc32($vehicleIndex)) % 12 + 1;
                 $day = (($yearOffset * 7) + 8) % 22 + 1;
-                $performedAt = new DateTimeImmutable(sprintf('%d-%02d-%02d', $year, $month, $day));
+                $finishedAt = new DateTimeImmutable(sprintf('%d-%02d-%02d', $year, $month, $day));
 
-                if ($performedAt > new DateTimeImmutable('2026-05-23')) {
+                if ($finishedAt > new DateTimeImmutable('2026-05-23')) {
                     continue;
                 }
 
@@ -521,13 +521,14 @@ class AppFixtures extends Fixture
                     ->setVehicle($vehicle)
                     ->setMaintenanceType($maintenanceTypes[$typeName])
                     ->setMileage($mileage)
-                    ->setPerformedAt($performedAt)
+                    ->setStartedAt($finishedAt->modify('-2 hours'))
+                    ->setFinishedAt($finishedAt)
                     ->setPlannedAt(null)
                     ->setStatus(MaintenanceStatusEnum::Completed)
                     ->setIsExternal($yearOffset % 3 === 0)
                     ->setNotes(sprintf('%s realisee sur %s.', $typeName, $vehicle->displayName()))
                     ->setNextDueMileage($mileage + ($vehicle->getType() === VehicleTypeEnum::Motorcycle ? 6000 : 10000))
-                    ->setNextDueAt($performedAt->modify('+1 year'));
+                    ->setNextDueAt($finishedAt->modify('+1 year'));
 
                 $manager->persist($maintenance);
 
@@ -558,7 +559,8 @@ class AppFixtures extends Fixture
                 ->setVehicle($vehicles[$data['vehicle']])
                 ->setMaintenanceType($maintenanceTypes[$data['type']])
                 ->setMileage($data['mileage'])
-                ->setPerformedAt(new DateTimeImmutable($data['date']))
+                ->setStartedAt((new DateTimeImmutable($data['date']))->modify('-2 hours'))
+                ->setFinishedAt(new DateTimeImmutable($data['date']))
                 ->setPlannedAt(null)
                 ->setStatus(MaintenanceStatusEnum::Completed)
                 ->setIsExternal(true)
@@ -580,7 +582,8 @@ class AppFixtures extends Fixture
                 ->setVehicle($vehicles[$data['vehicle']])
                 ->setMaintenanceType($maintenanceTypes[$data['type']])
                 ->setMileage($data['mileage'])
-                ->setPerformedAt(null)
+                ->setStartedAt(null)
+                ->setFinishedAt(null)
                 ->setPlannedAt(new DateTimeImmutable($data['date']))
                 ->setStatus(MaintenanceStatusEnum::ToDo)
                 ->setIsExternal(false)

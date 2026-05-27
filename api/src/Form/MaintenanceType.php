@@ -78,7 +78,7 @@ class MaintenanceType extends AbstractType
             ])
             ->add('mileage', IntegerType::class, [
                 'label' => 'Kilométrage',
-                'required' => true,
+                'required' => false,
                 'attr' => [
                     'class' => 'form-control',
                     'min' => 0,
@@ -95,8 +95,16 @@ class MaintenanceType extends AbstractType
                 'label_attr' => ['class' => 'form-label'],
                 'attr' => ['class' => 'form-control'],
             ])
-            ->add('performedAt', DateTimeType::class, [
-                'label' => 'Date réalisée',
+            ->add('startedAt', DateTimeType::class, [
+                'label' => 'Date de début',
+                'widget' => 'single_text',
+                'required' => false,
+                'row_attr' => ['class' => 'mb-3'],
+                'label_attr' => ['class' => 'form-label'],
+                'attr' => ['class' => 'form-control'],
+            ])
+            ->add('finishedAt', DateTimeType::class, [
+                'label' => 'Date de fin',
                 'widget' => 'single_text',
                 'required' => false,
                 'row_attr' => ['class' => 'mb-3'],

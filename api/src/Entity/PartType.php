@@ -41,11 +41,11 @@ class PartType
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
-    #[Groups(['part_type:read', 'part:read'])]
+    #[Groups(['part_type:read', 'part:read', 'maintenance:read'])]
     private ?int $id = null;
 
     #[ORM\Column(length: 255, unique: true)]
-    #[Groups(['part_type:read', 'part_type:write', 'part:read'])]
+    #[Groups(['part_type:read', 'part_type:write', 'part:read', 'maintenance:read'])]
     private ?string $name = null;
 
     #[ORM\Column(type: Types::TEXT, nullable: true)]

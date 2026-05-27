@@ -3,6 +3,7 @@
 namespace App\Entity;
 
 use ApiPlatform\Metadata\ApiResource;
+use ApiPlatform\Metadata\Delete;
 
 use ApiPlatform\Metadata\Get;
 
@@ -14,6 +15,7 @@ use ApiPlatform\Metadata\Post;
 
 use Symfony\Component\Serializer\Annotation\Groups;
 
+use App\ApiPlatform\State\MaintenanceStateProcessor;
 use App\Enum\MaintenanceStatusEnum;
 use App\Repository\MaintenanceRepository;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -25,11 +27,13 @@ use Doctrine\ORM\Mapping as ORM;
     operations: [
         new GetCollection(security: "is_granted('ROLE_USER')"),
         new Get(security: "is_granted('ROLE_USER')"),
-        new Post(security: "is_granted('ROLE_ADMIN')"),
-        new Patch(security: "is_granted('ROLE_ADMIN')"),
+        new Post(security: "is_granted('ROLE_USER')"),
+        new Patch(security: "is_granted('ROLE_ADMIN') or object.getVehicle().getUser() == user"),
+        new Delete(security: "is_granted('ROLE_ADMIN')"),
     ],
     normalizationContext: ['groups' => ['maintenance:read']],
-    denormalizationContext: ['groups' => ['maintenance:write']]
+    denormalizationContext: ['groups' => ['maintenance:write']],
+    processor: MaintenanceStateProcessor::class,
 )]
 #[ORM\Entity(repositoryClass: MaintenanceRepository::class)]
 #[ORM\HasLifecycleCallbacks]
@@ -51,13 +55,17 @@ class Maintenance
     #[Groups(['maintenance:read', 'maintenance:write', 'vehicle:read'])]
     private ?MaintenanceType $maintenanceType = null;
 
-    #[ORM\Column]
+    #[ORM\Column(nullable: true)]
     #[Groups(['maintenance:read', 'maintenance:write', 'vehicle:read'])]
     private ?int $mileage = null;
 
     #[ORM\Column(nullable: true)]
     #[Groups(['maintenance:read', 'maintenance:write', 'vehicle:read'])]
-    private ?\DateTimeImmutable $performedAt = null;
+    private ?\DateTimeImmutable $startedAt = null;
+
+    #[ORM\Column(nullable: true)]
+    #[Groups(['maintenance:read', 'maintenance:write', 'vehicle:read'])]
+    private ?\DateTimeImmutable $finishedAt = null;
 
     #[ORM\Column(nullable: true)]
     #[Groups(['maintenance:read', 'maintenance:write', 'vehicle:read'])]
@@ -94,8 +102,8 @@ class Maintenance
     /**
      * @var Collection<int, MaintenancePart>
      */
-    #[ORM\OneToMany(targetEntity: MaintenancePart::class, mappedBy: 'maintenance', cascade: ['persist'])]
-    #[Groups(['maintenance:read'])]
+    #[ORM\OneToMany(targetEntity: MaintenancePart::class, mappedBy: 'maintenance', cascade: ['persist', 'remove'], orphanRemoval: true)]
+    #[Groups(['maintenance:read', 'maintenance:write'])]
     private Collection $maintenanceParts;
 
     #[ORM\Column(options: ['default' => false])]
@@ -146,21 +154,33 @@ class Maintenance
         return $this->mileage;
     }
 
-    public function setMileage(int $mileage): static
+    public function setMileage(?int $mileage): static
     {
         $this->mileage = $mileage;
 
         return $this;
     }
 
-    public function getPerformedAt(): ?\DateTimeImmutable
+    public function getStartedAt(): ?\DateTimeImmutable
     {
-        return $this->performedAt;
+        return $this->startedAt;
     }
 
-    public function setPerformedAt(?\DateTimeImmutable $performedAt): static
+    public function setStartedAt(?\DateTimeImmutable $startedAt): static
     {
-        $this->performedAt = $performedAt;
+        $this->startedAt = $startedAt;
+
+        return $this;
+    }
+
+    public function getFinishedAt(): ?\DateTimeImmutable
+    {
+        return $this->finishedAt;
+    }
+
+    public function setFinishedAt(?\DateTimeImmutable $finishedAt): static
+    {
+        $this->finishedAt = $finishedAt;
 
         return $this;
     }
