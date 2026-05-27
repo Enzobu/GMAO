@@ -57,19 +57,6 @@ RUN apt-get update -y && apt-get install -y --no-install-recommends \
     gd intl mbstring opcache pdo_mysql zip \
  && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# ---- Install Dart Sass (no node)
-# Choose the right arch:
-# - linux-x64 for standard amd64 servers
-# - linux-arm64 for ARM64 servers
-ARG SASS_VERSION=1.77.8
-ARG SASS_ARCH=linux-x64
-RUN curl -fsSL -o /tmp/sass.tar.gz \
-    "https://github.com/sass/dart-sass/releases/download/${SASS_VERSION}/dart-sass-${SASS_VERSION}-${SASS_ARCH}.tar.gz" \
- && tar -xzf /tmp/sass.tar.gz -C /opt \
- && ln -s /opt/dart-sass/sass /usr/local/bin/sass \
- && rm -f /tmp/sass.tar.gz \
- && sass --version
-
 # ---- Apache modules
 RUN a2enmod rewrite remoteip ssl headers
 
@@ -93,8 +80,6 @@ RUN mkdir -p var \
 
 # ---- Build assets + warm cache (prod)
 RUN php bin/console importmap:install --env=prod \
- && php bin/console sass:build --env=prod --no-debug \
- && php bin/console asset-map:compile --env=prod --no-debug \
  && php bin/console cache:clear --env=prod --no-debug \
  && php bin/console cache:warmup --env=prod --no-debug
 

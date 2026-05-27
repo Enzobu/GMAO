@@ -35,7 +35,7 @@ services:
     apache:
         image: ${DOCKER_PROJECT_NAME}-apache:prod
         build:
-            context: .
+            context: ./api
             dockerfile: ./Dockerfile.prod
         container_name: ${DOCKER_PROJECT_NAME}-apache
         ports:
@@ -43,13 +43,23 @@ services:
         depends_on:
             - database
         volumes:
-          - ./var/storage/documents:/var/www/var/storage/documents
+          - ./api/var/storage/documents:/var/www/var/storage/documents
         environment:
             APP_ENV: prod
             TRUSTED_PROXIES: ${TRUSTED_PROXIES}
             APP_SECRET: ${APP_SECRET}
         networks:
             - project_network
+        restart: unless-stopped
+    
+    front:
+        image: ${DOCKER_PROJECT_NAME}-front:prod
+        build:
+            context: ./frontend
+            dockerfile: ./Dockerfile.prod
+        container_name: ${DOCKER_PROJECT_NAME}_front
+        ports:
+        - '${FRONT_PROD_PORT:-8080}:80'
         restart: unless-stopped
 
 networks:
