@@ -78,11 +78,6 @@ COPY --from=vendor /app/symfony.lock /var/www/
 RUN mkdir -p var \
  && chown -R www-data:www-data /var/www/var /var/www/public
 
-# ---- Build assets + warm cache (prod)
-RUN php bin/console importmap:install --env=prod \
- && php bin/console cache:clear --env=prod --no-debug \
- && php bin/console cache:warmup --env=prod --no-debug
-
 # ---- Entrypoint
 ADD docker/apache/entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
