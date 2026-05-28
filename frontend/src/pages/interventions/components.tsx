@@ -6,13 +6,13 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { DetailItem, EmptyCard, ErrorMessage, Field, PageHeader } from "@/components/page-primitives"
+import { DetailItem } from "@/components/page-primitives"
 import type { Intervention } from "@/types/intervention"
 import { formatDate, formatNumber, interventionStatusLabel, interventionStatusVariant } from "@/lib/intervention-utils"
 
-export const InterventionHeader = PageHeader
+export { PageHeader as InterventionHeader } from "@/components/page-primitives"
 
-export function InterventionBadges({ intervention, readOnly = false }: { intervention: Intervention; readOnly?: boolean }) {
+export function InterventionBadges({ intervention, readOnly = false }: Readonly<{ intervention: Intervention; readOnly?: boolean }>) {
   return (
     <div className="flex flex-wrap gap-2">
       <Badge variant={interventionStatusVariant(intervention.status)}>{interventionStatusLabel(intervention.status)}</Badge>
@@ -32,12 +32,12 @@ export function InterventionCard({
   to,
   actions,
   readOnly,
-}: {
+}: Readonly<{
   intervention: Intervention
   to: string
   actions?: ReactNode
   readOnly?: boolean
-}) {
+}>) {
   return (
     <Card className="relative border border-foreground/10 ring-0 transition-colors hover:border-primary/35 hover:bg-muted/30">
       <Link to={to} className="absolute inset-0 z-10 rounded-xl" />
@@ -60,10 +60,10 @@ export function InterventionCard({
   )
 }
 
-export { EmptyCard, ErrorMessage, Field }
+export { EmptyCard, ErrorMessage, Field } from "@/components/page-primitives"
 export const Detail = DetailItem
 
-export function InterventionFormActions({ cancelTo, canEdit, isSaving }: { cancelTo: string; canEdit: boolean; isSaving: boolean }) {
+export function InterventionFormActions({ cancelTo, canEdit, isSaving }: Readonly<{ cancelTo: string; canEdit: boolean; isSaving: boolean }>) {
   return (
     <div className="flex justify-end gap-2">
       <Button variant="outline" asChild>
@@ -85,7 +85,7 @@ export function MileageWarningDialog({
   onOpenChange,
   onForce,
   forceLabel = "Forcer",
-}: {
+}: Readonly<{
   open: boolean
   message: string
   isAdmin: boolean
@@ -93,7 +93,7 @@ export function MileageWarningDialog({
   onOpenChange: (open: boolean) => void
   onForce: () => void
   forceLabel?: string
-}) {
+}>) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>

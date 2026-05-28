@@ -4,10 +4,9 @@ import { Save } from "lucide-react"
 
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { DetailItem, EmptyCard, ErrorMessage, Field, PageHeader } from "@/components/page-primitives"
 import type { Vehicle } from "@/types/vehicle"
 
-export const VehicleEventHeader = PageHeader
+export { PageHeader as VehicleEventHeader } from "@/components/page-primitives"
 
 export function ReadOnlyBadge() {
   return (
@@ -20,7 +19,7 @@ export function ReadOnlyBadge() {
   )
 }
 
-export function WarningMessage({ children }: { children: ReactNode }) {
+export function WarningMessage({ children }: Readonly<{ children: ReactNode }>) {
   return (
     <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-4 text-sm text-amber-700 dark:text-amber-300">
       {children}
@@ -28,9 +27,9 @@ export function WarningMessage({ children }: { children: ReactNode }) {
   )
 }
 
-export { DetailItem, EmptyCard, ErrorMessage, Field }
+export { DetailItem, EmptyCard, ErrorMessage, Field } from "@/components/page-primitives"
 
-export function FormActions({ cancelTo, canEdit, isSaving }: { cancelTo: string; canEdit: boolean; isSaving: boolean }) {
+export function FormActions({ cancelTo, canEdit, isSaving }: Readonly<{ cancelTo: string; canEdit: boolean; isSaving: boolean }>) {
   return (
     <div className="flex justify-end gap-2">
       <Button variant="outline" asChild>

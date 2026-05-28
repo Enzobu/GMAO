@@ -12,13 +12,13 @@ export function PageHeader({
   backTo,
   backLabel = "Retour",
   actions,
-}: {
+}: Readonly<{
   title: string
   description?: string
   backTo?: string
   backLabel?: string
   actions?: ReactNode
-}) {
+}>) {
   return (
     <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
       <div>
@@ -40,7 +40,7 @@ export function PageHeader({
   )
 }
 
-export function DetailItem({ label, value, boxed = false }: { label: string; value: string; boxed?: boolean }) {
+export function DetailItem({ label, value, boxed = false }: Readonly<{ label: string; value: string; boxed?: boolean }>) {
   return (
     <div className={boxed ? "rounded-lg border p-3" : undefined}>
       <div className="text-xs text-muted-foreground">{label}</div>
@@ -49,7 +49,7 @@ export function DetailItem({ label, value, boxed = false }: { label: string; val
   )
 }
 
-export function EmptyCard({ children }: { children: ReactNode }) {
+export function EmptyCard({ children }: Readonly<{ children: ReactNode }>) {
   return (
     <Card>
       <CardContent className="py-8 text-sm text-muted-foreground">{children}</CardContent>
@@ -57,7 +57,7 @@ export function EmptyCard({ children }: { children: ReactNode }) {
   )
 }
 
-export function ErrorMessage({ children }: { children: ReactNode }) {
+export function ErrorMessage({ children }: Readonly<{ children: ReactNode }>) {
   return <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive">{children}</div>
 }
 
@@ -66,11 +66,11 @@ export function Field({
   value,
   onChange,
   ...props
-}: {
+}: Readonly<{
   label: string
   value: string
   onChange: (value: string) => void
-} & Omit<ComponentProps<typeof Input>, "value" | "onChange">) {
+} & Omit<ComponentProps<typeof Input>, "value" | "onChange">>) {
   return (
     <label className="grid gap-1.5 text-sm font-medium">
       <span>{label}</span>
