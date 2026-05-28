@@ -14,7 +14,6 @@ use App\Service\DocumentManager;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bridge\Doctrine\Attribute\MapEntity;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Component\HttpFoundation\File\Exception\FileException;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
@@ -202,32 +201,23 @@ final class PartController extends AbstractController
         $form = $this->createForm(DocumentType::class, $document);
         $form->handleRequest($request);
 
-        if ($form->isSubmitted() && $form->isValid()) {
-            $uploadedFile = $form->get('file')->getData();
+        $response = $this->persistUploadedDocumentFromForm(
+            $document,
+            $form,
+            $entityManager,
+            static fn (Document $document) => $document->setPart($part),
+            fn () => $this->render('document/new.html.twig', [
+                'document' => $document,
+                'form' => $form,
+                'entity' => $part,
+                'subtitle' => 'Pièce : ' . $part->getPartType()->getName(),
+            ]),
+            fn () => $this->redirectToRoute('app_part_show', ["id" => $part->getId()], Response::HTTP_SEE_OTHER),
+            $slugger,
+        );
 
-            if ($uploadedFile !== null) {
-                try {
-                    $this->storeUploadedDocument($document, $uploadedFile, $this->getParameter('documents_directory'), $slugger);
-                } catch (FileException $e) {
-                    $this->addFlash('danger', 'Le fichier n’a pas pu être envoyé.');
-
-                    return $this->render('document/new.html.twig', [
-                        'document' => $document,
-                        'form' => $form,
-                        'entity' => $part,
-                        'subtitle' => 'Pièce : ' . $part->getPartType()->getName(),
-                    ]);
-                }
-
-                $document->setPart($part);
-
-                $entityManager->persist($document);
-                $entityManager->flush();
-
-                $this->addFlash('success', 'Le document a bien été ajouté.');
-
-                return $this->redirectToRoute('app_part_show', ["id" => $part->getId()], Response::HTTP_SEE_OTHER);
-            }
+        if ($response) {
+            return $response;
         }
 
         return $this->render('document/new.html.twig', [

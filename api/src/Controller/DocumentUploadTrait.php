@@ -5,6 +5,8 @@ namespace App\Controller;
 use App\Entity\Document;
 use App\Service\DocumentManager;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\Form\FormInterface;
+use Symfony\Component\HttpFoundation\File\Exception\FileException;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -39,6 +41,42 @@ trait DocumentUploadTrait
         if (!$document->getName()) {
             $document->setName($originalFilename);
         }
+    }
+
+    protected function persistUploadedDocumentFromForm(
+        Document $document,
+        FormInterface $form,
+        EntityManagerInterface $entityManager,
+        callable $attachDocument,
+        callable $renderUploadError,
+        callable $successResponse,
+        ?SluggerInterface $slugger = null,
+    ): ?Response {
+        if (!$form->isSubmitted() || !$form->isValid()) {
+            return null;
+        }
+
+        $uploadedFile = $form->get('file')->getData();
+
+        if ($uploadedFile === null) {
+            return null;
+        }
+
+        try {
+            $this->storeUploadedDocument($document, $uploadedFile, $this->getParameter('documents_directory'), $slugger);
+        } catch (FileException $e) {
+            $this->addFlash('danger', 'Le fichier n’a pas pu être envoyé.');
+
+            return $renderUploadError();
+        }
+
+        $attachDocument($document);
+        $entityManager->persist($document);
+        $entityManager->flush();
+
+        $this->addFlash('success', 'Le document a bien été ajouté.');
+
+        return $successResponse();
     }
 
     protected function flushDocumentUpdate(

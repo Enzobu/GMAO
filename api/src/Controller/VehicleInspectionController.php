@@ -17,7 +17,6 @@ use Symfony\Bridge\Doctrine\Attribute\MapEntity;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Form\FormError;
 use Symfony\Component\Form\FormInterface;
-use Symfony\Component\HttpFoundation\File\Exception\FileException;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
@@ -293,35 +292,26 @@ final class VehicleInspectionController extends AbstractController
         $form = $this->createForm(DocumentType::class, $document);
         $form->handleRequest($request);
 
-        if ($form->isSubmitted() && $form->isValid()) {
-            $uploadedFile = $form->get('file')->getData();
+        $response = $this->persistUploadedDocumentFromForm(
+            $document,
+            $form,
+            $entityManager,
+            static fn (Document $document) => $document->setvehicleInspection($vehicleInspection),
+            fn () => $this->render('document/new.html.twig', [
+                'document' => $document,
+                'form' => $form,
+                'entity' => $vehicleInspection,
+                'subtitle' => 'Assurance : ' . ucfirst($vehicleInspection->getInspectionDate()->format('d-m-Y')),
+            ]),
+            fn () => $this->redirectToRoute('app_vehicle_inspection_show', [
+                'vehicleId' => $vehicle->getId(),
+                'id' => $vehicleInspection->getId(),
+            ], Response::HTTP_SEE_OTHER),
+            $slugger,
+        );
 
-            if ($uploadedFile !== null) {
-                try {
-                    $this->storeUploadedDocument($document, $uploadedFile, $this->getParameter('documents_directory'), $slugger);
-                } catch (FileException $e) {
-                    $this->addFlash('danger', 'Le fichier n’a pas pu être envoyé.');
-
-                    return $this->render('document/new.html.twig', [
-                        'document' => $document,
-                        'form' => $form,
-                        'entity' => $vehicleInspection,
-                        'subtitle' => 'Assurance : ' . ucfirst($vehicleInspection->getInspectionDate()->format('d-m-Y')),
-                    ]);
-                }
-
-                $document->setvehicleInspection($vehicleInspection);
-
-                $entityManager->persist($document);
-                $entityManager->flush();
-
-                $this->addFlash('success', 'Le document a bien été ajouté.');
-
-                return $this->redirectToRoute('app_vehicle_inspection_show', [
-                    'vehicleId' => $vehicle->getId(),
-                    'id' => $vehicleInspection->getId(),
-                ], Response::HTTP_SEE_OTHER);
-            }
+        if ($response) {
+            return $response;
         }
 
         return $this->render('document/new.html.twig', [
