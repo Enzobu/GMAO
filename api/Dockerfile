@@ -32,6 +32,13 @@ RUN docker-php-ext-configure gd --with-freetype --with-jpeg && \
     pdo_mysql \
     zip
 
+RUN pecl install xdebug && \
+    docker-php-ext-enable xdebug && \
+    { \
+        echo 'xdebug.mode=coverage'; \
+        echo 'xdebug.start_with_request=no'; \
+    } > /usr/local/etc/php/conf.d/xdebug-coverage.ini
+
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
 
 # Installation of Symfony CLI with cache cleaning

@@ -41,29 +41,29 @@ class Document
 
     #[ORM\Column(length: 255)]
     #[Groups(['document:read', 'document:write'])]
-    private string $name;
+    private string $name = '';
 
     #[ORM\Column(length: 255, nullable: true)]
     #[Groups(['document:read'])]
-    private string $originalFilename;
+    private ?string $originalFilename = null;
 
     #[ORM\Column(length: 255, nullable: true)]
-    private string $storedFilename;
+    private ?string $storedFilename = null;
 
     #[ORM\Column(length: 255, nullable: true)]
-    private string $deletedStoredFilename;
+    private ?string $deletedStoredFilename = null;
 
     #[ORM\Column(length: 100, nullable: true)]
     #[Groups(['document:read', 'document:write'])]
-    private string $mimeType;
+    private ?string $mimeType = null;
 
     #[ORM\Column(nullable: true)]
     #[Groups(['document:read'])]
-    private int $size;
+    private ?int $size = null;
 
     #[ORM\Column(length: 20, nullable: true)]
     #[Groups(['document:read', 'document:write'])]
-    private string $extension;
+    private ?string $extension = null;
 
     #[ORM\Column(type: Types::TEXT, nullable: true)]
     #[Groups(['document:read', 'document:write'])]

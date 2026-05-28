@@ -34,6 +34,8 @@ class DocumentManager
     ): Document {
         $originalFilename = $file->getClientOriginalName();
         $extension = $file->guessExtension() ?? $file->getClientOriginalExtension() ?? 'bin';
+        $mimeType = $file->getMimeType() ?? 'application/octet-stream';
+        $size = $file->getSize() ?? 0;
         $storedFilename = uniqid('doc_', true).'.'.$extension;
 
         $file->move($this->uploadDirectory, $storedFilename);
@@ -43,8 +45,8 @@ class DocumentManager
             ->setOriginalFilename($originalFilename)
             ->setStoredFilename($storedFilename)
             ->setExtension($extension)
-            ->setMimeType($file->getMimeType() ?? 'application/octet-stream')
-            ->setSize($file->getSize() ?? 0)
+            ->setMimeType($mimeType)
+            ->setSize($size)
             ->setDescription($description);
 
         match ($parent::class) {

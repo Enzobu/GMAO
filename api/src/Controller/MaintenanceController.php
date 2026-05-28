@@ -414,12 +414,8 @@ final class MaintenanceController extends AbstractController
         ?Array $params = [],
         bool $delete = false,
         bool $update = false,
-        bool $new = false,
     ): ?Response {
         # -------------------- Authization --------------------
-        if($new) {
-            return null;
-        }
         if (!$this->isGranted('ROLE_ADMIN') && !($maintenance->getVehicle()?->getUser() == $currentUser)) {
             if ($update) {
                 $this->addFlash('danger', 'Vous ne pouvez pas modifier la ressource demandée. Pour plus d\'informations, contactez un administrateur.');

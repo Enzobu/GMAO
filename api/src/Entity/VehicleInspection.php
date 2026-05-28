@@ -297,7 +297,7 @@ class VehicleInspection
     public function removeDocument(Document $document): static
     {
         if ($this->documents->removeElement($document)) {
-            if ($document->getVehicleInsurance() === $this) {
+            if ($document->getVehicleInspection() === $this) {
                 $document->setIsDeleted(true);
             }
         }

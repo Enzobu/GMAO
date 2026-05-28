@@ -380,11 +380,7 @@ class Vehicle
 
     public function removeVehicleInsurance(VehicleInsurance $vehicleInsurance): static
     {
-        if ($this->vehicleInsurances->removeElement($vehicleInsurance)) {
-            // set the owning side to null (unless already changed)
-            if ($vehicleInsurance->getVehicle() === $this) {
-            }
-        }
+        $this->vehicleInsurances->removeElement($vehicleInsurance);
 
         return $this;
     }
@@ -410,8 +406,8 @@ class Vehicle
     public function removeVehicleInspection(VehicleInspection $vehicleInspection): static
     {
         if ($this->vehicleInspections->removeElement($vehicleInspection)) {
-            // set the owning side to null (unless already changed)
             if ($vehicleInspection->getVehicle() === $this) {
+                $vehicleInspection->setVehicle(null);
             }
         }
 
@@ -507,8 +503,8 @@ class Vehicle
     public function removeMaintenance(Maintenance $maintenance): static
     {
         if ($this->maintenances->removeElement($maintenance)) {
-            // set the owning side to null (unless already changed)
             if ($maintenance->getVehicle() === $this) {
+                $maintenance->setVehicle(null);
             }
         }
 

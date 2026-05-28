@@ -317,8 +317,8 @@ class Maintenance
     public function removeMaintenancePart(MaintenancePart $maintenancePart): static
     {
         if ($this->maintenanceParts->removeElement($maintenancePart)) {
-            // set the owning side to null (unless already changed)
             if ($maintenancePart->getMaintenance() === $this) {
+                $maintenancePart->setMaintenance(null);
             }
         }
 

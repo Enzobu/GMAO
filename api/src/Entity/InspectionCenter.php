@@ -141,8 +141,8 @@ class InspectionCenter
     public function removeVehicleInspection(VehicleInspection $vehicleInspection): static
     {
         if ($this->vehicleInspections->removeElement($vehicleInspection)) {
-            // set the owning side to null (unless already changed)
             if ($vehicleInspection->getCenter() === $this) {
+                $vehicleInspection->setCenter(null);
             }
         }
 

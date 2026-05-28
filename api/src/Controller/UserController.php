@@ -29,11 +29,7 @@ final class UserController extends AbstractController
     #[Route(name: 'app_user_index', methods: ['GET'])]
     public function index(UserRepository $userRepository): Response
     {
-        $response = $this->checkAthorization();
-
-        if ($response) {
-            return $response;
-        }
+        $this->checkAthorization();
 
         return $this->render('user/index.html.twig', [
             'users' => $userRepository->findBy(['isDeleted' => false]),
@@ -50,13 +46,9 @@ final class UserController extends AbstractController
         $user = new User();
         $user->setAddress(new \App\Entity\Address());
 
-        $response = $this->checkAthorization(
+        $this->checkAthorization(
             user: $user,
         );
-
-        if ($response) {
-            return $response;
-        }
 
         $form = $this->createForm(UserType::class, $user);
         $form->handleRequest($request);
@@ -329,10 +321,6 @@ final class UserController extends AbstractController
             }
         }
         if ($document) {
-            if (!$this->isGranted('ROLE_ADMIN')) {
-                $this->addFlash('danger', 'Vous ne pouvez pas ajouter ou modifier un document sur la ressource demandée. ressoPour plus d\'informations, contactez un administrateururce demandée.');
-                return $this->redirectToRoute('app_user_index', [], Response::HTTP_SEE_OTHER);
-            }
             if ($document->isDeleted()) {
                 $this->addFlash('danger', 'Le document a été supprimé. ressoPour plus d\'informations, contactez un administrateururce demandée.');
                 return $this->redirectToRoute('app_user_index', [], Response::HTTP_SEE_OTHER);

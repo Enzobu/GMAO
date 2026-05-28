@@ -1,0 +1,38 @@
+<?php
+
+namespace App\Tests\Unit\Entity;
+
+use App\Entity\Maintenance;
+use App\Entity\MaintenanceType;
+use PHPUnit\Framework\TestCase;
+
+final class MaintenanceTypeTest extends TestCase
+{
+    public function testAccessorsAndSoftDeleteFlag(): void
+    {
+        $type = (new MaintenanceType())
+            ->setName('Vidange')
+            ->setDescription('Entretien moteur')
+            ->setIsDeleted(true);
+
+        self::assertSame('Vidange', $type->getName());
+        self::assertSame('Entretien moteur', $type->getDescription());
+        self::assertTrue($type->isDeleted());
+    }
+
+    public function testMaintenanceRelationIsBidirectional(): void
+    {
+        $type = new MaintenanceType();
+        $maintenance = new Maintenance();
+
+        $type->addMaintenance($maintenance);
+
+        self::assertTrue($type->getMaintenances()->contains($maintenance));
+        self::assertSame($type, $maintenance->getMaintenanceType());
+
+        $type->removeMaintenance($maintenance);
+
+        self::assertFalse($type->getMaintenances()->contains($maintenance));
+        self::assertNull($maintenance->getMaintenanceType());
+    }
+}

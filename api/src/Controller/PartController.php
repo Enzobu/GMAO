@@ -30,13 +30,9 @@ final class PartController extends AbstractController
         VehicleRepository $vehicleRepository,
         PartTypeRepository $partTypeRepository,
     ): Response {
-        $response = $this->checkAthorization(
+        $this->checkAthorization(
             roleAdminRequired: false,
         );
-
-        if ($response) {
-            return $response;
-        }
 
         $vehicleId = $request->query->get('vehicle');
         $partTypeId = $request->query->get('partType');
@@ -363,10 +359,6 @@ final class PartController extends AbstractController
             $this->addFlash('warning', 'Vous avez un accès en lecture seule à la ressource demandée. ressoPour plus d\'informations, contactez un administrateururce demandée.');
         }
         if ($document) {
-            if (!$this->isGranted('ROLE_ADMIN')) {
-                $this->addFlash('danger', 'Vous ne pouvez pas ajouter un document sur la ressource demandée. Pour plus d\'informations, contactez un administrateur.');
-                return $this->redirectToRoute('app_part_index', [], Response::HTTP_SEE_OTHER);
-            }
             if ($document->isDeleted()) {
                 $this->addFlash('danger', 'Le document a été supprimé. Pour plus d\'informations, contactez un administrateur.');
                 return $this->redirectToRoute('app_part_index', [], Response::HTTP_SEE_OTHER);
