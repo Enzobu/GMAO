@@ -52,31 +52,29 @@ trait DocumentUploadTrait
         callable $successResponse,
         ?SluggerInterface $slugger = null,
     ): ?Response {
-        if (!$form->isSubmitted() || !$form->isValid()) {
-            return null;
+        if ($form->isSubmitted() && $form->isValid()) {
+            $uploadedFile = $form->get('file')->getData();
+
+            if ($uploadedFile !== null) {
+                try {
+                    $this->storeUploadedDocument($document, $uploadedFile, $this->getParameter('documents_directory'), $slugger);
+                } catch (FileException $e) {
+                    $this->addFlash('danger', 'Le fichier n’a pas pu être envoyé.');
+
+                    return $renderUploadError();
+                }
+
+                $attachDocument($document);
+                $entityManager->persist($document);
+                $entityManager->flush();
+
+                $this->addFlash('success', 'Le document a bien été ajouté.');
+
+                return $successResponse();
+            }
         }
 
-        $uploadedFile = $form->get('file')->getData();
-
-        if ($uploadedFile === null) {
-            return null;
-        }
-
-        try {
-            $this->storeUploadedDocument($document, $uploadedFile, $this->getParameter('documents_directory'), $slugger);
-        } catch (FileException $e) {
-            $this->addFlash('danger', 'Le fichier n’a pas pu être envoyé.');
-
-            return $renderUploadError();
-        }
-
-        $attachDocument($document);
-        $entityManager->persist($document);
-        $entityManager->flush();
-
-        $this->addFlash('success', 'Le document a bien été ajouté.');
-
-        return $successResponse();
+        return null;
     }
 
     protected function renderDocumentForm(
