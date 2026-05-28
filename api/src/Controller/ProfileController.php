@@ -150,16 +150,7 @@ final class ProfileController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            $entityManager->flush();
-
-            $name = $document->getName();
-            $description = $document->getDescription();
-
-            if (($oldName != $name) || ($oldDescription != $description)) {
-                $this->addFlash('success', 'Le document a bien été modifié.');
-            } else {
-                $this->addFlash('warning', 'Le document ne comporte aucune modification.');
-            }
+            $this->flushDocumentUpdate($entityManager, $document, $oldName, $oldDescription);
 
             return $this->redirectToRoute('app_profile', [], Response::HTTP_SEE_OTHER);
         }
@@ -187,11 +178,7 @@ final class ProfileController extends AbstractController
             return $response;
         }
 
-        if ($this->isCsrfTokenValid('delete'.$document->getId(), $request->getPayload()->getString('_token'))) {
-            $documentManager->softDelete($document);
-
-            $this->addFlash('success', 'Document supprimé avec succès.');
-        }
+        $this->softDeleteDocumentWhenCsrfIsValid($request, $documentManager, $document);
 
         return $this->redirectToRoute('app_profile', [], Response::HTTP_SEE_OTHER);
     }
@@ -203,15 +190,17 @@ final class ProfileController extends AbstractController
     ): ?Response {
         # -------------------- Authization --------------------
         if ($document) {
-            if ($document->isDeleted()) {
-                $this->addFlash('danger', 'Le document a été supprimé. ressoPour plus d\'informations, contactez un administrateururce demandée.');
-                return $this->redirectToRoute('app_vehicle_index', $params, Response::HTTP_SEE_OTHER);
+            $response = $this->redirectIfDocumentIsDeleted($document, 'app_vehicle_index', $params ?? []);
+
+            if ($response) {
+                return $response;
             }
         }
         if ($delete) {
-            if (!$this->isGranted('ROLE_ADMIN')) {
-                $this->addFlash('danger', 'Vous n\'avez pas les autorisations nécessaires pour supprimer un document. Veuillez contacter un administrateur');
-                return $this->redirectToRoute('app_vehicle_show', $params, Response::HTTP_SEE_OTHER);
+            $response = $this->redirectUnlessAdmin('app_vehicle_show', $params ?? [], 'Vous n\'avez pas les autorisations nécessaires pour supprimer un document. Veuillez contacter un administrateur');
+
+            if ($response) {
+                return $response;
             }
         }
         # -----------------------------------------------------

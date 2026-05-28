@@ -3,7 +3,11 @@
 namespace App\Controller;
 
 use App\Entity\Document;
+use App\Service\DocumentManager;
+use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\String\Slugger\SluggerInterface;
 
 trait DocumentUploadTrait
@@ -35,5 +39,65 @@ trait DocumentUploadTrait
         if (!$document->getName()) {
             $document->setName($originalFilename);
         }
+    }
+
+    protected function flushDocumentUpdate(
+        EntityManagerInterface $entityManager,
+        Document $document,
+        ?string $oldName,
+        ?string $oldDescription,
+    ): void {
+        $entityManager->flush();
+
+        if ($oldName !== $document->getName() || $oldDescription !== $document->getDescription()) {
+            $this->addFlash('success', 'Le document a bien été modifié.');
+        } else {
+            $this->addFlash('warning', 'Le document ne comporte aucune modification.');
+        }
+    }
+
+    protected function softDeleteDocumentWhenCsrfIsValid(
+        Request $request,
+        DocumentManager $documentManager,
+        Document $document,
+    ): void {
+        if ($this->isCsrfTokenValid('delete'.$document->getId(), $request->getPayload()->getString('_token'))) {
+            $documentManager->softDelete($document);
+
+            $this->addFlash('success', 'Document supprimé avec succès.');
+        }
+    }
+
+    /**
+     * @param array<string, mixed> $params
+     */
+    protected function redirectIfDocumentIsDeleted(
+        Document $document,
+        string $route,
+        array $params = [],
+        string $message = 'Le document a été supprimé. ressoPour plus d\'informations, contactez un administrateururce demandée.',
+    ): ?Response
+    {
+        if (!$document->isDeleted()) {
+            return null;
+        }
+
+        $this->addFlash('danger', $message);
+
+        return $this->redirectToRoute($route, $params, Response::HTTP_SEE_OTHER);
+    }
+
+    /**
+     * @param array<string, mixed> $params
+     */
+    protected function redirectUnlessAdmin(string $route, array $params, string $message): ?Response
+    {
+        if ($this->isGranted('ROLE_ADMIN')) {
+            return null;
+        }
+
+        $this->addFlash('danger', $message);
+
+        return $this->redirectToRoute($route, $params, Response::HTTP_SEE_OTHER);
     }
 }

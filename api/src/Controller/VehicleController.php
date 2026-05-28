@@ -281,16 +281,7 @@ final class VehicleController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            $entityManager->flush();
-
-            $name = $document->getName();
-            $description = $document->getDescription();
-
-            if (($oldName != $name) || ($oldDescription != $description)) {
-                $this->addFlash('success', 'Le document a bien été modifié.');
-            } else {
-                $this->addFlash('warning', 'Le document ne comporte aucune modification.');
-            }
+            $this->flushDocumentUpdate($entityManager, $document, $oldName, $oldDescription);
 
             return $this->redirectToRoute('app_vehicle_show', [
                 'id' => $vehicle->getId(),
@@ -327,11 +318,7 @@ final class VehicleController extends AbstractController
             return $response;
         }
 
-        if ($this->isCsrfTokenValid('delete'.$document->getId(), $request->getPayload()->getString('_token'))) {
-            $documentManager->softDelete($document);
-
-            $this->addFlash('success', 'Document supprimé avec succès.');
-        }
+        $this->softDeleteDocumentWhenCsrfIsValid($request, $documentManager, $document);
 
         return $this->redirectToRoute('app_vehicle_show', ["id" => $vehicle->getId()], Response::HTTP_SEE_OTHER);
     }

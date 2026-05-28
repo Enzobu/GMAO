@@ -231,14 +231,7 @@ final class UserController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            $entityManager->flush();
-
-            $name = $document->getName();
-            $description = $document->getDescription();
-
-            ($oldName != $name) || ($oldDescription != $description) ?
-            $this->addFlash('success', 'Le document a bien été modifié.') :
-            $this->addFlash('warning', 'Le document ne comporte aucune modification.');
+            $this->flushDocumentUpdate($entityManager, $document, $oldName, $oldDescription);
 
             return $this->redirectToRoute('app_user_show', ["id" => $user->getId()], Response::HTTP_SEE_OTHER);
         }
@@ -267,11 +260,7 @@ final class UserController extends AbstractController
             return $response;
         }
 
-        if ($this->isCsrfTokenValid('delete'.$document->getId(), $request->getPayload()->getString('_token'))) {
-            $documentManager->softDelete($document);
-
-            $this->addFlash('success', 'Document supprimé avec succès.');
-        }
+        $this->softDeleteDocumentWhenCsrfIsValid($request, $documentManager, $document);
 
         return $this->redirectToRoute('app_user_show', ["id" => $user->getId()], Response::HTTP_SEE_OTHER);
     }
@@ -284,9 +273,10 @@ final class UserController extends AbstractController
     ): ?Response {
         # -------------------- Authization --------------------
         if ($delete || $edit) {
-            if (!$this->isGranted('ROLE_ADMIN')) {
-                $this->addFlash('danger', 'Vous n\'avez pas les autorisations nécessaires pour modifier ou supprimer un élément. Veuillez contacter un administrateur');
-                return $this->redirectToRoute('app_user_index', [], Response::HTTP_SEE_OTHER);
+            $response = $this->redirectUnlessAdmin('app_user_index', [], 'Vous n\'avez pas les autorisations nécessaires pour modifier ou supprimer un élément. Veuillez contacter un administrateur');
+
+            if ($response) {
+                return $response;
             }
         }
         if (!$this->isGranted('ROLE_ADMIN')) {
@@ -300,9 +290,10 @@ final class UserController extends AbstractController
             }
         }
         if ($document) {
-            if ($document->isDeleted()) {
-                $this->addFlash('danger', 'Le document a été supprimé. ressoPour plus d\'informations, contactez un administrateururce demandée.');
-                return $this->redirectToRoute('app_user_index', [], Response::HTTP_SEE_OTHER);
+            $response = $this->redirectIfDocumentIsDeleted($document, 'app_user_index');
+
+            if ($response) {
+                return $response;
             }
         }
         # -----------------------------------------------------
