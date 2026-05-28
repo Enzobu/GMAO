@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react"
-import type { ComponentProps, FormEvent } from "react"
+import type { FormEvent } from "react"
 import { isAxiosError } from "axios"
 import { Link, useNavigate, useParams } from "react-router-dom"
 import { Plus, Save, Trash2 } from "lucide-react"
@@ -11,7 +11,6 @@ import { getVehicle } from "@/api/vehicles"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
 import { NativeSelect } from "@/components/ui/native-select"
 import { Textarea } from "@/components/ui/textarea"
 import { useAuthStore } from "@/stores/auth-store"
@@ -20,7 +19,7 @@ import type { Intervention, InterventionPayload, InterventionStatus } from "@/ty
 import type { Part } from "@/types/part"
 import type { Vehicle } from "@/types/vehicle"
 import { INTERVENTION_STATUSES, vehicleDisplayName } from "@/lib/intervention-utils"
-import { ErrorMessage, InterventionHeader } from "./components"
+import { ErrorMessage, Field, InterventionHeader } from "./components"
 
 const emptyForm = {
   maintenanceTypeId: "",
@@ -306,24 +305,6 @@ export default function InterventionFormPage() {
         </div>
       </form>
     </div>
-  )
-}
-
-function Field({
-  label,
-  value,
-  onChange,
-  ...props
-}: {
-  label: string
-  value: string
-  onChange: (value: string) => void
-} & Omit<ComponentProps<typeof Input>, "value" | "onChange">) {
-  return (
-    <label className="grid gap-1.5 text-sm font-medium">
-      <span>{label}</span>
-      <Input value={value} onChange={(event) => onChange(event.target.value)} {...props} />
-    </label>
   )
 }
 

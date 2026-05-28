@@ -36,10 +36,7 @@ class MaintenanceType extends AbstractType
                 },
                 'label' => 'Véhicule',
                 'placeholder' => 'Sélectionner un véhicule',
-                'row_attr' => ['class' => 'mb-3'],
-                'label_attr' => ['class' => 'form-label'],
-                'attr' => ['class' => 'form-select'],
-            ]);
+            ] + $this->selectOptions());
         }
 
         $builder
@@ -63,72 +60,32 @@ class MaintenanceType extends AbstractType
                 },
                 'label' => 'Type d’entretien',
                 'placeholder' => 'Sélectionner un type',
-                'row_attr' => ['class' => 'mb-3'],
-                'label_attr' => ['class' => 'form-label'],
-                'attr' => ['class' => 'form-select'],
-            ])
+            ] + $this->selectOptions())
             ->add('status', EnumType::class, [
                 'class' => MaintenanceStatusEnum::class,
                 'choice_label' => fn (MaintenanceStatusEnum $choice) => $choice->label(),
                 'label' => 'Statut',
                 'placeholder' => 'Sélectionner un statut',
-                'row_attr' => ['class' => 'mb-3'],
-                'label_attr' => ['class' => 'form-label'],
-                'attr' => ['class' => 'form-select'],
-            ])
+            ] + $this->selectOptions())
             ->add('mileage', IntegerType::class, [
                 'label' => 'Kilométrage',
-                'required' => false,
                 'attr' => [
                     'class' => 'form-control',
                     'min' => 0,
                     'placeholder' => 'Ex : 125000',
                 ],
-                'row_attr' => ['class' => 'mb-3'],
-                'label_attr' => ['class' => 'form-label'],
-            ])
-            ->add('plannedAt', DateTimeType::class, [
-                'label' => 'Date prévue',
-                'widget' => 'single_text',
-                'required' => false,
-                'row_attr' => ['class' => 'mb-3'],
-                'label_attr' => ['class' => 'form-label'],
-                'attr' => ['class' => 'form-control'],
-            ])
-            ->add('startedAt', DateTimeType::class, [
-                'label' => 'Date de début',
-                'widget' => 'single_text',
-                'required' => false,
-                'row_attr' => ['class' => 'mb-3'],
-                'label_attr' => ['class' => 'form-label'],
-                'attr' => ['class' => 'form-control'],
-            ])
-            ->add('finishedAt', DateTimeType::class, [
-                'label' => 'Date de fin',
-                'widget' => 'single_text',
-                'required' => false,
-                'row_attr' => ['class' => 'mb-3'],
-                'label_attr' => ['class' => 'form-label'],
-                'attr' => ['class' => 'form-control'],
-            ])
+            ] + $this->integerOptions())
+            ->add('plannedAt', DateTimeType::class, $this->dateOptions('Date prévue'))
+            ->add('startedAt', DateTimeType::class, $this->dateOptions('Date de début'))
+            ->add('finishedAt', DateTimeType::class, $this->dateOptions('Date de fin'))
             ->add('nextDueMileage', IntegerType::class, [
                 'label' => 'Prochain kilométrage',
-                'required' => false,
                 'attr' => [
                     'class' => 'form-control',
                     'min' => 0,
                 ],
-                'row_attr' => ['class' => 'mb-3'],
-                'label_attr' => ['class' => 'form-label'],
-            ])
-            ->add('nextDueAt', DateTimeType::class, [
-                'label' => 'Prochaine date',
-                'widget' => 'single_text',
-                'required' => false,
-                'row_attr' => ['class' => 'mb-3'],
-                'label_attr' => ['class' => 'form-label'],
-                'attr' => ['class' => 'form-control'],
-            ])
+            ] + $this->integerOptions())
+            ->add('nextDueAt', DateTimeType::class, $this->dateOptions('Prochaine date'))
             ->add('isExternal', CheckboxType::class, [
                 'label' => 'Entretien réalisé en externe',
                 'required' => false,
@@ -168,5 +125,44 @@ class MaintenanceType extends AbstractType
             'data_class' => Maintenance::class,
             'vehicle_locked' => false,
         ]);
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function selectOptions(): array
+    {
+        return [
+            'row_attr' => ['class' => 'mb-3'],
+            'label_attr' => ['class' => 'form-label'],
+            'attr' => ['class' => 'form-select'],
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function integerOptions(): array
+    {
+        return [
+            'required' => false,
+            'row_attr' => ['class' => 'mb-3'],
+            'label_attr' => ['class' => 'form-label'],
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function dateOptions(string $label): array
+    {
+        return [
+            'label' => $label,
+            'widget' => 'single_text',
+            'required' => false,
+            'row_attr' => ['class' => 'mb-3'],
+            'label_attr' => ['class' => 'form-label'],
+            'attr' => ['class' => 'form-control'],
+        ];
     }
 }

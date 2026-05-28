@@ -1,6 +1,6 @@
 import type { ComponentProps, ReactNode } from "react"
 import { Link } from "react-router-dom"
-import { ArrowLeft } from "lucide-react"
+import { ArrowLeft, Save } from "lucide-react"
 
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -100,6 +100,20 @@ export function Field({
       <span>{label}</span>
       <Input value={value} onChange={(event) => onChange(event.target.value)} {...props} />
     </label>
+  )
+}
+
+export function FormActions({ cancelTo, canEdit, isSaving }: { cancelTo: string; canEdit: boolean; isSaving: boolean }) {
+  return (
+    <div className="flex justify-end gap-2">
+      <Button variant="outline" asChild>
+        <Link to={cancelTo}>Annuler</Link>
+      </Button>
+      <Button type="submit" disabled={!canEdit || isSaving}>
+        <Save />
+        {isSaving ? "Enregistrement..." : "Enregistrer"}
+      </Button>
+    </div>
   )
 }
 

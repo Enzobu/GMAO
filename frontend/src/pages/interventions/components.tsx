@@ -1,10 +1,11 @@
-import type { ReactNode } from "react"
+import type { ComponentProps, ReactNode } from "react"
 import { Link } from "react-router-dom"
 import { ArrowLeft } from "lucide-react"
 
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
 import type { Intervention } from "@/types/intervention"
 import { formatDate, formatNumber, interventionStatusLabel, interventionStatusVariant } from "@/lib/intervention-utils"
 
@@ -109,4 +110,22 @@ export function EmptyCard({ children }: { children: ReactNode }) {
 
 export function ErrorMessage({ children }: { children: ReactNode }) {
   return <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive">{children}</div>
+}
+
+export function Field({
+  label,
+  value,
+  onChange,
+  ...props
+}: {
+  label: string
+  value: string
+  onChange: (value: string) => void
+} & Omit<ComponentProps<typeof Input>, "value" | "onChange">) {
+  return (
+    <label className="grid gap-1.5 text-sm font-medium">
+      <span>{label}</span>
+      <Input value={value} onChange={(event) => onChange(event.target.value)} {...props} />
+    </label>
+  )
 }

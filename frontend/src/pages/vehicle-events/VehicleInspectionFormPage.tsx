@@ -1,11 +1,9 @@
 import { useEffect, useMemo, useState } from "react"
 import type { FormEvent } from "react"
-import { Link, useNavigate, useParams } from "react-router-dom"
-import { Save } from "lucide-react"
+import { useNavigate, useParams } from "react-router-dom"
 
 import { createVehicleInspection, getInspectionCenters, getVehicleInspection, updateVehicleInspection } from "@/api/vehicle-events"
 import { getVehicle } from "@/api/vehicles"
-import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { NativeSelect } from "@/components/ui/native-select"
 import { Textarea } from "@/components/ui/textarea"
@@ -13,7 +11,7 @@ import { useAuthStore } from "@/stores/auth-store"
 import type { Vehicle } from "@/types/vehicle"
 import type { InspectionCenter, VehicleInspectionEvent, VehicleInspectionPayload } from "@/types/vehicle-events"
 import { INSPECTION_RESULTS } from "@/lib/vehicle-events"
-import { ErrorMessage, Field, VehicleEventHeader, vehicleDescription, WarningMessage } from "./components"
+import { ErrorMessage, Field, FormActions, VehicleEventHeader, vehicleDescription, WarningMessage } from "./components"
 
 const emptyForm = {
   inspectionDate: "",
@@ -226,20 +224,6 @@ export default function VehicleInspectionFormPage() {
           isSaving={isSaving}
         />
       </form>
-    </div>
-  )
-}
-
-function FormActions({ cancelTo, canEdit, isSaving }: { cancelTo: string; canEdit: boolean; isSaving: boolean }) {
-  return (
-    <div className="flex justify-end gap-2">
-      <Button variant="outline" asChild>
-        <Link to={cancelTo}>Annuler</Link>
-      </Button>
-      <Button type="submit" disabled={!canEdit || isSaving}>
-        <Save />
-        {isSaving ? "Enregistrement..." : "Enregistrer"}
-      </Button>
     </div>
   )
 }
