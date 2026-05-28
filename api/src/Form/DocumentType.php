@@ -22,7 +22,7 @@ class DocumentType extends AbstractType
                     'required' => true,
                     'constraints' => [
                         new File([
-                            'maxSize' => '20M',
+                            'maxSize' => '8M',
                         ]),
                     ],
                     'attr' => [
