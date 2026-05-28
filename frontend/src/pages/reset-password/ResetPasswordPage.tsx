@@ -41,7 +41,7 @@ export default function ResetPasswordPage() {
       const response = await resetPassword(token, password)
 
       setMessage(response.message)
-      window.setTimeout(() => navigate("/login"), 1200)
+      globalThis.setTimeout(() => navigate("/login"), 1200)
     } catch {
       setError("Le lien est invalide, expiré ou le mot de passe n'a pas pu être réinitialisé.")
     } finally {

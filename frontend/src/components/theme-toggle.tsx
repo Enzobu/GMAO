@@ -7,15 +7,27 @@ const themes = ["system", "light", "dark"] as const
 type ThemeName = (typeof themes)[number]
 
 function isThemeName(theme: string | undefined): theme is ThemeName {
-  return themes.some((item) => item === theme)
+  return themes.includes(theme as ThemeName)
+}
+
+const themeIcons = {
+  system: Monitor,
+  light: Sun,
+  dark: Moon,
+}
+
+const themeLabels = {
+  system: "Thème système",
+  light: "Thème clair",
+  dark: "Thème sombre",
 }
 
 export function ThemeToggle() {
   const { theme, setTheme } = useTheme()
   const currentTheme = isThemeName(theme) ? theme : "system"
   const nextTheme = themes[(themes.indexOf(currentTheme) + 1) % themes.length]
-  const Icon = currentTheme === "light" ? Sun : currentTheme === "dark" ? Moon : Monitor
-  const label = currentTheme === "light" ? "Thème clair" : currentTheme === "dark" ? "Thème sombre" : "Thème système"
+  const Icon = themeIcons[currentTheme]
+  const label = themeLabels[currentTheme]
 
   return (
     <Button

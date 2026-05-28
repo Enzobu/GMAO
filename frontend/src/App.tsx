@@ -14,7 +14,7 @@ function App() {
   const logout = useAuthStore((state) => state.logout)
 
   useEffect(() => {
-    const isPublicRoute = window.location.pathname === "/login" || window.location.pathname.startsWith("/reset-password")
+    const isPublicRoute = globalThis.location.pathname === "/login" || globalThis.location.pathname.startsWith("/reset-password")
 
     if (!token || user || isPublicRoute) {
       return

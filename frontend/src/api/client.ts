@@ -24,13 +24,13 @@ api.interceptors.response.use(
   (error) => {
     const requestUrl = error.config?.url ?? ""
     const isAuthRequest = requestUrl.includes("/login") || requestUrl.includes("/reset-password")
-    const isAlreadyOnLogin = window.location.pathname === "/login"
+    const isAlreadyOnLogin = globalThis.location.pathname === "/login"
 
     if (error.response?.status === 401 && !isAuthRequest) {
       useAuthStore.getState().logout()
 
       if (!isAlreadyOnLogin) {
-        window.location.href = "/login"
+        globalThis.location.href = "/login"
       }
     }
 

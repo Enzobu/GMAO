@@ -54,7 +54,7 @@ export default function AppLayout() {
   const searchInputRef = useRef<HTMLInputElement>(null)
   const user = useAuthStore((state) => state.user)
   const logout = useAuthStore((state) => state.logout)
-  const isAdmin = user?.roles.some((role) => role === "ROLE_ADMIN") ?? false
+  const isAdmin = user?.roles.includes("ROLE_ADMIN") ?? false
 
   useEffect(() => {
     function handleSearchShortcut(event: KeyboardEvent) {
@@ -64,9 +64,9 @@ export default function AppLayout() {
       }
     }
 
-    window.addEventListener("keydown", handleSearchShortcut)
+    globalThis.addEventListener("keydown", handleSearchShortcut)
 
-    return () => window.removeEventListener("keydown", handleSearchShortcut)
+    return () => globalThis.removeEventListener("keydown", handleSearchShortcut)
   }, [])
 
   return (
@@ -197,7 +197,7 @@ export default function AppLayout() {
                         </p>
 
                         <p className="text-xs text-muted-foreground">
-                          {user?.roles?.some((role) => role === "ROLE_ADMIN")
+                          {isAdmin
                             ? "Administrateur"
                             : "Utilisateur"}
                         </p>
@@ -223,7 +223,7 @@ export default function AppLayout() {
                       className="cursor-pointer text-red-500 focus:text-red-500 [&_svg]:text-red-500"
                       onClick={() => {
                         logout()
-                        window.location.href = "/login"
+                        globalThis.location.href = "/login"
                       }}
                     >
                       <LogOut className="mr-2 h-4 w-4 text-red-500" />

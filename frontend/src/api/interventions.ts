@@ -36,7 +36,7 @@ function collectionNextPage<T>(data: ApiCollection<T>) {
   const next = data.view?.next ?? data["hydra:view"]?.["hydra:next"]
   if (!next) return null
 
-  const url = new URL(next, window.location.origin)
+  const url = new URL(next, globalThis.location.origin)
   const page = Number(url.searchParams.get("page"))
 
   return Number.isFinite(page) && page > 0 ? page : null
