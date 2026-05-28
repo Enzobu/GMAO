@@ -27,6 +27,8 @@ final class VehicleInsuranceController extends AbstractController
     use DocumentUploadTrait;
     use VehicleEventAuthorizationTrait;
 
+    private const DOCUMENT_TITLE_PREFIX = 'Assurance : ';
+
     #[Route('/{vehicleId}/insurance', name: 'app_vehicle_insurance_index', methods: ['GET'])]
     public function index(
         VehicleInsuranceRepository $vehicleInsuranceRepository,
@@ -237,7 +239,7 @@ final class VehicleInsuranceController extends AbstractController
             $form,
             $entityManager,
             static fn (Document $document) => $document->setVehicleInsurance($vehicleInsurance),
-            fn () => $this->renderDocumentForm('document/new.html.twig', $document, $form, $vehicleInsurance, 'Assurance : ' . ucfirst($vehicleInsurance->getProviderName())),
+            fn () => $this->renderDocumentForm('document/new.html.twig', $document, $form, $vehicleInsurance, self::DOCUMENT_TITLE_PREFIX . ucfirst($vehicleInsurance->getProviderName())),
             fn () => $this->redirectToRoute('app_vehicle_insurance_show', [
                 'vehicleId' => $vehicle->getId(),
                 'id' => $vehicleInsurance->getId(),
@@ -249,7 +251,7 @@ final class VehicleInsuranceController extends AbstractController
             return $response;
         }
 
-        return $this->renderDocumentForm('document/new.html.twig', $document, $form, $vehicleInsurance, 'Assurance : ' . ucfirst($vehicleInsurance->getProviderName()));
+        return $this->renderDocumentForm('document/new.html.twig', $document, $form, $vehicleInsurance, self::DOCUMENT_TITLE_PREFIX . ucfirst($vehicleInsurance->getProviderName()));
     }
 
     #[Route('/{vehicleId}/insurance/{id}/document/{documentId}/edit', name: 'app_vehicle_insurance_document_edit', methods: ['GET', 'POST'])]
@@ -291,7 +293,7 @@ final class VehicleInsuranceController extends AbstractController
             ], Response::HTTP_SEE_OTHER);
         }
 
-        return $this->renderDocumentForm('document/edit.html.twig', $document, $form, $vehicleInsurance, 'Assurance : ' . ucfirst($vehicleInsurance->getProviderName()));
+        return $this->renderDocumentForm('document/edit.html.twig', $document, $form, $vehicleInsurance, self::DOCUMENT_TITLE_PREFIX . ucfirst($vehicleInsurance->getProviderName()));
     }
 
     #[Route('/{vehicleId}/insurance/{id}/document/{documentId}', name: 'app_vehicle_insurance_document_delete', methods: ['POST'])]

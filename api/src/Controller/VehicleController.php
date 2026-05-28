@@ -28,6 +28,8 @@ final class VehicleController extends AbstractController
     use DocumentUploadTrait;
     use MileageWarningTrait;
 
+    private const DOCUMENT_TITLE_PREFIX = 'Véhicule : ';
+
     #[Route(name: 'app_vehicle_index', methods: ['GET'])]
     public function index(
         VehicleRepository $vehicleRepository,
@@ -217,7 +219,7 @@ final class VehicleController extends AbstractController
             $form,
             $entityManager,
             static fn (Document $document) => $document->setVehicle($vehicle),
-            fn () => $this->renderDocumentForm('document/new.html.twig', $document, $form, $vehicle, 'Véhicule : ' . ucfirst($vehicle->getName()) . ' ・ ' . strtoupper($vehicle->getRegistration())),
+            fn () => $this->renderDocumentForm('document/new.html.twig', $document, $form, $vehicle, self::DOCUMENT_TITLE_PREFIX . ucfirst($vehicle->getName()) . ' ・ ' . strtoupper($vehicle->getRegistration())),
             fn () => $this->redirectToRoute('app_vehicle_show', [
                 'id' => $vehicle->getId(),
             ], Response::HTTP_SEE_OTHER),
@@ -227,7 +229,7 @@ final class VehicleController extends AbstractController
             return $response;
         }
 
-        return $this->renderDocumentForm('document/new.html.twig', $document, $form->createView(), $vehicle, 'Véhicule : ' . ucfirst($vehicle->getName()) . ' ・ ' . strtoupper($vehicle->getRegistration()));
+        return $this->renderDocumentForm('document/new.html.twig', $document, $form->createView(), $vehicle, self::DOCUMENT_TITLE_PREFIX . ucfirst($vehicle->getName()) . ' ・ ' . strtoupper($vehicle->getRegistration()));
     }
 
     #[Route('/{id}/document/{documentId}/edit', name: 'app_vehicle_document_edit', methods: ['GET', 'POST'])]
@@ -266,7 +268,7 @@ final class VehicleController extends AbstractController
             ], Response::HTTP_SEE_OTHER);
         }
 
-        return $this->renderDocumentForm('document/edit.html.twig', $document, $form, $vehicle, 'Véhicule : ' . ucfirst($vehicle->getName()) . ' ・ ' . strtoupper($vehicle->getRegistration()));
+        return $this->renderDocumentForm('document/edit.html.twig', $document, $form, $vehicle, self::DOCUMENT_TITLE_PREFIX . ucfirst($vehicle->getName()) . ' ・ ' . strtoupper($vehicle->getRegistration()));
     }
 
     #[Route('{id}/document/{documentId}', name: 'app_vehicle_document_delete', methods: ['POST'])]

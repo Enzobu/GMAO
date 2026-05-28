@@ -24,6 +24,8 @@ final class PartController extends AbstractController
 {
     use DocumentUploadTrait;
 
+    private const DOCUMENT_TITLE_PREFIX = 'Pièce : ';
+
     #[Route(name: 'app_part_index', methods: ['GET'])]
     public function index(
         Request $request,
@@ -206,7 +208,7 @@ final class PartController extends AbstractController
             $form,
             $entityManager,
             static fn (Document $document) => $document->setPart($part),
-            fn () => $this->renderDocumentForm('document/new.html.twig', $document, $form, $part, 'Pièce : ' . $part->getPartType()->getName()),
+            fn () => $this->renderDocumentForm('document/new.html.twig', $document, $form, $part, self::DOCUMENT_TITLE_PREFIX . $part->getPartType()->getName()),
             fn () => $this->redirectToRoute('app_part_show', ["id" => $part->getId()], Response::HTTP_SEE_OTHER),
             $slugger,
         );
@@ -215,7 +217,7 @@ final class PartController extends AbstractController
             return $response;
         }
 
-        return $this->renderDocumentForm('document/new.html.twig', $document, $form, $part, 'Pièce : ' . $part->getPartType()->getName());
+        return $this->renderDocumentForm('document/new.html.twig', $document, $form, $part, self::DOCUMENT_TITLE_PREFIX . $part->getPartType()->getName());
     }
 
     #[Route('/{id}/document/{documentId}/edit', name: 'app_part_document_edit', methods: ['GET', 'POST'])]
@@ -247,7 +249,7 @@ final class PartController extends AbstractController
             return $this->redirectToRoute('app_part_show', ["id" => $part->getId()], Response::HTTP_SEE_OTHER);
         }
 
-        return $this->renderDocumentForm('document/edit.html.twig', $document, $form, $part, 'Pièce : ' . $part->getPartType()->getName());
+        return $this->renderDocumentForm('document/edit.html.twig', $document, $form, $part, self::DOCUMENT_TITLE_PREFIX . $part->getPartType()->getName());
     }
 
     #[Route('/{id}/document/{documentId}', name: 'app_part_document_delete', methods: ['POST'])]
