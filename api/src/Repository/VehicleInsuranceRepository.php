@@ -39,37 +39,32 @@ class VehicleInsuranceRepository extends ServiceEntityRepository
      */
     public function findByVehicle(array $criteria = [], array $orderBy = [], bool $deleted = false): array
     {
-        $qb = $this
+        $queryBuilder = $this
             ->createQueryBuilder('vi')
             ->innerJoin('vi.vehicle', 'v')
             ->addSelect('v')
         ;
 
-        if (array_key_exists('vehicle', $criteria) && $criteria['vehicle'] !== null) {
-            $qb
+        $vehicle = $criteria['vehicle'] ?? null;
+        if ($vehicle !== null) {
+            $queryBuilder
                 ->andWhere('vi.vehicle = :vehicle')
-                ->setParameter('vehicle', $criteria['vehicle'])
+                ->setParameter('vehicle', $vehicle)
             ;
         }
 
-        if ($deleted === false) {
-            $qb
-                ->andWhere('v.isDeleted = :deleted')
-                ->setParameter('deleted', false)
-            ;
-            $qb
-                ->andWhere('vi.isDeleted = :deleted')
-                ->setParameter('deleted', false)
-            ;
+        if (!$deleted) {
+            foreach (['v', 'vi'] as $alias) {
+                $queryBuilder->andWhere(sprintf('%s.isDeleted = :deleted', $alias));
+            }
+
+            $queryBuilder->setParameter('deleted', false);
         }
 
         foreach ($orderBy as $field => $direction) {
-            $allowedDirection = strtoupper($direction) === 'ASC' ? 'ASC' : 'DESC';
-            $qb
-                ->addOrderBy('vi.' . $field, $allowedDirection)
-            ;
+            $queryBuilder->addOrderBy('vi.' . $field, strtoupper($direction) === 'ASC' ? 'ASC' : 'DESC');
         }
 
-        return $qb->getQuery()->getResult();
+        return $queryBuilder->getQuery()->getResult();
     }
 }
