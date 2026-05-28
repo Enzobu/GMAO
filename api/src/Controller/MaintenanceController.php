@@ -242,12 +242,7 @@ final class MaintenanceController extends AbstractController
             $form,
             $entityManager,
             static fn (Document $document) => $document->setMaintenance($maintenance),
-            fn () => $this->render('document/new.html.twig', [
-                'document' => $document,
-                'form' => $form,
-                'subtitle' => 'Maintenance du véhicule : ' . ucfirst($maintenance->getVehicle()->getName()) . ' ・ ' . strtoupper($maintenance->getVehicle()->getRegistration()),
-                'entity' => $maintenance,
-            ]),
+            fn () => $this->renderDocumentForm('document/new.html.twig', $document, $form, $maintenance, 'Maintenance du véhicule : ' . ucfirst($maintenance->getVehicle()->getName()) . ' ・ ' . strtoupper($maintenance->getVehicle()->getRegistration())),
             fn () => $this->redirectToRoute('app_maintenance_show', [
                 'id' => $maintenance->getId(),
             ], Response::HTTP_SEE_OTHER),
@@ -257,12 +252,7 @@ final class MaintenanceController extends AbstractController
             return $response;
         }
 
-        return $this->render('document/new.html.twig', [
-            'document' => $document,
-            'form' => $form->createView(),
-            'subtitle' => 'Véhicule : ' . ucfirst($maintenance->getVehicle()->getName()) . ' ・ ' . strtoupper($maintenance->getVehicle()->getRegistration()),
-            'entity' => $maintenance,
-        ]);
+        return $this->renderDocumentForm('document/new.html.twig', $document, $form->createView(), $maintenance, 'Véhicule : ' . ucfirst($maintenance->getVehicle()->getName()) . ' ・ ' . strtoupper($maintenance->getVehicle()->getRegistration()));
     }
 
     #[Route('/{id}/document/{documentId}/edit', name: 'app_maintenance_document_edit', methods: ['GET', 'POST'])]
@@ -299,12 +289,7 @@ final class MaintenanceController extends AbstractController
             ], Response::HTTP_SEE_OTHER);
         }
 
-        return $this->render('document/edit.html.twig', [
-            'document' => $document,
-            'form' => $form,
-            'entity' => $maintenance,
-            'subtitle' => 'Véhicule : ' . ucfirst($maintenance->getVehicle()->getName()) . ' ・ ' . strtoupper($maintenance->getVehicle()->getRegistration()),
-        ]);
+        return $this->renderDocumentForm('document/edit.html.twig', $document, $form, $maintenance, 'Véhicule : ' . ucfirst($maintenance->getVehicle()->getName()) . ' ・ ' . strtoupper($maintenance->getVehicle()->getRegistration()));
     }
 
     #[Route('{id}/document/{documentId}', name: 'app_maintenance_document_delete', methods: ['POST'])]
@@ -361,20 +346,21 @@ final class MaintenanceController extends AbstractController
                 return $this->redirectToRoute('app_maintenance_index', [], Response::HTTP_SEE_OTHER);
             }
             if ($document->isDeleted()) {
-                $this->addFlash('danger', 'Le document a été supprimé. Pour plus d\'informations, contactez un administrateur.');
-                return $this->redirectToRoute('app_maintenance_index', [], Response::HTTP_SEE_OTHER);
+                return $this->redirectIfDocumentIsDeleted($document, 'app_maintenance_index', [], 'Le document a été supprimé. Pour plus d\'informations, contactez un administrateur.');
             }
             if ($delete) {
-                if (!$this->isGranted('ROLE_ADMIN')) {
-                    $this->addFlash('danger', 'Vous n\'avez pas les autorisations nécessaires pour supprimer un document. Veuillez contacter un administrateur');
-                    return $this->redirectToRoute('app_maintenance_show', $params, Response::HTTP_SEE_OTHER);
+                $response = $this->redirectUnlessAdmin('app_maintenance_show', $params ?? [], 'Vous n\'avez pas les autorisations nécessaires pour supprimer un document. Veuillez contacter un administrateur');
+
+                if ($response) {
+                    return $response;
                 }
             }
         }
         if ($delete) {
-            if (!$this->isGranted('ROLE_ADMIN')) {
-                $this->addFlash('danger', 'Vous n\'avez pas les autorisations nécessaires pour supprimer une maintenance. Veuillez contacter un administrateur');
-                return $this->redirectToRoute('app_maintenance_show', $params, Response::HTTP_SEE_OTHER);
+            $response = $this->redirectUnlessAdmin('app_maintenance_show', $params ?? [], 'Vous n\'avez pas les autorisations nécessaires pour supprimer une maintenance. Veuillez contacter un administrateur');
+
+            if ($response) {
+                return $response;
             }
         }
         # -----------------------------------------------------

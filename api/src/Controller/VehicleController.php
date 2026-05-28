@@ -217,12 +217,7 @@ final class VehicleController extends AbstractController
             $form,
             $entityManager,
             static fn (Document $document) => $document->setVehicle($vehicle),
-            fn () => $this->render('document/new.html.twig', [
-                'document' => $document,
-                'form' => $form,
-                'subtitle' => 'Véhicule : ' . ucfirst($vehicle->getName()) . ' ・ ' . strtoupper($vehicle->getRegistration()),
-                'entity' => $vehicle,
-            ]),
+            fn () => $this->renderDocumentForm('document/new.html.twig', $document, $form, $vehicle, 'Véhicule : ' . ucfirst($vehicle->getName()) . ' ・ ' . strtoupper($vehicle->getRegistration())),
             fn () => $this->redirectToRoute('app_vehicle_show', [
                 'id' => $vehicle->getId(),
             ], Response::HTTP_SEE_OTHER),
@@ -232,12 +227,7 @@ final class VehicleController extends AbstractController
             return $response;
         }
 
-        return $this->render('document/new.html.twig', [
-            'document' => $document,
-            'form' => $form->createView(),
-            'subtitle' => 'Véhicule : ' . ucfirst($vehicle->getName()) . ' ・ ' . strtoupper($vehicle->getRegistration()),
-            'entity' => $vehicle,
-        ]);
+        return $this->renderDocumentForm('document/new.html.twig', $document, $form->createView(), $vehicle, 'Véhicule : ' . ucfirst($vehicle->getName()) . ' ・ ' . strtoupper($vehicle->getRegistration()));
     }
 
     #[Route('/{id}/document/{documentId}/edit', name: 'app_vehicle_document_edit', methods: ['GET', 'POST'])]
@@ -276,12 +266,7 @@ final class VehicleController extends AbstractController
             ], Response::HTTP_SEE_OTHER);
         }
 
-        return $this->render('document/edit.html.twig', [
-            'document' => $document,
-            'form' => $form,
-            'entity' => $vehicle,
-            'subtitle' => 'Véhicule : ' . ucfirst($vehicle->getName()) . ' ・ ' . strtoupper($vehicle->getRegistration()),
-        ]);
+        return $this->renderDocumentForm('document/edit.html.twig', $document, $form, $vehicle, 'Véhicule : ' . ucfirst($vehicle->getName()) . ' ・ ' . strtoupper($vehicle->getRegistration()));
     }
 
     #[Route('{id}/document/{documentId}', name: 'app_vehicle_document_delete', methods: ['POST'])]
@@ -341,20 +326,21 @@ final class VehicleController extends AbstractController
                 return $this->redirectToRoute('app_vehicle_index', [], Response::HTTP_SEE_OTHER);
             }
             if ($document->isDeleted()) {
-                $this->addFlash('danger', 'Le document a été supprimé. Pour plus d\'informations, contactez un administrateur.');
-                return $this->redirectToRoute('app_vehicle_index', [], Response::HTTP_SEE_OTHER);
+                return $this->redirectIfDocumentIsDeleted($document, 'app_vehicle_index', [], 'Le document a été supprimé. Pour plus d\'informations, contactez un administrateur.');
             }
             if ($delete) {
-                if (!$this->isGranted('ROLE_ADMIN')) {
-                    $this->addFlash('danger', 'Vous n\'avez pas les autorisations nécessaires pour supprimer un document. Veuillez contacter un administrateur');
-                    return $this->redirectToRoute('app_vehicle_show', $params, Response::HTTP_SEE_OTHER);
+                $response = $this->redirectUnlessAdmin('app_vehicle_show', $params ?? [], 'Vous n\'avez pas les autorisations nécessaires pour supprimer un document. Veuillez contacter un administrateur');
+
+                if ($response) {
+                    return $response;
                 }
             }
         }
         if ($delete) {
-            if (!$this->isGranted('ROLE_ADMIN')) {
-                $this->addFlash('danger', 'Vous n\'avez pas les autorisations nécessaires pour supprimer un véhicule. Veuillez contacter un administrateur');
-                return $this->redirectToRoute('app_vehicle_show', $params, Response::HTTP_SEE_OTHER);
+            $response = $this->redirectUnlessAdmin('app_vehicle_show', $params ?? [], 'Vous n\'avez pas les autorisations nécessaires pour supprimer un véhicule. Veuillez contacter un administrateur');
+
+            if ($response) {
+                return $response;
             }
         }
         # -----------------------------------------------------

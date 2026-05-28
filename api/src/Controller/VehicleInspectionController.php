@@ -296,12 +296,7 @@ final class VehicleInspectionController extends AbstractController
             $form,
             $entityManager,
             static fn (Document $document) => $document->setvehicleInspection($vehicleInspection),
-            fn () => $this->render('document/new.html.twig', [
-                'document' => $document,
-                'form' => $form,
-                'entity' => $vehicleInspection,
-                'subtitle' => 'Assurance : ' . ucfirst($vehicleInspection->getInspectionDate()->format('d-m-Y')),
-            ]),
+            fn () => $this->renderDocumentForm('document/new.html.twig', $document, $form, $vehicleInspection, 'Assurance : ' . ucfirst($vehicleInspection->getInspectionDate()->format('d-m-Y'))),
             fn () => $this->redirectToRoute('app_vehicle_inspection_show', [
                 'vehicleId' => $vehicle->getId(),
                 'id' => $vehicleInspection->getId(),
@@ -313,12 +308,7 @@ final class VehicleInspectionController extends AbstractController
             return $response;
         }
 
-        return $this->render('document/new.html.twig', [
-            'document' => $document,
-            'form' => $form,
-            'entity' => $vehicleInspection,
-            'subtitle' => 'Contrôle technique du : ' . ucfirst($vehicleInspection->getInspectionDate()->format('d-m-Y')),
-        ]);
+        return $this->renderDocumentForm('document/new.html.twig', $document, $form, $vehicleInspection, 'Contrôle technique du : ' . ucfirst($vehicleInspection->getInspectionDate()->format('d-m-Y')));
     }
 
     #[Route('/{vehicleId}/inspection/{id}/document/{documentId}/edit', name: 'app_vehicle_inspection_document_edit', methods: ['GET', 'POST'])]
@@ -360,12 +350,7 @@ final class VehicleInspectionController extends AbstractController
             ], Response::HTTP_SEE_OTHER);
         }
 
-        return $this->render('document/edit.html.twig', [
-            'document' => $document,
-            'form' => $form,
-            'entity' => $vehicleInspection,
-            'subtitle' => 'Contrôle technique du : ' . ucfirst($vehicleInspection->getInspectionDate()->format('d-m-Y')),
-        ]);
+        return $this->renderDocumentForm('document/edit.html.twig', $document, $form, $vehicleInspection, 'Contrôle technique du : ' . ucfirst($vehicleInspection->getInspectionDate()->format('d-m-Y')));
     }
 
     #[Route('/{vehicleId}/inspection/{id}/document/{documentId}', name: 'app_vehicle_inspection_document_delete', methods: ['POST'])]

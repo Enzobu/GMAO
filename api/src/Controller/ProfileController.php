@@ -96,12 +96,7 @@ final class ProfileController extends AbstractController
             $form,
             $entityManager,
             static fn (Document $document) => $document->setUser($user),
-            fn () => $this->render('document/new.html.twig', [
-                'document' => $document,
-                'form' => $form,
-                'entity' => $user,
-                'subtitle' => 'Utilisateur : ' . $user->displayName(),
-            ]),
+            fn () => $this->renderDocumentForm('document/new.html.twig', $document, $form, $user, 'Utilisateur : ' . $user->displayName()),
             fn () => $this->redirectToRoute('app_profile', [], Response::HTTP_SEE_OTHER),
             $slugger,
         );
@@ -110,12 +105,7 @@ final class ProfileController extends AbstractController
             return $response;
         }
 
-        return $this->render('document/new.html.twig', [
-            'document' => $document,
-            'form' => $form,
-            'entity' => $user,
-            'subtitle' => 'Assurance : ' . $user->displayName(),
-        ]);
+        return $this->renderDocumentForm('document/new.html.twig', $document, $form, $user, 'Assurance : ' . $user->displayName());
     }
 
     #[Route('/document/{documentId}/edit', name: 'app_profile_document_edit', methods: ['GET', 'POST'])]
@@ -145,12 +135,7 @@ final class ProfileController extends AbstractController
             return $this->redirectToRoute('app_profile', [], Response::HTTP_SEE_OTHER);
         }
 
-        return $this->render('document/edit.html.twig', [
-            'document' => $document,
-            'form' => $form,
-            'entity' => $user,
-            'subtitle' => 'Assurance : ' . $user->displayName(),
-        ]);
+        return $this->renderDocumentForm('document/edit.html.twig', $document, $form, $user, 'Assurance : ' . $user->displayName());
     }
 
     #[Route('/document/{documentId}', name: 'app_profile_document_delete', methods: ['POST'])]

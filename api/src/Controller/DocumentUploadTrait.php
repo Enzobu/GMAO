@@ -79,6 +79,21 @@ trait DocumentUploadTrait
         return $successResponse();
     }
 
+    protected function renderDocumentForm(
+        string $template,
+        Document $document,
+        mixed $form,
+        object $entity,
+        string $subtitle,
+    ): Response {
+        return $this->render($template, [
+            'document' => $document,
+            'form' => $form,
+            'entity' => $entity,
+            'subtitle' => $subtitle,
+        ]);
+    }
+
     protected function flushDocumentUpdate(
         EntityManagerInterface $entityManager,
         Document $document,
