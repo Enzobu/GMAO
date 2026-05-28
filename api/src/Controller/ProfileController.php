@@ -21,6 +21,8 @@ use Symfony\Component\String\Slugger\SluggerInterface;
 #[Route('profile')]
 final class ProfileController extends AbstractController
 {
+    use DocumentUploadTrait;
+
     #[Route(name: 'app_profile')]
     public function index(
         #[CurrentUser] User $currentUser,
@@ -94,20 +96,8 @@ final class ProfileController extends AbstractController
             $uploadedFile = $form->get('file')->getData();
 
             if ($uploadedFile !== null) {
-                $originalFilename = pathinfo($uploadedFile->getClientOriginalName(), PATHINFO_FILENAME);
-                $safeFilename = $slugger->slug($originalFilename);
-                $extension = $uploadedFile->guessExtension() ?: $uploadedFile->getClientOriginalExtension() ?: 'bin';
-
-                $mimeType = $uploadedFile->getMimeType();
-                $size = $uploadedFile->getSize();
-
-                $storedFilename = sprintf('%s-%s.%s', $safeFilename, uniqid(), $extension);
-
                 try {
-                    $uploadedFile->move(
-                        $this->getParameter('documents_directory'),
-                        $storedFilename
-                    );
+                    $this->storeUploadedDocument($document, $uploadedFile, $this->getParameter('documents_directory'), $slugger);
                 } catch (FileException $e) {
                     $this->addFlash('danger', 'Le fichier n’a pas pu être envoyé.');
 
@@ -119,18 +109,7 @@ final class ProfileController extends AbstractController
                     ]);
                 }
 
-                $document
-                    ->setUser($user)
-                    ->setOriginalFilename($uploadedFile->getClientOriginalName())
-                    ->setStoredFilename($storedFilename)
-                    ->setMimeType($mimeType)
-                    ->setSize($size)
-                    ->setExtension($extension)
-                ;
-
-                if (!$document->getName()) {
-                    $document->setName($originalFilename);
-                }
+                $document->setUser($user);
 
                 $entityManager->persist($document);
                 $entityManager->flush();

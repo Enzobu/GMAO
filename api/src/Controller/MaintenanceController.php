@@ -28,6 +28,8 @@ use Symfony\Component\Security\Http\Attribute\CurrentUser;
 #[Route('/maintenance')]
 final class MaintenanceController extends AbstractController
 {
+    use DocumentUploadTrait;
+
     #[Route(name: 'app_maintenance_index', methods: ['GET'])]
     public function index(
         Request $request,
@@ -241,19 +243,8 @@ final class MaintenanceController extends AbstractController
             $uploadedFile = $form->get('file')->getData();
 
             if ($uploadedFile !== null) {
-                $originalFilename = pathinfo($uploadedFile->getClientOriginalName(), PATHINFO_FILENAME);
-                $extension = strtolower($uploadedFile->guessExtension() ?: $uploadedFile->getClientOriginalExtension() ?: 'bin');
-
-                $mimeType = $uploadedFile->getMimeType();
-                $size = $uploadedFile->getSize();
-
-                $storedFilename = sprintf('%s.%s', bin2hex(random_bytes(16)), $extension);
-
                 try {
-                    $uploadedFile->move(
-                        $this->getParameter('documents_directory'),
-                        $storedFilename
-                    );
+                    $this->storeUploadedDocument($document, $uploadedFile, $this->getParameter('documents_directory'));
                 } catch (FileException $e) {
                     $this->addFlash('danger', 'Le fichier n’a pas pu être envoyé.');
 
@@ -265,18 +256,7 @@ final class MaintenanceController extends AbstractController
                     ]);
                 }
 
-                $document
-                    ->setMaintenance($maintenance)
-                    ->setOriginalFilename($uploadedFile->getClientOriginalName())
-                    ->setStoredFilename($storedFilename)
-                    ->setMimeType($mimeType)
-                    ->setSize($size)
-                    ->setExtension($extension)
-                ;
-
-                if (!$document->getName()) {
-                    $document->setName($originalFilename);
-                }
+                $document->setMaintenance($maintenance);
 
                 $entityManager->persist($document);
                 $entityManager->flush();

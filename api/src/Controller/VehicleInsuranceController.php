@@ -25,6 +25,8 @@ use Symfony\Component\String\Slugger\SluggerInterface;
 #[Route('/vehicle')]
 final class VehicleInsuranceController extends AbstractController
 {
+    use DocumentUploadTrait;
+
     #[Route('/{vehicleId}/insurance', name: 'app_vehicle_insurance_index', methods: ['GET'])]
     public function index(
         VehicleInsuranceRepository $vehicleInsuranceRepository,
@@ -234,20 +236,8 @@ final class VehicleInsuranceController extends AbstractController
             $uploadedFile = $form->get('file')->getData();
 
             if ($uploadedFile !== null) {
-                $originalFilename = pathinfo($uploadedFile->getClientOriginalName(), PATHINFO_FILENAME);
-                $safeFilename = $slugger->slug($originalFilename);
-                $extension = $uploadedFile->guessExtension() ?: $uploadedFile->getClientOriginalExtension() ?: 'bin';
-
-                $mimeType = $uploadedFile->getMimeType();
-                $size = $uploadedFile->getSize();
-
-                $storedFilename = sprintf('%s-%s.%s', $safeFilename, uniqid(), $extension);
-
                 try {
-                    $uploadedFile->move(
-                        $this->getParameter('documents_directory'),
-                        $storedFilename
-                    );
+                    $this->storeUploadedDocument($document, $uploadedFile, $this->getParameter('documents_directory'), $slugger);
                 } catch (FileException $e) {
                     $this->addFlash('danger', 'Le fichier n’a pas pu être envoyé.');
 
@@ -259,18 +249,7 @@ final class VehicleInsuranceController extends AbstractController
                     ]);
                 }
 
-                $document
-                    ->setVehicleInsurance($vehicleInsurance)
-                    ->setOriginalFilename($uploadedFile->getClientOriginalName())
-                    ->setStoredFilename($storedFilename)
-                    ->setMimeType($mimeType)
-                    ->setSize($size)
-                    ->setExtension($extension)
-                ;
-
-                if (!$document->getName()) {
-                    $document->setName($originalFilename);
-                }
+                $document->setVehicleInsurance($vehicleInsurance);
 
                 $entityManager->persist($document);
                 $entityManager->flush();

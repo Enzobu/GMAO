@@ -38,6 +38,22 @@ final class VehicleInsuranceStateProcessorTest extends TestCase
         self::assertSame($insurance, $result);
     }
 
+    public function testAdminCanPersistInsuranceForAnyVehicle(): void
+    {
+        $insurance = (new VehicleInsurance())->setVehicle((new Vehicle())->setUser(new User()));
+        $security = $this->createMock(Security::class);
+        $security->method('getUser')->willReturn(new User());
+        $security->method('isGranted')->with('ROLE_ADMIN')->willReturn(true);
+        $em = $this->createMock(EntityManagerInterface::class);
+        $em->expects(self::once())->method('persist')->with($insurance);
+        $em->expects(self::once())->method('flush');
+
+        $result = (new VehicleInsuranceStateProcessor($em, $security))->process($insurance, new Post());
+
+        self::assertSame($insurance, $result);
+    }
+
+
     public function testNonOwnerCannotPersistInsurance(): void
     {
         $insurance = (new VehicleInsurance())->setVehicle((new Vehicle())->setUser(new User()));
