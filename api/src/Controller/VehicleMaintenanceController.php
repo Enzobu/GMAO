@@ -12,8 +12,6 @@ use App\Service\VehicleManager;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bridge\Doctrine\Attribute\MapEntity;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Component\Form\FormError;
-use Symfony\Component\Form\FormInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
@@ -22,6 +20,8 @@ use Symfony\Component\Security\Http\Attribute\CurrentUser;
 #[Route('/vehicle/{vehicleId}/maintenance')]
 final class VehicleMaintenanceController extends AbstractController
 {
+    use MileageWarningTrait;
+
     #[Route(name: 'app_vehicle_maintenance_index', methods: ['GET'])]
     public function index(
         #[MapEntity(id: 'vehicleId')] Vehicle $vehicle,
@@ -62,7 +62,7 @@ final class VehicleMaintenanceController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            $newMileage = $this->getMileageContribution($maintenance);
+            $newMileage = $this->getMaintenanceMileageContribution($maintenance);
             $warning = $vehicleManager->buildEventMileageWarning(
                 oldVehicle: null,
                 oldMileage: null,
@@ -141,7 +141,7 @@ final class VehicleMaintenanceController extends AbstractController
         }
 
         $oldVehicle = $maintenance->getVehicle();
-        $oldMileage = $this->getMileageContribution($maintenance);
+        $oldMileage = $this->getMaintenanceMileageContribution($maintenance);
         $oldVehicleLastMileage = $oldVehicle?->getLastMileage();
         $mileageWarning = null;
 
@@ -150,7 +150,7 @@ final class VehicleMaintenanceController extends AbstractController
 
         if ($form->isSubmitted() && $form->isValid()) {
             $maintenance->setVehicle($vehicle);
-            $newMileage = $this->getMileageContribution($maintenance);
+            $newMileage = $this->getMaintenanceMileageContribution($maintenance);
             $warning = $vehicleManager->buildEventMileageWarning(
                 oldVehicle: $oldVehicle,
                 oldMileage: $oldMileage,
@@ -194,36 +194,6 @@ final class VehicleMaintenanceController extends AbstractController
             'maintenance' => $maintenance,
             'form' => $form,
         ]);
-    }
-
-    private function getMileageContribution(Maintenance $maintenance): ?int
-    {
-        return $maintenance->getFinishedAt() !== null ? $maintenance->getMileage() : null;
-    }
-
-    private function shouldStopForMileageWarning(
-        Request $request,
-        FormInterface $form,
-        ?array $warning,
-        ?array &$mileageWarning,
-    ): bool {
-        $mileageWarning = null;
-
-        if ($warning === null) {
-            return false;
-        }
-
-        if ($this->isGranted('ROLE_ADMIN') && $request->request->get(VehicleManager::FORCE_MILEAGE_FIELD) === '1') {
-            return false;
-        }
-
-        $form->get('mileage')->addError(new FormError($warning['fieldError']));
-
-        if ($this->isGranted('ROLE_ADMIN')) {
-            $mileageWarning = $warning;
-        }
-
-        return true;
     }
 
     private function checkVehicleAuthorization(

@@ -15,8 +15,6 @@ use App\Service\VehicleManager;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bridge\Doctrine\Attribute\MapEntity;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Component\Form\FormError;
-use Symfony\Component\Form\FormInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
@@ -27,6 +25,7 @@ use Symfony\Component\String\Slugger\SluggerInterface;
 final class VehicleInspectionController extends AbstractController
 {
     use DocumentUploadTrait;
+    use MileageWarningTrait;
     use VehicleEventAuthorizationTrait;
 
     #[Route('/{vehicleId}/inspection', name: 'app_vehicle_inspection_index', methods: ['GET'])]
@@ -399,31 +398,6 @@ final class VehicleInspectionController extends AbstractController
             'vehicleId' => $vehicle->getId(),
             'id' => $vehicleInspection->getId(),
         ], Response::HTTP_SEE_OTHER);
-    }
-
-    private function shouldStopForMileageWarning(
-        Request $request,
-        FormInterface $form,
-        ?array $warning,
-        ?array &$mileageWarning,
-    ): bool {
-        $mileageWarning = null;
-
-        if ($warning === null) {
-            return false;
-        }
-
-        if ($this->isGranted('ROLE_ADMIN') && $request->request->get(VehicleManager::FORCE_MILEAGE_FIELD) === '1') {
-            return false;
-        }
-
-        $form->get('mileage')->addError(new FormError($warning['fieldError']));
-
-        if ($this->isGranted('ROLE_ADMIN')) {
-            $mileageWarning = $warning;
-        }
-
-        return true;
     }
 
     private function checkAthorization(

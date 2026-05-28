@@ -15,7 +15,7 @@ import { useAuthStore } from "@/stores/auth-store"
 import type { Intervention } from "@/types/intervention"
 import type { Vehicle } from "@/types/vehicle"
 import { INTERVENTION_STATUSES, nowInputValue, vehicleDisplayName } from "@/lib/intervention-utils"
-import { EmptyCard, ErrorMessage, InterventionCard, InterventionHeader } from "./components"
+import { EmptyCard, ErrorMessage, InterventionCard, InterventionHeader, MileageWarningDialog } from "./components"
 
 type ItemsPerPageValue = "6" | "12" | "24" | "all"
 
@@ -136,6 +136,7 @@ export default function InterventionsPage({ vehicleScoped = false }: { vehicleSc
         isLoading={isUpdatingStatus}
         onOpenChange={setMileageDialogOpen}
         onForce={() => confirmQuickAction(true)}
+        forceLabel="Forcer"
       />
 
       <InterventionHeader
@@ -293,37 +294,6 @@ function QuickActionDialog({
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isLoading}>Annuler</Button>
           <Button onClick={onConfirm} disabled={isLoading || !date || (!isStart && !mileage)}>{isLoading ? "Mise à jour..." : "Confirmer"}</Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  )
-}
-
-function MileageWarningDialog({
-  open,
-  message,
-  isAdmin,
-  isLoading,
-  onOpenChange,
-  onForce,
-}: {
-  open: boolean
-  message: string
-  isAdmin: boolean
-  isLoading: boolean
-  onOpenChange: (open: boolean) => void
-  onForce: () => void
-}) {
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Kilométrage à vérifier</DialogTitle>
-          <DialogDescription>{message}</DialogDescription>
-        </DialogHeader>
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isLoading}>Fermer</Button>
-          {isAdmin && <Button onClick={onForce} disabled={isLoading}>{isLoading ? "Mise à jour..." : "Forcer"}</Button>}
         </DialogFooter>
       </DialogContent>
     </Dialog>

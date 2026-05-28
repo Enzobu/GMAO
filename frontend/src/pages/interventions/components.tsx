@@ -1,8 +1,11 @@
 import type { ReactNode } from "react"
 import { Link } from "react-router-dom"
+import { Save } from "lucide-react"
 
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { DetailItem, EmptyCard, ErrorMessage, Field, PageHeader } from "@/components/page-primitives"
 import type { Intervention } from "@/types/intervention"
 import { formatDate, formatNumber, interventionStatusLabel, interventionStatusVariant } from "@/lib/intervention-utils"
@@ -59,3 +62,50 @@ export function InterventionCard({
 
 export { EmptyCard, ErrorMessage, Field }
 export const Detail = DetailItem
+
+export function InterventionFormActions({ cancelTo, canEdit, isSaving }: { cancelTo: string; canEdit: boolean; isSaving: boolean }) {
+  return (
+    <div className="flex justify-end gap-2">
+      <Button variant="outline" asChild>
+        <Link to={cancelTo}>Annuler</Link>
+      </Button>
+      <Button type="submit" disabled={!canEdit || isSaving}>
+        <Save />
+        {isSaving ? "Enregistrement..." : "Enregistrer"}
+      </Button>
+    </div>
+  )
+}
+
+export function MileageWarningDialog({
+  open,
+  message,
+  isAdmin,
+  isLoading,
+  onOpenChange,
+  onForce,
+  forceLabel = "Forcer",
+}: {
+  open: boolean
+  message: string
+  isAdmin: boolean
+  isLoading: boolean
+  onOpenChange: (open: boolean) => void
+  onForce: () => void
+  forceLabel?: string
+}) {
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Kilométrage à vérifier</DialogTitle>
+          <DialogDescription>{message}</DialogDescription>
+        </DialogHeader>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isLoading}>Fermer</Button>
+          {isAdmin && <Button onClick={onForce} disabled={isLoading}>{isLoading ? "Enregistrement..." : forceLabel}</Button>}
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  )
+}

@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from "react"
 import type { FormEvent } from "react"
 import { isAxiosError } from "axios"
-import { Link, useNavigate, useParams } from "react-router-dom"
-import { Plus, Save, Trash2 } from "lucide-react"
+import { useNavigate, useParams } from "react-router-dom"
+import { Plus, Trash2 } from "lucide-react"
 
 import { getMaintenanceTypes } from "@/api/configuration"
 import { createIntervention, getIntervention, updateIntervention } from "@/api/interventions"
@@ -19,7 +19,7 @@ import type { Intervention, InterventionPayload, InterventionStatus } from "@/ty
 import type { Part } from "@/types/part"
 import type { Vehicle } from "@/types/vehicle"
 import { INTERVENTION_STATUSES, vehicleDisplayName } from "@/lib/intervention-utils"
-import { ErrorMessage, Field, InterventionHeader } from "./components"
+import { ErrorMessage, Field, InterventionFormActions, InterventionHeader, MileageWarningDialog } from "./components"
 
 const emptyForm = {
   maintenanceTypeId: "",
@@ -194,7 +194,7 @@ export default function InterventionFormPage() {
         onOpenChange={setRestoreDialogOpen}
         onConfirm={() => { setRestoreDialogOpen(false); void save(false) }}
       />
-      <MileageDialog
+      <MileageWarningDialog
         open={mileageDialogOpen}
         message={mileageMessage}
         isAdmin={isAdmin}
@@ -295,14 +295,11 @@ export default function InterventionFormPage() {
           </CardContent>
         </Card>
 
-        <div className="flex justify-end gap-2">
-          <Button variant="outline" asChild>
-            <Link to={interventionId ? `/vehicles/${vehicleId}/interventions/${interventionId}` : `/vehicles/${vehicleId}/interventions`}>
-              Annuler
-            </Link>
-          </Button>
-          <Button type="submit" disabled={!canEdit || isSaving}><Save />{isSaving ? "Enregistrement..." : "Enregistrer"}</Button>
-        </div>
+        <InterventionFormActions
+          cancelTo={interventionId ? `/vehicles/${vehicleId}/interventions/${interventionId}` : `/vehicles/${vehicleId}/interventions`}
+          canEdit={canEdit}
+          isSaving={isSaving}
+        />
       </form>
     </div>
   )
@@ -417,37 +414,6 @@ function StockRestoreDialog({
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isLoading}>Annuler</Button>
           <Button onClick={onConfirm} disabled={isLoading}>{isLoading ? "Enregistrement..." : "Confirmer"}</Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  )
-}
-
-function MileageDialog({
-  open,
-  message,
-  isAdmin,
-  isLoading,
-  onOpenChange,
-  onForce,
-}: {
-  open: boolean
-  message: string
-  isAdmin: boolean
-  isLoading: boolean
-  onOpenChange: (open: boolean) => void
-  onForce: () => void
-}) {
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Kilométrage à vérifier</DialogTitle>
-          <DialogDescription>{message}</DialogDescription>
-        </DialogHeader>
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isLoading}>Fermer</Button>
-          {isAdmin && <Button onClick={onForce} disabled={isLoading}>{isLoading ? "Enregistrement..." : "Forcer"}</Button>}
         </DialogFooter>
       </DialogContent>
     </Dialog>
