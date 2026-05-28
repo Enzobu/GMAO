@@ -141,9 +141,9 @@ export default function UsersPage() {
 
       <Card>
         <CardContent className="grid min-w-0 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
-          <label className="grid min-w-0 gap-1.5 text-sm font-medium sm:col-span-2 lg:col-span-3 xl:col-span-1">
+          <label className="grid min-w-0 gap-1.5 text-sm font-medium sm:col-span-2 lg:col-span-3 xl:col-span-1" htmlFor="user-search">
             <span>Recherche</span>
-            <div className="relative min-w-0"><Search className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" /><Input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Nom, email, rôle..." className="pl-8" /></div>
+            <div className="relative min-w-0"><Search className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" /><Input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Nom, email, rôle..." className="pl-8" id="user-search" /></div>
           </label>
           <NativeSelect label="Rôle" value={roleFilter} onChange={(event) => setRoleFilter(event.target.value as RoleFilter)} options={[{ value: "all", label: "Tous" }, { value: "admin", label: "Administrateurs" }, { value: "user", label: "Utilisateurs" }]} />
           <NativeSelect label="Droit" value={editabilityFilter} onChange={(event) => setEditabilityFilter(event.target.value as EditabilityFilter)} options={[{ value: "all", label: "Tous" }, { value: "editable", label: "Modifiables" }, { value: "readonly", label: "Lecture seule" }]} />
@@ -203,7 +203,7 @@ function compareUsers(first: AppUser, second: AppUser, sort: SortValue) {
 }
 
 function normalize(value: string) {
-  return value.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+  return value.toLowerCase().normalize("NFD").replaceAll(/[\u0300-\u036f]/g, "")
 }
 
 function errorMessage(caught: unknown, fallback: string) {

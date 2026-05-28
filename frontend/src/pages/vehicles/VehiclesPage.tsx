@@ -215,11 +215,12 @@ export default function VehiclesPage() {
 
       <Card>
         <CardContent className="grid min-w-0 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
-          <label className="grid min-w-0 gap-1.5 text-sm font-medium sm:col-span-2 lg:col-span-3 xl:col-span-1">
+          <label className="grid min-w-0 gap-1.5 text-sm font-medium sm:col-span-2 lg:col-span-3 xl:col-span-1" htmlFor="vehicle-search">
             <span>Recherche</span>
             <div className="relative min-w-0">
               <Search className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" />
               <Input
+                id="vehicle-search"
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
                 placeholder="Nom, immat., marque..."
@@ -421,7 +422,7 @@ function normalize(value: string) {
   return value
     .toLowerCase()
     .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
+    .replaceAll(/[\u0300-\u036f]/g, "")
 }
 
 function formatNumber(value: number) {

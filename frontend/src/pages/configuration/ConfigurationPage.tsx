@@ -204,11 +204,11 @@ function ConfigurationResourcePanel({ resource }: { resource: ResourceConfig }) 
         <Card className="overflow-visible rounded-none border-0 bg-transparent py-0 ring-0">
           <CardContent className="space-y-4 px-0">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-              <label className="grid flex-1 gap-1.5 text-sm font-medium">
+              <label className="grid flex-1 gap-1.5 text-sm font-medium" htmlFor="configuration-search">
                 <span>Recherche</span>
                 <div className="relative min-w-0">
                   <Search className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" />
-                  <Input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Nom ou description..." className="pl-8" />
+                  <Input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Nom ou description..." className="pl-8" id="configuration-search" />
                 </div>
               </label>
 
@@ -361,7 +361,7 @@ function normalize(value: string) {
   return value
     .toLowerCase()
     .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
+    .replaceAll(/[\u0300-\u036f]/g, "")
 }
 
 function errorMessage(caught: unknown, fallback: string) {

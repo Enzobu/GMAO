@@ -206,11 +206,11 @@ export default function PartsPage() {
 
       <Card>
         <CardContent className="grid min-w-0 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
-          <label className="grid min-w-0 gap-1.5 text-sm font-medium sm:col-span-2 lg:col-span-3 xl:col-span-1">
+          <label className="grid min-w-0 gap-1.5 text-sm font-medium sm:col-span-2 lg:col-span-3 xl:col-span-1" htmlFor="part-search">
             <span>Recherche</span>
             <div className="relative min-w-0">
               <Search className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" />
-              <Input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Pièce, note, véhicule..." className="pl-8" />
+              <Input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Pièce, note, véhicule..." className="pl-8" id="part-search" />
             </div>
           </label>
 
@@ -343,5 +343,5 @@ function compareParts(first: Part, second: Part, sort: SortValue) {
 }
 
 function normalize(value: string) {
-  return value.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+  return value.toLowerCase().normalize("NFD").replaceAll(/[\u0300-\u036f]/g, "")
 }
