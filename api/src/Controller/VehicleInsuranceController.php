@@ -334,7 +334,7 @@ final class VehicleInsuranceController extends AbstractController
         Vehicle $vehicle,
         VehicleInsurance $vehicleInsurance,
         ?Document $document = null,
-        ?Array $params = [],
+        ?array $params = [],
         bool $delete = false,
         bool $update = false,
         bool $new = false,

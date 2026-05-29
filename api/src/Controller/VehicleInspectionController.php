@@ -391,7 +391,7 @@ final class VehicleInspectionController extends AbstractController
         Vehicle $vehicle,
         VehicleInspection $vehicleInspection,
         ?Document $document = null,
-        ?Array $params = [],
+        ?array $params = [],
         bool $delete = false,
         bool $update = false,
         bool $new = false,

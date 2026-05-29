@@ -160,7 +160,7 @@ final class ProfileController extends AbstractController
 
     private function checkAthorization(
         ?Document $document = null,
-        ?Array $params = [],
+        ?array $params = [],
         bool $delete = false,
     ): ?Response {
         # -------------------- Authization --------------------

@@ -321,7 +321,7 @@ final class MaintenanceController extends AbstractController
         User $currentUser,
         Maintenance $maintenance,
         ?Document $document = null,
-        ?Array $params = [],
+        ?array $params = [],
         bool $delete = false,
         bool $update = false,
     ): ?Response {

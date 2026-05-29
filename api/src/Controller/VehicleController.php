@@ -303,7 +303,7 @@ final class VehicleController extends AbstractController
         User $currentUser,
         Vehicle $vehicle,
         ?Document $document = null,
-        ?Array $params = [],
+        ?array $params = [],
         bool $delete = false,
         bool $update = false,
     ): ?Response {
