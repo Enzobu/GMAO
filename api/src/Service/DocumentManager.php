@@ -26,6 +26,47 @@ class DocumentManager
         }
     }
 
+    /**
+     * Crée un document lié à une entité métier.
+     *
+     * Le parent peut être un véhicule, une assurance, un contrôle technique ou un utilisateur.
+     *
+     * Exemples d’usage :
+     * - carte grise liée à un véhicule ;
+     * - attestation liée à une assurance ;
+     * - rapport de contrôle technique lié à une inspection ;
+     * - document personnel lié à un utilisateur.
+     * 
+     * Utilisations :
+     * 
+     * -------- Vehicle --------
+     * $documentManager->createDocument(
+     *     parent: $vehicle,
+     *     file: $form->get('file')->getData(),
+     *     name: 'Carte grise',
+     * );
+     *
+     * -------- Vehicle --------
+     * $documentManager->createDocument(
+     *     parent: $insurance,
+     *     file: $form->get('file')->getData(),
+     *     name: 'Attestation assurance',
+     * );
+     *
+     * -------- Vehicle --------
+     * $documentManager->createDocument(
+     *     parent: $inspection,
+     *     file: $form->get('file')->getData(),
+     *     name: 'Rapport CT',
+     * );
+     *
+     * -------- Vehicle --------
+     * $documentManager->createDocument(
+     *     parent: $maintenance,
+     *     file: $form->get('file')->getData(),
+     *     name: 'Facture vidange',
+     * );
+     */
     public function createDocument(
         Vehicle|VehicleInsurance|VehicleInspection|User $parent,
         UploadedFile $file,
@@ -116,33 +157,3 @@ class DocumentManager
         return $document->getOriginalFilename() ?: $document->getStoredFilename() ?: 'document';
     }
 }
-
-// Utilisations :
-
-// -------- Vehicle --------
-// $documentManager->createDocument(
-//     parent: $vehicle,
-//     file: $form->get('file')->getData(),
-//     name: 'Carte grise',
-// );
-
-// -------- Vehicle --------
-// $documentManager->createDocument(
-//     parent: $insurance,
-//     file: $form->get('file')->getData(),
-//     name: 'Attestation assurance',
-// );
-
-// -------- Vehicle --------
-// $documentManager->createDocument(
-//     parent: $inspection,
-//     file: $form->get('file')->getData(),
-//     name: 'Rapport CT',
-// );
-
-// -------- Vehicle --------
-// $documentManager->createDocument(
-//     parent: $maintenance,
-//     file: $form->get('file')->getData(),
-//     name: 'Facture vidange',
-// );
