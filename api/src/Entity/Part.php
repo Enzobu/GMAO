@@ -262,11 +262,7 @@ class Part
 
     public function removeMaintenancePart(MaintenancePart $maintenancePart): static
     {
-        if ($this->maintenanceParts->removeElement($maintenancePart)) {
-            // set the owning side to null (unless already changed)
-            if ($maintenancePart->getPart() === $this) {
-            }
-        }
+        $this->maintenanceParts->removeElement($maintenancePart);
 
         return $this;
     }
