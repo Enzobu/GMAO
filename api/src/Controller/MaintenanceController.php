@@ -326,7 +326,7 @@ final class MaintenanceController extends AbstractController
         bool $update = false,
     ): ?Response {
         # -------------------- Authization --------------------
-        if (!$this->isGranted('ROLE_ADMIN') && !($maintenance->getVehicle()?->getUser() == $currentUser)) {
+        if (!$this->isGranted('ROLE_ADMIN') && $maintenance->getVehicle()?->getUser() != $currentUser) {
             if ($update) {
                 $this->addFlash('danger', 'Vous ne pouvez pas modifier la ressource demandée. Pour plus d\'informations, contactez un administrateur.');
             } else {
@@ -341,7 +341,7 @@ final class MaintenanceController extends AbstractController
             return $this->redirectToRoute('app_maintenance_index', [], Response::HTTP_SEE_OTHER);
         }
         if ($document) {
-            if (!$this->isGranted('ROLE_ADMIN') && !($maintenance->getVehicle()->getUser() == $currentUser)) {
+            if (!$this->isGranted('ROLE_ADMIN') && ($maintenance->getVehicle()->getUser() != $currentUser)) {
                 $this->addFlash('danger', 'Vous ne pouvez pas ajouter un document sur la ressource demandée. Pour plus d\'informations, contactez un administrateur.');
                 return $this->redirectToRoute('app_maintenance_index', [], Response::HTTP_SEE_OTHER);
             }
