@@ -2,12 +2,8 @@
 
 namespace App\Service;
 
-use App\Entity\User;
-use Symfony\Bridge\Twig\Mime\TemplatedEmail;
 use Symfony\Component\DependencyInjection\ParameterBag\ContainerBagInterface;
-use Symfony\Component\Mailer\Envelope;
 use Symfony\Component\Mailer\MailerInterface;
-use Symfony\Component\Mime\Address;
 
 final readonly class MailManager
 {
