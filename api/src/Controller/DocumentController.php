@@ -18,7 +18,7 @@ final class DocumentController extends AbstractController
 {
     #[Route('/{publicId}', name: 'app_document_show', methods: ['GET'])]
     public function show(
-        #[MapEntity(mapping: ['publicId' => 'publicId'])] Document $document, 
+        #[MapEntity(mapping: ['publicId' => 'publicId'])] Document $document,
         VehicleManager $vehicleManager,
         DocumentManager $documentManager,
     ): BinaryFileResponse {
@@ -33,7 +33,7 @@ final class DocumentController extends AbstractController
 
     #[Route('/{publicId}/download', name: 'app_document_download', methods: ['GET'])]
     public function download(
-        #[MapEntity(mapping: ['publicId' => 'publicId'])] Document $document, 
+        #[MapEntity(mapping: ['publicId' => 'publicId'])] Document $document,
         VehicleManager $vehicleManager,
         DocumentManager $documentManager,
     ): BinaryFileResponse {

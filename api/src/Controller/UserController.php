@@ -39,7 +39,7 @@ final class UserController extends AbstractController
 
     #[Route('/new', name: 'app_user_new', methods: ['GET', 'POST'])]
     public function new(
-        Request $request, 
+        Request $request,
         EntityManagerInterface $entityManager,
         ResetPasswordHelperInterface $resetPasswordHelper,
         MailerInterface $mailer,
@@ -162,7 +162,7 @@ final class UserController extends AbstractController
 
     #[Route('/{userId}/document/new', name: 'app_user_document_new', methods: ['GET', 'POST'])]
     public function newDocument(
-        Request $request, 
+        Request $request,
         EntityManagerInterface $entityManager,
         #[MapEntity(id: 'userId')] User $user,
         SluggerInterface $slugger,
@@ -190,7 +190,7 @@ final class UserController extends AbstractController
 
     #[Route('/{userId}/document/{documentId}/edit', name: 'app_user_document_edit', methods: ['GET', 'POST'])]
     public function editDocument(
-        Request $request, 
+        Request $request,
         EntityManagerInterface $entityManager,
         #[MapEntity(id: 'userId')] User $user,
         #[MapEntity(mapping: ['documentId' => 'publicId'])] Document $document,
@@ -221,7 +221,7 @@ final class UserController extends AbstractController
 
     #[Route('/{userId}/document/{documentId}', name: 'app_user_document_delete', methods: ['POST'])]
     public function deleteDocument(
-        Request $request, 
+        Request $request,
         DocumentManager $documentManager,
         #[MapEntity(id: 'userId')] User $user,
         #[MapEntity(mapping: ['documentId' => 'publicId'])] Document $document,

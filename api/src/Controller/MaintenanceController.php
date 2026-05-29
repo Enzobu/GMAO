@@ -96,8 +96,8 @@ final class MaintenanceController extends AbstractController
 
     #[Route('/{id}/edit', name: 'app_maintenance_edit', methods: ['GET', 'POST'])]
     public function edit(
-        Request $request, 
-        Maintenance $maintenance, 
+        Request $request,
+        Maintenance $maintenance,
         EntityManagerInterface $entityManager,
         VehicleManager $vehicleManager,
         #[CurrentUser] User $currentUser,
@@ -174,8 +174,8 @@ final class MaintenanceController extends AbstractController
 
     #[Route('/{id}', name: 'app_maintenance_delete', methods: ['POST'])]
     public function delete(
-        Request $request, 
-        Maintenance $maintenance, 
+        Request $request,
+        Maintenance $maintenance,
         EntityManagerInterface $entityManager,
         VehicleManager $vehicleManager,
         #[CurrentUser] User $currentUser,
@@ -257,7 +257,7 @@ final class MaintenanceController extends AbstractController
 
     #[Route('/{id}/document/{documentId}/edit', name: 'app_maintenance_document_edit', methods: ['GET', 'POST'])]
     public function editDocument(
-        Request $request, 
+        Request $request,
         EntityManagerInterface $entityManager,
         Maintenance $maintenance,
         #[MapEntity(mapping: ['documentId' => 'publicId'])] Document $document,

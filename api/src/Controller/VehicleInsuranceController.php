@@ -59,7 +59,7 @@ final class VehicleInsuranceController extends AbstractController
 
     #[Route('/{vehicleId}/insurance/new', name: 'app_vehicle_insurance_new', methods: ['GET', 'POST'])]
     public function new(
-        Request $request, 
+        Request $request,
         EntityManagerInterface $entityManager,
         #[CurrentUser] User $currentUser,
         VehicleManager $vehicleManager,
@@ -128,7 +128,7 @@ final class VehicleInsuranceController extends AbstractController
 
     #[Route('/{vehicleId}/insurance/{id}/edit', name: 'app_vehicle_insurance_edit', methods: ['GET', 'POST'])]
     public function edit(
-        Request $request, 
+        Request $request,
         VehicleInsurance $vehicleInsurance,
         VehicleManager $vehicleManager,
         EntityManagerInterface $entityManager,
@@ -175,7 +175,7 @@ final class VehicleInsuranceController extends AbstractController
 
     #[Route('/{vehicleId}/insurance/{id}', name: 'app_vehicle_insurance_delete', methods: ['POST'])]
     public function delete(
-        Request $request, 
+        Request $request,
         VehicleInsurance $vehicleInsurance,
         EntityManagerInterface $entityManager,
         #[MapEntity(id: 'vehicleId')] Vehicle $vehicle,
@@ -208,7 +208,7 @@ final class VehicleInsuranceController extends AbstractController
 
     #[Route('/{vehicleId}/insurance/{id}/document/new', name: 'app_vehicle_insurance_document_new', methods: ['GET', 'POST'])]
     public function newDocument(
-        Request $request, 
+        Request $request,
         EntityManagerInterface $entityManager,
         #[MapEntity(id: 'vehicleId')] Vehicle $vehicle,
         VehicleInsurance $vehicleInsurance,
@@ -256,7 +256,7 @@ final class VehicleInsuranceController extends AbstractController
 
     #[Route('/{vehicleId}/insurance/{id}/document/{documentId}/edit', name: 'app_vehicle_insurance_document_edit', methods: ['GET', 'POST'])]
     public function editDocument(
-        Request $request, 
+        Request $request,
         EntityManagerInterface $entityManager,
         #[MapEntity(id: 'vehicleId')] Vehicle $vehicle,
         VehicleInsurance $vehicleInsurance,
@@ -265,9 +265,9 @@ final class VehicleInsuranceController extends AbstractController
         #[CurrentUser] User $currentUser,
     ): Response {
         $response = $this->checkAthorization(
-            vehicleManager: $vehicleManager, 
-            currentUser: $currentUser, 
-            vehicle: $vehicle, 
+            vehicleManager: $vehicleManager,
+            currentUser: $currentUser,
+            vehicle: $vehicle,
             vehicleInsurance: $vehicleInsurance,
             document: $document,
             params: ["vehicleId" => $vehicle->getId(), "id" => $vehicleInsurance->getId()],
@@ -298,7 +298,7 @@ final class VehicleInsuranceController extends AbstractController
 
     #[Route('/{vehicleId}/insurance/{id}/document/{documentId}', name: 'app_vehicle_insurance_document_delete', methods: ['POST'])]
     public function deleteDocument(
-        Request $request, 
+        Request $request,
         #[MapEntity(id: 'vehicleId')] Vehicle $vehicle,
         VehicleInsurance $vehicleInsurance,
         #[MapEntity(mapping: ['documentId' => 'publicId'])] Document $document,
@@ -307,9 +307,9 @@ final class VehicleInsuranceController extends AbstractController
         DocumentManager $documentManager,
     ): Response {
         $response = $this->checkAthorization(
-            vehicleManager: $vehicleManager, 
-            currentUser: $currentUser, 
-            vehicle: $vehicle, 
+            vehicleManager: $vehicleManager,
+            currentUser: $currentUser,
+            vehicle: $vehicle,
             vehicleInsurance: $vehicleInsurance,
             document: $document,
             params: ["vehicleId" => $vehicle->getId(), "id" => $vehicleInsurance->getId()],

@@ -107,7 +107,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         $this->email = $email;
 
         return $this;
-    }    
+    }
     
     #[ORM\Column(options: ['default' => false])]
     #[Groups(['user:read', 'user:write'])]

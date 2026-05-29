@@ -93,7 +93,7 @@ final class VehicleController extends AbstractController
             "isDeleted" => false,
         ], ['startDate' => 'DESC']);
 
-        $inspection = $vehicleInspectionRepository->findBy([        
+        $inspection = $vehicleInspectionRepository->findBy([
             "vehicle" => $vehicle,
             "isDeleted" => false,
         ], ['inspectionDate' => 'DESC']);
@@ -110,7 +110,7 @@ final class VehicleController extends AbstractController
     #[Route('/{id}/edit', name: 'app_vehicle_edit', methods: ['GET', 'POST'])]
     public function edit(
         Request $request,
-        Vehicle $vehicle, 
+        Vehicle $vehicle,
         EntityManagerInterface $entityManager,
         VehicleManager $vehicleManager,
         #[CurrentUser] User $currentUser,
@@ -161,8 +161,8 @@ final class VehicleController extends AbstractController
 
     #[Route('/{id}', name: 'app_vehicle_delete', methods: ['POST'])]
     public function delete(
-        Request $request, 
-        Vehicle $vehicle, 
+        Request $request,
+        Vehicle $vehicle,
         EntityManagerInterface $entityManager,
         VehicleManager $vehicleManager,
         #[CurrentUser] User $currentUser,
@@ -234,7 +234,7 @@ final class VehicleController extends AbstractController
 
     #[Route('/{id}/document/{documentId}/edit', name: 'app_vehicle_document_edit', methods: ['GET', 'POST'])]
     public function editDocument(
-        Request $request, 
+        Request $request,
         EntityManagerInterface $entityManager,
         Vehicle $vehicle,
         #[MapEntity(mapping: ['documentId' => 'publicId'])] Document $document,

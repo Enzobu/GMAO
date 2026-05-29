@@ -82,7 +82,7 @@ final class ProfileController extends AbstractController
 
     #[Route('/document/new', name: 'app_profile_document_new', methods: ['GET', 'POST'])]
     public function newDocument(
-        Request $request, 
+        Request $request,
         EntityManagerInterface $entityManager,
         #[CurrentUser] User $user,
         SluggerInterface $slugger,
@@ -110,7 +110,7 @@ final class ProfileController extends AbstractController
 
     #[Route('/document/{documentId}/edit', name: 'app_profile_document_edit', methods: ['GET', 'POST'])]
     public function editDocument(
-        Request $request, 
+        Request $request,
         EntityManagerInterface $entityManager,
         #[CurrentUser] User $user,
         #[MapEntity(mapping: ['documentId' => 'publicId'])] Document $document,
@@ -140,7 +140,7 @@ final class ProfileController extends AbstractController
 
     #[Route('/document/{documentId}', name: 'app_profile_document_delete', methods: ['POST'])]
     public function deleteDocument(
-        Request $request, 
+        Request $request,
         DocumentManager $documentManager,
         #[MapEntity(mapping: ['documentId' => 'publicId'])] Document $document,
     ): Response {

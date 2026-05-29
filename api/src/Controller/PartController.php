@@ -194,7 +194,7 @@ final class PartController extends AbstractController
 
     #[Route('/{id}/document/new', name: 'app_part_document_new', methods: ['GET', 'POST'])]
     public function newDocument(
-        Request $request, 
+        Request $request,
         EntityManagerInterface $entityManager,
         Part $part,
         SluggerInterface $slugger,
@@ -222,7 +222,7 @@ final class PartController extends AbstractController
 
     #[Route('/{id}/document/{documentId}/edit', name: 'app_part_document_edit', methods: ['GET', 'POST'])]
     public function editDocument(
-        Request $request, 
+        Request $request,
         EntityManagerInterface $entityManager,
         Part $part,
         #[MapEntity(mapping: ['documentId' => 'publicId'])] Document $document,
@@ -254,7 +254,7 @@ final class PartController extends AbstractController
 
     #[Route('/{id}/document/{documentId}', name: 'app_part_document_delete', methods: ['POST'])]
     public function deleteDocument(
-        Request $request, 
+        Request $request,
         DocumentManager $documentManager,
         Part $part,
         #[MapEntity(mapping: ['documentId' => 'publicId'])] Document $document,

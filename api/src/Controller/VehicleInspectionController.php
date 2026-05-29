@@ -265,7 +265,7 @@ final class VehicleInspectionController extends AbstractController
 
     #[Route('/{vehicleId}/inspection/{id}/document/new', name: 'app_vehicle_inspection_document_new', methods: ['GET', 'POST'])]
     public function newDocument(
-        Request $request, 
+        Request $request,
         EntityManagerInterface $entityManager,
         #[MapEntity(id: 'vehicleId')] Vehicle $vehicle,
         VehicleInspection $vehicleInspection,
@@ -313,7 +313,7 @@ final class VehicleInspectionController extends AbstractController
 
     #[Route('/{vehicleId}/inspection/{id}/document/{documentId}/edit', name: 'app_vehicle_inspection_document_edit', methods: ['GET', 'POST'])]
     public function editDocument(
-        Request $request, 
+        Request $request,
         EntityManagerInterface $entityManager,
         #[MapEntity(id: 'vehicleId')] Vehicle $vehicle,
         VehicleInspection $vehicleInspection,
@@ -355,7 +355,7 @@ final class VehicleInspectionController extends AbstractController
 
     #[Route('/{vehicleId}/inspection/{id}/document/{documentId}', name: 'app_vehicle_inspection_document_delete', methods: ['POST'])]
     public function deleteDocument(
-        Request $request, 
+        Request $request,
         #[MapEntity(id: 'vehicleId')] Vehicle $vehicle,
         VehicleInspection $vehicleInspection,
         #[MapEntity(mapping: ['documentId' => 'publicId'])] Document $document,
