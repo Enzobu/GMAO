@@ -36,9 +36,9 @@ class DocumentManager
      * - attestation liée à une assurance ;
      * - rapport de contrôle technique lié à une inspection ;
      * - document personnel lié à un utilisateur.
-     * 
+     *
      * Utilisations :
-     * 
+     *
      * -------- Vehicle --------
      * $documentManager->createDocument(
      *     parent: $vehicle,
