@@ -17,6 +17,7 @@ use ApiPlatform\Metadata\Post;
 use Symfony\Component\Serializer\Annotation\Groups;
 
 use App\ApiPlatform\State\VehicleInspectionStateProcessor;
+use App\Entity\Trait\TimestampableEntityTrait;
 use App\Enum\InspectionResultEnum;
 use App\Repository\VehicleInspectionRepository;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -289,30 +290,6 @@ class VehicleInspection
     public function setIsDeleted(bool $isDeleted): static
     {
         $this->isDeleted = $isDeleted;
-
-        return $this;
-    }
-
-    public function getCreatedAt(): \DateTimeImmutable
-    {
-        return $this->createdAt;
-    }
-
-    public function setCreatedAt(\DateTimeImmutable $createdAt): self
-    {
-        $this->createdAt = $createdAt;
-
-        return $this;
-    }
-
-    public function getUpdatedAt(): \DateTimeImmutable
-    {
-        return $this->updatedAt;
-    }
-
-    public function setUpdatedAt(\DateTimeImmutable $updatedAt): self
-    {
-        $this->updatedAt = $updatedAt;
 
         return $this;
     }

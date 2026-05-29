@@ -18,6 +18,7 @@ final class VehicleInsuranceTest extends TestCase
         $vehicle = new Vehicle();
         $start = new \DateTimeImmutable('-1 day');
         $end = new \DateTimeImmutable('+1 day');
+
         $insurance = (new VehicleInsurance())
             ->setVehicle($vehicle)
             ->setProviderName('Provider')
@@ -39,17 +40,34 @@ final class VehicleInsuranceTest extends TestCase
         $insurance->setEndDate(new \DateTimeImmutable('-1 day'));
         self::assertFalse($insurance->isActive());
 
+        $insurance->setEndDate(null);
+        self::assertTrue($insurance->isActive());
+
+        $insurance->setIsActive(false);
+        self::assertFalse($insurance->isActiveFromDb());
+
+        $insurance->setIsActiveFromDb(true);
+        self::assertTrue($insurance->isActiveFromDb());
+
+        $insurance->setIsActiveFromDb(false);
+        self::assertFalse($insurance->isActiveFromDb());
+
         $insurance->onCreate();
         self::assertInstanceOf(\DateTimeImmutable::class, $insurance->getCreatedAt());
         self::assertInstanceOf(\DateTimeImmutable::class, $insurance->getUpdatedAt());
 
         $createdAt = new \DateTimeImmutable('-2 days');
         $updatedAt = new \DateTimeImmutable('-1 day');
-        $insurance->setCreatedAt($createdAt)->setUpdatedAt($updatedAt)->setIsActive(false);
+
+        $insurance
+            ->setCreatedAt($createdAt)
+            ->setUpdatedAt($updatedAt);
+
         self::assertSame($createdAt, $insurance->getCreatedAt());
         self::assertSame($updatedAt, $insurance->getUpdatedAt());
 
         $insurance->onUpdate();
+
         self::assertNotSame($updatedAt, $insurance->getUpdatedAt());
     }
 
@@ -60,12 +78,15 @@ final class VehicleInsuranceTest extends TestCase
 
         $insurance->addDocument($document);
         $insurance->addDocument($document);
+
         self::assertCount(1, $insurance->getDocuments());
+
         $insurance->removeDocument($document);
 
         self::assertTrue($document->isDeleted());
 
         $insurance->removeDocument($document);
+
         self::assertTrue($document->isDeleted());
     }
 }

@@ -16,6 +16,7 @@ use ApiPlatform\Metadata\Post;
 use Symfony\Component\Serializer\Annotation\Groups;
 
 use App\ApiPlatform\State\MaintenanceStateProcessor;
+use App\Entity\Trait\TimestampableEntityTrait;
 use App\Enum\MaintenanceStatusEnum;
 use App\Repository\MaintenanceRepository;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -93,11 +94,11 @@ class Maintenance
     #[Groups(['maintenance:read', 'maintenance:write', 'vehicle:read'])]
     private ?\DateTimeImmutable $nextDueAt = null;
 
-    #[ORM\Column(type: 'datetime_immutable')]
+    #[ORM\Column(type: Types::DATETIME_IMMUTABLE)]
     #[Groups(['maintenance:read'])]
     private \DateTimeImmutable $createdAt;
 
-    #[ORM\Column(type: 'datetime_immutable')]
+    #[ORM\Column(type: Types::DATETIME_IMMUTABLE)]
     #[Groups(['maintenance:read'])]
     private \DateTimeImmutable $updatedAt;
 
@@ -337,30 +338,6 @@ class Maintenance
                 $document->setIsDeleted(true);
             }
         }
-
-        return $this;
-    }
-
-    public function getCreatedAt(): \DateTimeImmutable
-    {
-        return $this->createdAt;
-    }
-
-    public function setCreatedAt(\DateTimeImmutable $createdAt): self
-    {
-        $this->createdAt = $createdAt;
-
-        return $this;
-    }
-
-    public function getUpdatedAt(): \DateTimeImmutable
-    {
-        return $this->updatedAt;
-    }
-
-    public function setUpdatedAt(\DateTimeImmutable $updatedAt): self
-    {
-        $this->updatedAt = $updatedAt;
 
         return $this;
     }

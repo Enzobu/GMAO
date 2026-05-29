@@ -11,7 +11,7 @@ use ApiPlatform\Metadata\GetCollection;
 use ApiPlatform\Metadata\Patch;
 
 use ApiPlatform\Metadata\Post;
-
+use App\Entity\Trait\TimestampableEntityTrait;
 use Symfony\Component\Serializer\Annotation\Groups;
 
 use App\Repository\MaintenancePartRepository;
@@ -58,11 +58,11 @@ class MaintenancePart
     #[Groups(['maintenance_part:read', 'maintenance_part:write', 'maintenance:read', 'maintenance:write'])]
     private ?string $notes = null;
 
-    #[ORM\Column(type: 'datetime_immutable')]
+    #[ORM\Column(type: Types::DATETIME_IMMUTABLE)]
     #[Groups(['maintenance_part:read'])]
     private \DateTimeImmutable $createdAt;
 
-    #[ORM\Column(type: 'datetime_immutable')]
+    #[ORM\Column(type: Types::DATETIME_IMMUTABLE)]
     #[Groups(['maintenance_part:read'])]
     private \DateTimeImmutable $updatedAt;
 
@@ -129,29 +129,5 @@ class MaintenancePart
     public function onPreUpdate(): void
     {
         $this->refreshUpdatedAt();
-    }
-
-    public function getCreatedAt(): \DateTimeImmutable
-    {
-        return $this->createdAt;
-    }
-
-    public function setCreatedAt(\DateTimeImmutable $createdAt): self
-    {
-        $this->createdAt = $createdAt;
-
-        return $this;
-    }
-
-    public function getUpdatedAt(): \DateTimeImmutable
-    {
-        return $this->updatedAt;
-    }
-
-    public function setUpdatedAt(\DateTimeImmutable $updatedAt): self
-    {
-        $this->updatedAt = $updatedAt;
-
-        return $this;
     }
 }
