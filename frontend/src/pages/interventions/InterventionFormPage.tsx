@@ -356,7 +356,7 @@ function dateTimeInput(value?: string | null) {
 
 function partId(part: Intervention["maintenanceParts"] extends (infer T)[] | undefined ? T extends { part: infer P } ? P : never : never) {
   if (typeof part === "string") {
-    return part.split("/").filter(Boolean).at(-1) ?? ""
+    return part.split("/").findLast(Boolean) ?? ""
   }
 
   return part.id ? String(part.id) : ""

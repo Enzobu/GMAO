@@ -141,7 +141,7 @@ export default function InterventionDetailPage({ vehicleScoped = false }: { vehi
 
 function partName(part: Intervention["maintenanceParts"] extends (infer T)[] | undefined ? T extends { part: infer P } ? P : never : never) {
   if (typeof part === "string") {
-    return `Pièce ${part.split("/").filter(Boolean).at(-1) ?? ""}`.trim()
+    return `Pièce ${part.split("/").findLast(Boolean) ?? ""}`.trim()
   }
 
   return part.partType?.name ?? "Pièce"
