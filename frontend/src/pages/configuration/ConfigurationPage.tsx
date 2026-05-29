@@ -110,7 +110,7 @@ function ConfigurationResourcePanel({ resource }: { resource: ResourceConfig }) 
         const data = await resource.getItems()
 
         if (!ignore) {
-          setItems(data.sort(compareItems))
+          setItems(data.toSorted(compareItems))
         }
       } catch {
         if (!ignore) {
