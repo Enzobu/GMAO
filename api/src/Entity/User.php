@@ -211,11 +211,11 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     public function removeVehicle(Vehicle $vehicle): static
     {
-        if ($this->vehicles->removeElement($vehicle)) {
-            // set the owning side to null (unless already changed)
-            if ($vehicle->getUser() === $this) {
-                $vehicle->setUser(null);
-            }
+        if (
+            $this->vehicles->removeElement($vehicle)
+            && $vehicle->getUser() === $this
+        ) {
+            $vehicle->setUser(null);
         }
 
         return $this;
@@ -253,10 +253,11 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     public function removeDocument(Document $document): static
     {
-        if ($this->documents->removeElement($document)) {
-            if ($document->getUser() === $this) {
-                $document->setIsDeleted(true);
-            }
+        if (
+            $this->documents->removeElement($document)
+            && $document->getUser() === $this
+        ) {
+            $document->setIsDeleted(true);
         }
 
         return $this;

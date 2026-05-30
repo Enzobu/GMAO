@@ -141,10 +141,11 @@ class InspectionCenter
 
     public function removeVehicleInspection(VehicleInspection $vehicleInspection): static
     {
-        if ($this->vehicleInspections->removeElement($vehicleInspection)) {
-            if ($vehicleInspection->getCenter() === $this) {
-                $vehicleInspection->setCenter(null);
-            }
+        if (
+            $this->vehicleInspections->removeElement($vehicleInspection)
+            && $vehicleInspection->getCenter() === $this
+        ) {
+            $vehicleInspection->setCenter(null);
         }
 
         return $this;

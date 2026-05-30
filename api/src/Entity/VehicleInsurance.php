@@ -224,10 +224,11 @@ class VehicleInsurance
 
     public function removeDocument(Document $document): static
     {
-        if ($this->documents->removeElement($document)) {
-            if ($document->getVehicleInsurance() === $this) {
-                $document->setIsDeleted(true);
-            }
+        if (
+            $this->documents->removeElement($document)
+            && $document->getVehicleInsurance() === $this
+        ) {
+            $document->setIsDeleted(true);
         }
 
         return $this;

@@ -234,10 +234,11 @@ class Part
 
     public function removeDocument(Document $document): static
     {
-        if ($this->documents->removeElement($document)) {
-            if ($document->getPart() === $this) {
-                $document->setIsDeleted(true);
-            }
+        if (
+            $this->documents->removeElement($document)
+            && $document->getPart() === $this
+        ) {
+            $document->setIsDeleted(true);
         }
 
         return $this;

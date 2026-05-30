@@ -406,10 +406,11 @@ class Vehicle
 
     public function removeVehicleInspection(VehicleInspection $vehicleInspection): static
     {
-        if ($this->vehicleInspections->removeElement($vehicleInspection)) {
-            if ($vehicleInspection->getVehicle() === $this) {
-                $vehicleInspection->setVehicle(null);
-            }
+        if (
+            $this->vehicleInspections->removeElement($vehicleInspection)
+            && $vehicleInspection->getVehicle() === $this
+        ) {
+            $vehicleInspection->setVehicle(null);
         }
 
         return $this;
@@ -435,10 +436,11 @@ class Vehicle
 
     public function removeDocument(Document $document): static
     {
-        if ($this->documents->removeElement($document)) {
-            if ($document->getVehicle() === $this) {
-                $document->setIsDeleted(true);
-            }
+        if (
+            $this->documents->removeElement($document)
+            && $document->getVehicle() === $this
+        ) {
+            $document->setIsDeleted(true);
         }
 
         return $this;
@@ -503,10 +505,11 @@ class Vehicle
 
     public function removeMaintenance(Maintenance $maintenance): static
     {
-        if ($this->maintenances->removeElement($maintenance)) {
-            if ($maintenance->getVehicle() === $this) {
-                $maintenance->setVehicle(null);
-            }
+        if (
+            $this->maintenances->removeElement($maintenance)
+            && $maintenance->getVehicle() === $this
+        ) {
+            $maintenance->setVehicle(null);
         }
 
         return $this;

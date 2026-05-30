@@ -118,11 +118,11 @@ class PartType
 
     public function removePart(Part $part): static
     {
-        if ($this->parts->removeElement($part)) {
-            // set the owning side to null (unless already changed)
-            if ($part->getPartType() === $this) {
-                $part->setPartType(null);
-            }
+        if (
+            $this->parts->removeElement($part)
+            && $part->getPartType() === $this
+        ) {
+            $part->setPartType(null);
         }
 
         return $this;

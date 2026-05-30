@@ -293,10 +293,11 @@ class Maintenance
 
     public function removeMaintenancePart(MaintenancePart $maintenancePart): static
     {
-        if ($this->maintenanceParts->removeElement($maintenancePart)) {
-            if ($maintenancePart->getMaintenance() === $this) {
-                $maintenancePart->setMaintenance(null);
-            }
+        if (
+            $this->maintenanceParts->removeElement($maintenancePart)
+            && $maintenancePart->getMaintenance() === $this
+        ) {
+            $maintenancePart->setMaintenance(null);
         }
 
         return $this;
@@ -334,10 +335,11 @@ class Maintenance
 
     public function removeDocument(Document $document): static
     {
-        if ($this->documents->removeElement($document)) {
-            if ($document->getMaintenance() === $this) {
-                $document->setIsDeleted(true);
-            }
+        if (
+            $this->documents->removeElement($document)
+            && $document->getMaintenance() === $this
+        ) {
+            $document->setIsDeleted(true);
         }
 
         return $this;

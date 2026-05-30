@@ -109,18 +109,23 @@ class VehicleInspection
     #[Assert\Callback]
     public function validate(ExecutionContextInterface $context): void
     {
-        if ($this->inspectionDate && $this->validUntil) {
-            if ($this->validUntil < $this->inspectionDate) {
-                $context->buildViolation('La date de fin de validité doit être après la date du contrôle.')
-                    ->atPath('validUntil')
-                    ->addViolation();
-            }
+        if (
+            $this->inspectionDate && $this->validUntil
+            && $this->validUntil < $this->inspectionDate
+        ) {
+            $context
+                ->buildViolation('La date de fin de validité doit être après la date du contrôle.')
+                ->atPath('validUntil')
+                ->addViolation()
+            ;
         }
 
         if ($this->counterVisitRequired && $this->counterVisitDueAt === null) {
-            $context->buildViolation('La date limite de contre-visite est obligatoire si une contre-visite est requise.')
+            $context
+                ->buildViolation('La date limite de contre-visite est obligatoire si une contre-visite est requise.')
                 ->atPath('counterVisitDueAt')
-                ->addViolation();
+                ->addViolation()
+            ;
         }
     }
 
@@ -274,10 +279,11 @@ class VehicleInspection
 
     public function removeDocument(Document $document): static
     {
-        if ($this->documents->removeElement($document)) {
-            if ($document->getVehicleInspection() === $this) {
-                $document->setIsDeleted(true);
-            }
+        if (
+            $this->documents->removeElement($document)
+            && $document->getVehicleInspection() === $this
+        ) {
+            $document->setIsDeleted(true);
         }
 
         return $this;

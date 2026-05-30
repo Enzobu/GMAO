@@ -118,10 +118,11 @@ class MaintenanceType
 
     public function removeMaintenance(Maintenance $maintenance): static
     {
-        if ($this->maintenances->removeElement($maintenance)) {
-            if ($maintenance->getMaintenanceType() === $this) {
-                $maintenance->setMaintenanceType(null);
-            }
+        if (
+            $this->maintenances->removeElement($maintenance)
+            && $maintenance->getMaintenanceType() === $this
+        ) {
+            $maintenance->setMaintenanceType(null);
         }
 
         return $this;
