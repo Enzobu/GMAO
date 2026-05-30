@@ -280,7 +280,7 @@ export default function PartsPage() {
   )
 }
 
-function AddStockDialog({ part, onOpenChange, onSaved }: { part: Part | null; onOpenChange: (open: boolean) => void; onSaved: (part: Part) => void }) {
+function AddStockDialog({ part, onOpenChange, onSaved }: Readonly<{ part: Part | null; onOpenChange: (open: boolean) => void; onSaved: (part: Part) => void }>) {
   const [quantity, setQuantity] = useState("1")
   const [isSaving, setIsSaving] = useState(false)
 

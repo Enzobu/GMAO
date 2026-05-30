@@ -8,7 +8,7 @@ import {
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 
-interface ConfirmDialogProps {
+type ConfirmDialogProps = Readonly<{
   open: boolean
   title: string
   description: string
@@ -17,7 +17,7 @@ interface ConfirmDialogProps {
   isLoading?: boolean
   onOpenChange: (open: boolean) => void
   onConfirm: () => void
-}
+}>
 
 function ConfirmDialog({
   open,

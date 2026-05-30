@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button"
 import { NativeSelect } from "@/components/ui/native-select"
 
-export interface PaginationControlsProps {
+export type PaginationControlsProps = Readonly<{
   currentPage: number
   pageCount: number
   totalItems: number
@@ -13,7 +13,7 @@ export interface PaginationControlsProps {
   onPreviousPage: () => void
   onNextPage: () => void
   itemLabel?: string
-}
+}>
 
 function PaginationControls({
   currentPage,

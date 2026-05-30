@@ -199,7 +199,7 @@ export default function VehicleDetailPage() {
   )
 }
 
-function InfoCard({ title, rows }: { title: string; rows: [string, string | number][] }) {
+function InfoCard({ title, rows }: Readonly<{ title: string; rows: [string, string | number][] }>) {
   return (
     <Card>
       <CardHeader>
@@ -219,7 +219,7 @@ function InfoCard({ title, rows }: { title: string; rows: [string, string | numb
   )
 }
 
-function Metric({ label, value }: { label: string; value: string }) {
+function Metric({ label, value }: Readonly<{ label: string; value: string }>) {
   return (
     <div className="rounded-lg border p-3">
       <div className="text-xs text-muted-foreground">{label}</div>
@@ -232,11 +232,11 @@ function InsuranceCard({
   vehicleId,
   insurance,
   hasActiveInsurance,
-}: {
+}: Readonly<{
   vehicleId: number
   insurance?: VehicleInsurance
   hasActiveInsurance: boolean
-}) {
+}>) {
   return (
     <Card>
       <CardHeader>
@@ -273,7 +273,7 @@ function hasActiveInsurance(insurances: VehicleInsurance[] | undefined) {
   return insurances?.some((insurance) => !insurance.isDeleted && isInsuranceActive(insurance)) ?? false
 }
 
-function InspectionCard({ vehicleId, inspection }: { vehicleId: number; inspection?: VehicleInspection }) {
+function InspectionCard({ vehicleId, inspection }: Readonly<{ vehicleId: number; inspection?: VehicleInspection }>) {
   return (
     <Card>
       <CardHeader>
@@ -301,7 +301,7 @@ function InspectionCard({ vehicleId, inspection }: { vehicleId: number; inspecti
   )
 }
 
-function MaintenanceCard({ vehicleId, maintenance, canEdit }: { vehicleId: number; maintenance?: VehicleMaintenance; canEdit: boolean }) {
+function MaintenanceCard({ vehicleId, maintenance, canEdit }: Readonly<{ vehicleId: number; maintenance?: VehicleMaintenance; canEdit: boolean }>) {
   return (
     <Card>
       <CardHeader>
@@ -338,7 +338,7 @@ function MaintenanceCard({ vehicleId, maintenance, canEdit }: { vehicleId: numbe
   )
 }
 
-function Detail({ label, value }: { label: string; value: string }) {
+function Detail({ label, value }: Readonly<{ label: string; value: string }>) {
   return (
     <div>
       <div className="text-xs text-muted-foreground">{label}</div>
@@ -347,11 +347,11 @@ function Detail({ label, value }: { label: string; value: string }) {
   )
 }
 
-function EmptyText({ children }: { children: string }) {
+function EmptyText({ children }: Readonly<{ children: string }>) {
   return <div className="text-sm text-muted-foreground">{children}</div>
 }
 
-function VehicleBadge({ collection, value }: { collection: readonly { value: string; label: string; variant: string }[]; value?: string | null }) {
+function VehicleBadge({ collection, value }: Readonly<{ collection: readonly { value: string; label: string; variant: string }[]; value?: string | null }>) {
   const option = vehicleOption(collection, value)
 
   if (!option) {

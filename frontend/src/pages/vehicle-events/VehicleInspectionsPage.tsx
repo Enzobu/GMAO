@@ -150,13 +150,13 @@ function InspectionCard({
   canEdit,
   isAdmin,
   onDelete,
-}: {
+}: Readonly<{
   inspection: VehicleInspectionEvent
   vehicleId: number
   canEdit: boolean
   isAdmin: boolean
   onDelete: (inspection: VehicleInspectionEvent) => void
-}) {
+}>) {
   return (
     <Card className="relative border border-foreground/10 ring-0 transition-colors hover:border-primary/35 hover:bg-muted/30">
       <Link to={`/vehicles/${vehicleId}/inspections/${inspection.id}`} className="absolute inset-0 z-10 rounded-xl" />
@@ -198,7 +198,7 @@ function InspectionCard({
   )
 }
 
-function CounterVisitBadge({ required }: { required: boolean }) {
+function CounterVisitBadge({ required }: Readonly<{ required: boolean }>) {
   if (!required) {
     return <Badge variant="secondary">Sans contre-visite</Badge>
   }

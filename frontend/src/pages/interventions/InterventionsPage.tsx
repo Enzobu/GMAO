@@ -19,7 +19,7 @@ import { EmptyCard, ErrorMessage, InterventionCard, InterventionHeader, MileageW
 
 type ItemsPerPageValue = "6" | "12" | "24" | "all"
 
-export default function InterventionsPage({ vehicleScoped = false }: { vehicleScoped?: boolean }) {
+export default function InterventionsPage({ vehicleScoped = false }: Readonly<{ vehicleScoped?: boolean }>) {
   const { vehicleId } = useParams()
   const user = useAuthStore((state) => state.user)
   const isAdmin = user?.roles.includes("ROLE_ADMIN") ?? false
@@ -222,11 +222,11 @@ function InterventionActions({
   intervention,
   vehicleId,
   onQuickAction,
-}: {
+}: Readonly<{
   intervention: Intervention
   vehicleId?: string
   onQuickAction: (action: QuickAction) => void
-}) {
+}>) {
   return (
     <>
       {intervention.status === "todo" && (
@@ -260,7 +260,7 @@ function QuickActionDialog({
   onMileageChange,
   onOpenChange,
   onConfirm,
-}: {
+}: Readonly<{
   action: QuickAction | null
   date: string
   mileage: string
@@ -269,7 +269,7 @@ function QuickActionDialog({
   onMileageChange: (value: string) => void
   onOpenChange: (open: boolean) => void
   onConfirm: () => void
-}) {
+}>) {
   const isStart = action?.type === "start"
 
   return (

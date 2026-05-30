@@ -186,10 +186,10 @@ export default function DashboardPage() {
   )
 }
 
-interface MaintenanceHistoryChartProps {
+type MaintenanceHistoryChartProps = Readonly<{
   loading: boolean
   data: DashboardMaintenanceHistoryItem[]
-}
+}>
 
 function MaintenanceHistoryChart({ loading, data }: MaintenanceHistoryChartProps) {
   const hasMaintenance = data.some((item) => item.count > 0)
@@ -283,7 +283,7 @@ function MaintenanceHistoryChart({ loading, data }: MaintenanceHistoryChartProps
   )
 }
 
-interface DashboardListCardProps {
+type DashboardListCardProps = Readonly<{
   title: string
   description: string
   emptyLabel: string
@@ -296,7 +296,7 @@ interface DashboardListCardProps {
     severity?: DashboardItemSeverity
   }>
   showSeverity?: boolean
-}
+}>
 
 function DashboardListCard({
   title,

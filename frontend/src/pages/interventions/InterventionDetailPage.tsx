@@ -13,7 +13,7 @@ import type { Vehicle } from "@/types/vehicle"
 import { formatDateTime, formatNumber, vehicleDisplayName } from "@/lib/intervention-utils"
 import { Detail, ErrorMessage, InterventionBadges, InterventionHeader } from "./components"
 
-export default function InterventionDetailPage({ vehicleScoped = false }: { vehicleScoped?: boolean }) {
+export default function InterventionDetailPage({ vehicleScoped = false }: Readonly<{ vehicleScoped?: boolean }>) {
   const { vehicleId, interventionId, id } = useParams()
   const navigate = useNavigate()
   const user = useAuthStore((state) => state.user)

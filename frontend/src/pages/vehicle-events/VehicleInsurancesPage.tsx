@@ -150,13 +150,13 @@ function InsuranceCard({
   canEdit,
   isAdmin,
   onDelete,
-}: {
+}: Readonly<{
   insurance: VehicleInsuranceEvent
   vehicleId: number
   canEdit: boolean
   isAdmin: boolean
   onDelete: (insurance: VehicleInsuranceEvent) => void
-}) {
+}>) {
   return (
     <Card className="relative border border-foreground/10 ring-0 transition-colors hover:border-primary/35 hover:bg-muted/30">
       <Link to={`/vehicles/${vehicleId}/insurances/${insurance.id}`} className="absolute inset-0 z-10 rounded-xl" />

@@ -91,11 +91,11 @@ export default function UserDetailPage() {
   )
 }
 
-function Metric({ label, value }: { label: string; value: string }) {
+function Metric({ label, value }: Readonly<{ label: string; value: string }>) {
   return <div className="rounded-lg border p-3"><div className="text-xs text-muted-foreground">{label}</div><div className="mt-1 font-medium">{value}</div></div>
 }
 
-function InfoDialog({ message, onOpenChange }: { message: string | null; onOpenChange: (open: boolean) => void }) {
+function InfoDialog({ message, onOpenChange }: Readonly<{ message: string | null; onOpenChange: (open: boolean) => void }>) {
   return <Dialog open={message !== null} onOpenChange={onOpenChange}><DialogContent><DialogHeader><DialogTitle className="flex items-center gap-2"><Info className="size-5" />Action impossible</DialogTitle><DialogDescription>{message}</DialogDescription></DialogHeader><DialogFooter><Button onClick={() => onOpenChange(false)}>Compris</Button></DialogFooter></DialogContent></Dialog>
 }
 

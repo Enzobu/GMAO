@@ -220,7 +220,7 @@ export default function VehicleFormPage() {
   )
 }
 
-function Field({ label, value, onChange, ...props }: { label: string; value: string; onChange: (value: string) => void } & Omit<ComponentProps<typeof Input>, "value" | "onChange">) {
+function Field({ label, value, onChange, ...props }: Readonly<{ label: string; value: string; onChange: (value: string) => void } & Omit<ComponentProps<typeof Input>, "value" | "onChange">>) {
   return (
     <label className="grid gap-1.5 text-sm font-medium">
       <span>{label}</span>
@@ -229,7 +229,7 @@ function Field({ label, value, onChange, ...props }: { label: string; value: str
   )
 }
 
-function SelectField({ label, value, options, onChange, required = false, disabled = false }: { label: string; value: string; options: readonly { value: string; label: string }[]; onChange: (value: string) => void; required?: boolean; disabled?: boolean }) {
+function SelectField({ label, value, options, onChange, required = false, disabled = false }: Readonly<{ label: string; value: string; options: readonly { value: string; label: string }[]; onChange: (value: string) => void; required?: boolean; disabled?: boolean }>) {
   return <NativeSelect label={label} value={value} options={options} onChange={(event) => onChange(event.target.value)} required={required} disabled={disabled} placeholder={required ? undefined : "—"} />
 }
 

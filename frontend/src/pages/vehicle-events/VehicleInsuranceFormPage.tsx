@@ -280,7 +280,7 @@ function ClosePreviousInsuranceDialog({
   onEndDateChange,
   onOpenChange,
   onConfirm,
-}: {
+}: Readonly<{
   open: boolean
   insurance: VehicleInsuranceEvent | null
   endDate: string
@@ -288,7 +288,7 @@ function ClosePreviousInsuranceDialog({
   onEndDateChange: (value: string) => void
   onOpenChange: (open: boolean) => void
   onConfirm: () => void
-}) {
+}>) {
   if (!insurance) {
     return null
   }

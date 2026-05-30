@@ -396,12 +396,12 @@ function StockRestoreDialog({
   isLoading,
   onOpenChange,
   onConfirm,
-}: {
+}: Readonly<{
   open: boolean
   isLoading: boolean
   onOpenChange: (open: boolean) => void
   onConfirm: () => void
-}) {
+}>) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>

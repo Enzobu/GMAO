@@ -176,7 +176,7 @@ export default function UsersPage() {
   )
 }
 
-export function RoleBadges({ user }: { user: AppUser }) {
+export function RoleBadges({ user }: Readonly<{ user: AppUser }>) {
   return <>{user.roles.map((role) => <Badge key={role} variant={role === "ROLE_ADMIN" ? "destructive" : "secondary"}>{roleLabel(role)}</Badge>)}</>
 }
 
@@ -184,11 +184,11 @@ export function ReadOnlyBadge() {
   return <Badge variant="outline" className="border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-300">Lecture seule</Badge>
 }
 
-function Avatar({ user }: { user: AppUser }) {
+function Avatar({ user }: Readonly<{ user: AppUser }>) {
   return <span className="flex size-8 items-center justify-center rounded-lg bg-primary text-xs font-semibold text-primary-foreground">{userInitials(user)}</span>
 }
 
-function InfoDialog({ message, onOpenChange }: { message: string | null; onOpenChange: (open: boolean) => void }) {
+function InfoDialog({ message, onOpenChange }: Readonly<{ message: string | null; onOpenChange: (open: boolean) => void }>) {
   return <Dialog open={message !== null} onOpenChange={onOpenChange}><DialogContent><DialogHeader><DialogTitle className="flex items-center gap-2"><Info className="size-5" />Action impossible</DialogTitle><DialogDescription>{message}</DialogDescription></DialogHeader><DialogFooter><Button onClick={() => onOpenChange(false)}>Compris</Button></DialogFooter></DialogContent></Dialog>
 }
 

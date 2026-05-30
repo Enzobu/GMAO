@@ -92,7 +92,7 @@ export default function ConfigurationPage() {
   )
 }
 
-function ConfigurationResourcePanel({ resource }: { resource: ResourceConfig }) {
+function ConfigurationResourcePanel({ resource }: Readonly<{ resource: ResourceConfig }>) {
   const [items, setItems] = useState<ConfigurationItem[]>([])
   const [search, setSearch] = useState("")
   const [isLoading, setIsLoading] = useState(true)
@@ -292,7 +292,7 @@ function ConfigurationResourcePanel({ resource }: { resource: ResourceConfig }) 
   )
 }
 
-function ConfigurationFormDialog({ item, title, isSaving, onOpenChange, onSubmit }: { item: ConfigurationItem | "new" | null; title: string; isSaving: boolean; onOpenChange: (open: boolean) => void; onSubmit: (payload: ConfigurationPayload) => Promise<void> }) {
+function ConfigurationFormDialog({ item, title, isSaving, onOpenChange, onSubmit }: Readonly<{ item: ConfigurationItem | "new" | null; title: string; isSaving: boolean; onOpenChange: (open: boolean) => void; onSubmit: (payload: ConfigurationPayload) => Promise<void> }>) {
   const [name, setName] = useState("")
   const [description, setDescription] = useState("")
 

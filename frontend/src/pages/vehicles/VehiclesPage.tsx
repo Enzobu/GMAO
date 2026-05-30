@@ -384,7 +384,7 @@ export default function VehiclesPage() {
   )
 }
 
-function VehicleBadge({ collection, value }: { collection: readonly { value: string; label: string; variant: string }[]; value?: string | null }) {
+function VehicleBadge({ collection, value }: Readonly<{ collection: readonly { value: string; label: string; variant: string }[]; value?: string | null }>) {
   const option = vehicleOption(collection, value)
 
   if (!option) {

@@ -81,7 +81,7 @@ export default function UserFormPage() {
   )
 }
 
-function Field({ label, value, onChange, ...props }: { label: string; value: string; onChange: (value: string) => void } & Omit<React.ComponentProps<typeof Input>, "value" | "onChange">) {
+function Field({ label, value, onChange, ...props }: Readonly<{ label: string; value: string; onChange: (value: string) => void } & Omit<React.ComponentProps<typeof Input>, "value" | "onChange">>) {
   return <label className="grid gap-1.5 text-sm font-medium"><span>{label}</span><Input value={value} onChange={(event) => onChange(event.target.value)} {...props} /></label>
 }
 

@@ -169,7 +169,7 @@ export default function VehicleInspectionDetailPage() {
   )
 }
 
-function CounterVisitBadge({ required }: { required: boolean }) {
+function CounterVisitBadge({ required }: Readonly<{ required: boolean }>) {
   if (!required) {
     return <Badge variant="secondary">Sans contre-visite</Badge>
   }
