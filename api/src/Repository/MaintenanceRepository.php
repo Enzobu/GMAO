@@ -14,6 +14,8 @@ use Doctrine\Persistence\ManagerRegistry;
  */
 class MaintenanceRepository extends ServiceEntityRepository
 {
+    private const IS_DELETED_CONDITION = 'm.isDeleted = :isDeleted';
+
     public function __construct(ManagerRegistry $registry)
     {
         parent::__construct($registry, Maintenance::class);
@@ -36,7 +38,7 @@ class MaintenanceRepository extends ServiceEntityRepository
             ->addSelect('v')
             ->join('m.maintenanceType', 'mt')
             ->addSelect('mt')
-            ->andWhere('m.isDeleted = :isDeleted')
+            ->andWhere(self::IS_DELETED_CONDITION)
             ->setParameter('isDeleted', false);
 
         if ($vehicleId !== null) {
@@ -93,7 +95,7 @@ class MaintenanceRepository extends ServiceEntityRepository
             ->join('m.maintenanceType', 'mt')
             ->addSelect('mt')
             ->andWhere('m.vehicle = :vehicle')
-            ->andWhere('m.isDeleted = :isDeleted')
+            ->andWhere(self::IS_DELETED_CONDITION)
             ->setParameter('vehicle', $vehicle)
             ->setParameter('isDeleted', false)
             ->orderBy('m.finishedAt', 'DESC')
@@ -109,7 +111,7 @@ class MaintenanceRepository extends ServiceEntityRepository
             ->join('m.maintenanceType', 'mt')
             ->addSelect('mt')
             ->andWhere('m.vehicle = :vehicle')
-            ->andWhere('m.isDeleted = :isDeleted')
+            ->andWhere(self::IS_DELETED_CONDITION)
             ->andWhere('m.finishedAt IS NOT NULL')
             ->setParameter('vehicle', $vehicle)
             ->setParameter('isDeleted', false)

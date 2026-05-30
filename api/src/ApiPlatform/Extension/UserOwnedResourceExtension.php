@@ -21,6 +21,8 @@ use Symfony\Bundle\SecurityBundle\Security;
 
 final readonly class UserOwnedResourceExtension implements QueryCollectionExtensionInterface, QueryItemExtensionInterface
 {
+    private const VEHICLE_RELATION_PATH = '%s.vehicle';
+
     public function __construct(
         private Security $security,
         private EntityManagerInterface $entityManager,
@@ -118,7 +120,7 @@ final readonly class UserOwnedResourceExtension implements QueryCollectionExtens
         $vehicleAlias = $queryNameGenerator->generateJoinAlias('vehicle');
 
         $queryBuilder
-            ->join(sprintf('%s.vehicle', $rootAlias), $vehicleAlias)
+            ->join(sprintf(self::VEHICLE_RELATION_PATH, $rootAlias), $vehicleAlias)
             ->andWhere(sprintf('%s.user = :api_current_user', $vehicleAlias))
             ->setParameter('api_current_user', $user);
     }
@@ -134,7 +136,7 @@ final readonly class UserOwnedResourceExtension implements QueryCollectionExtens
 
         $queryBuilder
             ->join(sprintf('%s.maintenance', $rootAlias), $maintenanceAlias)
-            ->join(sprintf('%s.vehicle', $maintenanceAlias), $vehicleAlias)
+            ->join(sprintf(self::VEHICLE_RELATION_PATH, $maintenanceAlias), $vehicleAlias)
             ->andWhere(sprintf('%s.user = :api_current_user', $vehicleAlias))
             ->setParameter('api_current_user', $user);
     }
@@ -156,15 +158,15 @@ final readonly class UserOwnedResourceExtension implements QueryCollectionExtens
         $maintenanceVehicleAlias = $queryNameGenerator->generateJoinAlias('maintenanceVehicle');
 
         $queryBuilder
-            ->leftJoin(sprintf('%s.vehicle', $rootAlias), $vehicleAlias)
+            ->leftJoin(sprintf(self::VEHICLE_RELATION_PATH, $rootAlias), $vehicleAlias)
             ->leftJoin(sprintf('%s.vehicleInsurance', $rootAlias), $insuranceAlias)
-            ->leftJoin(sprintf('%s.vehicle', $insuranceAlias), $insuranceVehicleAlias)
+            ->leftJoin(sprintf(self::VEHICLE_RELATION_PATH, $insuranceAlias), $insuranceVehicleAlias)
             ->leftJoin(sprintf('%s.vehicleInspection', $rootAlias), $inspectionAlias)
-            ->leftJoin(sprintf('%s.vehicle', $inspectionAlias), $inspectionVehicleAlias)
+            ->leftJoin(sprintf(self::VEHICLE_RELATION_PATH, $inspectionAlias), $inspectionVehicleAlias)
             ->leftJoin(sprintf('%s.part', $rootAlias), $partAlias)
             ->leftJoin(sprintf('%s.vehicles', $partAlias), $partVehicleAlias)
             ->leftJoin(sprintf('%s.maintenance', $rootAlias), $maintenanceAlias)
-            ->leftJoin(sprintf('%s.vehicle', $maintenanceAlias), $maintenanceVehicleAlias)
+            ->leftJoin(sprintf(self::VEHICLE_RELATION_PATH, $maintenanceAlias), $maintenanceVehicleAlias)
             ->andWhere(sprintf(
                 '%1$s.user = :api_current_user OR %2$s.user = :api_current_user OR %3$s.user = :api_current_user OR %4$s.user = :api_current_user OR %5$s.user = :api_current_user OR %6$s.user = :api_current_user',
                 $vehicleAlias,

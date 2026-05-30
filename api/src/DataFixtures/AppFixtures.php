@@ -29,6 +29,29 @@ use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
 class AppFixtures extends Fixture
 {
+    private const PART_TYPE_ENGINE_OIL_5W40 = "Huile moteur 5W40";
+    private const PART_TYPE_ENGINE_OIL_10W50= "Huile moteur 10W50";
+    private const PART_TYPE_OIL_FILTER = "Filtre à huile";
+    private const PART_TYPE_SPORT_AIR_FILTER = "Filtre à air sport";
+    private const PART_TYPE_FRONT_SPORT_BRAKE_PADS = "Plaquettes frein sport avant";
+    private const PART_TYPE_REAR_SPORT_BRAKE_PADS = "Plaquettes frein sport arriere";
+    private const PART_TYPE_RBF660_BRAKE_FLUID = "Liquide de frein DOT4";
+    private const PART_TYPE_MICHELIN_PILOT_SPORT_4S = "Pneus Michelin Pilot Sport 4S";
+    private const PART_TYPE_PIRELLI_DIABLO_ROSSO_IV = "Pneus Pirelli Diablo Rosso IV";
+    private const PART_TYPE_IRIDIUM_SPARK_PLUGS = "Bougies iridium";
+    private const PART_TYPE_REINFORCED_CHAIN_KIT = "Kit chaine renforcé";
+    private const PART_TYPE_LIYHIUM_BATTERY = "Batterie lithium";
+
+    private const MAINTENANCE_TYPE_ANNUAL_OIL_CHANGE = "Vidange annuelle";
+    private const MAINTENANCE_TYPE_BREAK_SYSTEM = "Freinage";
+    private const MAINTENANCE_TYPE_TIRES = "Pneumatiques";
+    private const MAINTENANCE_TYPE_TRACK_CONTROL = "Controle piste";
+    private const MAINTENANCE_TYPE_TRANSMISSION = "Transmission";
+    private const MAINTENANCE_TYPE_ENGINE_DIAGNOSTIC = "Diagnostic moteur";
+    private const MAINTENANCE_TYPE_BODY_REPAIR = "Reparation carrosserie";
+    private const MAINTENANCE_TYPE_MECHANICAL_REPAIR = "Reparation mecanique";
+    private const MAINTENANCE_TYPE_TECHNICAL_CONTROL = "Controle technique";
+
     public function __construct(
         private readonly ContainerBagInterface $params,
         private readonly UserPasswordHasherInterface $passwordHasher,
@@ -308,18 +331,18 @@ class AppFixtures extends Fixture
     private function loadPartTypes(ObjectManager $manager): array
     {
         $names = [
-            'Huile moteur 5W40',
-            'Huile moteur 10W50',
-            'Filtre a huile',
-            'Filtre a air sport',
-            'Plaquettes frein sport avant',
-            'Plaquettes frein sport arriere',
-            'Liquide de frein RBF660',
-            'Pneus Michelin Pilot Sport 4S',
-            'Pneus Pirelli Diablo Rosso IV',
-            'Bougies iridium',
-            'Kit chaine renforcé',
-            'Batterie lithium',
+            self::PART_TYPE_ENGINE_OIL_5W40,
+            self::PART_TYPE_ENGINE_OIL_10W50,
+            self::PART_TYPE_OIL_FILTER,
+            self::PART_TYPE_SPORT_AIR_FILTER,
+            self::PART_TYPE_FRONT_SPORT_BRAKE_PADS,
+            self::PART_TYPE_REAR_SPORT_BRAKE_PADS,
+            self::PART_TYPE_RBF660_BRAKE_FLUID,
+            self::PART_TYPE_MICHELIN_PILOT_SPORT_4S,
+            self::PART_TYPE_PIRELLI_DIABLO_ROSSO_IV,
+            self::PART_TYPE_IRIDIUM_SPARK_PLUGS,
+            self::PART_TYPE_REINFORCED_CHAIN_KIT,
+            self::PART_TYPE_LIYHIUM_BATTERY,
         ];
 
         $partTypes = [];
@@ -343,18 +366,18 @@ class AppFixtures extends Fixture
     private function loadParts(ObjectManager $manager, array $partTypes, array $vehicles): array
     {
         $partsData = [
-            ['type' => 'Huile moteur 5W40', 'quantity' => 8, 'vehicles' => ['porsche-911', 'bmw-m3', 'audi-rs3', 'alpine-a110', 'nissan-gtr'], 'note' => 'Bidons 1L pour appoints et vidanges voitures sportives'],
-            ['type' => 'Huile moteur 10W50', 'quantity' => 5, 'vehicles' => ['s1000rr', 'zx6r'], 'note' => 'Usage motos sportives'],
-            ['type' => 'Filtre a huile', 'quantity' => 7, 'vehicles' => ['porsche-911', 'bmw-m3', 'audi-rs3', 'alpine-a110', 'nissan-gtr', 's1000rr', 'zx6r'], 'note' => null],
-            ['type' => 'Filtre a air sport', 'quantity' => 3, 'vehicles' => ['bmw-m3', 'audi-rs3', 'alpine-a110'], 'note' => 'Filtres performance nettoyables'],
-            ['type' => 'Plaquettes frein sport avant', 'quantity' => 4, 'vehicles' => ['porsche-911', 'bmw-m3', 'audi-rs3', 'nissan-gtr'], 'note' => 'Jeux avant route/trackday'],
-            ['type' => 'Plaquettes frein sport arriere', 'quantity' => 3, 'vehicles' => ['porsche-911', 'bmw-m3', 'nissan-gtr'], 'note' => null],
-            ['type' => 'Liquide de frein RBF660', 'quantity' => 6, 'vehicles' => ['porsche-911', 'bmw-m3', 'audi-rs3', 'alpine-a110', 'nissan-gtr', 's1000rr', 'zx6r'], 'note' => 'Flacons haute température'],
-            ['type' => 'Pneus Michelin Pilot Sport 4S', 'quantity' => 4, 'vehicles' => ['porsche-911', 'bmw-m3', 'audi-rs3', 'alpine-a110'], 'note' => 'Train complet mixte route'],
-            ['type' => 'Pneus Pirelli Diablo Rosso IV', 'quantity' => 2, 'vehicles' => ['s1000rr', 'zx6r'], 'note' => 'Train moto'],
-            ['type' => 'Bougies iridium', 'quantity' => 12, 'vehicles' => ['audi-rs3', 'nissan-gtr', 's1000rr', 'zx6r'], 'note' => null],
-            ['type' => 'Kit chaine renforcé', 'quantity' => 1, 'vehicles' => ['s1000rr', 'zx6r'], 'note' => 'Kit 525 renforcé'],
-            ['type' => 'Batterie lithium', 'quantity' => 2, 'vehicles' => ['s1000rr', 'zx6r', 'alpine-a110'], 'note' => null],
+            ['type' => self::PART_TYPE_ENGINE_OIL_5W40, 'quantity' => 8, 'vehicles' => ['porsche-911', 'bmw-m3', 'audi-rs3', 'alpine-a110', 'nissan-gtr'], 'note' => 'Bidons 1L pour appoints et vidanges voitures sportives'],
+            ['type' => self::PART_TYPE_ENGINE_OIL_10W50, 'quantity' => 5, 'vehicles' => ['s1000rr', 'zx6r'], 'note' => 'Usage motos sportives'],
+            ['type' => self::PART_TYPE_OIL_FILTER, 'quantity' => 7, 'vehicles' => ['porsche-911', 'bmw-m3', 'audi-rs3', 'alpine-a110', 'nissan-gtr', 's1000rr', 'zx6r'], 'note' => null],
+            ['type' => self::PART_TYPE_OIL_FILTER, 'quantity' => 3, 'vehicles' => ['bmw-m3', 'audi-rs3', 'alpine-a110'], 'note' => 'Filtres performance nettoyables'],
+            ['type' => self::PART_TYPE_FRONT_SPORT_BRAKE_PADS, 'quantity' => 4, 'vehicles' => ['porsche-911', 'bmw-m3', 'audi-rs3', 'nissan-gtr'], 'note' => 'Jeux avant route/trackday'],
+            ['type' => self::PART_TYPE_REAR_SPORT_BRAKE_PADS, 'quantity' => 3, 'vehicles' => ['porsche-911', 'bmw-m3', 'nissan-gtr'], 'note' => null],
+            ['type' => self::PART_TYPE_RBF660_BRAKE_FLUID, 'quantity' => 6, 'vehicles' => ['porsche-911', 'bmw-m3', 'audi-rs3', 'alpine-a110', 'nissan-gtr', 's1000rr', 'zx6r'], 'note' => 'Flacons haute température'],
+            ['type' => self::PART_TYPE_MICHELIN_PILOT_SPORT_4S, 'quantity' => 4, 'vehicles' => ['porsche-911', 'bmw-m3', 'audi-rs3', 'alpine-a110'], 'note' => 'Train complet mixte route'],
+            ['type' => self::PART_TYPE_PIRELLI_DIABLO_ROSSO_IV, 'quantity' => 2, 'vehicles' => ['s1000rr', 'zx6r'], 'note' => 'Train moto'],
+            ['type' => self::PART_TYPE_IRIDIUM_SPARK_PLUGS, 'quantity' => 12, 'vehicles' => ['audi-rs3', 'nissan-gtr', 's1000rr', 'zx6r'], 'note' => null],
+            ['type' => self::PART_TYPE_REINFORCED_CHAIN_KIT, 'quantity' => 1, 'vehicles' => ['s1000rr', 'zx6r'], 'note' => 'Kit 525 renforcé'],
+            ['type' => self::PART_TYPE_LIYHIUM_BATTERY, 'quantity' => 2, 'vehicles' => ['s1000rr', 'zx6r', 'alpine-a110'], 'note' => null],
         ];
 
         $parts = [];
@@ -384,15 +407,15 @@ class AppFixtures extends Fixture
     private function loadMaintenanceTypes(ObjectManager $manager): array
     {
         $types = [
-            'Vidange annuelle',
-            'Freinage',
-            'Pneumatiques',
-            'Controle piste',
-            'Transmission',
-            'Diagnostic moteur',
-            'Reparation carrosserie',
-            'Reparation mecanique',
-            'Controle technique',
+            self::MAINTENANCE_TYPE_ANNUAL_OIL_CHANGE,
+            self::MAINTENANCE_TYPE_BREAK_SYSTEM,
+            self::MAINTENANCE_TYPE_TIRES,
+            self::MAINTENANCE_TYPE_TRACK_CONTROL,
+            self::MAINTENANCE_TYPE_TRANSMISSION,
+            self::MAINTENANCE_TYPE_ENGINE_DIAGNOSTIC,
+            self::MAINTENANCE_TYPE_BODY_REPAIR,
+            self::MAINTENANCE_TYPE_MECHANICAL_REPAIR,
+            self::MAINTENANCE_TYPE_TECHNICAL_CONTROL,
         ];
 
         $maintenanceTypes = [];
@@ -494,8 +517,21 @@ class AppFixtures extends Fixture
      */
     private function loadMaintenances(ObjectManager $manager, array $vehicles, array $maintenanceTypes, array $parts): void
     {
-        $annualTypes = ['Vidange annuelle', 'Freinage', 'Pneumatiques', 'Controle piste', 'Transmission', 'Diagnostic moteur'];
-        $partRotation = ['Filtre a huile', 'Huile moteur 5W40', 'Liquide de frein RBF660', 'Plaquettes frein sport avant', 'Pneus Michelin Pilot Sport 4S'];
+        $annualTypes = [
+            self::MAINTENANCE_TYPE_ANNUAL_OIL_CHANGE, 
+            self::MAINTENANCE_TYPE_BREAK_SYSTEM, 
+            self::MAINTENANCE_TYPE_TIRES, 
+            self::MAINTENANCE_TYPE_TRACK_CONTROL, 
+            self::MAINTENANCE_TYPE_TRANSMISSION, 
+            self::MAINTENANCE_TYPE_ENGINE_DIAGNOSTIC
+        ];
+        $partRotation = [
+            self::PART_TYPE_OIL_FILTER, 
+            self::PART_TYPE_ENGINE_OIL_5W40, 
+            self::PART_TYPE_RBF660_BRAKE_FLUID, 
+            self::PART_TYPE_FRONT_SPORT_BRAKE_PADS, 
+            self::PART_TYPE_MICHELIN_PILOT_SPORT_4S
+        ];
         $currentYear = 2026;
 
         foreach ($vehicles as $vehicleIndex => $vehicle) {
@@ -513,8 +549,8 @@ class AppFixtures extends Fixture
 
                 $typeName = $annualTypes[$yearOffset % count($annualTypes)];
                 $mileage = max(1000, ((int) $vehicle->getLastMileage()) - (($currentYear - $year) * ($vehicle->getType() === VehicleTypeEnum::Motorcycle ? 3200 : 7800)));
-                $partName = $vehicle->getType() === VehicleTypeEnum::Motorcycle && $typeName === 'Transmission'
-                    ? 'Kit chaine renforcé'
+                $partName = $vehicle->getType() === VehicleTypeEnum::Motorcycle && $typeName === self::MAINTENANCE_TYPE_TRANSMISSION
+                    ? self::PART_TYPE_REINFORCED_CHAIN_KIT
                     : $partRotation[$yearOffset % count($partRotation)];
 
                 $maintenance = (new Maintenance())
@@ -536,7 +572,7 @@ class AppFixtures extends Fixture
                     $maintenancePart = (new MaintenancePart())
                         ->setMaintenance($maintenance)
                         ->setPart($parts[$partName])
-                        ->setQuantity($partName === 'Huile moteur 5W40' ? 5 : 1)
+                        ->setQuantity($partName === self::PART_TYPE_ENGINE_OIL_5W40 ? 5 : 1)
                         ->setNotes(null);
 
                     $maintenance->addMaintenancePart($maintenancePart);
@@ -548,10 +584,10 @@ class AppFixtures extends Fixture
         }
 
         $repairs = [
-            ['vehicle' => 'nissan-gtr', 'type' => 'Reparation mecanique', 'date' => '2024-10-18', 'mileage' => 87200, 'notes' => 'Remplacement capteur pression turbo.'],
-            ['vehicle' => 'porsche-911', 'type' => 'Reparation carrosserie', 'date' => '2025-03-04', 'mileage' => 64200, 'notes' => 'Correction impact bas de caisse.'],
-            ['vehicle' => 'bmw-m3', 'type' => 'Diagnostic moteur', 'date' => '2025-12-12', 'mileage' => 36500, 'notes' => 'Diagnostic voyant moteur intermittent.'],
-            ['vehicle' => 's1000rr', 'type' => 'Reparation mecanique', 'date' => '2026-02-22', 'mileage' => 17600, 'notes' => 'Remplacement levier embrayage et purge.'],
+            ['vehicle' => 'nissan-gtr', 'type' => self::MAINTENANCE_TYPE_MECHANICAL_REPAIR, 'date' => '2024-10-18', 'mileage' => 87200, 'notes' => 'Remplacement capteur pression turbo.'],
+            ['vehicle' => 'porsche-911', 'type' => self::MAINTENANCE_TYPE_BODY_REPAIR, 'date' => '2025-03-04', 'mileage' => 64200, 'notes' => 'Correction impact bas de caisse.'],
+            ['vehicle' => 'bmw-m3', 'type' => self::MAINTENANCE_TYPE_ENGINE_DIAGNOSTIC, 'date' => '2025-12-12', 'mileage' => 36500, 'notes' => 'Diagnostic voyant moteur intermittent.'],
+            ['vehicle' => 's1000rr', 'type' => self::MAINTENANCE_TYPE_MECHANICAL_REPAIR, 'date' => '2026-02-22', 'mileage' => 17600, 'notes' => 'Remplacement levier embrayage et purge.'],
         ];
 
         foreach ($repairs as $data) {
@@ -572,9 +608,9 @@ class AppFixtures extends Fixture
         }
 
         $planned = [
-            ['vehicle' => 'porsche-911', 'type' => 'Freinage', 'date' => '2026-06-08', 'mileage' => 69000, 'notes' => 'Prevoir plaquettes avant avant sortie circuit.'],
-            ['vehicle' => 'zx6r', 'type' => 'Transmission', 'date' => '2026-06-16', 'mileage' => 6800, 'notes' => 'Controle tension chaine et kit transmission.'],
-            ['vehicle' => 'nissan-gtr', 'type' => 'Controle technique', 'date' => '2026-04-12', 'mileage' => 91000, 'notes' => 'Preparation CT en retard.'],
+            ['vehicle' => 'porsche-911', 'type' => self::MAINTENANCE_TYPE_BREAK_SYSTEM, 'date' => '2026-06-08', 'mileage' => 69000, 'notes' => 'Prevoir plaquettes avant avant sortie circuit.'],
+            ['vehicle' => 'zx6r', 'type' => self::MAINTENANCE_TYPE_TRANSMISSION, 'date' => '2026-06-16', 'mileage' => 6800, 'notes' => 'Controle tension chaine et kit transmission.'],
+            ['vehicle' => 'nissan-gtr', 'type' => self::MAINTENANCE_TYPE_TECHNICAL_CONTROL, 'date' => '2026-04-12', 'mileage' => 91000, 'notes' => 'Preparation CT en retard.'],
         ];
 
         foreach ($planned as $data) {

@@ -20,6 +20,7 @@ use App\ApiPlatform\State\VehicleInsuranceStateProcessor;
 use App\Entity\Trait\TimestampableEntityTrait;
 use App\Enum\InsurancePaymentFrequencyEnum;
 use App\Repository\VehicleInsuranceRepository;
+use App\Security\SecurityExpression;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
@@ -27,11 +28,11 @@ use Doctrine\ORM\Mapping as ORM;
 
 #[ApiResource(
     operations: [
-        new GetCollection(security: "is_granted('ROLE_USER')"),
-        new Get(security: "is_granted('ROLE_USER')"),
-        new Post(security: "is_granted('ROLE_USER')"),
-        new Patch(security: "is_granted('ROLE_ADMIN') or object.getVehicle().getUser() == user"),
-        new Delete(security: "is_granted('ROLE_ADMIN')"),
+        new GetCollection(security: SecurityExpression::ROLE_USER),
+        new Get(security: SecurityExpression::ROLE_USER),
+        new Post(security: SecurityExpression::ROLE_USER),
+        new Patch(security: SecurityExpression::ADMIN_OR_VEHICLE_OWNER),
+        new Delete(security: SecurityExpression::ROLE_ADMIN),
     ],
     normalizationContext: ['groups' => ['vehicle_insurance:read']],
     denormalizationContext: ['groups' => ['vehicle_insurance:write']],

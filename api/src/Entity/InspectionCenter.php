@@ -15,16 +15,17 @@ use ApiPlatform\Metadata\Post;
 use Symfony\Component\Serializer\Annotation\Groups;
 
 use App\Repository\InspectionCenterRepository;
+use App\Security\SecurityExpression;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ApiResource(
     operations: [
-        new GetCollection(security: "is_granted('ROLE_USER')"),
-        new Get(security: "is_granted('ROLE_USER')"),
-        new Post(security: "is_granted('ROLE_ADMIN')"),
-        new Patch(security: "is_granted('ROLE_ADMIN')"),
+        new GetCollection(security: SecurityExpression::ROLE_USER),
+        new Get(security: SecurityExpression::ROLE_USER),
+        new Post(security: SecurityExpression::ROLE_ADMIN),
+        new Patch(security: SecurityExpression::ROLE_ADMIN),
     ],
     normalizationContext: ['groups' => ['inspection_center:read']],
     denormalizationContext: ['groups' => ['inspection_center:write']]

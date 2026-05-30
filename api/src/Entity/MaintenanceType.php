@@ -18,6 +18,7 @@ use Symfony\Component\Serializer\Annotation\Groups;
 
 use App\ApiPlatform\State\MaintenanceTypeStateProcessor;
 use App\Repository\MaintenanceTypeRepository;
+use App\Security\SecurityExpression;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
@@ -25,11 +26,11 @@ use Doctrine\ORM\Mapping as ORM;
 
 #[ApiResource(
     operations: [
-        new GetCollection(security: "is_granted('ROLE_USER')"),
-        new Get(security: "is_granted('ROLE_USER')"),
-        new Post(security: "is_granted('ROLE_ADMIN')"),
-        new Patch(security: "is_granted('ROLE_ADMIN')"),
-        new Delete(security: "is_granted('ROLE_ADMIN')"),
+        new GetCollection(security: SecurityExpression::ROLE_USER),
+        new Get(security: SecurityExpression::ROLE_USER),
+        new Post(security: SecurityExpression::ROLE_ADMIN),
+        new Patch(security: SecurityExpression::ROLE_ADMIN),
+        new Delete(security: SecurityExpression::ROLE_ADMIN),
     ],
     normalizationContext: ['groups' => ['maintenance_type:read']],
     denormalizationContext: ['groups' => ['maintenance_type:write']],

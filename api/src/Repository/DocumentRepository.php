@@ -17,6 +17,8 @@ use Doctrine\Persistence\ManagerRegistry;
  */
 class DocumentRepository extends ServiceEntityRepository
 {
+    private const IS_DELETED_CONDITION = 'd.isDeleted = :deleted';
+
     public function __construct(ManagerRegistry $registry)
     {
         parent::__construct($registry, Document::class);
@@ -27,7 +29,7 @@ class DocumentRepository extends ServiceEntityRepository
         return $this->createQueryBuilder('d')
             ->andWhere('d.user = :user')
             ->setParameter('user', $user)
-            ->andWhere('d.isDeleted = :deleted')
+            ->andWhere(self::IS_DELETED_CONDITION)
             ->setParameter('deleted', $deleted)
             ->orderBy('d.createdAt', 'DESC')
             ->getQuery()
@@ -39,7 +41,7 @@ class DocumentRepository extends ServiceEntityRepository
         return $this->createQueryBuilder('d')
             ->andWhere('d.vehicle = :vehicle')
             ->setParameter('vehicle', $vehicle)
-            ->andWhere('d.isDeleted = :deleted')
+            ->andWhere(self::IS_DELETED_CONDITION)
             ->setParameter('deleted', $deleted)
             ->orderBy('d.createdAt', 'DESC')
             ->getQuery()
@@ -51,7 +53,7 @@ class DocumentRepository extends ServiceEntityRepository
         return $this->createQueryBuilder('d')
             ->andWhere('d.vehicleInspection = :vehicleInspection')
             ->setParameter('vehicleInspection', $vehicleInspection)
-            ->andWhere('d.isDeleted = :deleted')
+            ->andWhere(self::IS_DELETED_CONDITION)
             ->setParameter('deleted', $deleted)
             ->orderBy('d.createdAt', 'DESC')
             ->getQuery()
@@ -63,7 +65,7 @@ class DocumentRepository extends ServiceEntityRepository
         return $this->createQueryBuilder('d')
             ->andWhere('d.vehicleInsurance = :vehicleInsurance')
             ->setParameter('vehicleInsurance', $vehicleInsurance)
-            ->andWhere('d.isDeleted = :deleted')
+            ->andWhere(self::IS_DELETED_CONDITION)
             ->setParameter('deleted', $deleted)
             ->orderBy('d.createdAt', 'DESC')
             ->getQuery()
@@ -75,7 +77,7 @@ class DocumentRepository extends ServiceEntityRepository
         return $this->createQueryBuilder('d')
             ->andWhere('d.part = :part')
             ->setParameter('part', $part)
-            ->andWhere('d.isDeleted = :deleted')
+            ->andWhere(self::IS_DELETED_CONDITION)
             ->setParameter('deleted', $deleted)
             ->orderBy('d.createdAt', 'DESC')
             ->getQuery()
@@ -87,7 +89,7 @@ class DocumentRepository extends ServiceEntityRepository
         return $this->createQueryBuilder('d')
             ->andWhere('d.maintenance = :maintenance')
             ->setParameter('maintenance', $maintenance)
-            ->andWhere('d.isDeleted = :deleted')
+            ->andWhere(self::IS_DELETED_CONDITION)
             ->setParameter('deleted', $deleted)
             ->orderBy('d.createdAt', 'DESC')
             ->getQuery()

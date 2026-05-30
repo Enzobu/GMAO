@@ -27,6 +27,11 @@ use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
 final class AppFixturesTest extends TestCase
 {
+    private const PART_TYPE_ENGINE_OIL_5W40 = 'Huile moteur 5W40';
+    private const PART_TYPE_OIL_FILTER = 'Filtre a huile';
+    private const PART_TYPE_REINFORCED_CHAIN_KIT = 'Kit chaine renforcé';
+    private const REPAIR_NOTE_TURBO_SENSOR = 'Remplacement capteur pression turbo.';
+
     public function testLoadReturnsImmediatelyWhenModeIsUnsupported(): void
     {
         $manager = $this->createMock(ObjectManager::class);
@@ -113,10 +118,10 @@ final class AppFixturesTest extends TestCase
             $partByName[$part->getPartType()->getName()] = $part;
         }
 
-        self::assertSame(8, $partByName['Huile moteur 5W40']->getQuantity());
-        self::assertSame('Bidons 1L pour appoints et vidanges voitures sportives', $partByName['Huile moteur 5W40']->getNote());
-        self::assertCount(5, $partByName['Huile moteur 5W40']->getVehicles());
-        self::assertNull($partByName['Filtre a huile']->getNote());
+        self::assertSame(8, $partByName[self::PART_TYPE_ENGINE_OIL_5W40]->getQuantity());
+        self::assertSame('Bidons 1L pour appoints et vidanges voitures sportives', $partByName[self::PART_TYPE_ENGINE_OIL_5W40]->getNote());
+        self::assertCount(5, $partByName[self::PART_TYPE_ENGINE_OIL_5W40]->getVehicles());
+        self::assertNull($partByName[self::PART_TYPE_OIL_FILTER]);
 
         $activePorscheInsurance = null;
         $oldPorscheInsurance = null;
@@ -175,7 +180,7 @@ final class AppFixturesTest extends TestCase
                 $plannedMaintenance = $maintenance;
             }
 
-            if ($maintenance->getNotes() === 'Remplacement capteur pression turbo.') {
+            if ($maintenance->getNotes() === self::REPAIR_NOTE_TURBO_SENSOR) {
                 $repair = $maintenance;
             }
         }
@@ -185,13 +190,13 @@ final class AppFixturesTest extends TestCase
                 $completedWithFiveLiters = $maintenancePart;
             }
 
-            if ($maintenancePart->getPart()->getPartType()->getName() === 'Kit chaine renforcé') {
+            if ($maintenancePart->getPart()->getPartType()->getName() === self::PART_TYPE_REINFORCED_CHAIN_KIT) {
                 $motorcycleTransmissionPart = $maintenancePart;
             }
         }
 
         self::assertInstanceOf(MaintenancePart::class, $completedWithFiveLiters);
-        self::assertSame('Huile moteur 5W40', $completedWithFiveLiters->getPart()->getPartType()->getName());
+        self::assertSame(self::PART_TYPE_ENGINE_OIL_5W40, $completedWithFiveLiters->getPart()->getPartType()->getName());
         self::assertNull($completedWithFiveLiters->getNotes());
         self::assertInstanceOf(MaintenancePart::class, $motorcycleTransmissionPart);
         self::assertSame(1, $motorcycleTransmissionPart->getQuantity());

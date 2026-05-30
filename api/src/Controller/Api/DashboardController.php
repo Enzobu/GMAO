@@ -17,6 +17,12 @@ use Symfony\Component\Routing\Attribute\Route;
 
 final class DashboardController extends AbstractController
 {
+    private const VEHICLE_NOT_DELETED_CONDITION = 'v.isDeleted = false';
+    private const ACTIVE_VEHICLE_STATUS_CONDITION = 'v.status = :status';
+    private const MAINTENANCE_NOT_DELETED_CONDITION = 'm.isDeleted = false';
+    private const UNKNOWN_VEHICLE_LABEL = 'Véhicule inconnu';
+    private const NEXT_DAY_MODIFIER = '+1 day';
+
     public function __construct(
         private readonly EntityManagerInterface $entityManager,
     ) {}
@@ -68,8 +74,8 @@ final class DashboardController extends AbstractController
         $qb = $this->entityManager->createQueryBuilder()
             ->select('COUNT(v.id)')
             ->from(Vehicle::class, 'v')
-            ->andWhere('v.isDeleted = false')
-            ->andWhere('v.status = :status')
+            ->andWhere(self::VEHICLE_NOT_DELETED_CONDITION)
+            ->andWhere(self::ACTIVE_VEHICLE_STATUS_CONDITION)
             ->setParameter('status', VehicleStatusEnum::Active);
 
         $this->restrictVehicleToCurrentUser($qb, 'v', $user);
@@ -83,7 +89,7 @@ final class DashboardController extends AbstractController
             ->select('COUNT(m.id)')
             ->from(Maintenance::class, 'm')
             ->join('m.vehicle', 'v')
-            ->andWhere('m.isDeleted = false');
+            ->andWhere(self::MAINTENANCE_NOT_DELETED_CONDITION);
 
         $this->restrictVehicleToCurrentUser($qb, 'v', $user);
 
@@ -98,8 +104,8 @@ final class DashboardController extends AbstractController
         $vehiclesQb = $this->entityManager->createQueryBuilder()
             ->select('v')
             ->from(Vehicle::class, 'v')
-            ->andWhere('v.isDeleted = false')
-            ->andWhere('v.status = :status')
+            ->andWhere(self::VEHICLE_NOT_DELETED_CONDITION)
+            ->andWhere(self::ACTIVE_VEHICLE_STATUS_CONDITION)
             ->setParameter('status', VehicleStatusEnum::Active);
 
         $this->restrictVehicleToCurrentUser($vehiclesQb, 'v', $user);
@@ -119,9 +125,9 @@ final class DashboardController extends AbstractController
             ->select('DISTINCT v.id')
             ->from(Maintenance::class, 'm')
             ->join('m.vehicle', 'v')
-            ->andWhere('m.isDeleted = false')
-            ->andWhere('v.isDeleted = false')
-            ->andWhere('v.status = :status')
+            ->andWhere(self::MAINTENANCE_NOT_DELETED_CONDITION)
+            ->andWhere(self::VEHICLE_NOT_DELETED_CONDITION)
+            ->andWhere(self::ACTIVE_VEHICLE_STATUS_CONDITION)
             ->andWhere('(
                 m.status IN (:openStatuses) AND m.plannedAt IS NOT NULL AND m.plannedAt < :today
             ) OR (
@@ -156,7 +162,7 @@ final class DashboardController extends AbstractController
             ->select('m.finishedAt')
             ->from(Maintenance::class, 'm')
             ->join('m.vehicle', 'v')
-            ->andWhere('m.isDeleted = false')
+            ->andWhere(self::MAINTENANCE_NOT_DELETED_CONDITION)
             ->andWhere('m.finishedAt IS NOT NULL')
             ->andWhere('m.finishedAt >= :start')
             ->andWhere('m.finishedAt < :end')
@@ -203,7 +209,7 @@ final class DashboardController extends AbstractController
             ->from(Maintenance::class, 'm')
             ->join('m.vehicle', 'v')
             ->join('m.maintenanceType', 'mt')
-            ->andWhere('m.isDeleted = false')
+            ->andWhere(self::MAINTENANCE_NOT_DELETED_CONDITION)
             ->andWhere('m.plannedAt IS NOT NULL')
             ->andWhere('m.plannedAt <= :next30Days')
             ->andWhere('m.status IN (:statuses)')
@@ -216,7 +222,7 @@ final class DashboardController extends AbstractController
             fn (Maintenance $maintenance): array => $this->buildDashboardItem(
                 type: 'maintenance',
                 title: sprintf('Entretien %s', $maintenance->getMaintenanceType()?->getName() ?? 'prévu'),
-                subtitle: $maintenance->getVehicle()?->displayName() ?? 'Véhicule inconnu',
+                subtitle: $maintenance->getVehicle()?->displayName() ?? self::UNKNOWN_VEHICLE_LABEL,
                 date: $maintenance->getPlannedAt(),
                 now: $now,
                 overdueLabel: 'En retard',
@@ -248,7 +254,7 @@ final class DashboardController extends AbstractController
             fn (VehicleInsurance $insurance): array => $this->buildDashboardItem(
                 type: 'insurance',
                 title: sprintf('Assurance %s', $insurance->getProviderName()),
-                subtitle: $insurance->getVehicle()?->displayName() ?? 'Véhicule inconnu',
+                subtitle: $insurance->getVehicle()?->displayName() ?? self::UNKNOWN_VEHICLE_LABEL,
                 date: $insurance->getEndDate(),
                 now: $now,
                 overdueLabel: 'Expirée',
@@ -277,7 +283,7 @@ final class DashboardController extends AbstractController
             fn (VehicleInspection $inspection): array => $this->buildDashboardItem(
                 type: 'inspection',
                 title: 'Contrôle technique',
-                subtitle: $inspection->getVehicle()?->displayName() ?? 'Véhicule inconnu',
+                subtitle: $inspection->getVehicle()?->displayName() ?? self::UNKNOWN_VEHICLE_LABEL,
                 date: $inspection->getValidUntil(),
                 now: $now,
                 overdueLabel: 'Expiré',
@@ -297,10 +303,10 @@ final class DashboardController extends AbstractController
             ->from(Maintenance::class, 'm')
             ->join('m.vehicle', 'v')
             ->join('m.maintenanceType', 'mt')
-            ->andWhere('m.isDeleted = false')
+            ->andWhere(self::MAINTENANCE_NOT_DELETED_CONDITION)
             ->andWhere('m.finishedAt BETWEEN :last30Days AND :now')
             ->setParameter('last30Days', $last30Days)
-            ->setParameter('now', $now->modify('+1 day'));
+            ->setParameter('now', $now->modify(self::NEXT_DAY_MODIFIER));
 
         $this->restrictVehicleToCurrentUser($qb, 'v', $user);
 
@@ -308,7 +314,7 @@ final class DashboardController extends AbstractController
             fn (Maintenance $maintenance): array => $this->buildRecentItem(
                 type: 'maintenance',
                 title: sprintf('Entretien %s réalisé', $maintenance->getMaintenanceType()?->getName() ?? ''),
-                subtitle: $maintenance->getVehicle()?->displayName() ?? 'Véhicule inconnu',
+                subtitle: $maintenance->getVehicle()?->displayName() ?? self::UNKNOWN_VEHICLE_LABEL,
                 date: $maintenance->getFinishedAt(),
             ),
             $qb->getQuery()->getResult(),
@@ -327,7 +333,7 @@ final class DashboardController extends AbstractController
             ->andWhere('i.isDeleted = false')
             ->andWhere('i.createdAt BETWEEN :last30Days AND :now')
             ->setParameter('last30Days', $last30Days)
-            ->setParameter('now', $now->modify('+1 day'));
+            ->setParameter('now', $now->modify(self::NEXT_DAY_MODIFIER));
 
         $this->restrictVehicleToCurrentUser($qb, 'v', $user);
 
@@ -335,7 +341,7 @@ final class DashboardController extends AbstractController
             fn (VehicleInsurance $insurance): array => $this->buildRecentItem(
                 type: 'insurance',
                 title: sprintf('Assurance %s ajoutée', $insurance->getProviderName()),
-                subtitle: $insurance->getVehicle()?->displayName() ?? 'Véhicule inconnu',
+                subtitle: $insurance->getVehicle()?->displayName() ?? self::UNKNOWN_VEHICLE_LABEL,
                 date: $insurance->getCreatedAt(),
             ),
             $qb->getQuery()->getResult(),
@@ -354,7 +360,7 @@ final class DashboardController extends AbstractController
             ->andWhere('vi.isDeleted = false')
             ->andWhere('vi.inspectionDate BETWEEN :last30Days AND :now')
             ->setParameter('last30Days', $last30Days)
-            ->setParameter('now', $now->modify('+1 day'));
+            ->setParameter('now', $now->modify(self::NEXT_DAY_MODIFIER));
 
         $this->restrictVehicleToCurrentUser($qb, 'v', $user);
 
@@ -362,7 +368,7 @@ final class DashboardController extends AbstractController
             fn (VehicleInspection $inspection): array => $this->buildRecentItem(
                 type: 'inspection',
                 title: 'Contrôle technique ajouté',
-                subtitle: $inspection->getVehicle()?->displayName() ?? 'Véhicule inconnu',
+                subtitle: $inspection->getVehicle()?->displayName() ?? self::UNKNOWN_VEHICLE_LABEL,
                 date: $inspection->getInspectionDate(),
             ),
             $qb->getQuery()->getResult(),

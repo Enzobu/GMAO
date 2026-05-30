@@ -15,15 +15,16 @@ use App\Entity\Trait\TimestampableEntityTrait;
 use Symfony\Component\Serializer\Annotation\Groups;
 
 use App\Repository\MaintenancePartRepository;
+use App\Security\SecurityExpression;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ApiResource(
     operations: [
-        new GetCollection(security: "is_granted('ROLE_USER')"),
-        new Get(security: "is_granted('ROLE_USER')"),
-        new Post(security: "is_granted('ROLE_ADMIN')"),
-        new Patch(security: "is_granted('ROLE_ADMIN')"),
+        new GetCollection(security: SecurityExpression::ROLE_USER),
+        new Get(security: SecurityExpression::ROLE_USER),
+        new Post(security: SecurityExpression::ROLE_ADMIN),
+        new Patch(security: SecurityExpression::ROLE_ADMIN),
     ],
     normalizationContext: ['groups' => ['maintenance_part:read']],
     denormalizationContext: ['groups' => ['maintenance_part:write']]
