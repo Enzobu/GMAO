@@ -176,9 +176,20 @@ jobs:
     if: github.event_name == 'push' && startsWith(github.ref, 'refs/heads/')
 
     steps:
-      - name: Deploy to Dokploy
+      - name: Deploy dev
         run: |
-          curl -fsS -X POST "${{ secrets.DOKPLOY_DEV_WEBHOOK_URL }}"
+          HTTP_CODE=$(curl -sS -o /tmp/deploy-response.txt -w "%{http_code}" -X POST "https://dockploy-dev.enzo-palermo.com/api/compose.deploy" \
+            -H "accept: application/json" \
+            -H "Content-Type: application/json" \
+            -H "x-api-key: ${{ secrets.DOKPLOY_DEV_API_KEY }}" \
+            -d '{"composeId":"${{ secrets.DOKPLOY_DEV_COMPOSE_ID }}"}')
+
+          echo "HTTP code: $HTTP_CODE"
+          cat /tmp/deploy-response.txt
+
+          if [ "$HTTP_CODE" -lt 200 ] || [ "$HTTP_CODE" -ge 300 ]; then
+            exit 1
+          fi
 
   deploy-prod:
     name: Deploy
@@ -187,6 +198,19 @@ jobs:
     if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
 
     steps:
-      - name: Deploy to Dokploy
+      - name: Deploy prod
         run: |
-          curl -fsS -X POST "${{ secrets.DOKPLOY_WEBHOOK_URL }}"
+          exit 0
+        # run: |
+        #   HTTP_CODE=$(curl -sS -o /tmp/deploy-response.txt -w "%{http_code}" -X POST "https://dockploy.enzo-palermo.com/api/compose.deploy" \
+        #     -H "accept: application/json" \
+        #     -H "Content-Type: application/json" \
+        #     -H "x-api-key: ${{ secrets.DOKPLOY_PROD_API_KEY }}" \
+        #     -d '{"composeId":"${{ secrets.DOKPLOY_PROD_COMPOSE_ID }}"}')
+
+        #   echo "HTTP code: $HTTP_CODE"
+        #   cat /tmp/deploy-response.txt
+
+        #   if [ "$HTTP_CODE" -lt 200 ] || [ "$HTTP_CODE" -ge 300 ]; then
+        #     exit 1
+        #   fi
