@@ -40,30 +40,48 @@ class VehicleManager
         ?Vehicle $newVehicle,
         ?int $newMileage,
     ): ?array {
-        if (
-            $oldVehicle !== null
-            && $oldMileage !== null
-            && $oldMileage === $oldVehicle->getLastMileage()
-            && (!$this->isSameVehicle($oldVehicle, $newVehicle) || $newMileage === null || $newMileage < $oldMileage)
-        ) {
+        $warning = null;
+
+        if ($this->shouldWarnAboutOldVehicleMileage($oldVehicle, $oldMileage, $newVehicle, $newMileage)) {
             return $this->buildMileageWarning($oldMileage, $newMileage ?? $oldMileage);
         }
 
-        if ($newVehicle === null || $newMileage === null) {
-            return null;
+        if ($this->shouldCheckNewVehicleMileage($oldVehicle, $oldMileage, $newVehicle, $newMileage)) {
+            $currentMileage = $newVehicle->getLastMileage();
+
+            if ($currentMileage !== null && $newMileage < $currentMileage) {
+                $warning = $this->buildMileageWarning($currentMileage, $newMileage);
+            }
         }
 
-        if ($this->isSameVehicle($oldVehicle, $newVehicle) && $oldMileage === $newMileage) {
-            return null;
-        }
+        return $warning;
+    }
 
-        $currentMileage = $newVehicle->getLastMileage();
+    private function shouldWarnAboutOldVehicleMileage(
+        ?Vehicle $oldVehicle,
+        ?int $oldMileage,
+        ?Vehicle $newVehicle,
+        ?int $newMileage,
+    ): bool {
+        return $oldVehicle !== null
+            && $oldMileage !== null
+            && $oldMileage === $oldVehicle->getLastMileage()
+            && (
+                !$this->isSameVehicle($oldVehicle, $newVehicle)
+                || $newMileage === null
+                || $newMileage < $oldMileage
+            );
+    }
 
-        if ($currentMileage === null || $newMileage >= $currentMileage) {
-            return null;
-        }
-
-        return $this->buildMileageWarning($currentMileage, $newMileage);
+    private function shouldCheckNewVehicleMileage(
+        ?Vehicle $oldVehicle,
+        ?int $oldMileage,
+        ?Vehicle $newVehicle,
+        ?int $newMileage,
+    ): bool {
+        return $newVehicle !== null
+            && $newMileage !== null
+            && !($this->isSameVehicle($oldVehicle, $newVehicle) && $oldMileage === $newMileage);
     }
 
     /**

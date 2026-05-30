@@ -44,37 +44,13 @@ final class ProfileController extends AbstractController
         }
 
         $payload = json_decode($request->getContent(), true);
+        $validationResponse = $this->validateProfilePayload($payload);
 
-        if (!is_array($payload)) {
-            return $this->json(['message' => 'Invalid JSON payload'], 400);
+        if ($validationResponse instanceof JsonResponse) {
+            return $validationResponse;
         }
 
-        $firstname = trim((string) ($payload['firstname'] ?? ''));
-        $lastname = trim((string) ($payload['lastname'] ?? ''));
-
-        if ($firstname === '' || $lastname === '') {
-            return $this->json(['message' => 'Firstname and lastname are required'], 422);
-        }
-
-        $user
-            ->setFirstname($firstname)
-            ->setLastname($lastname);
-
-        $addressPayload = is_array($payload['address'] ?? null) ? $payload['address'] : [];
-        $address = $user->getAddress() ?? new Address();
-
-        $address
-            ->setLine1(trim((string) ($addressPayload['line1'] ?? '')))
-            ->setLine2($this->nullableString($addressPayload['line2'] ?? null))
-            ->setPostalCode(trim((string) ($addressPayload['postalCode'] ?? '')))
-            ->setCity(trim((string) ($addressPayload['city'] ?? '')))
-            ->setCountry(trim((string) ($addressPayload['country'] ?? '')));
-
-        if ($address->getLine1() === '' || $address->getPostalCode() === '' || $address->getCity() === '' || $address->getCountry() === '') {
-            return $this->json(['message' => 'Address line1, postalCode, city and country are required'], 422);
-        }
-
-        $user->setAddress($address);
+        $this->updateUserProfile($user, $payload);
         $this->entityManager->flush();
 
         return $this->json($this->serializeProfile($user));
@@ -120,6 +96,79 @@ final class ProfileController extends AbstractController
         $user = $this->getUser();
 
         return $user instanceof User ? $user : null;
+    }
+
+    private function validateProfilePayload(mixed $payload): ?JsonResponse
+    {
+        $response = null;
+
+        if (!is_array($payload)) {
+            $response = $this->json(['message' => 'Invalid JSON payload'], 400);
+        } elseif ($this->hasInvalidIdentityPayload($payload)) {
+            $response = $this->json(['message' => 'Firstname and lastname are required'], 422);
+        } elseif ($this->hasInvalidAddressPayload($payload)) {
+            $response = $this->json(['message' => 'Address line1, postalCode, city and country are required'], 422);
+        }
+
+        return $response;
+    }
+
+    /**
+     * @param array<string, mixed> $payload
+     */
+    private function hasInvalidIdentityPayload(array $payload): bool
+    {
+        $firstname = trim((string) ($payload['firstname'] ?? ''));
+        $lastname = trim((string) ($payload['lastname'] ?? ''));
+
+        return $firstname === '' || $lastname === '';
+    }
+
+    /**
+     * @param array<string, mixed> $payload
+     */
+    private function hasInvalidAddressPayload(array $payload): bool
+    {
+        $addressPayload = $this->getAddressPayload($payload);
+
+        return trim((string) ($addressPayload['line1'] ?? '')) === ''
+            || trim((string) ($addressPayload['postalCode'] ?? '')) === ''
+            || trim((string) ($addressPayload['city'] ?? '')) === ''
+            || trim((string) ($addressPayload['country'] ?? '')) === '';
+    }
+
+    /**
+     * @param array<string, mixed> $payload
+     */
+    private function updateUserProfile(User $user, array $payload): void
+    {
+        $user
+            ->setFirstname(trim((string) $payload['firstname']))
+            ->setLastname(trim((string) $payload['lastname']));
+
+        $addressPayload = $this->getAddressPayload($payload);
+        $address = $user->getAddress() ?? new Address();
+
+        $address
+            ->setLine1(trim((string) $addressPayload['line1']))
+            ->setLine2($this->nullableString($addressPayload['line2'] ?? null))
+            ->setPostalCode(trim((string) $addressPayload['postalCode']))
+            ->setCity(trim((string) $addressPayload['city']))
+            ->setCountry(trim((string) $addressPayload['country']));
+
+        $user->setAddress($address);
+    }
+
+    /**
+     * @param array<string, mixed> $payload
+     *
+     * @return array<string, mixed>
+     */
+    private function getAddressPayload(array $payload): array
+    {
+        $addressPayload = $payload['address'] ?? [];
+
+        return is_array($addressPayload) ? $addressPayload : [];
     }
 
     /**

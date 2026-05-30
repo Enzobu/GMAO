@@ -27,17 +27,46 @@ final class ResetPasswordController extends AbstractController
         UserPasswordHasherInterface $passwordHasher,
     ): JsonResponse {
         $payload = json_decode($request->getContent(), true);
+        $payloadErrorResponse = $this->validatePasswordPayload($payload);
 
+        if ($payloadErrorResponse instanceof JsonResponse) {
+            return $payloadErrorResponse;
+        }
+
+        $userResult = $this->validateTokenAndFetchUser($token, $resetPasswordHelper);
+
+        if ($userResult instanceof JsonResponse) {
+            return $userResult;
+        }
+
+        $this->resetUserPassword(
+            $userResult,
+            (string) $payload['password'],
+            $token,
+            $resetPasswordHelper,
+            $passwordHasher,
+        );
+
+        return $this->json(['message' => 'Votre mot de passe a été réinitialisé.']);
+    }
+
+    private function validatePasswordPayload(mixed $payload): ?JsonResponse
+    {
         if (!is_array($payload)) {
             return $this->json(['message' => 'Invalid JSON payload'], 400);
         }
 
-        $plainPassword = (string) ($payload['password'] ?? '');
-
-        if (strlen($plainPassword) < 8) {
+        if (strlen((string) ($payload['password'] ?? '')) < 8) {
             return $this->json(['message' => 'Le mot de passe doit contenir au moins 8 caractères.'], 422);
         }
 
+        return null;
+    }
+
+    private function validateTokenAndFetchUser(
+        string $token,
+        ResetPasswordHelperInterface $resetPasswordHelper,
+    ): User|JsonResponse {
         try {
             $user = $resetPasswordHelper->validateTokenAndFetchUser($token);
         } catch (ResetPasswordExceptionInterface) {
@@ -48,11 +77,20 @@ final class ResetPasswordController extends AbstractController
             return $this->json(['message' => 'Utilisateur introuvable.'], 404);
         }
 
+        return $user;
+    }
+
+    private function resetUserPassword(
+        User $user,
+        string $plainPassword,
+        string $token,
+        ResetPasswordHelperInterface $resetPasswordHelper,
+        UserPasswordHasherInterface $passwordHasher,
+    ): void {
         $resetPasswordHelper->removeResetRequest($token);
 
         $user->setPassword($passwordHasher->hashPassword($user, $plainPassword));
-        $this->entityManager->flush();
 
-        return $this->json(['message' => 'Votre mot de passe a été réinitialisé.']);
+        $this->entityManager->flush();
     }
 }
