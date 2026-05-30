@@ -518,18 +518,18 @@ class AppFixtures extends Fixture
     private function loadMaintenances(ObjectManager $manager, array $vehicles, array $maintenanceTypes, array $parts): void
     {
         $annualTypes = [
-            self::MAINTENANCE_TYPE_ANNUAL_OIL_CHANGE, 
-            self::MAINTENANCE_TYPE_BREAK_SYSTEM, 
-            self::MAINTENANCE_TYPE_TIRES, 
-            self::MAINTENANCE_TYPE_TRACK_CONTROL, 
-            self::MAINTENANCE_TYPE_TRANSMISSION, 
+            self::MAINTENANCE_TYPE_ANNUAL_OIL_CHANGE,
+            self::MAINTENANCE_TYPE_BREAK_SYSTEM,
+            self::MAINTENANCE_TYPE_TIRES,
+            self::MAINTENANCE_TYPE_TRACK_CONTROL,
+            self::MAINTENANCE_TYPE_TRANSMISSION,
             self::MAINTENANCE_TYPE_ENGINE_DIAGNOSTIC
         ];
         $partRotation = [
-            self::PART_TYPE_OIL_FILTER, 
-            self::PART_TYPE_ENGINE_OIL_5W40, 
-            self::PART_TYPE_RBF660_BRAKE_FLUID, 
-            self::PART_TYPE_FRONT_SPORT_BRAKE_PADS, 
+            self::PART_TYPE_OIL_FILTER,
+            self::PART_TYPE_ENGINE_OIL_5W40,
+            self::PART_TYPE_RBF660_BRAKE_FLUID,
+            self::PART_TYPE_FRONT_SPORT_BRAKE_PADS,
             self::PART_TYPE_MICHELIN_PILOT_SPORT_4S
         ];
         $currentYear = 2026;
