@@ -7,6 +7,7 @@ use App\Entity\User;
 use App\Entity\Vehicle;
 use App\Entity\VehicleInsurance;
 use App\Entity\VehicleInspection;
+use App\Exception\DocumentStorageException;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\DependencyInjection\ParameterBag\ContainerBagInterface;
@@ -22,7 +23,7 @@ class DocumentManager
         $this->uploadDirectory = $this->params->get('documents_directory');
 
         if (!is_dir($this->uploadDirectory)) {
-            throw new \RuntimeException('Le dossier de stockage des documents est introuvable.');
+            throw new DocumentStorageException('Le dossier de stockage des documents est introuvable.');
         }
     }
 
@@ -141,7 +142,7 @@ class DocumentManager
         $filename = $document->getStoredFilename();
 
         if (!$filename) {
-            throw new \RuntimeException('Le document ne possède pas de fichier stocké.');
+            throw new DocumentStorageException('Le document ne possède pas de fichier stocké.');
         }
 
         return rtrim($this->uploadDirectory, '/').'/'.$filename;
