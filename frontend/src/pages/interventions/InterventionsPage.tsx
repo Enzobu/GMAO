@@ -86,12 +86,12 @@ export default function InterventionsPage({ vehicleScoped = false }: Readonly<{ 
       setInterventions(vehicleId ? interventionData.filter((item) => item.vehicle.id === Number(vehicleId)) : interventionData)
       setQuickAction(null)
       setMileageDialogOpen(false)
-    } catch (caught) {
-      if (isAxiosError(caught) && caught.response?.status === 409) {
-        setMileageDialogMessage(errorMessage(caught))
+    } catch (error_) {
+      if (isAxiosError(error_) && error_.response?.status === 409) {
+        setMileageDialogMessage(errorMessage(error_))
         setMileageDialogOpen(true)
       } else {
-        setError(errorMessage(caught))
+        setError(errorMessage(error_))
       }
     } finally {
       setIsUpdatingStatus(false)

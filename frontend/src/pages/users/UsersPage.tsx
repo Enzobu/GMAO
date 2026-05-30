@@ -99,8 +99,8 @@ export default function UsersPage() {
       await deleteUser(userToDelete.id)
       setUsers((current) => current.filter((user) => user.id !== userToDelete.id))
       setUserToDelete(null)
-    } catch (caught) {
-      setError(errorMessage(caught, "Impossible de supprimer cet utilisateur."))
+    } catch (error_) {
+      setError(errorMessage(error_, "Impossible de supprimer cet utilisateur."))
     } finally {
       setIsDeleting(false)
     }

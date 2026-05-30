@@ -221,5 +221,5 @@ function deleteDescription(inspection: VehicleInspectionEvent | null) {
 }
 
 function formatMileage(value?: number | null) {
-  return value != null ? `${new Intl.NumberFormat("fr-FR").format(value)} km` : "—"
+  return value == null ? "—" : `${new Intl.NumberFormat("fr-FR").format(value)} km`
 }

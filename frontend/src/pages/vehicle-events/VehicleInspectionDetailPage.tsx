@@ -182,5 +182,5 @@ function CounterVisitBadge({ required }: Readonly<{ required: boolean }>) {
 }
 
 function formatMileage(value?: number | null) {
-  return value != null ? `${new Intl.NumberFormat("fr-FR").format(value)} km` : "—"
+  return value == null ? "—" : `${new Intl.NumberFormat("fr-FR").format(value)} km`
 }

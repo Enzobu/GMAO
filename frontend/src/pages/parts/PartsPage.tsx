@@ -163,6 +163,69 @@ export default function PartsPage() {
     return <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive">{error}</div>
   }
 
+  function renderPartsContent() {
+    if (parts.length === 0) {
+      return (
+        <Card>
+          <CardContent className="py-8 text-center text-sm text-muted-foreground">Aucun stock enregistré.</CardContent>
+        </Card>
+      )
+    }
+
+    if (filteredParts.length === 0) {
+      return (
+        <Card>
+          <CardContent className="py-8 text-center text-sm text-muted-foreground">Aucune pièce ne correspond aux critères.</CardContent>
+        </Card>
+      )
+    }
+
+    return (
+      <>
+        <PaginationControls currentPage={currentPage} pageCount={pageCount} totalItems={filteredParts.length} visibleStart={visibleStart} visibleEnd={visibleEnd} itemsPerPage={itemsPerPage} itemsPerPageOptions={ITEMS_PER_PAGE_OPTIONS} onItemsPerPageChange={(value) => setItemsPerPage(value as ItemsPerPageValue)} onPreviousPage={() => setPage((current) => Math.max(1, current - 1))} onNextPage={() => setPage((current) => Math.min(pageCount, current + 1))} itemLabel="ligne(s)" />
+
+        <div className="grid gap-4 xl:grid-cols-2">
+          {paginatedParts.map((part) => {
+            const status = stockStatus(part.quantity)
+
+            return (
+              <Card key={part.id} className="relative flex h-full flex-col border border-foreground/10 ring-0 transition-colors hover:border-primary/35 hover:bg-muted/30">
+                <Link to={`/parts/${part.id}`} className="absolute inset-0 z-10 rounded-xl focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50" aria-label={`Voir ${partName(part)}`} />
+                <CardHeader>
+                  <CardTitle className="flex flex-wrap items-center gap-2">
+                    <span>{partName(part)}</span>
+                    <Badge variant={status.variant} className={status.value === "low" ? "border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-300" : undefined}>{status.label}</Badge>
+                    {part.vehicles.length === 0 && <Badge variant="destructive">Aucun véhicule compatible</Badge>}
+                    {!isAdmin && <Badge variant="outline" className="border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-300">Lecture seule</Badge>}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="flex-1 space-y-3">
+                  <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted-foreground">
+                    <span><strong className="text-foreground">Quantité</strong> {part.quantity}</span>
+                    <span><strong className="text-foreground">Màj</strong> {formatDateTime(part.updatedAt)}</span>
+                  </div>
+                  {part.note && <p className="line-clamp-2 text-sm text-muted-foreground">{part.note}</p>}
+                  <div className="flex flex-wrap gap-2">
+                    {part.vehicles.length > 0 ? part.vehicles.map((vehicle) => <Badge key={vehicle.id} variant="outline">{vehicleDisplayName(vehicle)}</Badge>) : <span className="text-sm text-destructive">Cette pièce ne pourra être utilisée sur aucune intervention.</span>}
+                  </div>
+                </CardContent>
+                {isAdmin && (
+                  <CardFooter className="relative z-20 justify-end gap-2">
+                    <Button variant="outline" size="sm" onClick={() => setPartToStock(part)}>Ajouter stock</Button>
+                    <Button variant="outline" size="sm" asChild><Link to={`/parts/${part.id}/edit`}>Modifier</Link></Button>
+                    <Button variant="destructive" size="sm" onClick={() => setPartToDelete(part)}><Trash2 />Supprimer</Button>
+                  </CardFooter>
+                )}
+              </Card>
+            )
+          })}
+        </div>
+
+        {pageCount > 1 && <PaginationControls currentPage={currentPage} pageCount={pageCount} totalItems={filteredParts.length} visibleStart={visibleStart} visibleEnd={visibleEnd} itemsPerPage={itemsPerPage} itemsPerPageOptions={ITEMS_PER_PAGE_OPTIONS} onItemsPerPageChange={(value) => setItemsPerPage(value as ItemsPerPageValue)} onPreviousPage={() => setPage((current) => Math.max(1, current - 1))} onNextPage={() => setPage((current) => Math.min(pageCount, current + 1))} itemLabel="ligne(s)" />}
+      </>
+    )
+  }
+
   return (
     <div className="space-y-6">
       <ConfirmDialog
@@ -228,54 +291,7 @@ export default function PartsPage() {
         </CardContent>
       </Card>
 
-      {parts.length === 0 ? (
-        <Card><CardContent className="py-8 text-center text-sm text-muted-foreground">Aucun stock enregistré.</CardContent></Card>
-      ) : filteredParts.length === 0 ? (
-        <Card><CardContent className="py-8 text-center text-sm text-muted-foreground">Aucune pièce ne correspond aux critères.</CardContent></Card>
-      ) : (
-        <>
-          <PaginationControls currentPage={currentPage} pageCount={pageCount} totalItems={filteredParts.length} visibleStart={visibleStart} visibleEnd={visibleEnd} itemsPerPage={itemsPerPage} itemsPerPageOptions={ITEMS_PER_PAGE_OPTIONS} onItemsPerPageChange={(value) => setItemsPerPage(value as ItemsPerPageValue)} onPreviousPage={() => setPage((current) => Math.max(1, current - 1))} onNextPage={() => setPage((current) => Math.min(pageCount, current + 1))} itemLabel="ligne(s)" />
-
-          <div className="grid gap-4 xl:grid-cols-2">
-            {paginatedParts.map((part) => {
-              const status = stockStatus(part.quantity)
-
-              return (
-                <Card key={part.id} className="relative flex h-full flex-col border border-foreground/10 ring-0 transition-colors hover:border-primary/35 hover:bg-muted/30">
-                  <Link to={`/parts/${part.id}`} className="absolute inset-0 z-10 rounded-xl focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50" aria-label={`Voir ${partName(part)}`} />
-                  <CardHeader>
-                    <CardTitle className="flex flex-wrap items-center gap-2">
-                      <span>{partName(part)}</span>
-                      <Badge variant={status.variant} className={status.value === "low" ? "border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-300" : undefined}>{status.label}</Badge>
-                      {part.vehicles.length === 0 && <Badge variant="destructive">Aucun véhicule compatible</Badge>}
-                      {!isAdmin && <Badge variant="outline" className="border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-300">Lecture seule</Badge>}
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="flex-1 space-y-3">
-                    <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted-foreground">
-                      <span><strong className="text-foreground">Quantité</strong> {part.quantity}</span>
-                      <span><strong className="text-foreground">Màj</strong> {formatDateTime(part.updatedAt)}</span>
-                    </div>
-                    {part.note && <p className="line-clamp-2 text-sm text-muted-foreground">{part.note}</p>}
-                    <div className="flex flex-wrap gap-2">
-                      {part.vehicles.length > 0 ? part.vehicles.map((vehicle) => <Badge key={vehicle.id} variant="outline">{vehicleDisplayName(vehicle)}</Badge>) : <span className="text-sm text-destructive">Cette pièce ne pourra être utilisée sur aucune intervention.</span>}
-                    </div>
-                  </CardContent>
-                  {isAdmin && (
-                    <CardFooter className="relative z-20 justify-end gap-2">
-                      <Button variant="outline" size="sm" onClick={() => setPartToStock(part)}>Ajouter stock</Button>
-                      <Button variant="outline" size="sm" asChild><Link to={`/parts/${part.id}/edit`}>Modifier</Link></Button>
-                      <Button variant="destructive" size="sm" onClick={() => setPartToDelete(part)}><Trash2 />Supprimer</Button>
-                    </CardFooter>
-                  )}
-                </Card>
-              )
-            })}
-          </div>
-
-          {pageCount > 1 && <PaginationControls currentPage={currentPage} pageCount={pageCount} totalItems={filteredParts.length} visibleStart={visibleStart} visibleEnd={visibleEnd} itemsPerPage={itemsPerPage} itemsPerPageOptions={ITEMS_PER_PAGE_OPTIONS} onItemsPerPageChange={(value) => setItemsPerPage(value as ItemsPerPageValue)} onPreviousPage={() => setPage((current) => Math.max(1, current - 1))} onNextPage={() => setPage((current) => Math.min(pageCount, current + 1))} itemLabel="ligne(s)" />}
-        </>
-      )}
+      {renderPartsContent()}
     </div>
   )
 }

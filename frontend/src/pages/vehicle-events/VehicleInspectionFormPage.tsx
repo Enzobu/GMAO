@@ -232,7 +232,7 @@ function inspectionToForm(inspection: VehicleInspectionEvent): InspectionFormSta
   return {
     inspectionDate: inspection.inspectionDate?.slice(0, 10) ?? "",
     validUntil: inspection.validUntil?.slice(0, 10) ?? "",
-    mileage: inspection.mileage != null ? String(inspection.mileage) : "",
+    mileage: inspection.mileage == null ? "" : String(inspection.mileage),
     result: inspection.result ?? "pass",
     counterVisitRequired: String(inspection.counterVisitRequired),
     counterVisitDueAt: inspection.counterVisitDueAt?.slice(0, 10) ?? "",

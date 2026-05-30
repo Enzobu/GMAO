@@ -181,6 +181,122 @@ export default function VehiclesPage() {
     return <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive">{error}</div>
   }
 
+  function renderVehiclesContent() {
+    if (vehicles.length === 0) {
+      return (
+        <Card>
+          <CardContent className="py-8 text-center text-sm text-muted-foreground">Aucun véhicule pour le moment.</CardContent>
+        </Card>
+      )
+    }
+
+    if (filteredVehicles.length === 0) {
+      return (
+        <Card>
+          <CardContent className="py-8 text-center text-sm text-muted-foreground">
+            Aucun véhicule ne correspond à ces critères.
+          </CardContent>
+        </Card>
+      )
+    }
+
+    return (
+      <>
+        <PaginationControls
+          currentPage={currentPage}
+          pageCount={pageCount}
+          totalItems={filteredVehicles.length}
+          visibleStart={visibleStart}
+          visibleEnd={visibleEnd}
+          itemsPerPage={itemsPerPage}
+          itemsPerPageOptions={ITEMS_PER_PAGE_OPTIONS}
+          onItemsPerPageChange={(value) => setItemsPerPage(value as ItemsPerPageValue)}
+          onPreviousPage={previousPage}
+          onNextPage={nextPage}
+          itemLabel="véhicule(s)"
+        />
+
+        <div className="grid gap-4 xl:grid-cols-2">
+          {paginatedVehicles.map((vehicle) => {
+            const canEdit = canEditVehicle(vehicle, currentUser?.id, isAdmin)
+
+            return (
+              <Card
+                key={vehicle.id}
+                className="relative border border-foreground/10 ring-0 transition-colors hover:border-primary/35 hover:bg-muted/30"
+              >
+                <Link
+                  to={`/vehicles/${vehicle.id}`}
+                  className="absolute inset-0 z-10 rounded-xl focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+                  aria-label={`Voir ${displayVehicleName(vehicle)}`}
+                />
+                <CardHeader>
+                  <CardTitle className="flex flex-wrap items-center gap-2">
+                    <span>{displayVehicleName(vehicle)}</span>
+                    <VehicleBadge collection={VEHICLE_TYPES} value={vehicle.type} />
+                    <VehicleBadge collection={VEHICLE_STATUSES} value={vehicle.status} />
+                    {!canEdit && (
+                      <Badge
+                        variant="outline"
+                        className="border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-300"
+                      >
+                        Lecture seule
+                      </Badge>
+                    )}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted-foreground">
+                    <span><strong className="text-foreground">Immat.</strong> {vehicle.registration.toUpperCase()}</span>
+                    {vehicle.year && <span><strong className="text-foreground">Année</strong> {vehicle.year}</span>}
+                    {vehicle.lastMileage !== null && vehicle.lastMileage !== undefined && (
+                      <span><strong className="text-foreground">Km</strong> {formatNumber(vehicle.lastMileage)}</span>
+                    )}
+                  </div>
+
+                  <div className="flex flex-wrap gap-2">
+                    <VehicleBadge collection={VEHICLE_FUEL_TYPES} value={vehicle.fuelType} />
+                    <VehicleBadge collection={VEHICLE_TRANSMISSIONS} value={vehicle.transmission} />
+                    <VehicleBadge collection={VEHICLE_COLORS} value={vehicle.color} />
+                  </div>
+                </CardContent>
+                <CardFooter className="relative z-20 justify-end gap-2">
+                  {canEdit && (
+                    <Button variant="outline" size="sm" asChild>
+                      <Link to={`/vehicles/${vehicle.id}/edit`}>Modifier</Link>
+                    </Button>
+                  )}
+                  {isAdmin && (
+                    <Button variant="destructive" size="sm" onClick={() => setVehicleToDelete(vehicle)}>
+                      <Trash2 />
+                      Supprimer
+                    </Button>
+                  )}
+                </CardFooter>
+              </Card>
+            )
+          })}
+        </div>
+
+        {pageCount > 1 && (
+          <PaginationControls
+            currentPage={currentPage}
+            pageCount={pageCount}
+            totalItems={filteredVehicles.length}
+            visibleStart={visibleStart}
+            visibleEnd={visibleEnd}
+            itemsPerPage={itemsPerPage}
+            itemsPerPageOptions={ITEMS_PER_PAGE_OPTIONS}
+            onItemsPerPageChange={(value) => setItemsPerPage(value as ItemsPerPageValue)}
+            onPreviousPage={previousPage}
+            onNextPage={nextPage}
+            itemLabel="véhicule(s)"
+          />
+        )}
+      </>
+    )
+  }
+
   return (
     <div className="space-y-6">
       <ConfirmDialog
@@ -275,111 +391,7 @@ export default function VehiclesPage() {
         </CardContent>
       </Card>
 
-      {vehicles.length === 0 ? (
-        <Card>
-          <CardContent className="py-8 text-center text-sm text-muted-foreground">Aucun véhicule pour le moment.</CardContent>
-        </Card>
-      ) : filteredVehicles.length === 0 ? (
-        <Card>
-          <CardContent className="py-8 text-center text-sm text-muted-foreground">
-            Aucun véhicule ne correspond à ces critères.
-          </CardContent>
-        </Card>
-      ) : (
-        <>
-          <PaginationControls
-            currentPage={currentPage}
-            pageCount={pageCount}
-            totalItems={filteredVehicles.length}
-            visibleStart={visibleStart}
-            visibleEnd={visibleEnd}
-            itemsPerPage={itemsPerPage}
-            itemsPerPageOptions={ITEMS_PER_PAGE_OPTIONS}
-            onItemsPerPageChange={(value) => setItemsPerPage(value as ItemsPerPageValue)}
-            onPreviousPage={previousPage}
-            onNextPage={nextPage}
-            itemLabel="véhicule(s)"
-          />
-
-          <div className="grid gap-4 xl:grid-cols-2">
-          {paginatedVehicles.map((vehicle) => {
-            const canEdit = canEditVehicle(vehicle, currentUser?.id, isAdmin)
-
-            return (
-              <Card
-                key={vehicle.id}
-                className="relative border border-foreground/10 ring-0 transition-colors hover:border-primary/35 hover:bg-muted/30"
-              >
-                <Link
-                  to={`/vehicles/${vehicle.id}`}
-                  className="absolute inset-0 z-10 rounded-xl focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
-                  aria-label={`Voir ${displayVehicleName(vehicle)}`}
-                />
-                <CardHeader>
-                  <CardTitle className="flex flex-wrap items-center gap-2">
-                    <span>{displayVehicleName(vehicle)}</span>
-                    <VehicleBadge collection={VEHICLE_TYPES} value={vehicle.type} />
-                    <VehicleBadge collection={VEHICLE_STATUSES} value={vehicle.status} />
-                    {!canEdit && (
-                      <Badge
-                        variant="outline"
-                        className="border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-300"
-                      >
-                        Lecture seule
-                      </Badge>
-                    )}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted-foreground">
-                    <span><strong className="text-foreground">Immat.</strong> {vehicle.registration.toUpperCase()}</span>
-                    {vehicle.year && <span><strong className="text-foreground">Année</strong> {vehicle.year}</span>}
-                    {vehicle.lastMileage !== null && vehicle.lastMileage !== undefined && (
-                      <span><strong className="text-foreground">Km</strong> {formatNumber(vehicle.lastMileage)}</span>
-                    )}
-                  </div>
-
-                  <div className="flex flex-wrap gap-2">
-                    <VehicleBadge collection={VEHICLE_FUEL_TYPES} value={vehicle.fuelType} />
-                    <VehicleBadge collection={VEHICLE_TRANSMISSIONS} value={vehicle.transmission} />
-                    <VehicleBadge collection={VEHICLE_COLORS} value={vehicle.color} />
-                  </div>
-                </CardContent>
-                <CardFooter className="relative z-20 justify-end gap-2">
-                  {canEdit && (
-                    <Button variant="outline" size="sm" asChild>
-                      <Link to={`/vehicles/${vehicle.id}/edit`}>Modifier</Link>
-                    </Button>
-                  )}
-                  {isAdmin && (
-                    <Button variant="destructive" size="sm" onClick={() => setVehicleToDelete(vehicle)}>
-                      <Trash2 />
-                      Supprimer
-                    </Button>
-                  )}
-                </CardFooter>
-              </Card>
-            )
-          })}
-          </div>
-
-          {pageCount > 1 && (
-            <PaginationControls
-              currentPage={currentPage}
-              pageCount={pageCount}
-              totalItems={filteredVehicles.length}
-              visibleStart={visibleStart}
-              visibleEnd={visibleEnd}
-              itemsPerPage={itemsPerPage}
-              itemsPerPageOptions={ITEMS_PER_PAGE_OPTIONS}
-              onItemsPerPageChange={(value) => setItemsPerPage(value as ItemsPerPageValue)}
-              onPreviousPage={previousPage}
-              onNextPage={nextPage}
-              itemLabel="véhicule(s)"
-            />
-          )}
-        </>
-      )}
+      {renderVehiclesContent()}
     </div>
   )
 }

@@ -110,7 +110,7 @@ export default function InterventionDetailPage({ vehicleScoped = false }: Readon
           <Detail boxed label="Début" value={formatDateTime(intervention.startedAt)} />
           <Detail boxed label="Fin" value={formatDateTime(intervention.finishedAt)} />
           <Detail boxed label="Mode" value={intervention.isExternal ? "Externe" : "Interne"} />
-          <Detail boxed label="Prochaine échéance km" value={intervention.nextDueMileage != null ? `${formatNumber(intervention.nextDueMileage)} km` : "—"} />
+          <Detail boxed label="Prochaine échéance km" value={intervention.nextDueMileage == null ? "—" : `${formatNumber(intervention.nextDueMileage)} km`} />
           <Detail boxed label="Prochaine échéance date" value={formatDateTime(intervention.nextDueAt)} />
         </CardContent>
       </Card>
@@ -118,14 +118,14 @@ export default function InterventionDetailPage({ vehicleScoped = false }: Readon
       <Card>
         <CardHeader><CardTitle>Pièces utilisées</CardTitle></CardHeader>
         <CardContent className="space-y-3">
-          {!intervention.maintenanceParts?.length ? (
-            <div className="text-sm text-muted-foreground">Aucune pièce renseignée.</div>
-          ) : intervention.maintenanceParts.map((line, index) => (
+          {intervention.maintenanceParts?.length ? intervention.maintenanceParts.map((line, index) => (
             <div key={`${partKey(line.part)}-${line.id ?? line.quantity}-${index}`} className="flex items-center justify-between rounded-lg border p-3 text-sm">
               <span>{partName(line.part)}</span>
               <span className="font-medium">x{line.quantity}</span>
             </div>
-          ))}
+          )) : (
+            <div className="text-sm text-muted-foreground">Aucune pièce renseignée.</div>
+          )}
         </CardContent>
       </Card>
 

@@ -27,7 +27,7 @@ export function formatDateTime(value?: string | null) {
 }
 
 export function formatNumber(value?: number | null) {
-  return value != null ? new Intl.NumberFormat("fr-FR").format(value) : "—"
+  return value == null ? "—" : new Intl.NumberFormat("fr-FR").format(value)
 }
 
 export function vehicleDisplayName(vehicle: Vehicle) {

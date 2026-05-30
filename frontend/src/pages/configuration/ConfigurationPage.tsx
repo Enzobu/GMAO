@@ -178,11 +178,61 @@ function ConfigurationResourcePanel({ resource }: Readonly<{ resource: ResourceC
       await resource.deleteItem(deleteItem.id)
       setItems((current) => current.filter((item) => item.id !== deleteItem.id))
       setDeleteItem(null)
-    } catch (caught) {
-      setError(errorMessage(caught, "Impossible de supprimer cet élément."))
+    } catch (error_) {
+      setError(errorMessage(error_, "Impossible de supprimer cet élément."))
     } finally {
       setIsDeleting(false)
     }
+  }
+
+  function renderItemsContent() {
+    if (isLoading) {
+      return <div className="text-sm text-muted-foreground">Chargement...</div>
+    }
+
+    if (items.length === 0) {
+      return (
+        <div className="rounded-lg border p-6 text-center">
+          <div className="font-medium">{resource.emptyTitle}</div>
+          <div className="mt-1 text-sm text-muted-foreground">{resource.emptyDescription}</div>
+        </div>
+      )
+    }
+
+    if (filteredItems.length === 0) {
+      return <div className="rounded-lg border p-6 text-center text-sm text-muted-foreground">Aucun résultat pour cette recherche.</div>
+    }
+
+    return (
+      <div className="space-y-2">
+        {filteredItems.map((item) => (
+          <div key={item.id} className="rounded-lg border border-foreground/10 p-3">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+              <div className="min-w-0">
+                <div className="flex flex-wrap items-center gap-2">
+                  <div className="font-medium">{item.name}</div>
+                  <Badge variant={item.isDeleted ? "outline" : "secondary"}>{item.isDeleted ? "Supprimé" : "Actif"}</Badge>
+                </div>
+                <p className="mt-1 text-sm text-muted-foreground">{item.description || "—"}</p>
+              </div>
+
+              {!item.isDeleted && (
+                <div className="flex shrink-0 justify-end gap-2">
+                  <Button variant="outline" size="sm" onClick={() => setFormItem(item)}>
+                    <Pencil />
+                    Modifier
+                  </Button>
+                  <Button variant="destructive" size="sm" onClick={() => setDeleteItem(item)}>
+                    <Trash2 />
+                    Supprimer
+                  </Button>
+                </div>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+    )
   }
 
   return (
@@ -220,45 +270,7 @@ function ConfigurationResourcePanel({ resource }: Readonly<{ resource: ResourceC
 
             {error && <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">{error}</div>}
 
-            {isLoading ? (
-              <div className="text-sm text-muted-foreground">Chargement...</div>
-            ) : items.length === 0 ? (
-              <div className="rounded-lg border p-6 text-center">
-                <div className="font-medium">{resource.emptyTitle}</div>
-                <div className="mt-1 text-sm text-muted-foreground">{resource.emptyDescription}</div>
-              </div>
-            ) : filteredItems.length === 0 ? (
-              <div className="rounded-lg border p-6 text-center text-sm text-muted-foreground">Aucun résultat pour cette recherche.</div>
-            ) : (
-              <div className="space-y-2">
-                {filteredItems.map((item) => (
-                  <div key={item.id} className="rounded-lg border border-foreground/10 p-3">
-                    <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                      <div className="min-w-0">
-                        <div className="flex flex-wrap items-center gap-2">
-                          <div className="font-medium">{item.name}</div>
-                          <Badge variant={item.isDeleted ? "outline" : "secondary"}>{item.isDeleted ? "Supprimé" : "Actif"}</Badge>
-                        </div>
-                        <p className="mt-1 text-sm text-muted-foreground">{item.description || "—"}</p>
-                      </div>
-
-                      {!item.isDeleted && (
-                        <div className="flex shrink-0 justify-end gap-2">
-                          <Button variant="outline" size="sm" onClick={() => setFormItem(item)}>
-                            <Pencil />
-                            Modifier
-                          </Button>
-                          <Button variant="destructive" size="sm" onClick={() => setDeleteItem(item)}>
-                            <Trash2 />
-                            Supprimer
-                          </Button>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
+            {renderItemsContent()}
           </CardContent>
         </Card>
       </AccordionContent>

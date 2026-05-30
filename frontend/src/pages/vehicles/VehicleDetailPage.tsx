@@ -251,7 +251,7 @@ function InsuranceCard({
             Ce véhicule n’a aucune assurance active.
           </div>
         )}
-        {!insurance ? <EmptyText>Aucune assurance renseignée.</EmptyText> : (
+        {insurance ? (
           <div className="grid gap-3 text-sm md:grid-cols-2">
             <Detail label="Assureur" value={insurance.providerName} />
             <Detail label="Police" value={insurance.policyNumber || "—"} />
@@ -260,7 +260,7 @@ function InsuranceCard({
             <Detail label="Fin" value={formatDate(insurance.endDate)} />
             <Detail label="Paiement" value={optionLabel(PAYMENT_FREQUENCIES, insurance.paymentFrequency)} />
           </div>
-        )}
+        ) : <EmptyText>Aucune assurance renseignée.</EmptyText>}
         <Button variant="outline" className="mt-4" asChild>
           <Link to={`/vehicles/${vehicleId}/insurances`}>Voir les assurances</Link>
         </Button>
@@ -283,7 +283,7 @@ function InspectionCard({ vehicleId, inspection }: Readonly<{ vehicleId: number;
         </CardTitle>
       </CardHeader>
       <CardContent>
-        {!inspection ? <EmptyText>Aucun contrôle technique renseigné.</EmptyText> : (
+        {inspection ? (
           <div className="grid gap-3 text-sm md:grid-cols-2">
             <Detail label="Résultat" value={optionLabel(INSPECTION_RESULTS, inspection.result)} />
             <Detail label="Date" value={formatDate(inspection.inspectionDate)} />
@@ -292,7 +292,7 @@ function InspectionCard({ vehicleId, inspection }: Readonly<{ vehicleId: number;
             <Detail label="Contre-visite" value={inspection.counterVisitRequired ? "Requise" : "Non requise"} />
             <Detail label="Centre" value={inspection.center?.name ?? "Non renseigné"} />
           </div>
-        )}
+        ) : <EmptyText>Aucun contrôle technique renseigné.</EmptyText>}
         <Button variant="outline" className="mt-4" asChild>
           <Link to={`/vehicles/${vehicleId}/inspections`}>Voir les contrôles</Link>
         </Button>
@@ -311,7 +311,7 @@ function MaintenanceCard({ vehicleId, maintenance, canEdit }: Readonly<{ vehicle
         </CardTitle>
       </CardHeader>
       <CardContent>
-        {!maintenance ? <EmptyText>Aucune intervention réalisée.</EmptyText> : (
+        {maintenance ? (
           <div className="grid gap-3 text-sm md:grid-cols-2 xl:grid-cols-4">
             <Detail label="Type" value={maintenance.maintenanceType?.name ?? "—"} />
             <Detail label="Statut" value={maintenance.status ?? "—"} />
@@ -322,7 +322,7 @@ function MaintenanceCard({ vehicleId, maintenance, canEdit }: Readonly<{ vehicle
             <Detail label="Prochaine échéance km" value={maintenance.nextDueMileage !== null && maintenance.nextDueMileage !== undefined ? `${formatNumber(maintenance.nextDueMileage)} km` : "—"} />
             <Detail label="Prochaine échéance date" value={formatDate(maintenance.nextDueAt)} />
           </div>
-        )}
+        ) : <EmptyText>Aucune intervention réalisée.</EmptyText>}
         <div className="mt-4 flex flex-wrap gap-2">
           <Button variant="outline" asChild>
             <Link to={`/vehicles/${vehicleId}/interventions`}>Voir les interventions</Link>
@@ -361,10 +361,28 @@ function VehicleBadge({ collection, value }: Readonly<{ collection: readonly { v
   return <Badge variant={vehicleBadgeVariant(option.variant)}>{option.label}</Badge>
 }
 
-function latestByDate<T extends { isDeleted?: boolean }>(items: T[] | undefined, field: keyof T) {
+type DateLikeValue = string | null | undefined
+
+type DateLikeKey<T> = {
+  [K in keyof T]: T[K] extends DateLikeValue ? K : never
+}[keyof T]
+
+function latestByDate<T extends { isDeleted?: boolean }>(
+  items: T[] | undefined,
+  field: DateLikeKey<T>,
+) {
   return items
     ?.filter((item) => !item.isDeleted && item[field])
-    .sort((a, b) => String(b[field]).localeCompare(String(a[field])))[0]
+    .toSorted((a, b) => {
+      const aDate = a[field]
+      const bDate = b[field]
+
+      if (typeof aDate !== "string" || typeof bDate !== "string") {
+        return 0
+      }
+
+      return bDate.localeCompare(aDate)
+    })[0]
 }
 
 function labelFor(collection: readonly { value: string; label: string }[], value?: string | null) {

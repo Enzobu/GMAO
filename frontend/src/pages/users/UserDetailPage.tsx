@@ -49,8 +49,8 @@ export default function UserDetailPage() {
     try {
       await deleteUser(user.id)
       navigate("/users")
-    } catch (caught) {
-      setError(errorMessage(caught, "Impossible de supprimer cet utilisateur."))
+    } catch (error_) {
+      setError(errorMessage(error_, "Impossible de supprimer cet utilisateur."))
     } finally {
       setIsDeleting(false)
     }

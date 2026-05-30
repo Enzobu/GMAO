@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useEffect, useState, type ReactNode } from "react"
 import {
   AlertTriangle,
   BarChart3,
@@ -191,6 +191,37 @@ type MaintenanceHistoryChartProps = Readonly<{
   data: DashboardMaintenanceHistoryItem[]
 }>
 
+type MaintenanceHistoryTooltipProps = Readonly<{
+  active?: boolean
+  payload?: Array<{
+    value?: unknown
+  }>
+  label?: string | number
+}>
+
+function MaintenanceHistoryTooltip({
+  active,
+  payload,
+  label,
+}: MaintenanceHistoryTooltipProps) {
+  if (!active || !payload?.length) {
+    return null
+  }
+
+  const count = Number(payload[0].value ?? 0)
+
+  return (
+    <div className="rounded-xl border border-border bg-popover px-3 py-2 text-sm text-popover-foreground shadow-md">
+      <p className="font-medium">
+        {label}
+      </p>
+      <p className="text-muted-foreground">
+        {count} entretien{count > 1 ? "s" : ""}
+      </p>
+    </div>
+  )
+}
+
 function MaintenanceHistoryChart({ loading, data }: MaintenanceHistoryChartProps) {
   const hasMaintenance = data.some((item) => item.count > 0)
 
@@ -243,24 +274,7 @@ function MaintenanceHistoryChart({ loading, data }: MaintenanceHistoryChartProps
                   />
                   <Tooltip
                     cursor={{ fill: "hsl(var(--muted))", opacity: 0.35 }}
-                    content={({ active, payload, label }) => {
-                      if (!active || !payload?.length) {
-                        return null
-                      }
-
-                      const count = Number(payload[0].value ?? 0)
-
-                      return (
-                        <div className="rounded-xl border border-border bg-popover px-3 py-2 text-sm text-popover-foreground shadow-md">
-                          <p className="font-medium">
-                            {label}
-                          </p>
-                          <p className="text-muted-foreground">
-                            {count} entretien{count > 1 ? "s" : ""}
-                          </p>
-                        </div>
-                      )
-                    }}
+                    content={<MaintenanceHistoryTooltip />}
                   />
                   <Bar
                     dataKey="count"
@@ -306,6 +320,75 @@ function DashboardListCard({
   items,
   showSeverity = false,
 }: DashboardListCardProps) {
+  let content: ReactNode
+
+  if (loading) {
+    content = (
+      <div className="space-y-3">
+        {["first", "second", "third"].map((item) => (
+          <div
+            key={item}
+            className="h-20 animate-pulse rounded-2xl bg-muted/40"
+          />
+        ))}
+      </div>
+    )
+  } else if (items.length > 0) {
+    content = (
+      <div className="grid gap-3 xl:grid-cols-2">
+        {items.map((item, index) => {
+          const Icon = itemIcons[item.type]
+          const severityClassName = item.severity
+            ? severityClassNames[item.severity]
+            : "border-border bg-muted/20 text-primary"
+
+          return (
+            <div
+              key={`${item.type}-${item.title}-${item.meta}-${index}`}
+              className="rounded-2xl border border-border bg-muted/20 p-4"
+            >
+              <div className="flex items-start gap-4">
+                <div className={[
+                  "flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border",
+                  showSeverity ? severityClassName : "border-border bg-primary/10 text-primary",
+                ].join(" ")}
+                >
+                  <Icon className="h-5 w-5" />
+                </div>
+
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <p className="font-medium">
+                      {item.title}
+                    </p>
+
+                    <span className={[
+                      "rounded-full px-2.5 py-1 text-xs font-medium",
+                      showSeverity ? severityClassName : "bg-primary/10 text-primary",
+                    ].join(" ")}
+                    >
+                      {item.meta}
+                    </span>
+                  </div>
+
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    {item.subtitle}
+                  </p>
+                </div>
+              </div>
+            </div>
+          )
+        })}
+      </div>
+    )
+  } else {
+    content = (
+      <div className="rounded-2xl border border-dashed border-border bg-muted/20 p-8 text-center text-muted-foreground">
+        {emptyLabel}
+      </div>
+    )
+  }
+
   return (
     <Card className="rounded-3xl border-border bg-card shadow-sm">
       <CardHeader>
@@ -327,66 +410,7 @@ function DashboardListCard({
       </CardHeader>
 
       <CardContent>
-        {loading ? (
-          <div className="space-y-3">
-            {["first", "second", "third"].map((item) => (
-              <div
-                key={item}
-                className="h-20 animate-pulse rounded-2xl bg-muted/40"
-              />
-            ))}
-          </div>
-        ) : items.length > 0 ? (
-          <div className="grid gap-3 xl:grid-cols-2">
-            {items.map((item, index) => {
-              const Icon = itemIcons[item.type]
-              const severityClassName = item.severity
-                ? severityClassNames[item.severity]
-                : "border-border bg-muted/20 text-primary"
-
-              return (
-                <div
-                  key={`${item.type}-${item.title}-${item.meta}-${index}`}
-                  className="rounded-2xl border border-border bg-muted/20 p-4"
-                >
-                  <div className="flex items-start gap-4">
-                    <div className={[
-                      "flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border",
-                      showSeverity ? severityClassName : "border-border bg-primary/10 text-primary",
-                    ].join(" ")}
-                    >
-                      <Icon className="h-5 w-5" />
-                    </div>
-
-                    <div className="min-w-0 flex-1">
-                      <div className="flex flex-wrap items-center justify-between gap-2">
-                        <p className="font-medium">
-                          {item.title}
-                        </p>
-
-                        <span className={[
-                          "rounded-full px-2.5 py-1 text-xs font-medium",
-                          showSeverity ? severityClassName : "bg-primary/10 text-primary",
-                        ].join(" ")}
-                        >
-                          {item.meta}
-                        </span>
-                      </div>
-
-                      <p className="mt-1 text-sm text-muted-foreground">
-                        {item.subtitle}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              )
-            })}
-          </div>
-        ) : (
-          <div className="rounded-2xl border border-dashed border-border bg-muted/20 p-8 text-center text-muted-foreground">
-            {emptyLabel}
-          </div>
-        )}
+        {content}
       </CardContent>
     </Card>
   )

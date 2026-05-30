@@ -138,12 +138,12 @@ export default function InterventionFormPage() {
         ? await updateIntervention(interventionId, payload, forceMileage)
         : await createIntervention(payload, forceMileage)
       navigate(`/vehicles/${vehicleId}/interventions/${saved.id}`)
-    } catch (caught) {
-      if (isAxiosError(caught) && caught.response?.status === 409) {
-        setMileageMessage(errorMessage(caught))
+    } catch (error_) {
+      if (isAxiosError(error_) && error_.response?.status === 409) {
+        setMileageMessage(errorMessage(error_))
         setMileageDialogOpen(true)
       } else {
-        setError(errorMessage(caught))
+        setError(errorMessage(error_))
       }
     } finally {
       setIsSaving(false)
@@ -308,14 +308,14 @@ export default function InterventionFormPage() {
 function interventionToForm(intervention: Intervention) {
   return {
     maintenanceTypeId: String(intervention.maintenanceType.id),
-    mileage: intervention.mileage != null ? String(intervention.mileage) : "",
+    mileage: intervention.mileage == null ? "" : String(intervention.mileage),
     plannedAt: dateTimeInput(intervention.plannedAt),
     startedAt: dateTimeInput(intervention.startedAt),
     finishedAt: dateTimeInput(intervention.finishedAt),
     status: intervention.status,
     isExternal: String(Boolean(intervention.isExternal)),
     notes: intervention.notes ?? "",
-    nextDueMileage: intervention.nextDueMileage != null ? String(intervention.nextDueMileage) : "",
+    nextDueMileage: intervention.nextDueMileage == null ? "" : String(intervention.nextDueMileage),
     nextDueAt: dateTimeInput(intervention.nextDueAt),
     parts: intervention.maintenanceParts?.map((line) => ({
       id: line.id,
