@@ -157,29 +157,7 @@ export function GlobalSearch() {
 
     return (
       <div className="max-h-[28rem] overflow-y-auto py-2">
-        {groupedResults.map(([category, categoryResults]) => {
-          const Icon = categoryIcons[category]
-
-          return (
-            <div key={category} className="py-1">
-              <div className="flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-muted-foreground">
-                <Icon className="size-3.5" />
-                {categoryLabels[category]}
-              </div>
-              {categoryResults.map((result) => (
-                <button
-                  key={result.id}
-                  type="button"
-                  className="grid w-full gap-0.5 px-4 py-2 text-left text-sm hover:bg-muted focus:bg-muted focus:outline-none"
-                  onClick={() => openResult(result)}
-                >
-                  <span className="font-medium">{result.title}</span>
-                  <span className="truncate text-xs text-muted-foreground">{result.description}</span>
-                </button>
-              ))}
-            </div>
-          )
-        })}
+        {groupedResults.map(([category, categoryResults]) => <SearchResultGroup key={category} category={category} results={categoryResults} onOpenResult={openResult} />)}
       </div>
     )
   }
@@ -217,6 +195,35 @@ export function GlobalSearch() {
         </div>
       )}
     </div>
+  )
+}
+
+function SearchResultGroup({ category, results, onOpenResult }: Readonly<{ category: SearchCategory; results: SearchResult[]; onOpenResult: (result: SearchResult) => void }>) {
+  const Icon = categoryIcons[category]
+
+  return (
+    <div className="py-1">
+      <div className="flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-muted-foreground">
+        <Icon className="size-3.5" />
+        {categoryLabels[category]}
+      </div>
+      {results.map((result) => (
+        <SearchResultButton key={result.id} result={result} onOpenResult={onOpenResult} />
+      ))}
+    </div>
+  )
+}
+
+function SearchResultButton({ result, onOpenResult }: Readonly<{ result: SearchResult; onOpenResult: (result: SearchResult) => void }>) {
+  return (
+    <button
+      type="button"
+      className="grid w-full gap-0.5 px-4 py-2 text-left text-sm hover:bg-muted focus:bg-muted focus:outline-none"
+      onClick={() => onOpenResult(result)}
+    >
+      <span className="font-medium">{result.title}</span>
+      <span className="truncate text-xs text-muted-foreground">{result.description}</span>
+    </button>
   )
 }
 
