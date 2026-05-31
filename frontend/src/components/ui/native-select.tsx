@@ -2,6 +2,7 @@ import * as React from "react"
 import { ChevronDown } from "lucide-react"
 
 import { cn } from "@/lib/utils"
+import { LabelText } from "@/components/page-primitives"
 
 export interface NativeSelectOption {
   value: string
@@ -49,7 +50,7 @@ function NativeSelect({
 
   return (
     <label className={cn("grid min-w-0 gap-1.5 text-sm font-medium", wrapperClassName)}>
-      <span>{label}</span>
+      <LabelText label={label} required={props.required} />
       {select}
     </label>
   )

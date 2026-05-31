@@ -24,6 +24,7 @@ import { NativeSelect } from "@/components/ui/native-select"
 import { useAuthStore } from "@/stores/auth-store"
 import type { Vehicle } from "@/types/vehicle"
 import type { VehicleInsuranceEvent, VehicleInsurancePayload } from "@/types/vehicle-events"
+import { MIN_INPUT_DATE, MAX_INPUT_DATE } from "@/lib/date-limits"
 import { formatDate, isInsuranceActive, PAYMENT_FREQUENCIES, todayInputValue } from "@/lib/vehicle-events"
 import { ErrorMessage, Field, FormActions, VehicleEventHeader, vehicleDescription, WarningMessage } from "./components"
 
@@ -213,6 +214,8 @@ export default function VehicleInsuranceFormPage() {
             <Field
               label="Début"
               type="date"
+              min={MIN_INPUT_DATE}
+              max={MAX_INPUT_DATE}
               value={form.startDate}
               onChange={(value) => updateField("startDate", value)}
               disabled={!canEdit}
@@ -220,6 +223,8 @@ export default function VehicleInsuranceFormPage() {
             <Field
               label="Fin"
               type="date"
+              min={MIN_INPUT_DATE}
+              max={MAX_INPUT_DATE}
               value={form.endDate}
               onChange={(value) => updateField("endDate", value)}
               disabled={!canEdit}
@@ -307,6 +312,8 @@ function ClosePreviousInsuranceDialog({
         <Field
           label="Date de fin de l’assurance actuelle"
           type="date"
+          min={MIN_INPUT_DATE}
+          max={MAX_INPUT_DATE}
           value={endDate}
           onChange={onEndDateChange}
           disabled={isLoading}

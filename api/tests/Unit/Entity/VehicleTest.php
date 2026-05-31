@@ -15,6 +15,7 @@ use App\Enum\VehicleStatusEnum;
 use App\Enum\VehicleTransmissionTypeEnum;
 use App\Enum\VehicleTypeEnum;
 use PHPUnit\Framework\TestCase;
+use Symfony\Component\Validator\Validation;
 
 final class VehicleTest extends TestCase
 {
@@ -42,7 +43,7 @@ final class VehicleTest extends TestCase
             ->setUser(new User());
 
         self::assertSame('camion a', $vehicle->getName());
-        self::assertSame('ab-123-cd', $vehicle->getRegistration());
+        self::assertSame('AB-123-CD', $vehicle->getRegistration());
         self::assertSame('renault', $vehicle->getBrand());
         self::assertSame('master', $vehicle->getModel());
         self::assertSame(VehicleTypeEnum::Truck, $vehicle->getType());
@@ -72,6 +73,12 @@ final class VehicleTest extends TestCase
         self::assertCount(1, $vehicle->getVehicleInsurances());
         self::assertSame($vehicle, $insurance->getVehicle());
 
+        $insurance->setIsDeleted(true);
+        self::assertFalse($vehicle->getVehicleInsurances()->contains($insurance));
+        self::assertCount(0, $vehicle->getVehicleInsurances());
+
+        $insurance->setIsDeleted(false);
+
         $vehicle->removeVehicleInsurance($insurance);
         self::assertFalse($vehicle->getVehicleInsurances()->contains($insurance));
     }
@@ -87,6 +94,12 @@ final class VehicleTest extends TestCase
         self::assertTrue($vehicle->getVehicleInspections()->contains($inspection));
         self::assertCount(1, $vehicle->getVehicleInspections());
         self::assertSame($vehicle, $inspection->getVehicle());
+
+        $inspection->setIsDeleted(true);
+        self::assertFalse($vehicle->getVehicleInspections()->contains($inspection));
+        self::assertCount(0, $vehicle->getVehicleInspections());
+
+        $inspection->setIsDeleted(false);
 
         $vehicle->removeVehicleInspection($inspection);
         self::assertFalse($vehicle->getVehicleInspections()->contains($inspection));
@@ -139,6 +152,12 @@ final class VehicleTest extends TestCase
         self::assertCount(1, $vehicle->getMaintenances());
         self::assertSame($vehicle, $maintenance->getVehicle());
 
+        $maintenance->setIsDeleted(true);
+        self::assertFalse($vehicle->getMaintenances()->contains($maintenance));
+        self::assertCount(0, $vehicle->getMaintenances());
+
+        $maintenance->setIsDeleted(false);
+
         $vehicle->removeMaintenance($maintenance);
         self::assertFalse($vehicle->getMaintenances()->contains($maintenance));
         self::assertNull($maintenance->getVehicle());
@@ -151,5 +170,82 @@ final class VehicleTest extends TestCase
         self::assertFalse($vehicle->isDeleted());
         $vehicle->setIsDeleted(true);
         self::assertTrue($vehicle->isDeleted());
+    }
+
+    public function testVinCannotExceedSeventeenCharacters(): void
+    {
+        $violations = Validation::createValidatorBuilder()
+            ->enableAttributeMapping()
+            ->getValidator()
+            ->validate((new Vehicle())->setVin('123456789012345678'));
+
+        self::assertCount(1, $violations);
+        self::assertSame('vin', $violations[0]->getPropertyPath());
+        self::assertSame('Le VIN ne peut pas dépasser 17 caractères.', $violations[0]->getMessage());
+    }
+
+    public function testVinIsNormalizedToUppercase(): void
+    {
+        $vehicle = (new Vehicle())->setVin(' vf1abcdefg1234567 ');
+
+        self::assertSame('VF1ABCDEFG1234567', $vehicle->getVin());
+        self::assertNull((new Vehicle())->setVin(' ')->getVin());
+    }
+
+    public function testRegistrationIsFormattedAndValidated(): void
+    {
+        $validator = Validation::createValidatorBuilder()
+            ->enableAttributeMapping()
+            ->getValidator();
+
+        $vehicle = (new Vehicle())->setRegistration('ab123cd');
+        self::assertSame('AB-123-CD', $vehicle->getRegistration());
+        self::assertCount(0, $validator->validate($vehicle, null, ['Default']));
+
+        $violations = $validator->validate((new Vehicle())->setRegistration('A1-123-CD'));
+
+        self::assertCount(1, $violations);
+        self::assertSame('registration', $violations[0]->getPropertyPath());
+        self::assertSame('La plaque d’immatriculation doit respecter le format AA-123-AA.', $violations[0]->getMessage());
+    }
+
+    public function testYearMustStayInAllowedRange(): void
+    {
+        $validator = Validation::createValidatorBuilder()
+            ->enableAttributeMapping()
+            ->getValidator();
+
+        $tooOldViolations = $validator->validate((new Vehicle())->setYear(1799));
+        $tooRecentViolations = $validator->validate((new Vehicle())->setYear(2101));
+
+        self::assertCount(1, $tooOldViolations);
+        self::assertSame('year', $tooOldViolations[0]->getPropertyPath());
+        self::assertSame('L’année doit être comprise entre 1800 et 2100.', $tooOldViolations[0]->getMessage());
+        self::assertCount(1, $tooRecentViolations);
+        self::assertSame('year', $tooRecentViolations[0]->getPropertyPath());
+    }
+
+    public function testPurchaseDateMustStayInAllowedRange(): void
+    {
+        $violations = Validation::createValidatorBuilder()
+            ->enableAttributeMapping()
+            ->getValidator()
+            ->validate((new Vehicle())->setPurchaseDate(new \DateTimeImmutable('1799-12-31')));
+
+        self::assertCount(1, $violations);
+        self::assertSame('purchaseDate', $violations[0]->getPropertyPath());
+        self::assertSame('La date doit être comprise entre le 01/01/1800 et le 31/12/2100.', $violations[0]->getMessage());
+    }
+
+    public function testLastMileageCannotBeNegative(): void
+    {
+        $violations = Validation::createValidatorBuilder()
+            ->enableAttributeMapping()
+            ->getValidator()
+            ->validate((new Vehicle())->setLastMileage(-1));
+
+        self::assertCount(1, $violations);
+        self::assertSame('lastMileage', $violations[0]->getPropertyPath());
+        self::assertSame('Le kilométrage ne peut pas être négatif.', $violations[0]->getMessage());
     }
 }

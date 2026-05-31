@@ -53,13 +53,18 @@ export async function getVehicleInspection(id: string | number) {
   return response.data
 }
 
-export async function createVehicleInspection(payload: VehicleInspectionPayload) {
-  const response = await api.post<VehicleInspectionEvent>("/vehicle_inspections", payload)
+export async function createVehicleInspection(payload: VehicleInspectionPayload, forceMileage = false) {
+  const response = await api.post<VehicleInspectionEvent>("/vehicle_inspections", payload, {
+    params: forceMileage ? { forceMileage: true } : undefined,
+  })
   return response.data
 }
 
-export async function updateVehicleInspection(id: string | number, payload: VehicleInspectionPayload) {
-  const response = await api.patch<VehicleInspectionEvent>(`/vehicle_inspections/${id}`, payload, { headers: { "Content-Type": "application/merge-patch+json" } })
+export async function updateVehicleInspection(id: string | number, payload: VehicleInspectionPayload, forceMileage = false) {
+  const response = await api.patch<VehicleInspectionEvent>(`/vehicle_inspections/${id}`, payload, {
+    headers: { "Content-Type": "application/merge-patch+json" },
+    params: forceMileage ? { forceMileage: true } : undefined,
+  })
   return response.data
 }
 

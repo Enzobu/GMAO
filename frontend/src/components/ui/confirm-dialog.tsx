@@ -12,6 +12,7 @@ type ConfirmDialogProps = Readonly<{
   open: boolean
   title: string
   description: string
+  error?: string | null
   confirmLabel?: string
   cancelLabel?: string
   isLoading?: boolean
@@ -23,6 +24,7 @@ function ConfirmDialog({
   open,
   title,
   description,
+  error = null,
   confirmLabel = "Confirmer",
   cancelLabel = "Annuler",
   isLoading = false,
@@ -36,6 +38,7 @@ function ConfirmDialog({
           <DialogTitle>{title}</DialogTitle>
           <DialogDescription>{description}</DialogDescription>
         </DialogHeader>
+        {error && <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">{error}</div>}
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isLoading}>
             {cancelLabel}

@@ -28,6 +28,7 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Validator\Constraints as Assert;
 
 #[ApiResource(
     operations: [
@@ -55,6 +56,7 @@ class Vehicle
     private ?string $name = null;
 
     #[ORM\Column(length: 20, unique: true)]
+    #[Assert\Regex(pattern: '/^[A-Z]{2}-\d{3}-[A-Z]{2}$/', message: 'La plaque d’immatriculation doit respecter le format AA-123-AA.')]
     #[Groups(['vehicle:read', 'vehicle:write', 'maintenance:read', 'vehicle_insurance:read', 'vehicle_inspection:read', 'document:read', 'part:read'])]
     private ?string $registration = null;
 
@@ -71,10 +73,12 @@ class Vehicle
     private ?VehicleTypeEnum $type = null;
 
     #[ORM\Column(type: Types::SMALLINT, nullable: true)]
+    #[Assert\Range(notInRangeMessage: 'L’année doit être comprise entre {{ min }} et {{ max }}.', min: 1800, max: 2100)]
     #[Groups(['vehicle:read', 'vehicle:write'])]
     private ?int $year = null;
 
     #[ORM\Column(length: 17, nullable: true, unique: true)]
+    #[Assert\Length(max: 17, maxMessage: 'Le VIN ne peut pas dépasser {{ limit }} caractères.')]
     #[Groups(['vehicle:read', 'vehicle:write'])]
     private ?string $vin = null;
 
@@ -91,6 +95,7 @@ class Vehicle
     private ?VehicleTransmissionTypeEnum $transmission = null;
 
     #[ORM\Column(nullable: true)]
+    #[Assert\PositiveOrZero(message: 'Le kilométrage ne peut pas être négatif.')]
     #[Groups(['vehicle:read', 'vehicle:write', 'maintenance:read', 'vehicle_insurance:read', 'vehicle_inspection:read'])]
     private ?int $lastMileage = null;
 
@@ -99,6 +104,7 @@ class Vehicle
     private ?VehicleColorEnum $color = null;
 
     #[ORM\Column(type: Types::DATE_IMMUTABLE, nullable: true)]
+    #[Assert\Range(notInRangeMessage: 'La date doit être comprise entre le 01/01/1800 et le 31/12/2100.', min: '1800-01-01', max: '2100-12-31')]
     #[Groups(['vehicle:read', 'vehicle:write'])]
     private ?\DateTimeImmutable $purchaseDate = null;
 
@@ -183,14 +189,26 @@ class Vehicle
 
     public function setRegistration(string $registration): static
     {
-        $this->registration = strtolower($registration);
+        $this->registration = $this->formatRegistration($registration);
 
         return $this;
     }
 
     public function displayName(): ?string
     {
-        return ucfirst($this->name) . ' ・ ' . strtoupper($this->registration);
+        return ucfirst($this->name) . ' ・ ' . $this->registration;
+    }
+
+    private function formatRegistration(string $registration): string
+    {
+        $value = strtoupper(trim($registration));
+        $compactValue = preg_replace('/[^A-Z0-9]/', '', $value) ?? '';
+
+        if (preg_match('/^([A-Z]{2})(\d{3})([A-Z]{2})$/', $compactValue, $matches) === 1) {
+            return sprintf('%s-%s-%s', $matches[1], $matches[2], $matches[3]);
+        }
+
+        return $value;
     }
 
     public function getBrand(): ?string
@@ -248,7 +266,8 @@ class Vehicle
 
     public function setVin(?string $vin): static
     {
-        $this->vin = $vin;
+        $vin = $vin !== null ? strtoupper(trim($vin)) : null;
+        $this->vin = $vin !== '' ? $vin : null;
 
         return $this;
     }
@@ -366,7 +385,7 @@ class Vehicle
      */
     public function getVehicleInsurances(): Collection
     {
-        return $this->vehicleInsurances;
+        return $this->vehicleInsurances->filter(static fn (VehicleInsurance $insurance): bool => !$insurance->isDeleted());
     }
 
     public function addVehicleInsurance(VehicleInsurance $vehicleInsurance): static
@@ -391,7 +410,7 @@ class Vehicle
      */
     public function getVehicleInspections(): Collection
     {
-        return $this->vehicleInspections;
+        return $this->vehicleInspections->filter(static fn (VehicleInspection $inspection): bool => !$inspection->isDeleted());
     }
 
     public function addVehicleInspection(VehicleInspection $vehicleInspection): static
@@ -490,7 +509,7 @@ class Vehicle
      */
     public function getMaintenances(): Collection
     {
-        return $this->maintenances;
+        return $this->maintenances->filter(static fn (Maintenance $maintenance): bool => !$maintenance->isDeleted());
     }
 
     public function addMaintenance(Maintenance $maintenance): static

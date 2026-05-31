@@ -10,6 +10,7 @@ use App\Enum\InspectionResultEnum;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Validator\Constraints\Callback;
 use Symfony\Component\Validator\Context\ExecutionContextInterface;
+use Symfony\Component\Validator\Validation;
 use Symfony\Component\Validator\Violation\ConstraintViolationBuilderInterface;
 
 final class VehicleInspectionTest extends TestCase
@@ -80,7 +81,7 @@ final class VehicleInspectionTest extends TestCase
         $inspection = (new VehicleInspection())
             ->setInspectionDate(new \DateTimeImmutable('2025-02-01'))
             ->setValidUntil(new \DateTimeImmutable('2025-01-01'))
-            ->setCounterVisitRequired(true);
+            ->setResult(InspectionResultEnum::CounterVisit);
         $builder = $this->createMock(ConstraintViolationBuilderInterface::class);
         $builder->expects(self::exactly(2))->method('atPath')->willReturnSelf();
         $builder->expects(self::exactly(2))->method('addViolation');
@@ -96,5 +97,73 @@ final class VehicleInspectionTest extends TestCase
         $context->expects(self::never())->method('buildViolation');
 
         (new VehicleInspection())->validate($context);
+    }
+
+    public function testBusinessDatesMustStayInAllowedRange(): void
+    {
+        $violations = Validation::createValidatorBuilder()
+            ->enableAttributeMapping()
+            ->getValidator()
+            ->validate((new VehicleInspection())
+                ->setInspectionDate(new \DateTimeImmutable('1799-12-31'))
+                ->setValidUntil(new \DateTimeImmutable('2101-01-01'))
+                ->setMileage(1200)
+                ->setCounterVisitDueAt(new \DateTimeImmutable('2101-01-01')));
+
+        self::assertCount(3, $violations);
+        self::assertSame(['inspectionDate', 'validUntil', 'counterVisitDueAt'], array_map(static fn ($violation): string => $violation->getPropertyPath(), iterator_to_array($violations)));
+    }
+
+    public function testMileageCannotBeNegative(): void
+    {
+        $violations = Validation::createValidatorBuilder()
+            ->enableAttributeMapping()
+            ->getValidator()
+            ->validate((new VehicleInspection())->setMileage(-1));
+
+        self::assertCount(1, $violations);
+        self::assertSame('mileage', $violations[0]->getPropertyPath());
+        self::assertSame('Le kilométrage ne peut pas être négatif.', $violations[0]->getMessage());
+    }
+
+    public function testMileageIsRequired(): void
+    {
+        $violations = Validation::createValidatorBuilder()
+            ->enableAttributeMapping()
+            ->getValidator()
+            ->validate(new VehicleInspection());
+
+        self::assertCount(1, $violations);
+        self::assertSame('mileage', $violations[0]->getPropertyPath());
+        self::assertSame('Le kilométrage est obligatoire.', $violations[0]->getMessage());
+    }
+
+    public function testCounterVisitIsDerivedFromResult(): void
+    {
+        $inspection = (new VehicleInspection())
+            ->setResult(InspectionResultEnum::CounterVisit);
+
+        self::assertTrue($inspection->isCounterVisitRequired());
+
+        $inspection
+            ->setCounterVisitDueAt(new \DateTimeImmutable('2025-02-01'))
+            ->setResult(InspectionResultEnum::Pass);
+
+        self::assertFalse($inspection->isCounterVisitRequired());
+        self::assertNull($inspection->getCounterVisitDueAt());
+    }
+
+    public function testValidationRejectsCounterVisitDateForPassResult(): void
+    {
+        $inspection = (new VehicleInspection())
+            ->setResult(InspectionResultEnum::Pass)
+            ->setCounterVisitDueAt(new \DateTimeImmutable('2025-02-01'));
+        $builder = $this->createMock(ConstraintViolationBuilderInterface::class);
+        $builder->expects(self::once())->method('atPath')->with('counterVisitDueAt')->willReturnSelf();
+        $builder->expects(self::once())->method('addViolation');
+        $context = $this->createMock(ExecutionContextInterface::class);
+        $context->expects(self::once())->method('buildViolation')->willReturn($builder);
+
+        $inspection->validate($context);
     }
 }

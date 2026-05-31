@@ -1,5 +1,5 @@
 import { api } from "@/api/client"
-import type { ConfigurationItem, ConfigurationPayload } from "@/types/configuration"
+import type { ConfigurationItem, ConfigurationPayload, InspectionCenterConfigurationItem, InspectionCenterConfigurationPayload } from "@/types/configuration"
 
 type ApiCollection<T> = T[] | { member?: T[]; "hydra:member"?: T[] }
 
@@ -57,4 +57,28 @@ export async function updatePartType(id: number, payload: ConfigurationPayload) 
 
 export async function deletePartType(id: number) {
   await api.delete(`/part_types/${id}`)
+}
+
+export async function getInspectionCentersConfiguration() {
+  const response = await api.get<ApiCollection<InspectionCenterConfigurationItem>>("/inspection_centers")
+
+  return collectionItems(response.data)
+}
+
+export async function createInspectionCenter(payload: InspectionCenterConfigurationPayload) {
+  const response = await api.post<InspectionCenterConfigurationItem>("/inspection_centers", payload)
+
+  return response.data
+}
+
+export async function updateInspectionCenter(id: number, payload: InspectionCenterConfigurationPayload) {
+  const response = await api.patch<InspectionCenterConfigurationItem>(`/inspection_centers/${id}`, payload, {
+    headers: { "Content-Type": "application/merge-patch+json" },
+  })
+
+  return response.data
+}
+
+export async function deleteInspectionCenter(id: number) {
+  await api.delete(`/inspection_centers/${id}`)
 }

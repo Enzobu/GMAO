@@ -4,6 +4,7 @@ import { Save } from "lucide-react"
 
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import type { Vehicle } from "@/types/vehicle"
 
 export { PageHeader as VehicleEventHeader } from "@/components/page-primitives"
@@ -53,4 +54,37 @@ export function vehicleDescription(vehicle: Vehicle | null) {
 
 export function canEditVehicle(vehicle: Vehicle | null, userId?: number, isAdmin = false) {
   return isAdmin || vehicle?.user.id === userId
+}
+
+export function MileageWarningDialog({
+  open,
+  message,
+  isAdmin,
+  isLoading,
+  onOpenChange,
+  onForce,
+  forceLabel = "Forcer",
+}: Readonly<{
+  open: boolean
+  message: string
+  isAdmin: boolean
+  isLoading: boolean
+  onOpenChange: (open: boolean) => void
+  onForce: () => void
+  forceLabel?: string
+}>) {
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Kilométrage à vérifier</DialogTitle>
+          <DialogDescription>{message}</DialogDescription>
+        </DialogHeader>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isLoading}>Fermer</Button>
+          {isAdmin && <Button onClick={onForce} disabled={isLoading}>{isLoading ? "Enregistrement..." : forceLabel}</Button>}
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  )
 }

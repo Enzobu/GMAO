@@ -25,6 +25,7 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Validator\Constraints as Assert;
 
 #[ApiResource(
     operations: [
@@ -64,10 +65,12 @@ class VehicleInsurance
     private ?string $policyNumber = null;
 
     #[ORM\Column(type: Types::DATE_IMMUTABLE, nullable: true)]
+    #[Assert\Range(notInRangeMessage: 'La date doit être comprise entre le 01/01/1800 et le 31/12/2100.', min: '1800-01-01', max: '2100-12-31')]
     #[Groups(['vehicle_insurance:read', 'vehicle_insurance:write', 'vehicle:read'])]
     private ?\DateTimeImmutable $startDate = null;
 
     #[ORM\Column(type: Types::DATE_IMMUTABLE, nullable: true)]
+    #[Assert\Range(notInRangeMessage: 'La date doit être comprise entre le 01/01/1800 et le 31/12/2100.', min: '1800-01-01', max: '2100-12-31')]
     #[Groups(['vehicle_insurance:read', 'vehicle_insurance:write', 'vehicle:read'])]
     private ?\DateTimeImmutable $endDate = null;
 

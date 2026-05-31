@@ -11,6 +11,7 @@ import { useAuthStore } from "@/stores/auth-store"
 import type { Profile, UpdateProfilePayload } from "@/types/profile"
 
 import { DocumentsPanel } from "@/components/documents-panel"
+import { LabelText } from "@/components/page-primitives"
 import { Button } from "@/components/ui/button"
 import {
   Card,
@@ -157,9 +158,10 @@ export default function ProfilePage() {
               </Field>
 
               <div className="grid gap-4 md:grid-cols-2">
-                <Field label="Prénom">
+                <Field label="Prénom" required>
                   <Input
                     value={form.firstname}
+                    required
                     disabled={loading || saving}
                     onChange={(event) => setForm((current) => ({
                       ...current,
@@ -168,9 +170,10 @@ export default function ProfilePage() {
                   />
                 </Field>
 
-                <Field label="Nom">
+                <Field label="Nom" required>
                   <Input
                     value={form.lastname}
+                    required
                     disabled={loading || saving}
                     onChange={(event) => setForm((current) => ({
                       ...current,
@@ -191,9 +194,10 @@ export default function ProfilePage() {
             </CardHeader>
 
             <CardContent className="space-y-4">
-              <Field label="Adresse">
+              <Field label="Adresse" required>
                 <Input
                   value={form.address.line1}
+                  required
                   disabled={loading || saving}
                   onChange={(event) => updateAddress("line1", event.target.value)}
                 />
@@ -208,25 +212,29 @@ export default function ProfilePage() {
               </Field>
 
               <div className="grid gap-4 md:grid-cols-3">
-                <Field label="Code postal">
+                <Field label="Code postal" required>
                   <Input
                     value={form.address.postalCode}
+                    maxLength={5}
+                    required
                     disabled={loading || saving}
-                    onChange={(event) => updateAddress("postalCode", event.target.value)}
+                    onChange={(event) => updateAddress("postalCode", formatPostalCode(event.target.value))}
                   />
                 </Field>
 
-                <Field label="Ville">
+                <Field label="Ville" required>
                   <Input
                     value={form.address.city}
+                    required
                     disabled={loading || saving}
                     onChange={(event) => updateAddress("city", event.target.value)}
                   />
                 </Field>
 
-                <Field label="Pays">
+                <Field label="Pays" required>
                   <Input
                     value={form.address.country}
+                    required
                     disabled={loading || saving}
                     onChange={(event) => updateAddress("country", event.target.value)}
                   />
@@ -291,17 +299,23 @@ export default function ProfilePage() {
   }
 }
 
+function formatPostalCode(value: string) {
+  return value.replace(/\D/g, "").slice(0, 5)
+}
+
 function Field({
   label,
+  required = false,
   children,
 }: Readonly<{
   label: string
+  required?: boolean
   children: React.ReactNode
 }>) {
   return (
     <label className="block space-y-2">
       <span className="text-sm font-medium text-muted-foreground">
-        {label}
+        <LabelText label={label} required={required} />
       </span>
       {children}
     </label>

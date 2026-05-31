@@ -65,6 +65,7 @@ export function Field({
   label,
   value,
   onChange,
+  required,
   ...props
 }: Readonly<{
   label: string
@@ -73,8 +74,17 @@ export function Field({
 } & Omit<ComponentProps<typeof Input>, "value" | "onChange">>) {
   return (
     <label className="grid gap-1.5 text-sm font-medium">
-      <span>{label}</span>
-      <Input value={value} onChange={(event) => onChange(event.target.value)} {...props} />
+      <LabelText label={label} required={required} />
+      <Input value={value} required={required} onChange={(event) => onChange(event.target.value)} {...props} />
     </label>
+  )
+}
+
+export function LabelText({ label, required }: Readonly<{ label: string; required?: boolean }>) {
+  return (
+    <span>
+      {label}
+      {required && <span className="text-destructive"> *</span>}
+    </span>
   )
 }

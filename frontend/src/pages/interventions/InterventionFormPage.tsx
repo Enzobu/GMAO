@@ -18,6 +18,7 @@ import type { ConfigurationItem } from "@/types/configuration"
 import type { Intervention, InterventionPayload, InterventionStatus } from "@/types/intervention"
 import type { Part } from "@/types/part"
 import type { Vehicle } from "@/types/vehicle"
+import { MIN_INPUT_DATETIME, MAX_INPUT_DATETIME } from "@/lib/date-limits"
 import { INTERVENTION_STATUSES, vehicleDisplayName } from "@/lib/intervention-utils"
 import { ErrorMessage, Field, InterventionFormActions, InterventionHeader, MileageWarningDialog } from "./components"
 
@@ -235,6 +236,7 @@ export default function InterventionFormPage() {
             <Field
               label="Kilométrage"
               type="number"
+              min="0"
               value={form.mileage}
               onChange={(value) => updateField("mileage", value)}
               disabled={!canEdit || !isCompleted}
@@ -247,11 +249,11 @@ export default function InterventionFormPage() {
               onChange={(event) => updateField("isExternal", event.target.value)}
               disabled={!canEdit}
             />
-            <Field label="Date prévue" type="datetime-local" value={form.plannedAt} onChange={(value) => updateField("plannedAt", value)} disabled={!canEdit} />
-            <Field label="Date de début" type="datetime-local" value={form.startedAt} onChange={(value) => updateField("startedAt", value)} disabled={!canEdit || !canEditStartDate} />
-            <Field label="Date de fin" type="datetime-local" value={form.finishedAt} onChange={(value) => updateField("finishedAt", value)} disabled={!canEdit || !isCompleted} required={isCompleted} />
-            <Field label="Prochaine échéance km" type="number" value={form.nextDueMileage} onChange={(value) => updateField("nextDueMileage", value)} disabled={!canEdit} />
-            <Field label="Prochaine échéance date" type="datetime-local" value={form.nextDueAt} onChange={(value) => updateField("nextDueAt", value)} disabled={!canEdit} />
+            <Field label="Date prévue" type="datetime-local" min={MIN_INPUT_DATETIME} max={MAX_INPUT_DATETIME} value={form.plannedAt} onChange={(value) => updateField("plannedAt", value)} disabled={!canEdit} />
+            <Field label="Date de début" type="datetime-local" min={MIN_INPUT_DATETIME} max={MAX_INPUT_DATETIME} value={form.startedAt} onChange={(value) => updateField("startedAt", value)} disabled={!canEdit || !canEditStartDate} />
+            <Field label="Date de fin" type="datetime-local" min={MIN_INPUT_DATETIME} max={MAX_INPUT_DATETIME} value={form.finishedAt} onChange={(value) => updateField("finishedAt", value)} disabled={!canEdit || !isCompleted} required={isCompleted} />
+            <Field label="Prochaine échéance km" type="number" min="0" value={form.nextDueMileage} onChange={(value) => updateField("nextDueMileage", value)} disabled={!canEdit} />
+            <Field label="Prochaine échéance date" type="datetime-local" min={MIN_INPUT_DATETIME} max={MAX_INPUT_DATETIME} value={form.nextDueAt} onChange={(value) => updateField("nextDueAt", value)} disabled={!canEdit} />
             <label className="grid gap-1.5 text-sm font-medium md:col-span-2">
               <span>Notes</span>
               <Textarea value={form.notes} onChange={(event) => updateField("notes", event.target.value)} disabled={!canEdit} />

@@ -4,6 +4,7 @@ import { AxiosError } from "axios"
 import { Download, Eye, FileText, Pencil, Plus, Trash2, Upload } from "lucide-react"
 
 import { createParentDocument, deleteParentDocument, getParentDocumentBlob, getParentDocuments, type DocumentParent, updateParentDocument } from "@/api/documents"
+import { LabelText } from "@/components/page-primitives"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { ConfirmDialog } from "@/components/ui/confirm-dialog"
@@ -306,9 +307,10 @@ function DocumentFormDialog({
           {error && <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">{error}</div>}
 
           {!document && (
-            <Field label="Fichier">
+            <Field label="Fichier" required>
               <Input
                 type="file"
+                required
                 disabled={isSaving}
                 onChange={(event) => {
                   const file = event.target.files?.[0] ?? null
@@ -322,8 +324,8 @@ function DocumentFormDialog({
             </Field>
           )}
 
-          <Field label="Nom">
-            <Input value={form.name} disabled={isSaving} onChange={(event) => onFormChange({ ...form, name: event.target.value })} />
+          <Field label="Nom" required>
+            <Input value={form.name} required disabled={isSaving} onChange={(event) => onFormChange({ ...form, name: event.target.value })} />
           </Field>
 
           <Field label="Description">
@@ -510,10 +512,10 @@ function PreviewContent({ document, previewUrl }: Readonly<{ document: AppDocume
   )
 }
 
-function Field({ label, children }: Readonly<{ label: string; children: ReactNode }>) {
+function Field({ label, required = false, children }: Readonly<{ label: string; required?: boolean; children: ReactNode }>) {
   return (
     <label className="grid gap-1.5 text-sm font-medium">
-      <span>{label}</span>
+      <LabelText label={label} required={required} />
       {children}
     </label>
   )

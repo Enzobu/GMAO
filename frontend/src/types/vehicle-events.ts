@@ -51,8 +51,7 @@ export interface VehicleInspectionPayload {
   validUntil?: string | null
   mileage?: number | null
   result: "pass" | "counter_visit" | "fail"
-  counterVisitRequired: boolean
   counterVisitDueAt?: string | null
   notes?: string | null
-  center?: string | null
+  center?: string
 }

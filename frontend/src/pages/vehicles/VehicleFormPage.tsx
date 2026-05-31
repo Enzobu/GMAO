@@ -7,9 +7,11 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { NativeSelect } from "@/components/ui/native-select"
+import { LabelText } from "@/components/page-primitives"
 import { createVehicle, getUsers, getVehicle, updateVehicle } from "@/api/vehicles"
 import { useAuthStore } from "@/stores/auth-store"
 import type { Vehicle, VehiclePayload, VehicleUser } from "@/types/vehicle"
+import { MIN_INPUT_DATE, MAX_INPUT_DATE } from "@/lib/date-limits"
 import {
   VEHICLE_COLORS,
   VEHICLE_FUEL_TYPES,
@@ -37,6 +39,11 @@ const emptyForm = {
   userId: "",
 }
 
+const VIN_MAX_LENGTH = 17
+const REGISTRATION_MAX_LENGTH = 9
+const MIN_VEHICLE_YEAR = 1800
+const MAX_VEHICLE_YEAR = 2100
+
 type VehicleFormState = typeof emptyForm
 
 export default function VehicleFormPage() {
@@ -52,6 +59,12 @@ export default function VehicleFormPage() {
   const [isLoading, setIsLoading] = useState(isEditing)
   const [isSaving, setIsSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (error) {
+      globalThis.scrollTo({ top: 0, behavior: "smooth" })
+    }
+  }, [error])
 
   useEffect(() => {
     let ignore = false
@@ -120,6 +133,14 @@ export default function VehicleFormPage() {
     setForm((current) => ({ ...current, [field]: value }))
   }
 
+  function updateRegistration(value: string) {
+    updateField("registration", formatRegistration(value))
+  }
+
+  function updateVin(value: string) {
+    updateField("vin", value.toUpperCase())
+  }
+
   if (isLoading) {
     return <div className="text-sm text-muted-foreground">Chargement du véhicule...</div>
   }
@@ -163,7 +184,7 @@ export default function VehicleFormPage() {
           </CardHeader>
           <CardContent className="grid gap-4 md:grid-cols-2">
             <Field label="Nom" value={form.name} onChange={(value) => updateField("name", value)} required disabled={!canEdit} />
-            <Field label="Immatriculation" value={form.registration} onChange={(value) => updateField("registration", value)} required disabled={!canEdit} />
+            <Field label="Immatriculation" value={form.registration} maxLength={REGISTRATION_MAX_LENGTH} onChange={updateRegistration} required disabled={!canEdit} />
             <Field label="Marque" value={form.brand} onChange={(value) => updateField("brand", value)} required disabled={!canEdit} />
             <Field label="Modèle" value={form.model} onChange={(value) => updateField("model", value)} required disabled={!canEdit} />
             <SelectField label="Type" value={form.type} options={VEHICLE_TYPES} onChange={(value) => updateField("type", value)} disabled={!canEdit} />
@@ -186,8 +207,8 @@ export default function VehicleFormPage() {
             <CardTitle>Caractéristiques</CardTitle>
           </CardHeader>
           <CardContent className="grid gap-4 md:grid-cols-2">
-            <Field label="Année" type="number" value={form.year} onChange={(value) => updateField("year", value)} disabled={!canEdit} />
-            <Field label="VIN" value={form.vin} onChange={(value) => updateField("vin", value)} disabled={!canEdit} />
+            <Field label="Année" type="number" min={MIN_VEHICLE_YEAR} max={MAX_VEHICLE_YEAR} value={form.year} onChange={(value) => updateField("year", value)} disabled={!canEdit} />
+            <Field label="VIN" value={form.vin} maxLength={VIN_MAX_LENGTH} onChange={updateVin} disabled={!canEdit} />
             <Field label="Moteur" value={form.engine} onChange={(value) => updateField("engine", value)} disabled={!canEdit} />
             <SelectField label="Carburant" value={form.fuelType} options={VEHICLE_FUEL_TYPES} onChange={(value) => updateField("fuelType", value)} disabled={!canEdit} />
             <SelectField label="Transmission" value={form.transmission} options={VEHICLE_TRANSMISSIONS} onChange={(value) => updateField("transmission", value)} disabled={!canEdit} />
@@ -200,8 +221,8 @@ export default function VehicleFormPage() {
             <CardTitle>Achat et suivi</CardTitle>
           </CardHeader>
           <CardContent className="grid gap-4 md:grid-cols-2">
-            <Field label="Kilométrage" type="number" value={form.lastMileage} onChange={(value) => updateField("lastMileage", value)} required disabled={!canEdit || disableMileage} />
-            <Field label="Date d’achat" type="date" value={form.purchaseDate} onChange={(value) => updateField("purchaseDate", value)} disabled={!canEdit} />
+            <Field label="Kilométrage" type="number" min="0" value={form.lastMileage} onChange={(value) => updateField("lastMileage", value)} required disabled={!canEdit || disableMileage} />
+            <Field label="Date d’achat" type="date" min={MIN_INPUT_DATE} max={MAX_INPUT_DATE} value={form.purchaseDate} onChange={(value) => updateField("purchaseDate", value)} disabled={!canEdit} />
             <Field label="Prix d’achat" type="number" step="0.01" value={form.purchasePrice} onChange={(value) => updateField("purchasePrice", value)} disabled={!canEdit} />
           </CardContent>
         </Card>
@@ -220,11 +241,11 @@ export default function VehicleFormPage() {
   )
 }
 
-function Field({ label, value, onChange, ...props }: Readonly<{ label: string; value: string; onChange: (value: string) => void } & Omit<ComponentProps<typeof Input>, "value" | "onChange">>) {
+function Field({ label, value, onChange, required, ...props }: Readonly<{ label: string; value: string; onChange: (value: string) => void } & Omit<ComponentProps<typeof Input>, "value" | "onChange">>) {
   return (
     <label className="grid gap-1.5 text-sm font-medium">
-      <span>{label}</span>
-      <Input value={value} onChange={(event) => onChange(event.target.value)} {...props} />
+      <LabelText label={label} required={required} />
+      <Input value={value} required={required} onChange={(event) => onChange(event.target.value)} {...props} />
     </label>
   )
 }
@@ -284,4 +305,21 @@ function userLabel(user: VehicleUser) {
   const name = `${user.firstname ?? ""} ${user.lastname ?? ""}`.trim()
 
   return name ? `${name} - ${user.email}` : user.email
+}
+
+function formatRegistration(value: string) {
+  const characters = value.toUpperCase().replace(/[^A-Z0-9]/g, "")
+  let result = ""
+
+  for (const character of characters) {
+    if (result.length < 2 && /[A-Z]/.test(character)) {
+      result += character
+    } else if (result.length >= 2 && result.length < 5 && /\d/.test(character)) {
+      result += character
+    } else if (result.length >= 5 && result.length < 7 && /[A-Z]/.test(character)) {
+      result += character
+    }
+  }
+
+  return [result.slice(0, 2), result.slice(2, 5), result.slice(5, 7)].filter(Boolean).join("-")
 }

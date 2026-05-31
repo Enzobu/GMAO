@@ -204,11 +204,11 @@ export default function VehicleDetailPage() {
 
 function InfoCard({ title, rows }: Readonly<{ title: string; rows: [string, string | number][] }>) {
   return (
-    <Card>
+    <Card className="h-full">
       <CardHeader>
         <CardTitle>{title}</CardTitle>
       </CardHeader>
-      <CardContent>
+      <CardContent className="flex h-full flex-col">
         <dl className="grid gap-2 text-sm sm:grid-cols-[10rem_1fr]">
           {rows.map(([label, value]) => (
             <div key={label} className="contents">
@@ -254,7 +254,8 @@ function InsuranceCard({
             Ce véhicule n’a aucune assurance active.
           </div>
         )}
-        {insurance ? (
+        <div className="flex-1">
+          {insurance ? (
           <div className="grid gap-3 text-sm md:grid-cols-2">
             <Detail label="Assureur" value={insurance.providerName} />
             <Detail label="Police" value={insurance.policyNumber || "—"} />
@@ -263,8 +264,9 @@ function InsuranceCard({
             <Detail label="Fin" value={formatDate(insurance.endDate)} />
             <Detail label="Paiement" value={optionLabel(PAYMENT_FREQUENCIES, insurance.paymentFrequency)} />
           </div>
-        ) : <EmptyText>Aucune assurance renseignée.</EmptyText>}
-        <Button variant="outline" className="mt-4" asChild>
+          ) : <EmptyText>Aucune assurance renseignée.</EmptyText>}
+        </div>
+        <Button variant="outline" className="mt-4 w-fit" asChild>
           <Link to={`/vehicles/${vehicleId}/insurances`}>Voir les assurances</Link>
         </Button>
       </CardContent>
@@ -273,20 +275,21 @@ function InsuranceCard({
 }
 
 function hasActiveInsurance(insurances: VehicleInsurance[] | undefined) {
-  return insurances?.some((insurance) => !insurance.isDeleted && isInsuranceActive(insurance)) ?? false
+  return insurances?.some((insurance) => !isArchived(insurance) && isInsuranceActive(insurance)) ?? false
 }
 
 function InspectionCard({ vehicleId, inspection }: Readonly<{ vehicleId: number; inspection?: VehicleInspection }>) {
   return (
-    <Card>
+    <Card className="h-full">
       <CardHeader>
         <CardTitle className="flex items-center justify-between gap-2">
           Contrôle technique
           <Badge variant="outline">Dernier</Badge>
         </CardTitle>
       </CardHeader>
-      <CardContent>
-        {inspection ? (
+      <CardContent className="flex h-full flex-col">
+        <div className="flex-1">
+          {inspection ? (
           <div className="grid gap-3 text-sm md:grid-cols-2">
             <Detail label="Résultat" value={optionLabel(INSPECTION_RESULTS, inspection.result)} />
             <Detail label="Date" value={formatDate(inspection.inspectionDate)} />
@@ -295,8 +298,9 @@ function InspectionCard({ vehicleId, inspection }: Readonly<{ vehicleId: number;
             <Detail label="Contre-visite" value={inspection.counterVisitRequired ? "Requise" : "Non requise"} />
             <Detail label="Centre" value={inspection.center?.name ?? "Non renseigné"} />
           </div>
-        ) : <EmptyText>Aucun contrôle technique renseigné.</EmptyText>}
-        <Button variant="outline" className="mt-4" asChild>
+          ) : <EmptyText>Aucun contrôle technique renseigné.</EmptyText>}
+        </div>
+        <Button variant="outline" className="mt-4 w-fit" asChild>
           <Link to={`/vehicles/${vehicleId}/inspections`}>Voir les contrôles</Link>
         </Button>
       </CardContent>
@@ -375,7 +379,7 @@ function latestByDate<T extends { isDeleted?: boolean }>(
   field: DateLikeKey<T>,
 ) {
   return items
-    ?.filter((item) => !item.isDeleted && item[field])
+    ?.filter((item) => !isArchived(item) && item[field])
     .toSorted((a, b) => {
       const aDate = a[field]
       const bDate = b[field]
@@ -386,6 +390,10 @@ function latestByDate<T extends { isDeleted?: boolean }>(
 
       return bDate.localeCompare(aDate)
     })[0]
+}
+
+function isArchived(item: { isDeleted?: boolean; deleted?: boolean }) {
+  return item.isDeleted === true || item.deleted === true
 }
 
 function labelFor(collection: readonly { value: string; label: string }[], value?: string | null) {

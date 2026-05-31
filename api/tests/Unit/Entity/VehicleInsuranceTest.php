@@ -7,6 +7,7 @@ use App\Entity\Vehicle;
 use App\Entity\VehicleInsurance;
 use App\Enum\InsurancePaymentFrequencyEnum;
 use PHPUnit\Framework\TestCase;
+use Symfony\Component\Validator\Validation;
 
 final class VehicleInsuranceTest extends TestCase
 {
@@ -88,5 +89,18 @@ final class VehicleInsuranceTest extends TestCase
         $insurance->removeDocument($document);
 
         self::assertTrue($document->isDeleted());
+    }
+
+    public function testBusinessDatesMustStayInAllowedRange(): void
+    {
+        $violations = Validation::createValidatorBuilder()
+            ->enableAttributeMapping()
+            ->getValidator()
+            ->validate((new VehicleInsurance())
+                ->setStartDate(new \DateTimeImmutable('1799-12-31'))
+                ->setEndDate(new \DateTimeImmutable('2101-01-01')));
+
+        self::assertCount(2, $violations);
+        self::assertSame(['startDate', 'endDate'], array_map(static fn ($violation): string => $violation->getPropertyPath(), iterator_to_array($violations)));
     }
 }

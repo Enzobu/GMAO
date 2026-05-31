@@ -16,6 +16,7 @@ export interface VehicleInsurance {
   active?: boolean
   isActive?: boolean
   isDeleted?: boolean
+  deleted?: boolean
 }
 
 export interface VehicleInspection {
@@ -29,6 +30,7 @@ export interface VehicleInspection {
   notes?: string | null
   center?: { id: number; name: string } | null
   isDeleted?: boolean
+  deleted?: boolean
 }
 
 export interface VehicleMaintenance {
@@ -44,6 +46,7 @@ export interface VehicleMaintenance {
   nextDueAt?: string | null
   maintenanceType?: { id: number; name: string } | null
   isDeleted?: boolean
+  deleted?: boolean
 }
 
 export interface Vehicle {
@@ -68,6 +71,7 @@ export interface Vehicle {
   vehicleInspections?: VehicleInspection[]
   maintenances?: VehicleMaintenance[]
   isDeleted?: boolean
+  deleted?: boolean
 }
 
 export interface VehiclePayload {

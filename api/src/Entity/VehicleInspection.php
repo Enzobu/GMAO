@@ -58,14 +58,18 @@ class VehicleInspection
     private ?Vehicle $vehicle = null;
 
     #[ORM\Column(type: Types::DATE_IMMUTABLE)]
+    #[Assert\Range(notInRangeMessage: 'La date doit être comprise entre le 01/01/1800 et le 31/12/2100.', min: '1800-01-01', max: '2100-12-31')]
     #[Groups(['vehicle_inspection:read', 'vehicle_inspection:write', 'vehicle:read'])]
     private ?\DateTimeImmutable $inspectionDate = null;
 
     #[ORM\Column(type: Types::DATE_IMMUTABLE)]
+    #[Assert\Range(notInRangeMessage: 'La date doit être comprise entre le 01/01/1800 et le 31/12/2100.', min: '1800-01-01', max: '2100-12-31')]
     #[Groups(['vehicle_inspection:read', 'vehicle_inspection:write', 'vehicle:read'])]
     private ?\DateTimeImmutable $validUntil = null;
 
     #[ORM\Column(nullable: true)]
+    #[Assert\NotNull(message: 'Le kilométrage est obligatoire.')]
+    #[Assert\PositiveOrZero(message: 'Le kilométrage ne peut pas être négatif.')]
     #[Groups(['vehicle_inspection:read', 'vehicle_inspection:write', 'vehicle:read'])]
     private ?int $mileage = null;
 
@@ -74,10 +78,11 @@ class VehicleInspection
     private InspectionResultEnum $result;
 
     #[ORM\Column(options: ['default' => false])]
-    #[Groups(['vehicle_inspection:read', 'vehicle_inspection:write', 'vehicle:read'])]
+    #[Groups(['vehicle_inspection:read', 'vehicle:read'])]
     private bool $counterVisitRequired = false;
 
     #[ORM\Column(type: Types::DATE_IMMUTABLE, nullable: true)]
+    #[Assert\Range(notInRangeMessage: 'La date doit être comprise entre le 01/01/1800 et le 31/12/2100.', min: '1800-01-01', max: '2100-12-31')]
     #[Groups(['vehicle_inspection:read', 'vehicle_inspection:write', 'vehicle:read'])]
     private ?\DateTimeImmutable $counterVisitDueAt = null;
 
@@ -120,9 +125,17 @@ class VehicleInspection
             ;
         }
 
-        if ($this->counterVisitRequired && $this->counterVisitDueAt === null) {
+        if ($this->isCounterVisitExpected() && $this->counterVisitDueAt === null) {
             $context
                 ->buildViolation('La date limite de contre-visite est obligatoire si une contre-visite est requise.')
+                ->atPath('counterVisitDueAt')
+                ->addViolation()
+            ;
+        }
+
+        if (isset($this->result) && $this->result === InspectionResultEnum::Pass && $this->counterVisitDueAt !== null) {
+            $context
+                ->buildViolation('La date limite de contre-visite ne doit pas être renseignée si le résultat est favorable.')
                 ->atPath('counterVisitDueAt')
                 ->addViolation()
             ;
@@ -195,6 +208,11 @@ class VehicleInspection
     public function setResult(InspectionResultEnum $result): static
     {
         $this->result = $result;
+        $this->counterVisitRequired = $this->isCounterVisitExpected();
+
+        if (!$this->counterVisitRequired) {
+            $this->counterVisitDueAt = null;
+        }
 
         return $this;
     }
@@ -299,5 +317,10 @@ class VehicleInspection
         $this->isDeleted = $isDeleted;
 
         return $this;
+    }
+
+    private function isCounterVisitExpected(): bool
+    {
+        return isset($this->result) && $this->result !== InspectionResultEnum::Pass;
     }
 }

@@ -5,6 +5,7 @@ import { Plus, Search, Trash2, X } from "lucide-react"
 import { deletePart, getParts, updatePartQuantity } from "@/api/parts"
 import { getPartTypes } from "@/api/configuration"
 import { getVehicles } from "@/api/vehicles"
+import { LabelText } from "@/components/page-primitives"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
@@ -338,7 +339,7 @@ function AddStockDialog({ part, onOpenChange, onSaved }: Readonly<{ part: Part |
             <DialogDescription>{part ? `Stock actuel ${partName(part)} : ${part.quantity}` : ""}</DialogDescription>
           </DialogHeader>
           <label className="grid gap-1.5 text-sm font-medium">
-            <span>Nombre de pièces à ajouter</span>
+            <LabelText label="Nombre de pièces à ajouter" required />
             <Input type="number" min="1" step="1" value={quantity} onChange={(event) => setQuantity(event.target.value)} required />
           </label>
           <DialogFooter>

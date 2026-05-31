@@ -9,6 +9,7 @@ use App\Entity\MaintenanceType;
 use App\Entity\Vehicle;
 use App\Enum\MaintenanceStatusEnum;
 use PHPUnit\Framework\TestCase;
+use Symfony\Component\Validator\Validation;
 
 final class MaintenanceTest extends TestCase
 {
@@ -93,5 +94,31 @@ final class MaintenanceTest extends TestCase
 
         $maintenance->removeDocument($document);
         self::assertTrue($document->isDeleted());
+    }
+
+    public function testBusinessDatesMustStayInAllowedRange(): void
+    {
+        $violations = Validation::createValidatorBuilder()
+            ->enableAttributeMapping()
+            ->getValidator()
+            ->validate((new Maintenance())
+                ->setStartedAt(new \DateTimeImmutable('1799-12-31 23:59:59'))
+                ->setFinishedAt(new \DateTimeImmutable('2101-01-01'))
+                ->setPlannedAt(new \DateTimeImmutable('1799-12-31'))
+                ->setNextDueAt(new \DateTimeImmutable('2101-01-01')));
+
+        self::assertCount(4, $violations);
+        self::assertSame(['startedAt', 'finishedAt', 'plannedAt', 'nextDueAt'], array_map(static fn ($violation): string => $violation->getPropertyPath(), iterator_to_array($violations)));
+    }
+
+    public function testMileagesCannotBeNegative(): void
+    {
+        $violations = Validation::createValidatorBuilder()
+            ->enableAttributeMapping()
+            ->getValidator()
+            ->validate((new Maintenance())->setMileage(-1)->setNextDueMileage(-1));
+
+        self::assertCount(2, $violations);
+        self::assertSame(['mileage', 'nextDueMileage'], array_map(static fn ($violation): string => $violation->getPropertyPath(), iterator_to_array($violations)));
     }
 }

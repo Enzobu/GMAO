@@ -104,7 +104,7 @@ final class AppFixturesTest extends TestCase
 
         self::assertSame($admin, $porsche->getUser());
         self::assertSame('911 carrera s', $porsche->getName());
-        self::assertSame('gt-911-cs', $porsche->getRegistration());
+        self::assertSame('GT-911-CS', $porsche->getRegistration());
         self::assertSame(VehicleTypeEnum::Car, $porsche->getType());
         self::assertSame(VehicleColorEnum::Gray, $porsche->getColor());
         self::assertSame(VehicleStatusEnum::Active, $porsche->getStatus());

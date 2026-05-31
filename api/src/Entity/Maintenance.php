@@ -24,6 +24,7 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Validator\Constraints as Assert;
 
 #[ApiResource(
     operations: [
@@ -60,18 +61,22 @@ class Maintenance
     private ?MaintenanceType $maintenanceType = null;
 
     #[ORM\Column(nullable: true)]
+    #[Assert\PositiveOrZero(message: 'Le kilométrage ne peut pas être négatif.')]
     #[Groups(['maintenance:read', 'maintenance:write', 'vehicle:read'])]
     private ?int $mileage = null;
 
     #[ORM\Column(nullable: true)]
+    #[Assert\Range(notInRangeMessage: 'La date doit être comprise entre le 01/01/1800 et le 31/12/2100.', min: '1800-01-01', max: '2100-12-31 23:59:59')]
     #[Groups(['maintenance:read', 'maintenance:write', 'vehicle:read'])]
     private ?\DateTimeImmutable $startedAt = null;
 
     #[ORM\Column(nullable: true)]
+    #[Assert\Range(notInRangeMessage: 'La date doit être comprise entre le 01/01/1800 et le 31/12/2100.', min: '1800-01-01', max: '2100-12-31 23:59:59')]
     #[Groups(['maintenance:read', 'maintenance:write', 'vehicle:read'])]
     private ?\DateTimeImmutable $finishedAt = null;
 
     #[ORM\Column(nullable: true)]
+    #[Assert\Range(notInRangeMessage: 'La date doit être comprise entre le 01/01/1800 et le 31/12/2100.', min: '1800-01-01', max: '2100-12-31 23:59:59')]
     #[Groups(['maintenance:read', 'maintenance:write', 'vehicle:read'])]
     private ?\DateTimeImmutable $plannedAt = null;
 
@@ -88,10 +93,12 @@ class Maintenance
     private ?string $notes = null;
 
     #[ORM\Column(nullable: true)]
+    #[Assert\PositiveOrZero(message: 'Le kilométrage ne peut pas être négatif.')]
     #[Groups(['maintenance:read', 'maintenance:write', 'vehicle:read'])]
     private ?int $nextDueMileage = null;
 
     #[ORM\Column(nullable: true)]
+    #[Assert\Range(notInRangeMessage: 'La date doit être comprise entre le 01/01/1800 et le 31/12/2100.', min: '1800-01-01', max: '2100-12-31 23:59:59')]
     #[Groups(['maintenance:read', 'maintenance:write', 'vehicle:read'])]
     private ?\DateTimeImmutable $nextDueAt = null;
 

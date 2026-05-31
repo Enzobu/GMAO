@@ -6,6 +6,7 @@ import { ArrowLeft, Save } from "lucide-react"
 import { createPart, getPart, updatePart } from "@/api/parts"
 import { getPartTypes } from "@/api/configuration"
 import { getVehicles } from "@/api/vehicles"
+import { LabelText } from "@/components/page-primitives"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -85,7 +86,7 @@ export default function PartFormPage() {
           <CardHeader><CardTitle>Informations</CardTitle></CardHeader>
           <CardContent className="grid gap-4 md:grid-cols-2">
             <NativeSelect label="Type de pièce" value={form.partTypeId} onChange={(event) => setForm((current) => ({ ...current, partTypeId: event.target.value }))} required options={partTypes.map((type) => ({ value: String(type.id), label: type.name }))} placeholder="Sélectionner" />
-            <label className="grid gap-1.5 text-sm font-medium"><span>Quantité</span><Input type="number" min="0" value={form.quantity} onChange={(event) => setForm((current) => ({ ...current, quantity: event.target.value }))} required /></label>
+            <label className="grid gap-1.5 text-sm font-medium"><LabelText label="Quantité" required /><Input type="number" min="0" value={form.quantity} onChange={(event) => setForm((current) => ({ ...current, quantity: event.target.value }))} required /></label>
             <label className="grid gap-1.5 text-sm font-medium md:col-span-2"><span>Note</span><Textarea value={form.note} onChange={(event) => setForm((current) => ({ ...current, note: event.target.value }))} /></label>
           </CardContent>
         </Card>

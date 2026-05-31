@@ -17,6 +17,7 @@ use Symfony\Component\Serializer\Annotation\Groups;
 use App\Repository\AddressRepository;
 use App\Security\SecurityExpression;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Validator\Constraints as Assert;
 
 #[ApiResource(
     operations: [
@@ -38,23 +39,24 @@ class Address
     private ?int $id = null;
 
     #[ORM\Column(length: 255)]
-    #[Groups(['address:read', 'address:write', 'user:read', 'user:write'])]
+    #[Groups(['address:read', 'address:write', 'user:read', 'user:write', 'inspection_center:read', 'inspection_center:write'])]
     private ?string $line1 = null;
 
     #[ORM\Column(length: 255, nullable: true)]
-    #[Groups(['address:read', 'address:write', 'user:read', 'user:write'])]
+    #[Groups(['address:read', 'address:write', 'user:read', 'user:write', 'inspection_center:read', 'inspection_center:write'])]
     private ?string $line2 = null;
 
     #[ORM\Column(length: 255)]
-    #[Groups(['address:read', 'address:write', 'user:read', 'user:write'])]
+    #[Assert\Regex(pattern: '/^\d{5}$/', message: 'Le code postal doit contenir 5 chiffres.')]
+    #[Groups(['address:read', 'address:write', 'user:read', 'user:write', 'inspection_center:read', 'inspection_center:write'])]
     private ?string $postalCode = null;
 
     #[ORM\Column(length: 255)]
-    #[Groups(['address:read', 'address:write', 'user:read', 'user:write'])]
+    #[Groups(['address:read', 'address:write', 'user:read', 'user:write', 'inspection_center:read', 'inspection_center:write'])]
     private ?string $city = null;
 
     #[ORM\Column(length: 255)]
-    #[Groups(['address:read', 'address:write', 'user:read', 'user:write'])]
+    #[Groups(['address:read', 'address:write', 'user:read', 'user:write', 'inspection_center:read', 'inspection_center:write'])]
     private ?string $country = null;
 
     public function getId(): ?int
@@ -93,7 +95,7 @@ class Address
 
     public function setPostalCode(string $postalCode): static
     {
-        $this->postalCode = $postalCode;
+        $this->postalCode = trim($postalCode);
 
         return $this;
     }

@@ -14,6 +14,7 @@ import { useLocalStorageState } from "@/hooks/use-local-storage-state"
 import { useAuthStore } from "@/stores/auth-store"
 import type { Intervention } from "@/types/intervention"
 import type { Vehicle } from "@/types/vehicle"
+import { MIN_INPUT_DATETIME, MAX_INPUT_DATETIME } from "@/lib/date-limits"
 import { INTERVENTION_STATUSES, nowInputValue, vehicleDisplayName } from "@/lib/intervention-utils"
 import { EmptyCard, ErrorMessage, InterventionCard, InterventionHeader, MileageWarningDialog } from "./components"
 
@@ -283,12 +284,12 @@ function QuickActionDialog({
         </DialogHeader>
         <label className="grid gap-1.5 text-sm font-medium">
           <span>{isStart ? "Date de début" : "Date de fin"}</span>
-          <Input type="datetime-local" value={date} onChange={(event) => onDateChange(event.target.value)} disabled={isLoading} />
+          <Input type="datetime-local" min={MIN_INPUT_DATETIME} max={MAX_INPUT_DATETIME} value={date} onChange={(event) => onDateChange(event.target.value)} disabled={isLoading} />
         </label>
         {!isStart && (
           <label className="grid gap-1.5 text-sm font-medium">
             <span>Kilométrage</span>
-            <Input type="number" value={mileage} onChange={(event) => onMileageChange(event.target.value)} disabled={isLoading} />
+            <Input type="number" min="0" value={mileage} onChange={(event) => onMileageChange(event.target.value)} disabled={isLoading} />
           </label>
         )}
         <DialogFooter>

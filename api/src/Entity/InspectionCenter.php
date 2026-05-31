@@ -4,6 +4,8 @@ namespace App\Entity;
 
 use ApiPlatform\Metadata\ApiResource;
 
+use ApiPlatform\Metadata\Delete;
+
 use ApiPlatform\Metadata\Get;
 
 use ApiPlatform\Metadata\GetCollection;
@@ -14,11 +16,13 @@ use ApiPlatform\Metadata\Post;
 
 use Symfony\Component\Serializer\Annotation\Groups;
 
+use App\ApiPlatform\State\InspectionCenterStateProcessor;
 use App\Repository\InspectionCenterRepository;
 use App\Security\SecurityExpression;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Validator\Constraints as Assert;
 
 #[ApiResource(
     operations: [
@@ -26,9 +30,11 @@ use Doctrine\ORM\Mapping as ORM;
         new Get(security: SecurityExpression::ROLE_USER),
         new Post(security: SecurityExpression::ROLE_ADMIN),
         new Patch(security: SecurityExpression::ROLE_ADMIN),
+        new Delete(security: SecurityExpression::ROLE_ADMIN),
     ],
     normalizationContext: ['groups' => ['inspection_center:read']],
-    denormalizationContext: ['groups' => ['inspection_center:write']]
+    denormalizationContext: ['groups' => ['inspection_center:write']],
+    processor: InspectionCenterStateProcessor::class,
 )]
 #[ORM\Entity(repositoryClass: InspectionCenterRepository::class)]
 class InspectionCenter
@@ -44,6 +50,7 @@ class InspectionCenter
     private ?string $name = null;
 
     #[ORM\Column(length: 255, nullable: true)]
+    #[Assert\Regex(pattern: '/^0[1-9]( \d{2}){4}$/', message: 'Le téléphone doit respecter le format 04 85 74 85 96.')]
     #[Groups(['inspection_center:read', 'inspection_center:write', 'vehicle_inspection:read'])]
     private ?string $phone = null;
 
@@ -62,6 +69,10 @@ class InspectionCenter
     #[ORM\OneToMany(targetEntity: VehicleInspection::class, mappedBy: 'center')]
     #[Groups(['inspection_center:read'])]
     private Collection $vehicleInspections;
+
+    #[ORM\Column(options: ['default' => false])]
+    #[Groups(['inspection_center:read'])]
+    private bool $isDeleted = false;
 
     public function __construct()
     {
@@ -92,9 +103,24 @@ class InspectionCenter
 
     public function setPhone(?string $phone): static
     {
-        $this->phone = $phone;
+        $this->phone = $this->formatPhone($phone);
 
         return $this;
+    }
+
+    private function formatPhone(?string $phone): ?string
+    {
+        $digits = preg_replace('/\D/', '', (string) $phone) ?? '';
+
+        if ($digits === '') {
+            return null;
+        }
+
+        if (strlen($digits) === 10) {
+            return implode(' ', str_split($digits, 2));
+        }
+
+        return trim((string) $phone);
     }
 
     public function getEmail(): ?string
@@ -147,6 +173,18 @@ class InspectionCenter
         ) {
             $vehicleInspection->setCenter(null);
         }
+
+        return $this;
+    }
+
+    public function isDeleted(): bool
+    {
+        return $this->isDeleted;
+    }
+
+    public function setIsDeleted(bool $isDeleted): static
+    {
+        $this->isDeleted = $isDeleted;
 
         return $this;
     }
