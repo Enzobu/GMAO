@@ -44,6 +44,7 @@ services:
             - database
         volumes:
           - ./api/var/storage/documents:/var/www/var/storage/documents
+          - ./api/config/jwt:/var/www/config/jwt
         environment:
             APP_ENV: prod
             DOCKER_PROJECT_NAME: ${DOCKER_PROJECT_NAME}
