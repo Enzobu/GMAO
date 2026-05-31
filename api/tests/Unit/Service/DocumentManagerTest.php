@@ -3,6 +3,8 @@
 namespace App\Tests\Unit\Service;
 
 use App\Entity\Document;
+use App\Entity\Maintenance;
+use App\Entity\Part;
 use App\Entity\User;
 use App\Entity\Vehicle;
 use App\Entity\VehicleInspection;
@@ -65,10 +67,14 @@ final class DocumentManagerTest extends TestCase
         $insurance = new VehicleInsurance();
         $inspection = new VehicleInspection();
         $user = new User();
+        $part = new Part();
+        $maintenance = new Maintenance();
 
         self::assertSame($insurance, $manager->createDocument($insurance, $this->uploadedFile('insurance.pdf'), 'Insurance')->getVehicleInsurance());
         self::assertSame($inspection, $manager->createDocument($inspection, $this->uploadedFile('inspection.pdf'), 'Inspection')->getVehicleInspection());
         self::assertSame($user, $manager->createDocument($user, $this->uploadedFile('user.pdf'), 'User')->getUser());
+        self::assertSame($part, $manager->createDocument($part, $this->uploadedFile('part.pdf'), 'Part')->getPart());
+        self::assertSame($maintenance, $manager->createDocument($maintenance, $this->uploadedFile('maintenance.pdf'), 'Maintenance')->getMaintenance());
     }
 
     public function testSoftDeleteMovesExistingFileAndFlushes(): void

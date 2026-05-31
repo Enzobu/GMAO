@@ -3,6 +3,8 @@
 namespace App\Service;
 
 use App\Entity\Document;
+use App\Entity\Maintenance;
+use App\Entity\Part;
 use App\Entity\User;
 use App\Entity\Vehicle;
 use App\Entity\VehicleInsurance;
@@ -69,7 +71,7 @@ class DocumentManager
      * );
      */
     public function createDocument(
-        Vehicle|VehicleInsurance|VehicleInspection|User $parent,
+        Vehicle|VehicleInsurance|VehicleInspection|User|Part|Maintenance $parent,
         UploadedFile $file,
         string $name,
         ?string $description = null,
@@ -96,6 +98,8 @@ class DocumentManager
             VehicleInsurance::class => $document->setVehicleInsurance($parent),
             VehicleInspection::class => $document->setVehicleInspection($parent),
             User::class => $document->setUser($parent),
+            Part::class => $document->setPart($parent),
+            Maintenance::class => $document->setMaintenance($parent),
         };
 
         $this->entityManager->persist($document);

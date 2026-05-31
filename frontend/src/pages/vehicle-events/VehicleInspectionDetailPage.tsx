@@ -4,6 +4,7 @@ import { Pencil, Trash2 } from "lucide-react"
 
 import { deleteVehicleInspection, getVehicleInspection } from "@/api/vehicle-events"
 import { getVehicle } from "@/api/vehicles"
+import { DocumentsPanel } from "@/components/documents-panel"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -165,6 +166,8 @@ export default function VehicleInspectionDetailPage() {
           </CardContent>
         </Card>
       )}
+
+      <DocumentsPanel parent={{ type: "vehicle_inspections", id: inspection.id }} canManage={canEdit} canDelete={isAdmin} emptyLabel="Aucun document disponible pour ce contrôle technique." />
     </div>
   )
 }

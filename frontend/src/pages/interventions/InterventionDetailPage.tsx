@@ -4,6 +4,7 @@ import { Pencil, Trash2 } from "lucide-react"
 
 import { deleteIntervention, getIntervention } from "@/api/interventions"
 import { getVehicle } from "@/api/vehicles"
+import { DocumentsPanel } from "@/components/documents-panel"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { ConfirmDialog } from "@/components/ui/confirm-dialog"
@@ -51,7 +52,8 @@ export default function InterventionDetailPage({ vehicleScoped = false }: Readon
     return () => { ignore = true }
   }, [interventionRouteId, vehicleId, vehicleScoped])
 
-  const canEdit = useMemo(() => isAdmin || vehicle?.user.id === user?.id, [isAdmin, vehicle?.user.id, user?.id])
+  const ownerId = vehicle?.user?.id ?? intervention?.vehicle?.user?.id
+  const canEdit = useMemo(() => isAdmin || ownerId === user?.id, [isAdmin, ownerId, user?.id])
 
   async function confirmDelete() {
     if (!intervention) return
@@ -135,6 +137,8 @@ export default function InterventionDetailPage({ vehicleScoped = false }: Readon
           <CardContent className="whitespace-pre-wrap text-sm text-muted-foreground">{intervention.notes}</CardContent>
         </Card>
       )}
+
+      <DocumentsPanel parent={{ type: "maintenances", id: intervention.id }} canManage={canEdit} canDelete={isAdmin} emptyLabel="Aucun document disponible pour cette intervention." />
     </div>
   )
 }

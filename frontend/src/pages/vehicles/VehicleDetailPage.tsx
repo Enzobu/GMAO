@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams } from "react-router-dom"
 import { ArrowLeft, Pencil, Trash2 } from "lucide-react"
 
 import { deleteVehicle, getVehicle } from "@/api/vehicles"
+import { DocumentsPanel } from "@/components/documents-panel"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -195,6 +196,8 @@ export default function VehicleDetailPage() {
         <h2 className="text-lg font-semibold">Interventions</h2>
         <MaintenanceCard vehicleId={vehicle.id} maintenance={latestMaintenance} canEdit={canEdit} />
       </section>
+
+      <DocumentsPanel parent={{ type: "vehicles", id: vehicle.id }} canManage={canEdit} canDelete={isAdmin} emptyLabel="Aucun document disponible pour ce véhicule." />
     </div>
   )
 }

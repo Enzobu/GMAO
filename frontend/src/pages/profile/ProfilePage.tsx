@@ -10,6 +10,7 @@ import {
 import { useAuthStore } from "@/stores/auth-store"
 import type { Profile, UpdateProfilePayload } from "@/types/profile"
 
+import { DocumentsPanel } from "@/components/documents-panel"
 import { Button } from "@/components/ui/button"
 import {
   Card,
@@ -33,6 +34,8 @@ const emptyForm: UpdateProfilePayload = {
 
 export default function ProfilePage() {
   const setUser = useAuthStore((state) => state.setUser)
+  const currentUser = useAuthStore((state) => state.user)
+  const isAdmin = currentUser?.roles.includes("ROLE_ADMIN") ?? false
   const [profile, setProfile] = useState<Profile | null>(null)
   const [form, setForm] = useState<UpdateProfilePayload>(emptyForm)
   const [loading, setLoading] = useState(true)
@@ -270,6 +273,8 @@ export default function ProfilePage() {
           </Button>
         </CardContent>
       </Card>
+
+      <DocumentsPanel canDelete={isAdmin} />
     </div>
   )
 

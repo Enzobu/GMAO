@@ -4,6 +4,7 @@ import { ArrowLeft, Info, Pencil, Trash2 } from "lucide-react"
 import { AxiosError } from "axios"
 
 import { deleteUser, getUser } from "@/api/users"
+import { DocumentsPanel } from "@/components/documents-panel"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { ConfirmDialog } from "@/components/ui/confirm-dialog"
@@ -87,6 +88,8 @@ export default function UserDetailPage() {
         <Card><CardHeader><CardTitle>Informations</CardTitle></CardHeader><CardContent className="grid gap-3 md:grid-cols-2"><Metric label="Email" value={user.email} /><Metric label="ID" value={String(user.id)} /><Metric label="Prénom" value={user.firstname || "—"} /><Metric label="Nom" value={user.lastname || "—"} /></CardContent></Card>
         <Card><CardHeader><CardTitle>Adresse</CardTitle></CardHeader><CardContent className="grid gap-3 md:grid-cols-2"><Metric label="Adresse" value={user.address?.line1 || "—"} /><Metric label="Complément" value={user.address?.line2 || "—"} /><Metric label="Code postal" value={user.address?.postalCode || "—"} /><Metric label="Ville" value={user.address?.city || "—"} /><Metric label="Pays" value={user.address?.country || "—"} /></CardContent></Card>
       </div>
+
+      <DocumentsPanel parent={{ type: "users", id: user.id }} canManage={canEdit} canDelete={isAdmin} emptyLabel="Aucun document disponible pour cet utilisateur." />
     </div>
   )
 }

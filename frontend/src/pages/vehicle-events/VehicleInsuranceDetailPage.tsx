@@ -4,6 +4,7 @@ import { Pencil, Trash2 } from "lucide-react"
 
 import { deleteVehicleInsurance, getVehicleInsurance } from "@/api/vehicle-events"
 import { getVehicle } from "@/api/vehicles"
+import { DocumentsPanel } from "@/components/documents-panel"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -153,6 +154,8 @@ export default function VehicleInsuranceDetailPage() {
           <DetailItem boxed label="Mise à jour" value={formatDateTime(insurance.updatedAt)} />
         </CardContent>
       </Card>
+
+      <DocumentsPanel parent={{ type: "vehicle_insurances", id: insurance.id }} canManage={canEdit} canDelete={isAdmin} emptyLabel="Aucun document disponible pour cette assurance." />
     </div>
   )
 }

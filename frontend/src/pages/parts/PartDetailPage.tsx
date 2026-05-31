@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams } from "react-router-dom"
 import { ArrowLeft, Pencil, Trash2 } from "lucide-react"
 
 import { deletePart, getPart } from "@/api/parts"
+import { DocumentsPanel } from "@/components/documents-panel"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -108,6 +109,8 @@ export default function PartDetailPage() {
           <Metric label="Mis à jour le" value={formatDateTime(part.updatedAt)} />
         </CardContent>
       </Card>
+
+      <DocumentsPanel parent={{ type: "parts", id: part.id }} canManage={isAdmin} canDelete={isAdmin} emptyLabel="Aucun document disponible pour cette pièce." />
     </div>
   )
 }
