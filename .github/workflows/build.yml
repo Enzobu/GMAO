@@ -129,7 +129,7 @@ jobs:
           exit 1
 
       - name: debug
-        run: docker compose logs --env-file .env.local
+        run: docker compose --env-file .env.local logs
 
       - name: Install API dependencies
         run: docker compose -f docker-compose.yml --env-file .env.local exec -T apache sh -c 'APP_ENV=test TRUSTED_PROXIES=127.0.0.1 composer install --no-interaction --prefer-dist --no-progress'
