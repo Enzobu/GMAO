@@ -1,0 +1,26 @@
+{
+  "name": "gmao",
+  "version": "1.0.0",
+  "description": "",
+  "homepage": "https://github.com/Enzobu/GMAO#readme",
+  "bugs": {
+    "url": "https://github.com/Enzobu/GMAO/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Enzobu/GMAO.git"
+  },
+  "license": "ISC",
+  "author": "",
+  "type": "commonjs",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "prepare": "husky"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^19.8.1",
+    "@commitlint/config-conventional": "^19.8.1",
+    "husky": "^9.1.7"
+  }
+}

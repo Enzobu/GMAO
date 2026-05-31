@@ -1,0 +1,32 @@
+#!/bin/sh
+
+PROJECT_DIR="/home/enzo/Dev/01 01 04 - GMAO"
+ENV_FILE="$PROJECT_DIR/.env.local"
+
+cd "$PROJECT_DIR" || {
+    echo "Impossible d'accéder au dossier projet. Commit bloqué."
+    exit 1
+}
+
+echo "Nettoyage du cache Symfony..."
+
+docker compose \
+  --env-file "$ENV_FILE" \
+  exec -T apache symfony console cache:clear || {
+    echo "Cache Symfony impossible à nettoyer. Commit bloqué."
+    exit 1
+}
+
+echo "Cache Symfony OK."
+
+echo "Lancement des tests..."
+
+docker compose \
+  --env-file "$ENV_FILE" \
+  exec -T apache bin/phpunit || {
+    echo "Tests échoués. Commit bloqué."
+    exit 1
+}
+
+echo "Tests OK. Commit autorisé."
+exit 0

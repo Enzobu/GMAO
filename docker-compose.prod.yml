@@ -11,7 +11,7 @@ services:
             - MARIADB_PASSWORD=${MARIADB_PASSWORD}
             - MARIADB_DATABASE=${MARIADB_DATABASE}
         volumes:
-            - database_data:/var/lib/mysql
+            - ./database_data:/var/lib/mysql
         networks:
             - project_network
         expose:
@@ -35,7 +35,7 @@ services:
     apache:
         image: ${DOCKER_PROJECT_NAME}-apache:prod
         build:
-            context: .
+            context: ./api
             dockerfile: ./Dockerfile.prod
         container_name: ${DOCKER_PROJECT_NAME}-apache
         ports:
@@ -43,21 +43,52 @@ services:
         depends_on:
             - database
         volumes:
-          - ./var/storage/documents:/var/www/var/storage/documents
+          - ./api/var/storage/documents:/var/www/var/storage/documents
+          - ./api/config/jwt:/var/www/config/jwt
         environment:
             APP_ENV: prod
+            DOCKER_PROJECT_NAME: ${DOCKER_PROJECT_NAME}
+            APACHE_PORT: ${APACHE_PORT}
+            PHPMYADMIN_PORT: ${PHPMYADMIN_PORT}
+            FRONT_PROD_PORT: ${FRONT_PROD_PORT}
+            MARIADB_ROOT_PASSWORD: ${MARIADB_ROOT_PASSWORD}
+            MARIADB_USER: ${MARIADB_USER}
+            MARIADB_PASSWORD: ${MARIADB_PASSWORD}
+            MARIADB_DATABASE: ${MARIADB_DATABASE}
             TRUSTED_PROXIES: ${TRUSTED_PROXIES}
             APP_SECRET: ${APP_SECRET}
+            VITE_API_URL: ${VITE_API_URL}
+            DATABASE_URL: ${DATABASE_URL}
+            MAILER_DSN: ${MAILER_DSN}
+            MAILER_SENDER: ${MAILER_SENDER}
+            MAILER_FROM_DISPLAY_NAME: ${MAILER_FROM_DISPLAY_NAME}
+            DOCUMENT_DIRECTORY: ${DOCUMENT_DIRECTORY}
+            JWT_SECRET_KEY: ${JWT_SECRET_KEY}
+            JWT_PUBLIC_KEY: ${JWT_PUBLIC_KEY}
+            JWT_PASSPHRASE: ${JWT_PASSPHRASE}
+            CORS_ALLOW_ORIGIN: ${CORS_ALLOW_ORIGIN}
+            FRONTEND_URL: ${FRONTEND_URL}
         networks:
             - project_network
         restart: unless-stopped
+    
+    front:
+        image: ${DOCKER_PROJECT_NAME}-front:prod
+        build:
+            context: ./frontend
+            dockerfile: ./Dockerfile.prod
+            args:
+                VITE_API_URL: ${VITE_API_URL}
+        container_name: ${DOCKER_PROJECT_NAME}-front
+        environment:
+            VITE_API_URL: ${VITE_API_URL}
+        ports:
+            - '${FRONT_PROD_PORT:-8080}:80'
+        restart: unless-stopped
+        networks:
+            - project_network
 
 networks:
     project_network:
-        name: ${DOCKER_PROJECT_NAME}_network
+        name: ${DOCKER_PROJECT_NAME}-network
         driver: bridge
-
-volumes:
-    database_data:
-        name: ${DOCKER_PROJECT_NAME}_database_data
-        driver: local

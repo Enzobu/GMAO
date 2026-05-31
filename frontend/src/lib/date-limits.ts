@@ -1,0 +1,4 @@
+export const MIN_INPUT_DATE = "1800-01-01"
+export const MAX_INPUT_DATE = "2100-12-31"
+export const MIN_INPUT_DATETIME = "1800-01-01T00:00"
+export const MAX_INPUT_DATETIME = "2100-12-31T23:59"
