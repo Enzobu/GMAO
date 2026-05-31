@@ -11,7 +11,7 @@ services:
             - MARIADB_PASSWORD=${MARIADB_PASSWORD}
             - MARIADB_DATABASE=${MARIADB_DATABASE}
         volumes:
-            - database_data:/var/lib/mysql
+            - ./database_data:/var/lib/mysql
         networks:
             - project_network
         expose:
@@ -78,19 +78,16 @@ services:
             dockerfile: ./Dockerfile.prod
             args:
                 VITE_API_URL: ${VITE_API_URL}
-        container_name: ${DOCKER_PROJECT_NAME}_front
+        container_name: ${DOCKER_PROJECT_NAME}-front
         environment:
             VITE_API_URL: ${VITE_API_URL}
         ports:
-        - '${FRONT_PROD_PORT:-8080}:80'
+            - '${FRONT_PROD_PORT:-8080}:80'
         restart: unless-stopped
+        networks:
+            - project_network
 
 networks:
     project_network:
-        name: ${DOCKER_PROJECT_NAME}_network
+        name: ${DOCKER_PROJECT_NAME}-network
         driver: bridge
-
-volumes:
-    database_data:
-        name: ${DOCKER_PROJECT_NAME}_database_data
-        driver: local
