@@ -1,0 +1,5 @@
+#!/bin/sh
+
+cd "/home/enzo/Dev/01 01 04 - GMAO/frontend" || exit 1
+
+npx --no -- commitlint --edit "$1"

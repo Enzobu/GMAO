@@ -37,14 +37,13 @@ services:
 
   apache:
     build:
-      context: .
-      dockerfile: ./Dockerfile
+      context: ./api
     container_name: gmao-apache
     volumes:
-      - .:/var/www/
-      - ./docker/apache/apache.conf:/etc/apache2/sites-enabled/000-default.conf
-      - ./docker/apache/php.ini:/usr/local/etc/php/conf.d/php.custom.ini
-      - ./docker/apache/.htaccess:/var/www/public/.htaccess
+      - ./api:/var/www/
+      - ./api/docker/apache/apache.conf:/etc/apache2/sites-enabled/000-default.conf
+      - ./api/docker/apache/php.ini:/usr/local/etc/php/conf.d/php.custom.ini
+      - ./api/docker/apache/.htaccess:/var/www/public/.htaccess
     ports:
       - "8000:80"
     depends_on:

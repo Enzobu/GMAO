@@ -1,0 +1,38 @@
+info:
+  name: create
+  type: http
+  seq: 1
+
+http:
+  method: POST
+  url: "{{apiUrl}}{{apiPrefix}}/maintenances"
+  headers:
+    - name: Content-Type
+      value: application/json
+    - name: Accept
+      value: application/json
+  body:
+    type: json
+    data: |-
+      {
+        "vehicle": "{{apiPrefix}}/vehicles/1",
+        "maintenanceType": "{{apiPrefix}}/maintenance_types/1",
+        "mileage": 75000,
+        "plannedAt": "2026-05-27T18:03:00+00:00",
+        "performedAt": "2026-05-27T18:03:00+00:00",
+        "status": "completed",
+        "isExternal": false,
+        "notes": null,
+        "nextDueMileage": null,
+        "nextDueAt": null,
+        "maintenanceParts": []
+      }
+  auth:
+    type: bearer
+    token: "{{API_Token}}"
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
