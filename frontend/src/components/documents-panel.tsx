@@ -317,7 +317,7 @@ function DocumentFormDialog({
                   onFormChange({
                     ...form,
                     file,
-                    name: form.name || (file ? file.name.replace(/\.[^.]+$/, "") : ""),
+                    name: form.name || (file ? file.name.replaceAll(/\.[^.]+$/g, "") : ""),
                   })
                 }}
               />

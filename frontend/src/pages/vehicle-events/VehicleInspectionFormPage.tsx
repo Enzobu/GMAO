@@ -410,7 +410,7 @@ function formatInputDate(date: Date) {
 async function uploadInspectionDocuments(inspectionId: number, files: File[]) {
   await Promise.all(files.map((file) => createParentDocument(
     { type: "vehicle_inspections", id: inspectionId },
-    { file, name: file.name.replace(/\.[^.]+$/, "") || file.name }
+    { file, name: file.name.replaceAll(/\.[^.]+$/g, "") || file.name }
   )))
 }
 

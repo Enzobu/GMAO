@@ -308,18 +308,25 @@ function userLabel(user: VehicleUser) {
 }
 
 function formatRegistration(value: string) {
-  const characters = value.toUpperCase().replace(/[^A-Z0-9]/g, "")
+  const characters = value.toUpperCase().replaceAll(/[^A-Z0-9]/g, "")
   let result = ""
+  const expectedPatterns = [/^[A-Z]$/, /^\d$/, /^[A-Z]$/]
 
   for (const character of characters) {
-    if (result.length < 2 && /[A-Z]/.test(character)) {
-      result += character
-    } else if (result.length >= 2 && result.length < 5 && /\d/.test(character)) {
-      result += character
-    } else if (result.length >= 5 && result.length < 7 && /[A-Z]/.test(character)) {
+    const groupIndex = registrationGroupIndex(result.length)
+
+    if (result.length < 7 && expectedPatterns[groupIndex].test(character)) {
       result += character
     }
   }
 
   return [result.slice(0, 2), result.slice(2, 5), result.slice(5, 7)].filter(Boolean).join("-")
+}
+
+function registrationGroupIndex(length: number) {
+  if (length < 2) {
+    return 0
+  }
+
+  return length < 5 ? 1 : 2
 }

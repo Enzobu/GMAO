@@ -44,6 +44,10 @@ class Maintenance
 {
     use TimestampableEntityTrait;
 
+    private const BUSINESS_DATE_MIN = '1800-01-01';
+    private const BUSINESS_DATETIME_MAX = '2100-12-31 23:59:59';
+    private const BUSINESS_DATE_RANGE_MESSAGE = 'La date doit être comprise entre le 01/01/1800 et le 31/12/2100.';
+
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
@@ -66,17 +70,17 @@ class Maintenance
     private ?int $mileage = null;
 
     #[ORM\Column(nullable: true)]
-    #[Assert\Range(notInRangeMessage: 'La date doit être comprise entre le 01/01/1800 et le 31/12/2100.', min: '1800-01-01', max: '2100-12-31 23:59:59')]
+    #[Assert\Range(notInRangeMessage: self::BUSINESS_DATE_RANGE_MESSAGE, min: self::BUSINESS_DATE_MIN, max: self::BUSINESS_DATETIME_MAX)]
     #[Groups(['maintenance:read', 'maintenance:write', 'vehicle:read'])]
     private ?\DateTimeImmutable $startedAt = null;
 
     #[ORM\Column(nullable: true)]
-    #[Assert\Range(notInRangeMessage: 'La date doit être comprise entre le 01/01/1800 et le 31/12/2100.', min: '1800-01-01', max: '2100-12-31 23:59:59')]
+    #[Assert\Range(notInRangeMessage: self::BUSINESS_DATE_RANGE_MESSAGE, min: self::BUSINESS_DATE_MIN, max: self::BUSINESS_DATETIME_MAX)]
     #[Groups(['maintenance:read', 'maintenance:write', 'vehicle:read'])]
     private ?\DateTimeImmutable $finishedAt = null;
 
     #[ORM\Column(nullable: true)]
-    #[Assert\Range(notInRangeMessage: 'La date doit être comprise entre le 01/01/1800 et le 31/12/2100.', min: '1800-01-01', max: '2100-12-31 23:59:59')]
+    #[Assert\Range(notInRangeMessage: self::BUSINESS_DATE_RANGE_MESSAGE, min: self::BUSINESS_DATE_MIN, max: self::BUSINESS_DATETIME_MAX)]
     #[Groups(['maintenance:read', 'maintenance:write', 'vehicle:read'])]
     private ?\DateTimeImmutable $plannedAt = null;
 
@@ -98,7 +102,7 @@ class Maintenance
     private ?int $nextDueMileage = null;
 
     #[ORM\Column(nullable: true)]
-    #[Assert\Range(notInRangeMessage: 'La date doit être comprise entre le 01/01/1800 et le 31/12/2100.', min: '1800-01-01', max: '2100-12-31 23:59:59')]
+    #[Assert\Range(notInRangeMessage: self::BUSINESS_DATE_RANGE_MESSAGE, min: self::BUSINESS_DATE_MIN, max: self::BUSINESS_DATETIME_MAX)]
     #[Groups(['maintenance:read', 'maintenance:write', 'vehicle:read'])]
     private ?\DateTimeImmutable $nextDueAt = null;
 

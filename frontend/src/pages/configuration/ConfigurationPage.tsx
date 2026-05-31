@@ -161,7 +161,7 @@ function InspectionCentersPanel() {
         ? await createInspectionCenter(payload)
         : await updateInspectionCenter(formItem.id, payload)
 
-      setItems((current) => upsertInspectionCenter(current, saved).sort(compareInspectionCenters))
+      setItems((current) => upsertById(current, saved).sort(compareInspectionCenters))
       setFormItem(null)
     } catch {
       setError("Impossible d’enregistrer le centre. Vérifiez les champs saisis.")
@@ -375,7 +375,7 @@ function ConfigurationResourcePanel({ resource }: Readonly<{ resource: ResourceC
         ? await resource.createItem(payload)
         : await resource.updateItem(formItem.id, payload)
 
-      setItems((current) => upsertItem(current, saved).sort(compareItems))
+      setItems((current) => upsertById(current, saved).sort(compareItems))
       setFormItem(null)
     } catch {
       setError("Impossible d’enregistrer. Vérifiez les champs saisis.")
@@ -687,17 +687,7 @@ function InspectionCenterFormDialog({ item, error, isSaving, onOpenChange, onSub
   )
 }
 
-function upsertItem(items: ConfigurationItem[], item: ConfigurationItem) {
-  const exists = items.some((current) => current.id === item.id)
-
-  if (!exists) {
-    return [...items, item]
-  }
-
-  return items.map((current) => current.id === item.id ? item : current)
-}
-
-function upsertInspectionCenter(items: InspectionCenterConfigurationItem[], item: InspectionCenterConfigurationItem) {
+function upsertById<T extends { id: number }>(items: T[], item: T) {
   const exists = items.some((current) => current.id === item.id)
 
   if (!exists) {
@@ -742,13 +732,13 @@ function nullableString(value: string | null | undefined) {
 
 function formatPhone(value: string) {
   return value
-    .replace(/\D/g, "")
+    .replaceAll(/\D/g, "")
     .slice(0, 10)
-    .replace(/(\d{2})(?=\d)/g, "$1 ")
+    .replaceAll(/(\d{2})(?=\d)/g, "$1 ")
 }
 
 function formatPostalCode(value: string) {
-  return value.replace(/\D/g, "").slice(0, 5)
+  return value.replaceAll(/\D/g, "").slice(0, 5)
 }
 
 function normalize(value: string) {

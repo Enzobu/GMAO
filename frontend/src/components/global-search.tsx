@@ -137,6 +137,53 @@ export function GlobalSearch() {
     }
   }
 
+  function renderDropdownContent() {
+    if (isLoading) {
+      return (
+        <div className="flex items-center gap-2 px-4 py-3 text-sm text-muted-foreground">
+          <Loader2 className="size-4 animate-spin" />
+          Recherche en cours...
+        </div>
+      )
+    }
+
+    if (query.trim().length < MIN_SEARCH_LENGTH) {
+      return <div className="px-4 py-3 text-sm text-muted-foreground">Saisissez au moins {MIN_SEARCH_LENGTH} caractères.</div>
+    }
+
+    if (results.length === 0) {
+      return <div className="px-4 py-3 text-sm text-muted-foreground">Aucun résultat trouvé.</div>
+    }
+
+    return (
+      <div className="max-h-[28rem] overflow-y-auto py-2">
+        {groupedResults.map(([category, categoryResults]) => {
+          const Icon = categoryIcons[category]
+
+          return (
+            <div key={category} className="py-1">
+              <div className="flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-muted-foreground">
+                <Icon className="size-3.5" />
+                {categoryLabels[category]}
+              </div>
+              {categoryResults.map((result) => (
+                <button
+                  key={result.id}
+                  type="button"
+                  className="grid w-full gap-0.5 px-4 py-2 text-left text-sm hover:bg-muted focus:bg-muted focus:outline-none"
+                  onClick={() => openResult(result)}
+                >
+                  <span className="font-medium">{result.title}</span>
+                  <span className="truncate text-xs text-muted-foreground">{result.description}</span>
+                </button>
+              ))}
+            </div>
+          )
+        })}
+      </div>
+    )
+  }
+
   const shouldShowDropdown = isOpen && (query.length > 0 || isLoading)
 
   return (
@@ -166,42 +213,7 @@ export function GlobalSearch() {
 
       {shouldShowDropdown && (
         <div className="absolute top-full right-0 left-0 z-50 mt-2 overflow-hidden rounded-xl border bg-popover text-popover-foreground shadow-xl">
-          {isLoading ? (
-            <div className="flex items-center gap-2 px-4 py-3 text-sm text-muted-foreground">
-              <Loader2 className="size-4 animate-spin" />
-              Recherche en cours...
-            </div>
-          ) : query.trim().length < MIN_SEARCH_LENGTH ? (
-            <div className="px-4 py-3 text-sm text-muted-foreground">Saisissez au moins {MIN_SEARCH_LENGTH} caractères.</div>
-          ) : results.length === 0 ? (
-            <div className="px-4 py-3 text-sm text-muted-foreground">Aucun résultat trouvé.</div>
-          ) : (
-            <div className="max-h-[28rem] overflow-y-auto py-2">
-              {groupedResults.map(([category, categoryResults]) => {
-                const Icon = categoryIcons[category]
-
-                return (
-                  <div key={category} className="py-1">
-                    <div className="flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-muted-foreground">
-                      <Icon className="size-3.5" />
-                      {categoryLabels[category]}
-                    </div>
-                    {categoryResults.map((result) => (
-                      <button
-                        key={result.id}
-                        type="button"
-                        className="grid w-full gap-0.5 px-4 py-2 text-left text-sm hover:bg-muted focus:bg-muted focus:outline-none"
-                        onClick={() => openResult(result)}
-                      >
-                        <span className="font-medium">{result.title}</span>
-                        <span className="truncate text-xs text-muted-foreground">{result.description}</span>
-                      </button>
-                    ))}
-                  </div>
-                )
-              })}
-            </div>
-          )}
+          {renderDropdownContent()}
         </div>
       )}
     </div>

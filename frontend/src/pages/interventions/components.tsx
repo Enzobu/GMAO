@@ -1,16 +1,15 @@
 import type { ReactNode } from "react"
 import { Link } from "react-router-dom"
-import { Save } from "lucide-react"
 
 import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { DetailItem } from "@/components/page-primitives"
 import type { Intervention } from "@/types/intervention"
 import { formatDate, formatNumber, interventionStatusLabel, interventionStatusVariant } from "@/lib/intervention-utils"
 
 export { PageHeader as InterventionHeader } from "@/components/page-primitives"
+export { MileageWarningDialog } from "@/components/mileage-warning-dialog"
+export { FormActions as InterventionFormActions } from "@/components/form-actions"
 
 export function InterventionBadges({ intervention, readOnly = false }: Readonly<{ intervention: Intervention; readOnly?: boolean }>) {
   return (
@@ -62,50 +61,3 @@ export function InterventionCard({
 
 export { EmptyCard, ErrorMessage, Field } from "@/components/page-primitives"
 export const Detail = DetailItem
-
-export function InterventionFormActions({ cancelTo, canEdit, isSaving }: Readonly<{ cancelTo: string; canEdit: boolean; isSaving: boolean }>) {
-  return (
-    <div className="flex justify-end gap-2">
-      <Button variant="outline" asChild>
-        <Link to={cancelTo}>Annuler</Link>
-      </Button>
-      <Button type="submit" disabled={!canEdit || isSaving}>
-        <Save />
-        {isSaving ? "Enregistrement..." : "Enregistrer"}
-      </Button>
-    </div>
-  )
-}
-
-export function MileageWarningDialog({
-  open,
-  message,
-  isAdmin,
-  isLoading,
-  onOpenChange,
-  onForce,
-  forceLabel = "Forcer",
-}: Readonly<{
-  open: boolean
-  message: string
-  isAdmin: boolean
-  isLoading: boolean
-  onOpenChange: (open: boolean) => void
-  onForce: () => void
-  forceLabel?: string
-}>) {
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Kilométrage à vérifier</DialogTitle>
-          <DialogDescription>{message}</DialogDescription>
-        </DialogHeader>
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isLoading}>Fermer</Button>
-          {isAdmin && <Button onClick={onForce} disabled={isLoading}>{isLoading ? "Enregistrement..." : forceLabel}</Button>}
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  )
-}

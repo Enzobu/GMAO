@@ -46,6 +46,10 @@ class VehicleInspection
 {
     use TimestampableEntityTrait;
 
+    private const BUSINESS_DATE_MIN = '1800-01-01';
+    private const BUSINESS_DATE_MAX = '2100-12-31';
+    private const BUSINESS_DATE_RANGE_MESSAGE = 'La date doit être comprise entre le 01/01/1800 et le 31/12/2100.';
+
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
@@ -58,12 +62,12 @@ class VehicleInspection
     private ?Vehicle $vehicle = null;
 
     #[ORM\Column(type: Types::DATE_IMMUTABLE)]
-    #[Assert\Range(notInRangeMessage: 'La date doit être comprise entre le 01/01/1800 et le 31/12/2100.', min: '1800-01-01', max: '2100-12-31')]
+    #[Assert\Range(notInRangeMessage: self::BUSINESS_DATE_RANGE_MESSAGE, min: self::BUSINESS_DATE_MIN, max: self::BUSINESS_DATE_MAX)]
     #[Groups(['vehicle_inspection:read', 'vehicle_inspection:write', 'vehicle:read'])]
     private ?\DateTimeImmutable $inspectionDate = null;
 
     #[ORM\Column(type: Types::DATE_IMMUTABLE)]
-    #[Assert\Range(notInRangeMessage: 'La date doit être comprise entre le 01/01/1800 et le 31/12/2100.', min: '1800-01-01', max: '2100-12-31')]
+    #[Assert\Range(notInRangeMessage: self::BUSINESS_DATE_RANGE_MESSAGE, min: self::BUSINESS_DATE_MIN, max: self::BUSINESS_DATE_MAX)]
     #[Groups(['vehicle_inspection:read', 'vehicle_inspection:write', 'vehicle:read'])]
     private ?\DateTimeImmutable $validUntil = null;
 
@@ -82,7 +86,7 @@ class VehicleInspection
     private bool $counterVisitRequired = false;
 
     #[ORM\Column(type: Types::DATE_IMMUTABLE, nullable: true)]
-    #[Assert\Range(notInRangeMessage: 'La date doit être comprise entre le 01/01/1800 et le 31/12/2100.', min: '1800-01-01', max: '2100-12-31')]
+    #[Assert\Range(notInRangeMessage: self::BUSINESS_DATE_RANGE_MESSAGE, min: self::BUSINESS_DATE_MIN, max: self::BUSINESS_DATE_MAX)]
     #[Groups(['vehicle_inspection:read', 'vehicle_inspection:write', 'vehicle:read'])]
     private ?\DateTimeImmutable $counterVisitDueAt = null;
 

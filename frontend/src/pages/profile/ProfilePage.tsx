@@ -300,7 +300,7 @@ export default function ProfilePage() {
 }
 
 function formatPostalCode(value: string) {
-  return value.replace(/\D/g, "").slice(0, 5)
+  return value.replaceAll(/\D/g, "").slice(0, 5)
 }
 
 function Field({
