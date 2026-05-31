@@ -1,4 +1,3 @@
-import { useEffect, useRef } from "react"
 import {
   Bell,
   CarFront,
@@ -18,7 +17,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { NavLink, Outlet } from "react-router-dom"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
+import { GlobalSearch } from "@/components/global-search"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { useAuthStore } from "@/stores/auth-store"
 
@@ -51,23 +50,9 @@ const navigation = [
 ]
 
 export default function AppLayout() {
-  const searchInputRef = useRef<HTMLInputElement>(null)
   const user = useAuthStore((state) => state.user)
   const logout = useAuthStore((state) => state.logout)
   const isAdmin = user?.roles.includes("ROLE_ADMIN") ?? false
-
-  useEffect(() => {
-    function handleSearchShortcut(event: KeyboardEvent) {
-      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "k") {
-        event.preventDefault()
-        searchInputRef.current?.focus()
-      }
-    }
-
-    globalThis.addEventListener("keydown", handleSearchShortcut)
-
-    return () => globalThis.removeEventListener("keydown", handleSearchShortcut)
-  }, [])
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -155,22 +140,7 @@ export default function AppLayout() {
           <header className="sticky top-0 z-40 border-b border-border bg-background/80 backdrop-blur">
             <div className="flex h-20 items-center justify-between px-8">
               {/* Search */}
-              <div className="relative w-full max-w-lg">
-                <Input
-                  ref={searchInputRef}
-                  placeholder="Rechercher..."
-                  className="h-12 rounded-xl border-border bg-card pr-20"
-                />
-
-                <div className="pointer-events-none absolute right-3 top-1/2 hidden -translate-y-1/2 items-center gap-1 text-xs text-muted-foreground sm:flex">
-                  <kbd className="rounded-md border border-border bg-muted px-1.5 py-0.5 font-sans">
-                    Ctrl
-                  </kbd>
-                  <kbd className="rounded-md border border-border bg-muted px-1.5 py-0.5 font-sans">
-                    K
-                  </kbd>
-                </div>
-              </div>
+              <GlobalSearch />
 
               {/* Right */}
               <div className="flex items-center gap-4">
