@@ -62,9 +62,20 @@ jobs:
           MARIADB_PASSWORD=gmao
           MARIADB_ROOT_PASSWORD=root
           APACHE_PORT=8000
+          PHPMYADMIN_PORT=8080
           FRONTEND_PORT=3000
+          FRONT_PROD_PORT=8200
           TRUSTED_PROXIES=127.0.0.1
           VITE_API_URL=http://localhost:8000
+          MAILER_DSN=${{ vars.MAILER_DSN_CI }}
+          MAILER_SENDER=no-reply@enzo-palermo.com
+          MAILER_FROM_DISPLAY_NAME="Enzo Palermo"
+          DOCUMENT_DIRECTORY=${{ vars.DOCUMENT_DIRECTORY_CI }}
+          JWT_SECRET_KEY=${{ vars.JWT_SECRET_KEY_CI }}
+          JWT_PUBLIC_KEY=${{ vars.JWT_PUBLIC_KEY_CI }}
+          JWT_PASSPHRASE=${{ vars.JWT_PASSPHRASE_CI }}
+          CORS_ALLOW_ORIGIN=http://localhost:8200
+          FRONTEND_URL=http://localhost:8200
           EOF
 
       - name: Create project env file
@@ -79,9 +90,20 @@ jobs:
           MARIADB_PASSWORD=gmao
           MARIADB_ROOT_PASSWORD=root
           APACHE_PORT=8000
+          PHPMYADMIN_PORT=8080
           FRONTEND_PORT=3000
+          FRONT_PROD_PORT=8200
           TRUSTED_PROXIES=127.0.0.1
           VITE_API_URL=http://localhost:8000
+          MAILER_DSN=${{ vars.MAILER_DSN_CI }}
+          MAILER_SENDER=no-reply@enzo-palermo.com
+          MAILER_FROM_DISPLAY_NAME="Enzo Palermo"
+          DOCUMENT_DIRECTORY=${{ vars.DOCUMENT_DIRECTORY_CI }}
+          JWT_SECRET_KEY=${{ vars.JWT_SECRET_KEY_CI }}
+          JWT_PUBLIC_KEY=${{ vars.JWT_PUBLIC_KEY_CI }}
+          JWT_PASSPHRASE=${{ vars.JWT_PASSPHRASE_CI }}
+          CORS_ALLOW_ORIGIN=http://localhost:8200
+          FRONTEND_URL=http://localhost:8200
           EOF
 
       - name: Build Docker images
