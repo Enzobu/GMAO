@@ -200,17 +200,15 @@ jobs:
     steps:
       - name: Deploy prod
         run: |
-          exit 0
-        # run: |
-        #   HTTP_CODE=$(curl -sS -o /tmp/deploy-response.txt -w "%{http_code}" -X POST "https://dockploy.enzo-palermo.com/api/compose.deploy" \
-        #     -H "accept: application/json" \
-        #     -H "Content-Type: application/json" \
-        #     -H "x-api-key: ${{ secrets.DOKPLOY_PROD_API_KEY }}" \
-        #     -d '{"composeId":"${{ secrets.DOKPLOY_PROD_COMPOSE_ID }}"}')
+          HTTP_CODE=$(curl -sS -o /tmp/deploy-response.txt -w "%{http_code}" -X POST "https://dockploy.enzo-palermo.com/api/compose.deploy" \
+            -H "accept: application/json" \
+            -H "Content-Type: application/json" \
+            -H "x-api-key: ${{ secrets.DOKPLOY_PROD_API_KEY }}" \
+            -d '{"composeId":"${{ secrets.DOKPLOY_PROD_COMPOSE_ID }}"}')
 
-        #   echo "HTTP code: $HTTP_CODE"
-        #   cat /tmp/deploy-response.txt
+          echo "HTTP code: $HTTP_CODE"
+          cat /tmp/deploy-response.txt
 
-        #   if [ "$HTTP_CODE" -lt 200 ] || [ "$HTTP_CODE" -ge 300 ]; then
-        #     exit 1
-        #   fi
+          if [ "$HTTP_CODE" -lt 200 ] || [ "$HTTP_CODE" -ge 300 ]; then
+            exit 1
+          fi
