@@ -274,7 +274,9 @@ export default function ProfilePage() {
         </CardContent>
       </Card>
 
-      <DocumentsPanel canDelete={isAdmin} />
+      {profile && (
+        <DocumentsPanel parent={{ type: "users", id: profile.id }} canDelete={isAdmin} />
+      )}
     </div>
   )
 

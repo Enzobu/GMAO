@@ -91,10 +91,10 @@ final class DocumentParentResolverTest extends TestCase
         self::assertNull($this->resolver()->owningVehicle(new User()));
     }
 
-    public function testIsDeletedReadsParentFlag(): void
+    #[DataProvider('deletedParentProvider')]
+    public function testIsDeletedReadsParentFlag(object $parent, bool $expected): void
     {
-        self::assertTrue($this->resolver()->isDeleted((new Vehicle())->setIsDeleted(true)));
-        self::assertFalse($this->resolver()->isDeleted(new User()));
+        self::assertSame($expected, $this->resolver()->isDeleted($parent));
     }
 
     public static function parentProvider(): iterable
@@ -137,6 +137,16 @@ final class DocumentParentResolverTest extends TestCase
         yield 'inspection' => [new VehicleInspection(), 'getVehicleInspection'];
         yield 'maintenance' => [new Maintenance(), 'getMaintenance'];
         yield 'part' => [new Part(), 'getPart'];
+    }
+
+    public static function deletedParentProvider(): iterable
+    {
+        yield 'user' => [new User(), false];
+        yield 'vehicle' => [(new Vehicle())->setIsDeleted(true), true];
+        yield 'insurance' => [(new VehicleInsurance())->setIsDeleted(true), true];
+        yield 'inspection' => [(new VehicleInspection())->setIsDeleted(true), true];
+        yield 'maintenance' => [(new Maintenance())->setIsDeleted(true), true];
+        yield 'part' => [(new Part())->setIsDeleted(true), true];
     }
 
     private function resolver(?EntityManagerInterface $entityManager = null, ?DocumentRepository $repository = null): DocumentParentResolver

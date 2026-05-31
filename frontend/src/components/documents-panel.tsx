@@ -3,19 +3,7 @@ import type { FormEvent, ReactNode } from "react"
 import { AxiosError } from "axios"
 import { Download, Eye, FileText, Pencil, Plus, Trash2, Upload } from "lucide-react"
 
-import {
-  createProfileDocument,
-  createParentDocument,
-  deleteProfileDocument,
-  deleteParentDocument,
-  getParentDocumentBlob,
-  getParentDocuments,
-  getProfileDocumentBlob,
-  getProfileDocuments,
-  type DocumentParent,
-  updateParentDocument,
-  updateProfileDocument,
-} from "@/api/documents"
+import { createParentDocument, deleteParentDocument, getParentDocumentBlob, getParentDocuments, type DocumentParent, updateParentDocument } from "@/api/documents"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { ConfirmDialog } from "@/components/ui/confirm-dialog"
@@ -53,7 +41,7 @@ export function DocumentsPanel({
 }: Readonly<{
   canDelete: boolean
   canManage?: boolean
-  parent?: DocumentParent
+  parent: DocumentParent
   emptyLabel?: string
 }>) {
   const [documents, setDocuments] = useState<AppDocument[]>([])
@@ -69,6 +57,8 @@ export function DocumentsPanel({
   const [previewDocument, setPreviewDocument] = useState<AppDocument | null>(null)
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const [isPreviewLoading, setIsPreviewLoading] = useState(false)
+  const parentType = parent.type
+  const parentId = parent.id
 
   useEffect(() => {
     let ignore = false
@@ -76,7 +66,7 @@ export function DocumentsPanel({
     async function loadDocuments() {
       try {
         setError("")
-        const data = parent === undefined ? await getProfileDocuments() : await getParentDocuments(parent)
+        const data = await getParentDocuments({ type: parentType, id: parentId })
 
         if (!ignore) {
           setDocuments(data)
@@ -97,7 +87,7 @@ export function DocumentsPanel({
     return () => {
       ignore = true
     }
-  }, [parent?.type, parent?.id])
+  }, [parentType, parentId])
 
   useEffect(() => () => revokePreviewUrl(previewUrl), [previewUrl])
 
@@ -158,8 +148,8 @@ export function DocumentsPanel({
       setIsFormOpen(false)
       setForm(emptyForm)
       setEditingDocument(null)
-    } catch (caught) {
-      setFormError(errorMessage(caught, editingDocument ? "Impossible de modifier ce document." : "Impossible d’ajouter ce document."))
+    } catch (error_) {
+      setFormError(errorMessage(error_, editingDocument ? "Impossible de modifier ce document." : "Impossible d’ajouter ce document."))
     } finally {
       setIsSaving(false)
     }
@@ -233,50 +223,17 @@ export function DocumentsPanel({
       <CardContent className="space-y-4">
         {error && <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">{error}</div>}
 
-        {isLoading ? (
-          <div className="text-sm text-muted-foreground">Chargement des documents...</div>
-        ) : documents.length === 0 ? (
-          <div className="rounded-lg border border-dashed p-6 text-sm text-muted-foreground">{emptyLabel}</div>
-        ) : (
-          <div className="divide-y rounded-lg border">
-            {documents.map((document) => (
-              <div key={document.publicId} className="flex flex-col gap-3 p-4 lg:flex-row lg:items-center lg:justify-between">
-                <div className="min-w-0 space-y-1">
-                  <div className="truncate font-medium">{document.name || "Document sans nom"}</div>
-                  <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-muted-foreground">
-                    <span>Ajouté le {formatDate(document.createdAt)}</span>
-                    <span>Modifié le {formatDate(document.updatedAt)}</span>
-                    <span>{formatFileDetails(document)}</span>
-                  </div>
-                  <div className="text-sm text-muted-foreground">{shortDescription(document.description)}</div>
-                </div>
-
-                <div className="flex flex-wrap gap-2">
-                  <Button type="button" variant="outline" onClick={() => void openPreview(document)}>
-                    <Eye />
-                    Voir
-                  </Button>
-                  <Button type="button" variant="outline" onClick={() => void downloadDocument(document)}>
-                    <Download />
-                    Télécharger
-                  </Button>
-                  {canManage && (
-                    <Button type="button" variant="outline" onClick={() => openEditForm(document)}>
-                      <Pencil />
-                      Modifier
-                    </Button>
-                  )}
-                  {canDelete && (
-                    <Button type="button" variant="destructive" onClick={() => setDocumentToDelete(document)}>
-                      <Trash2 />
-                      Archiver
-                    </Button>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
+        {renderDocumentsContent({
+          canDelete,
+          canManage,
+          documents,
+          emptyLabel,
+          isLoading,
+          onDelete: setDocumentToDelete,
+          onDownload: downloadDocument,
+          onEdit: openEditForm,
+          onPreview: openPreview,
+        })}
       </CardContent>
 
       <DocumentFormDialog
@@ -385,6 +342,108 @@ function DocumentFormDialog({
         </form>
       </DialogContent>
     </Dialog>
+  )
+}
+
+function renderDocumentsContent({
+  canDelete,
+  canManage,
+  documents,
+  emptyLabel,
+  isLoading,
+  onDelete,
+  onDownload,
+  onEdit,
+  onPreview,
+}: Readonly<{
+  canDelete: boolean
+  canManage: boolean
+  documents: AppDocument[]
+  emptyLabel: string
+  isLoading: boolean
+  onDelete: (document: AppDocument) => void
+  onDownload: (document: AppDocument) => Promise<void>
+  onEdit: (document: AppDocument) => void
+  onPreview: (document: AppDocument) => Promise<void>
+}>) {
+  if (isLoading) {
+    return <div className="text-sm text-muted-foreground">Chargement des documents...</div>
+  }
+
+  if (documents.length === 0) {
+    return <div className="rounded-lg border border-dashed p-6 text-sm text-muted-foreground">{emptyLabel}</div>
+  }
+
+  return (
+    <div className="divide-y rounded-lg border">
+      {documents.map((document) => (
+        <DocumentRow
+          key={document.publicId}
+          canDelete={canDelete}
+          canManage={canManage}
+          document={document}
+          onDelete={onDelete}
+          onDownload={onDownload}
+          onEdit={onEdit}
+          onPreview={onPreview}
+        />
+      ))}
+    </div>
+  )
+}
+
+function DocumentRow({
+  canDelete,
+  canManage,
+  document,
+  onDelete,
+  onDownload,
+  onEdit,
+  onPreview,
+}: Readonly<{
+  canDelete: boolean
+  canManage: boolean
+  document: AppDocument
+  onDelete: (document: AppDocument) => void
+  onDownload: (document: AppDocument) => Promise<void>
+  onEdit: (document: AppDocument) => void
+  onPreview: (document: AppDocument) => Promise<void>
+}>) {
+  return (
+    <div className="flex flex-col gap-3 p-4 lg:flex-row lg:items-center lg:justify-between">
+      <div className="min-w-0 space-y-1">
+        <div className="truncate font-medium">{document.name || "Document sans nom"}</div>
+        <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-muted-foreground">
+          <span>Ajouté le {formatDate(document.createdAt)}</span>
+          <span>Modifié le {formatDate(document.updatedAt)}</span>
+          <span>{formatFileDetails(document)}</span>
+        </div>
+        <div className="text-sm text-muted-foreground">{shortDescription(document.description)}</div>
+      </div>
+
+      <div className="flex flex-wrap gap-2">
+        <Button type="button" variant="outline" onClick={() => void onPreview(document)}>
+          <Eye />
+          Voir
+        </Button>
+        <Button type="button" variant="outline" onClick={() => void onDownload(document)}>
+          <Download />
+          Télécharger
+        </Button>
+        {canManage && (
+          <Button type="button" variant="outline" onClick={() => onEdit(document)}>
+            <Pencil />
+            Modifier
+          </Button>
+        )}
+        {canDelete && (
+          <Button type="button" variant="destructive" onClick={() => onDelete(document)}>
+            <Trash2 />
+            Archiver
+          </Button>
+        )}
+      </div>
+    </div>
   )
 }
 
@@ -498,18 +557,18 @@ function revokePreviewUrl(url: string | null) {
   }
 }
 
-function createDocument(parent: DocumentParent | undefined, payload: { name: string; description: string | null; file: File }) {
-  return parent === undefined ? createProfileDocument(payload) : createParentDocument(parent, payload)
+function createDocument(parent: DocumentParent, payload: { name: string; description: string | null; file: File }) {
+  return createParentDocument(parent, payload)
 }
 
-function updateDocument(parent: DocumentParent | undefined, publicId: string, payload: { name: string; description: string | null }) {
-  return parent === undefined ? updateProfileDocument(publicId, payload) : updateParentDocument(parent, publicId, payload)
+function updateDocument(parent: DocumentParent, publicId: string, payload: { name: string; description: string | null }) {
+  return updateParentDocument(parent, publicId, payload)
 }
 
-function deleteDocument(parent: DocumentParent | undefined, publicId: string) {
-  return parent === undefined ? deleteProfileDocument(publicId) : deleteParentDocument(parent, publicId)
+function deleteDocument(parent: DocumentParent, publicId: string) {
+  return deleteParentDocument(parent, publicId)
 }
 
-function getDocumentBlob(parent: DocumentParent | undefined, publicId: string, download = false) {
-  return parent === undefined ? getProfileDocumentBlob(publicId, download) : getParentDocumentBlob(parent, publicId, download)
+function getDocumentBlob(parent: DocumentParent, publicId: string, download = false) {
+  return getParentDocumentBlob(parent, publicId, download)
 }

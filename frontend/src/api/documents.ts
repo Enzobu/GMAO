@@ -12,26 +12,6 @@ function parentPath(parent: DocumentParent) {
   return `/${parent.type}/${parent.id}/documents`
 }
 
-export async function getProfileDocuments() {
-  const response = await api.get<AppDocument[]>("/profile/documents")
-
-  return response.data
-}
-
-export async function createProfileDocument(payload: DocumentMetadataPayload & { file: File }) {
-  const formData = new FormData()
-  formData.append("file", payload.file)
-  formData.append("name", payload.name)
-
-  if (payload.description) {
-    formData.append("description", payload.description)
-  }
-
-  const response = await api.post<AppDocument>("/profile/documents", formData)
-
-  return response.data
-}
-
 export async function getUserDocuments(userId: string | number) {
   return getParentDocuments({ type: "users", id: userId })
 }
@@ -86,26 +66,6 @@ export async function getUserDocumentBlob(userId: string | number, publicId: str
 
 export async function getParentDocumentBlob(parent: DocumentParent, publicId: string, download = false) {
   const response = await api.get<Blob>(`${parentPath(parent)}/${publicId}/${download ? "download" : "file"}`, {
-    responseType: "blob",
-  })
-
-  return response.data
-}
-
-export async function updateProfileDocument(publicId: string, payload: DocumentMetadataPayload) {
-  const response = await api.patch<AppDocument>(`/profile/documents/${publicId}`, payload, {
-    headers: { "Content-Type": "application/merge-patch+json" },
-  })
-
-  return response.data
-}
-
-export async function deleteProfileDocument(publicId: string) {
-  await api.delete(`/profile/documents/${publicId}`)
-}
-
-export async function getProfileDocumentBlob(publicId: string, download = false) {
-  const response = await api.get<Blob>(`/profile/documents/${publicId}/${download ? "download" : "file"}`, {
     responseType: "blob",
   })
 

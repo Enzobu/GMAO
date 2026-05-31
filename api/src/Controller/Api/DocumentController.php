@@ -3,8 +3,12 @@
 namespace App\Controller\Api;
 
 use App\Entity\Document;
+use App\Entity\Maintenance;
 use App\Entity\Part;
 use App\Entity\User;
+use App\Entity\Vehicle;
+use App\Entity\VehicleInspection;
+use App\Entity\VehicleInsurance;
 use App\Service\DocumentManager;
 use App\Service\DocumentParentResolver;
 use Doctrine\ORM\EntityManagerInterface;
@@ -21,6 +25,8 @@ use Symfony\Component\Routing\Attribute\Route;
 #[Route('/api/{parentType}/{parentId}/documents', requirements: ['parentType' => 'users|vehicles|vehicle_insurances|vehicle_inspections|maintenances|parts', 'parentId' => '\\d+'])]
 final class DocumentController extends AbstractController
 {
+    private const MAX_FILE_SIZE = 8 * 1024 * 1024;
+
     public function __construct(
         private readonly DocumentParentResolver $parents,
         private readonly EntityManagerInterface $entityManager,
@@ -47,19 +53,15 @@ final class DocumentController extends AbstractController
             return $accessResponse;
         }
 
+        $uploadValidationResponse = $this->validateUploadedFile($request->files->get('file'));
+        if ($uploadValidationResponse instanceof JsonResponse) {
+            return $uploadValidationResponse;
+        }
+
+        /** @var UploadedFile $file */
         $file = $request->files->get('file');
-        if (!$file instanceof UploadedFile) {
-            return $this->json(['message' => 'Le fichier est obligatoire.'], Response::HTTP_UNPROCESSABLE_ENTITY);
-        }
 
-        if ($file->getSize() !== false && $file->getSize() > 8 * 1024 * 1024) {
-            return $this->json(['message' => 'Fichier trop volumineux. Max 8 Mo.'], Response::HTTP_UNPROCESSABLE_ENTITY);
-        }
-
-        $name = trim((string) $request->request->get('name', ''));
-        if ($name === '') {
-            $name = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME) ?: 'Document';
-        }
+        $name = $this->documentName($request, $file);
 
         $document = $documentManager->createDocument($parent, $file, $name, $this->nullableString($request->request->get('description')));
 
@@ -80,23 +82,13 @@ final class DocumentController extends AbstractController
             return $ownershipResponse;
         }
 
-        $payload = json_decode($request->getContent(), true);
-        if (!is_array($payload)) {
-            return $this->json(['message' => 'Invalid JSON payload'], Response::HTTP_BAD_REQUEST);
+        $response = $this->validateAndApplyMetadata($request, $document);
+        if (!$response instanceof JsonResponse) {
+            $this->entityManager->flush();
+            $response = $this->json($this->serializeDocument($document));
         }
 
-        $name = trim((string) ($payload['name'] ?? ''));
-        if ($name === '') {
-            return $this->json(['message' => 'Le nom est obligatoire.'], Response::HTTP_UNPROCESSABLE_ENTITY);
-        }
-
-        $document
-            ->setName($name)
-            ->setDescription($this->nullableString($payload['description'] ?? null));
-
-        $this->entityManager->flush();
-
-        return $this->json($this->serializeDocument($document));
+        return $response;
     }
 
     #[Route('/{publicId}', name: 'api_documents_delete', methods: ['DELETE'])]
@@ -107,11 +99,13 @@ final class DocumentController extends AbstractController
         }
 
         $parent = $this->getParentOr404($parentType, $parentId);
+        if ($document->isDeleted()) {
+            return new Response(status: Response::HTTP_NO_CONTENT);
+        }
+
         $this->denyUnlessDocumentBelongsToParentOrThrow($document, $parent);
 
-        if (!$document->isDeleted()) {
-            $documentManager->softDelete($document);
-        }
+        $documentManager->softDelete($document);
 
         return new Response(status: Response::HTTP_NO_CONTENT);
     }
@@ -136,7 +130,7 @@ final class DocumentController extends AbstractController
         return $this->buildDocumentFileResponse($document, $documentManager, ResponseHeaderBag::DISPOSITION_ATTACHMENT);
     }
 
-    private function getParentOr404(string $parentType, int $parentId): User|\App\Entity\Vehicle|\App\Entity\VehicleInsurance|\App\Entity\VehicleInspection|\App\Entity\Maintenance|Part
+    private function getParentOr404(string $parentType, int $parentId): User|Vehicle|VehicleInsurance|VehicleInspection|Maintenance|Part
     {
         $parent = $this->parents->resolve($parentType, $parentId);
         if ($parent === null || $this->parents->isDeleted($parent)) {
@@ -146,30 +140,29 @@ final class DocumentController extends AbstractController
         return $parent;
     }
 
-    private function denyUnlessCanManage(User|\App\Entity\Vehicle|\App\Entity\VehicleInsurance|\App\Entity\VehicleInspection|\App\Entity\Maintenance|Part $parent): ?JsonResponse
+    private function denyUnlessCanManage(User|Vehicle|VehicleInsurance|VehicleInspection|Maintenance|Part $parent): ?JsonResponse
     {
+        $response = null;
         $currentUser = $this->getUser();
         if (!$currentUser instanceof User) {
-            return $this->json(['message' => 'Unauthenticated'], Response::HTTP_UNAUTHORIZED);
+            $response = $this->json(['message' => 'Unauthenticated'], Response::HTTP_UNAUTHORIZED);
+        } elseif (!$this->canManage($parent, $currentUser)) {
+            $response = $this->json(['message' => 'Vous ne pouvez modifier que vos documents.'], Response::HTTP_FORBIDDEN);
         }
 
-        if ($this->isGranted('ROLE_ADMIN')) {
-            return null;
-        }
-
-        if ($parent instanceof User && $parent->getId() === $currentUser->getId()) {
-            return null;
-        }
-
-        $vehicle = $this->parents->owningVehicle($parent);
-        if ($vehicle !== null && $vehicle->getUser()?->getId() === $currentUser->getId()) {
-            return null;
-        }
-
-        return $this->json(['message' => 'Vous ne pouvez modifier que vos documents.'], Response::HTTP_FORBIDDEN);
+        return $response;
     }
 
-    private function denyUnlessDocumentBelongsToParent(Document $document, User|\App\Entity\Vehicle|\App\Entity\VehicleInsurance|\App\Entity\VehicleInspection|\App\Entity\Maintenance|Part $parent): ?JsonResponse
+    private function canManage(User|Vehicle|VehicleInsurance|VehicleInspection|Maintenance|Part $parent, User $currentUser): bool
+    {
+        $vehicle = $this->parents->owningVehicle($parent);
+
+        return $this->isGranted('ROLE_ADMIN')
+            || ($parent instanceof User && $parent->getId() === $currentUser->getId())
+            || ($vehicle !== null && $vehicle->getUser()?->getId() === $currentUser->getId());
+    }
+
+    private function denyUnlessDocumentBelongsToParent(Document $document, User|Vehicle|VehicleInsurance|VehicleInspection|Maintenance|Part $parent): ?JsonResponse
     {
         if ($document->isDeleted() || !$this->parents->belongsToParent($document, $parent)) {
             return $this->json(['message' => 'Document introuvable.'], Response::HTTP_NOT_FOUND);
@@ -178,11 +171,52 @@ final class DocumentController extends AbstractController
         return null;
     }
 
-    private function denyUnlessDocumentBelongsToParentOrThrow(Document $document, User|\App\Entity\Vehicle|\App\Entity\VehicleInsurance|\App\Entity\VehicleInspection|\App\Entity\Maintenance|Part $parent): void
+    private function denyUnlessDocumentBelongsToParentOrThrow(Document $document, User|Vehicle|VehicleInsurance|VehicleInspection|Maintenance|Part $parent): void
     {
         if ($document->isDeleted() || !$this->parents->belongsToParent($document, $parent)) {
             throw $this->createNotFoundException('Document introuvable.');
         }
+    }
+
+    private function validateUploadedFile(mixed $file): ?JsonResponse
+    {
+        $response = null;
+
+        if (!$file instanceof UploadedFile) {
+            $response = $this->json(['message' => 'Le fichier est obligatoire.'], Response::HTTP_UNPROCESSABLE_ENTITY);
+        } elseif ($file->getSize() !== false && $file->getSize() > self::MAX_FILE_SIZE) {
+            $response = $this->json(['message' => 'Fichier trop volumineux. Max 8 Mo.'], Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
+
+        return $response;
+    }
+
+    private function documentName(Request $request, UploadedFile $file): string
+    {
+        $name = trim((string) $request->request->get('name', ''));
+
+        return $name !== '' ? $name : (pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME) ?: 'Document');
+    }
+
+    private function validateAndApplyMetadata(Request $request, Document $document): ?JsonResponse
+    {
+        $payload = json_decode($request->getContent(), true);
+        $response = null;
+
+        if (!is_array($payload)) {
+            $response = $this->json(['message' => 'Invalid JSON payload'], Response::HTTP_BAD_REQUEST);
+        } else {
+            $name = trim((string) ($payload['name'] ?? ''));
+            if ($name === '') {
+                $response = $this->json(['message' => 'Le nom est obligatoire.'], Response::HTTP_UNPROCESSABLE_ENTITY);
+            } else {
+                $document
+                    ->setName($name)
+                    ->setDescription($this->nullableString($payload['description'] ?? null));
+            }
+        }
+
+        return $response;
     }
 
     private function buildDocumentFileResponse(Document $document, DocumentManager $documentManager, string $disposition): BinaryFileResponse
