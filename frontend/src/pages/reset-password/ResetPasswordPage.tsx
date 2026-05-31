@@ -4,7 +4,7 @@ import { Link, useNavigate, useParams } from "react-router-dom"
 import { resetPassword } from "@/api/reset-password"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
+import { PasswordInput } from "@/components/password-input"
 
 export default function ResetPasswordPage() {
   const navigate = useNavigate()
@@ -59,15 +59,13 @@ export default function ResetPasswordPage() {
 
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
-          <Input
-            type="password"
+          <PasswordInput
             placeholder="Nouveau mot de passe"
             value={password}
             onChange={(event) => setPassword(event.target.value)}
           />
 
-          <Input
-            type="password"
+          <PasswordInput
             placeholder="Confirmer le mot de passe"
             value={confirmPassword}
             onChange={(event) => setConfirmPassword(event.target.value)}

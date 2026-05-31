@@ -7,6 +7,7 @@ import { useAuthStore } from "@/stores/auth-store"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
+import { PasswordInput } from "@/components/password-input"
 
 export default function LoginPage() {
   const navigate = useNavigate()
@@ -65,8 +66,7 @@ export default function LoginPage() {
             onChange={(e) => setEmail(e.target.value)}
           />
 
-          <Input
-            type="password"
+          <PasswordInput
             placeholder="Mot de passe"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
