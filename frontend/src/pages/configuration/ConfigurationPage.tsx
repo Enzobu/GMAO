@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react"
-import type { FormEvent } from "react"
+import type { FormEvent, ReactNode } from "react"
 import { AxiosError } from "axios"
 import { Pencil, Plus, Search, Trash2 } from "lucide-react"
 
@@ -190,40 +190,7 @@ function InspectionCentersPanel() {
   }
 
   function renderItemsContent() {
-    if (isLoading) {
-      return <div className="text-sm text-muted-foreground">Chargement...</div>
-    }
-
-    if (items.length === 0) {
-      return <EmptyConfigurationState title="Aucun centre de contrôle technique" description="Créez un premier centre pour le proposer dans les contrôles techniques." />
-    }
-
-    if (filteredItems.length === 0) {
-      return <div className="rounded-lg border p-6 text-center text-sm text-muted-foreground">Aucun résultat pour cette recherche.</div>
-    }
-
-    return (
-      <div className="space-y-2">
-        {filteredItems.map((item) => (
-          <div key={item.id} className="rounded-lg border border-foreground/10 p-3">
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-              <div className="min-w-0">
-                <div className="flex flex-wrap items-center gap-2">
-                  <div className="font-medium">{item.name}</div>
-                  <StatusBadge isDeleted={item.isDeleted} />
-                </div>
-                <p className="mt-1 text-sm text-muted-foreground">{addressLabel(item.address)}</p>
-                <p className="mt-1 text-xs text-muted-foreground">{[item.phone, item.email].filter(Boolean).join(" - ") || "Aucun contact"}</p>
-              </div>
-
-              {!item.isDeleted && (
-                <ConfigurationItemActions onEdit={() => setFormItem(item)} onDelete={() => setDeleteItem(item)} />
-              )}
-            </div>
-          </div>
-        ))}
-      </div>
-    )
+    return <ConfigurationItemsList items={items} filteredItems={filteredItems} isLoading={isLoading} emptyTitle="Aucun centre de contrôle technique" emptyDescription="Créez un premier centre pour le proposer dans les contrôles techniques." renderDetails={inspectionCenterDetails} onEdit={setFormItem} onDelete={setDeleteItem} />
   }
 
   return (
@@ -375,39 +342,7 @@ function ConfigurationResourcePanel({ resource }: Readonly<{ resource: ResourceC
   }
 
   function renderItemsContent() {
-    if (isLoading) {
-      return <div className="text-sm text-muted-foreground">Chargement...</div>
-    }
-
-    if (items.length === 0) {
-      return <EmptyConfigurationState title={resource.emptyTitle} description={resource.emptyDescription} />
-    }
-
-    if (filteredItems.length === 0) {
-      return <div className="rounded-lg border p-6 text-center text-sm text-muted-foreground">Aucun résultat pour cette recherche.</div>
-    }
-
-    return (
-      <div className="space-y-2">
-        {filteredItems.map((item) => (
-          <div key={item.id} className="rounded-lg border border-foreground/10 p-3">
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-              <div className="min-w-0">
-                <div className="flex flex-wrap items-center gap-2">
-                  <div className="font-medium">{item.name}</div>
-                  <StatusBadge isDeleted={item.isDeleted} />
-                </div>
-                <p className="mt-1 text-sm text-muted-foreground">{item.description || "—"}</p>
-              </div>
-
-              {!item.isDeleted && (
-                <ConfigurationItemActions onEdit={() => setFormItem(item)} onDelete={() => setDeleteItem(item)} />
-              )}
-            </div>
-          </div>
-        ))}
-      </div>
-    )
+    return <ConfigurationItemsList items={items} filteredItems={filteredItems} isLoading={isLoading} emptyTitle={resource.emptyTitle} emptyDescription={resource.emptyDescription} renderDetails={configurationItemDetails} onEdit={setFormItem} onDelete={setDeleteItem} />
   }
 
   return (
@@ -636,6 +571,87 @@ function EmptyConfigurationState({ title, description }: Readonly<{ title: strin
       <div className="mt-1 text-sm text-muted-foreground">{description}</div>
     </div>
   )
+}
+
+function ConfigurationItemsList<T extends { id: number; name: string; isDeleted?: boolean }>({
+  items,
+  filteredItems,
+  isLoading,
+  emptyTitle,
+  emptyDescription,
+  renderDetails,
+  onEdit,
+  onDelete,
+}: Readonly<{
+  items: T[]
+  filteredItems: T[]
+  isLoading: boolean
+  emptyTitle: string
+  emptyDescription: string
+  renderDetails: (item: T) => ReactNode
+  onEdit: (item: T) => void
+  onDelete: (item: T) => void
+}>) {
+  if (isLoading) {
+    return <div className="text-sm text-muted-foreground">Chargement...</div>
+  }
+
+  if (items.length === 0) {
+    return <EmptyConfigurationState title={emptyTitle} description={emptyDescription} />
+  }
+
+  if (filteredItems.length === 0) {
+    return <div className="rounded-lg border p-6 text-center text-sm text-muted-foreground">Aucun résultat pour cette recherche.</div>
+  }
+
+  return (
+    <div className="space-y-2">
+      {filteredItems.map((item) => (
+        <ConfigurationListItem key={item.id} item={item} renderDetails={renderDetails} onEdit={onEdit} onDelete={onDelete} />
+      ))}
+    </div>
+  )
+}
+
+function ConfigurationListItem<T extends { name: string; isDeleted?: boolean }>({
+  item,
+  renderDetails,
+  onEdit,
+  onDelete,
+}: Readonly<{
+  item: T
+  renderDetails: (item: T) => ReactNode
+  onEdit: (item: T) => void
+  onDelete: (item: T) => void
+}>) {
+  return (
+    <div className="rounded-lg border border-foreground/10 p-3">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div className="min-w-0">
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="font-medium">{item.name}</div>
+            <StatusBadge isDeleted={item.isDeleted} />
+          </div>
+          {renderDetails(item)}
+        </div>
+
+        {!item.isDeleted && <ConfigurationItemActions onEdit={() => onEdit(item)} onDelete={() => onDelete(item)} />}
+      </div>
+    </div>
+  )
+}
+
+function inspectionCenterDetails(item: InspectionCenterConfigurationItem) {
+  return (
+    <>
+      <p className="mt-1 text-sm text-muted-foreground">{addressLabel(item.address)}</p>
+      <p className="mt-1 text-xs text-muted-foreground">{[item.phone, item.email].filter(Boolean).join(" - ") || "Aucun contact"}</p>
+    </>
+  )
+}
+
+function configurationItemDetails(item: ConfigurationItem) {
+  return <p className="mt-1 text-sm text-muted-foreground">{item.description || "—"}</p>
 }
 
 function StatusBadge({ isDeleted }: Readonly<{ isDeleted?: boolean }>) {
