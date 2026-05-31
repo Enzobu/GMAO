@@ -113,18 +113,14 @@ final class UserOwnedResourceExtensionTest extends TestCase
         $this->extension($security)->applyToItem($queryBuilder, $this->queryNameGenerator(), MaintenancePart::class, []);
     }
 
-    public function testVehicleInsuranceRestrictionJoinsThroughVehicle(): void
+    public function testVehicleInsuranceResourceOnlyGetsDeletedFilter(): void
     {
-        $user = new User();
-        $queryBuilder = $this->queryBuilder();
-        $queryBuilder->method('andWhere')->willReturnSelf();
-        $queryBuilder->method('setParameter')->willReturnSelf();
-        $queryBuilder->expects(self::once())->method('join')->with('d.vehicle', 'vehicle_1')->willReturnSelf();
-        $security = $this->createMock(Security::class);
-        $security->method('isGranted')->with('ROLE_ADMIN')->willReturn(false);
-        $security->method('getUser')->willReturn($user);
+        $this->assertCurrentUserResourceOnlyGetsDeletedFilter(VehicleInsurance::class);
+    }
 
-        $this->extension($security)->applyToCollection($queryBuilder, $this->queryNameGenerator(), VehicleInsurance::class);
+    public function testVehicleInspectionResourceOnlyGetsDeletedFilter(): void
+    {
+        $this->assertCurrentUserResourceOnlyGetsDeletedFilter(\App\Entity\VehicleInspection::class);
     }
 
     public function testVehicleResourceOnlyGetsDeletedFilterForCurrentUser(): void

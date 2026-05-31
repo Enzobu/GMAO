@@ -94,9 +94,9 @@ final readonly class UserOwnedResourceExtension implements QueryCollectionExtens
             User::class => null,
             Address::class => $this->restrictAddress($queryBuilder, $rootAlias, $user),
             Vehicle::class => null,
-            Maintenance::class => null,
+            Maintenance::class,
             VehicleInsurance::class,
-            VehicleInspection::class => $this->restrictThroughVehicle($queryBuilder, $queryNameGenerator, $rootAlias, $user),
+            VehicleInspection::class => null,
             MaintenancePart::class => $this->restrictMaintenancePart($queryBuilder, $queryNameGenerator, $rootAlias, $user),
             Part::class => null,
             Document::class => $this->restrictDocument($queryBuilder, $queryNameGenerator, $rootAlias, $user),
@@ -109,20 +109,6 @@ final readonly class UserOwnedResourceExtension implements QueryCollectionExtens
         $queryBuilder
             ->andWhere(sprintf('%s = :api_current_user_address', $rootAlias))
             ->setParameter('api_current_user_address', $user->getAddress());
-    }
-
-    private function restrictThroughVehicle(
-        QueryBuilder $queryBuilder,
-        QueryNameGeneratorInterface $queryNameGenerator,
-        string $rootAlias,
-        User $user,
-    ): void {
-        $vehicleAlias = $queryNameGenerator->generateJoinAlias('vehicle');
-
-        $queryBuilder
-            ->join(sprintf(self::VEHICLE_RELATION_PATH, $rootAlias), $vehicleAlias)
-            ->andWhere(sprintf('%s.user = :api_current_user', $vehicleAlias))
-            ->setParameter('api_current_user', $user);
     }
 
     private function restrictMaintenancePart(
