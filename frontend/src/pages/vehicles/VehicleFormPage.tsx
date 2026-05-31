@@ -223,7 +223,7 @@ export default function VehicleFormPage() {
           <CardContent className="grid gap-4 md:grid-cols-2">
             <Field label="Kilométrage" type="number" min="0" value={form.lastMileage} onChange={(value) => updateField("lastMileage", value)} required disabled={!canEdit || disableMileage} />
             <Field label="Date d’achat" type="date" min={MIN_INPUT_DATE} max={MAX_INPUT_DATE} value={form.purchaseDate} onChange={(value) => updateField("purchaseDate", value)} disabled={!canEdit} />
-            <Field label="Prix d’achat" type="number" step="0.01" value={form.purchasePrice} onChange={(value) => updateField("purchasePrice", value)} disabled={!canEdit} />
+            <Field label="Prix d’achat" type="number" min="0" step="0.01" value={form.purchasePrice} onChange={(value) => updateField("purchasePrice", value)} disabled={!canEdit} />
           </CardContent>
         </Card>
 

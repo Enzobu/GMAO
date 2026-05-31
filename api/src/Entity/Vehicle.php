@@ -109,6 +109,7 @@ class Vehicle
     private ?\DateTimeImmutable $purchaseDate = null;
 
     #[ORM\Column(type: Types::DECIMAL, precision: 10, scale: 2, nullable: true)]
+    #[Assert\PositiveOrZero(message: 'Le prix d’achat ne peut pas être négatif.')]
     #[Groups(['vehicle:read', 'vehicle:write'])]
     private ?string $purchasePrice = null;
 

@@ -65,6 +65,7 @@ export function GlobalSearch() {
       if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "k") {
         event.preventDefault()
         searchInputRef.current?.focus()
+        searchInputRef.current?.select()
         setIsOpen(true)
         void loadSearchData()
       }

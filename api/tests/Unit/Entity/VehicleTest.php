@@ -248,4 +248,16 @@ final class VehicleTest extends TestCase
         self::assertSame('lastMileage', $violations[0]->getPropertyPath());
         self::assertSame('Le kilométrage ne peut pas être négatif.', $violations[0]->getMessage());
     }
+
+    public function testPurchasePriceCannotBeNegative(): void
+    {
+        $violations = Validation::createValidatorBuilder()
+            ->enableAttributeMapping()
+            ->getValidator()
+            ->validate((new Vehicle())->setPurchasePrice('-1'));
+
+        self::assertCount(1, $violations);
+        self::assertSame('purchasePrice', $violations[0]->getPropertyPath());
+        self::assertSame('Le prix d’achat ne peut pas être négatif.', $violations[0]->getMessage());
+    }
 }
