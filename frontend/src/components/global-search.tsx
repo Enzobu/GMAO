@@ -13,6 +13,7 @@ import type { Part } from "@/types/part"
 import type { AppUser } from "@/types/user"
 import type { Vehicle } from "@/types/vehicle"
 import { formatDateTime, interventionStatusLabel, vehicleDisplayName } from "@/lib/intervention-utils"
+import { cn } from "@/lib/utils"
 
 type SearchCategory = "vehicle" | "intervention" | "part" | "user"
 
@@ -48,7 +49,7 @@ const categoryIcons = {
   user: User,
 }
 
-export function GlobalSearch() {
+export function GlobalSearch({ className }: Readonly<{ className?: string }>) {
   const navigate = useNavigate()
   const user = useAuthStore((state) => state.user)
   const isAdmin = user?.roles.includes("ROLE_ADMIN") ?? false
@@ -165,13 +166,13 @@ export function GlobalSearch() {
   const shouldShowDropdown = isOpen && (query.length > 0 || isLoading)
 
   return (
-    <div ref={containerRef} className="relative w-full max-w-lg">
+    <div ref={containerRef} className={cn("relative w-full min-w-0 max-w-lg", className)}>
       <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
       <Input
         ref={searchInputRef}
         value={query}
         placeholder="Rechercher..."
-        className="h-12 rounded-xl border-border bg-card pr-20 pl-10"
+        className="h-11 rounded-xl border-border bg-card pr-10 pl-10 sm:h-12 sm:pr-20"
         onFocus={() => {
           setIsOpen(true)
           void loadSearchData()
@@ -190,7 +191,7 @@ export function GlobalSearch() {
       </div>
 
       {shouldShowDropdown && (
-        <div className="absolute top-full right-0 left-0 z-50 mt-2 overflow-hidden rounded-xl border bg-popover text-popover-foreground shadow-xl">
+        <div className="absolute top-full right-0 left-0 z-50 mt-2 min-w-[min(22rem,calc(100vw-2rem))] overflow-hidden rounded-xl border bg-popover text-popover-foreground shadow-xl sm:min-w-0">
           {renderDropdownContent()}
         </div>
       )}

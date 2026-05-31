@@ -107,9 +107,9 @@ export default function DashboardPage() {
   ]
 
   return (
-    <div className="space-y-8">
-      <div>
-        <h1 className="text-4xl font-bold tracking-tight">
+    <div className="min-w-0 space-y-6 sm:space-y-8">
+      <div className="min-w-0">
+        <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">
           Dashboard
         </h1>
 
@@ -126,7 +126,7 @@ export default function DashboardPage() {
         </Card>
       )}
 
-      <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
+      <div className="grid min-w-0 gap-4 sm:gap-5 md:grid-cols-2 xl:grid-cols-4">
         {stats.map((stat) => {
           const Icon = stat.icon
 
@@ -136,7 +136,7 @@ export default function DashboardPage() {
               className="rounded-3xl border-border bg-card shadow-sm"
             >
               <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">
+                <CardTitle className="min-w-0 break-words text-sm font-medium text-muted-foreground">
                   {stat.title}
                 </CardTitle>
 
@@ -146,7 +146,7 @@ export default function DashboardPage() {
               </CardHeader>
 
               <CardContent>
-                <p className="text-4xl font-bold tracking-tight">
+                <p className="text-3xl font-bold tracking-tight sm:text-4xl">
                   {loading ? "..." : stat.value ?? 0}
                 </p>
 
@@ -226,7 +226,7 @@ function MaintenanceHistoryChart({ loading, data }: MaintenanceHistoryChartProps
   const hasMaintenance = data.some((item) => item.count > 0)
 
   return (
-    <Card className="rounded-3xl border-border bg-card shadow-sm">
+    <Card className="min-w-0 rounded-3xl border-border bg-card shadow-sm">
       <CardHeader>
         <div className="flex items-start justify-between gap-4">
           <div>
@@ -249,8 +249,8 @@ function MaintenanceHistoryChart({ loading, data }: MaintenanceHistoryChartProps
         {loading ? (
           <div className="h-80 animate-pulse rounded-2xl bg-muted/40" />
         ) : (
-          <div className="space-y-4">
-            <div className="h-80">
+          <div className="min-w-0 space-y-4">
+            <div className="h-72 min-w-0 sm:h-80">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={data} margin={{ top: 10, right: 8, left: -20, bottom: 0 }}>
                   <CartesianGrid
@@ -335,7 +335,7 @@ function DashboardListCard({
     )
   } else if (items.length > 0) {
     content = (
-      <div className="grid gap-3 xl:grid-cols-2">
+      <div className="grid min-w-0 gap-3 xl:grid-cols-2">
         {items.map((item, index) => {
           const Icon = itemIcons[item.type]
           const severityClassName = item.severity
@@ -345,9 +345,9 @@ function DashboardListCard({
           return (
             <div
               key={`${item.type}-${item.title}-${item.meta}-${index}`}
-              className="rounded-2xl border border-border bg-muted/20 p-4"
+              className="min-w-0 rounded-2xl border border-border bg-muted/20 p-4"
             >
-              <div className="flex items-start gap-4">
+              <div className="flex min-w-0 items-start gap-3 sm:gap-4">
                 <div className={[
                   "flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border",
                   showSeverity ? severityClassName : "border-border bg-primary/10 text-primary",
@@ -357,13 +357,13 @@ function DashboardListCard({
                 </div>
 
                 <div className="min-w-0 flex-1">
-                  <div className="flex flex-wrap items-center justify-between gap-2">
-                    <p className="font-medium">
+                  <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                    <p className="min-w-0 break-words font-medium">
                       {item.title}
                     </p>
 
                     <span className={[
-                      "rounded-full px-2.5 py-1 text-xs font-medium",
+                      "w-fit max-w-full break-words rounded-full px-2.5 py-1 text-xs font-medium",
                       showSeverity ? severityClassName : "bg-primary/10 text-primary",
                     ].join(" ")}
                     >
@@ -371,7 +371,7 @@ function DashboardListCard({
                     </span>
                   </div>
 
-                  <p className="mt-1 text-sm text-muted-foreground">
+                  <p className="mt-1 min-w-0 break-words text-sm text-muted-foreground">
                     {item.subtitle}
                   </p>
                 </div>
@@ -390,15 +390,15 @@ function DashboardListCard({
   }
 
   return (
-    <Card className="rounded-3xl border-border bg-card shadow-sm">
+    <Card className="min-w-0 rounded-3xl border-border bg-card shadow-sm">
       <CardHeader>
-        <div className="flex items-start justify-between gap-4">
-          <div>
+        <div className="flex min-w-0 items-start justify-between gap-4">
+          <div className="min-w-0">
             <CardTitle>
               {title}
             </CardTitle>
 
-            <p className="mt-2 text-sm text-muted-foreground">
+            <p className="mt-2 break-words text-sm text-muted-foreground">
               {description}
             </p>
           </div>
