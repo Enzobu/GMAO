@@ -195,12 +195,7 @@ function InspectionCentersPanel() {
     }
 
     if (items.length === 0) {
-      return (
-        <div className="rounded-lg border p-6 text-center">
-          <div className="font-medium">Aucun centre de contrôle technique</div>
-          <div className="mt-1 text-sm text-muted-foreground">Créez un premier centre pour le proposer dans les contrôles techniques.</div>
-        </div>
-      )
+      return <EmptyConfigurationState title="Aucun centre de contrôle technique" description="Créez un premier centre pour le proposer dans les contrôles techniques." />
     }
 
     if (filteredItems.length === 0) {
@@ -215,23 +210,14 @@ function InspectionCentersPanel() {
               <div className="min-w-0">
                 <div className="flex flex-wrap items-center gap-2">
                   <div className="font-medium">{item.name}</div>
-                  <Badge variant={item.isDeleted ? "outline" : "secondary"}>{item.isDeleted ? "Supprimé" : "Actif"}</Badge>
+                  <StatusBadge isDeleted={item.isDeleted} />
                 </div>
                 <p className="mt-1 text-sm text-muted-foreground">{addressLabel(item.address)}</p>
                 <p className="mt-1 text-xs text-muted-foreground">{[item.phone, item.email].filter(Boolean).join(" - ") || "Aucun contact"}</p>
               </div>
 
               {!item.isDeleted && (
-                <div className="flex shrink-0 justify-end gap-2">
-                  <Button variant="outline" size="sm" onClick={() => setFormItem(item)}>
-                    <Pencil />
-                    Modifier
-                  </Button>
-                  <Button variant="destructive" size="sm" onClick={() => setDeleteItem(item)}>
-                    <Trash2 />
-                    Supprimer
-                  </Button>
-                </div>
+                <ConfigurationItemActions onEdit={() => setFormItem(item)} onDelete={() => setDeleteItem(item)} />
               )}
             </div>
           </div>
@@ -249,31 +235,16 @@ function InspectionCentersPanel() {
             <p className="text-sm font-normal text-muted-foreground">Centres proposés lors de la saisie des contrôles techniques.</p>
           </div>
 
-          <Badge variant="outline" className="w-fit shrink-0">
-            {search ? `${filteredItems.length} / ${items.length}` : items.length} élément(s)
-          </Badge>
+          <ItemCountBadge search={search} filteredCount={filteredItems.length} totalCount={items.length} />
         </div>
       </AccordionTrigger>
 
       <AccordionContent>
         <Card className="overflow-visible rounded-none border-0 bg-transparent py-0 ring-0">
           <CardContent className="space-y-4 px-0">
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-              <label className="grid flex-1 gap-1.5 text-sm font-medium" htmlFor="inspection-center-search">
-                <span>Recherche</span>
-                <div className="relative min-w-0">
-                  <Search className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" />
-                  <Input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Nom, contact ou adresse..." className="pl-8" id="inspection-center-search" />
-                </div>
-              </label>
+            <ConfigurationSearchToolbar id="inspection-center-search" value={search} placeholder="Nom, contact ou adresse..." onSearchChange={setSearch} onAdd={() => setFormItem("new")} />
 
-              <Button onClick={() => setFormItem("new")}>
-                <Plus />
-                Ajouter
-              </Button>
-            </div>
-
-            {error && !formItem && !deleteItem && <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">{error}</div>}
+            <PanelError message={error} hidden={Boolean(formItem || deleteItem)} />
 
             {renderItemsContent()}
           </CardContent>
@@ -409,12 +380,7 @@ function ConfigurationResourcePanel({ resource }: Readonly<{ resource: ResourceC
     }
 
     if (items.length === 0) {
-      return (
-        <div className="rounded-lg border p-6 text-center">
-          <div className="font-medium">{resource.emptyTitle}</div>
-          <div className="mt-1 text-sm text-muted-foreground">{resource.emptyDescription}</div>
-        </div>
-      )
+      return <EmptyConfigurationState title={resource.emptyTitle} description={resource.emptyDescription} />
     }
 
     if (filteredItems.length === 0) {
@@ -429,22 +395,13 @@ function ConfigurationResourcePanel({ resource }: Readonly<{ resource: ResourceC
               <div className="min-w-0">
                 <div className="flex flex-wrap items-center gap-2">
                   <div className="font-medium">{item.name}</div>
-                  <Badge variant={item.isDeleted ? "outline" : "secondary"}>{item.isDeleted ? "Supprimé" : "Actif"}</Badge>
+                  <StatusBadge isDeleted={item.isDeleted} />
                 </div>
                 <p className="mt-1 text-sm text-muted-foreground">{item.description || "—"}</p>
               </div>
 
               {!item.isDeleted && (
-                <div className="flex shrink-0 justify-end gap-2">
-                  <Button variant="outline" size="sm" onClick={() => setFormItem(item)}>
-                    <Pencil />
-                    Modifier
-                  </Button>
-                  <Button variant="destructive" size="sm" onClick={() => setDeleteItem(item)}>
-                    <Trash2 />
-                    Supprimer
-                  </Button>
-                </div>
+                <ConfigurationItemActions onEdit={() => setFormItem(item)} onDelete={() => setDeleteItem(item)} />
               )}
             </div>
           </div>
@@ -462,31 +419,16 @@ function ConfigurationResourcePanel({ resource }: Readonly<{ resource: ResourceC
             <p className="text-sm font-normal text-muted-foreground">{resource.description}</p>
           </div>
 
-          <Badge variant="outline" className="w-fit shrink-0">
-            {search ? `${filteredItems.length} / ${items.length}` : items.length} élément(s)
-          </Badge>
+          <ItemCountBadge search={search} filteredCount={filteredItems.length} totalCount={items.length} />
         </div>
       </AccordionTrigger>
 
       <AccordionContent>
         <Card className="overflow-visible rounded-none border-0 bg-transparent py-0 ring-0">
           <CardContent className="space-y-4 px-0">
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-              <label className="grid flex-1 gap-1.5 text-sm font-medium" htmlFor="configuration-search">
-                <span>Recherche</span>
-                <div className="relative min-w-0">
-                  <Search className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" />
-                  <Input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Nom ou description..." className="pl-8" id="configuration-search" />
-                </div>
-              </label>
+            <ConfigurationSearchToolbar id={`configuration-search-${resource.kind}`} value={search} placeholder="Nom ou description..." onSearchChange={setSearch} onAdd={() => setFormItem("new")} />
 
-              <Button onClick={() => setFormItem("new")}>
-                <Plus />
-                Ajouter
-              </Button>
-            </div>
-
-            {error && !formItem && !deleteItem && <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">{error}</div>}
+            <PanelError message={error} hidden={Boolean(formItem || deleteItem)} />
 
             {renderItemsContent()}
           </CardContent>
@@ -685,6 +627,69 @@ function InspectionCenterFormDialog({ item, error, isSaving, onOpenChange, onSub
       </DialogContent>
     </Dialog>
   )
+}
+
+function EmptyConfigurationState({ title, description }: Readonly<{ title: string; description: string }>) {
+  return (
+    <div className="rounded-lg border p-6 text-center">
+      <div className="font-medium">{title}</div>
+      <div className="mt-1 text-sm text-muted-foreground">{description}</div>
+    </div>
+  )
+}
+
+function StatusBadge({ isDeleted }: Readonly<{ isDeleted?: boolean }>) {
+  return <Badge variant={isDeleted ? "outline" : "secondary"}>{isDeleted ? "Supprimé" : "Actif"}</Badge>
+}
+
+function ItemCountBadge({ search, filteredCount, totalCount }: Readonly<{ search: string; filteredCount: number; totalCount: number }>) {
+  return (
+    <Badge variant="outline" className="w-fit shrink-0">
+      {search ? `${filteredCount} / ${totalCount}` : totalCount} élément(s)
+    </Badge>
+  )
+}
+
+function ConfigurationItemActions({ onEdit, onDelete }: Readonly<{ onEdit: () => void; onDelete: () => void }>) {
+  return (
+    <div className="flex shrink-0 justify-end gap-2">
+      <Button variant="outline" size="sm" onClick={onEdit}>
+        <Pencil />
+        Modifier
+      </Button>
+      <Button variant="destructive" size="sm" onClick={onDelete}>
+        <Trash2 />
+        Supprimer
+      </Button>
+    </div>
+  )
+}
+
+function ConfigurationSearchToolbar({ id, value, placeholder, onSearchChange, onAdd }: Readonly<{ id: string; value: string; placeholder: string; onSearchChange: (value: string) => void; onAdd: () => void }>) {
+  return (
+    <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+      <label className="grid flex-1 gap-1.5 text-sm font-medium" htmlFor={id}>
+        <span>Recherche</span>
+        <div className="relative min-w-0">
+          <Search className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" />
+          <Input value={value} onChange={(event) => onSearchChange(event.target.value)} placeholder={placeholder} className="pl-8" id={id} />
+        </div>
+      </label>
+
+      <Button onClick={onAdd}>
+        <Plus />
+        Ajouter
+      </Button>
+    </div>
+  )
+}
+
+function PanelError({ message, hidden }: Readonly<{ message: string | null; hidden: boolean }>) {
+  if (!message || hidden) {
+    return null
+  }
+
+  return <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">{message}</div>
 }
 
 function upsertById<T extends { id: number }>(items: T[], item: T) {
