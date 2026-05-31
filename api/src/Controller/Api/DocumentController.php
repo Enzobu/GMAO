@@ -195,7 +195,13 @@ final class DocumentController extends AbstractController
     {
         $name = trim((string) $request->request->get('name', ''));
 
-        return $name !== '' ? $name : (pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME) ?: 'Document');
+        if ($name !== '') {
+            return $name;
+        }
+
+        $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
+
+        return $originalName ?: 'Document';
     }
 
     private function validateAndApplyMetadata(Request $request, Document $document): ?JsonResponse
