@@ -5,11 +5,17 @@ namespace App\Tests\Unit\Controller\Api;
 use App\Controller\Api\ProfileController;
 use App\Entity\Address;
 use App\Entity\User;
+use App\Service\CurrentUserProvider;
+use App\Service\ProfilePasswordResetService;
+use App\Service\ProfilePayloadValidator;
+use App\Service\ProfileService;
+use App\Service\UserProfileSerializer;
 use App\Tests\Unit\Controller\ControllerTestContainer;
 use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\Mime\RawMessage;
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
@@ -22,9 +28,7 @@ final class ProfileControllerTest extends TestCase
 {
     public function testShowReturnsUnauthenticated(): void
     {
-        $response = $this->controller(null)->show();
-
-        self::assertSame(401, $response->getStatusCode());
+        $this->assertHttpExceptionStatus(401, fn () => $this->controller(null)->show());
     }
 
     public function testShowReturnsCurrentProfile(): void
@@ -44,23 +48,17 @@ final class ProfileControllerTest extends TestCase
 
     public function testUpdateRejectsInvalidJson(): void
     {
-        $response = $this->controller(new User())->update(new Request(content: '{invalid'));
-
-        self::assertSame(400, $response->getStatusCode());
+        $this->assertHttpExceptionStatus(400, fn () => $this->controller(new User())->update(new Request(content: '{invalid')));
     }
 
     public function testUpdateReturnsUnauthenticated(): void
     {
-        $response = $this->controller(null)->update(new Request(content: json_encode([])));
-
-        self::assertSame(401, $response->getStatusCode());
+        $this->assertHttpExceptionStatus(401, fn () => $this->controller(null)->update(new Request(content: json_encode([]))));
     }
 
     public function testUpdateRejectsMissingNames(): void
     {
-        $response = $this->controller(new User())->update(new Request(content: json_encode(['firstname' => '', 'lastname' => ''])));
-
-        self::assertSame(422, $response->getStatusCode());
+        $this->assertHttpExceptionStatus(422, fn () => $this->controller(new User())->update(new Request(content: json_encode(['firstname' => '', 'lastname' => '']))));
     }
 
     public function testUpdatePersistsProfileAndAddress(): void
@@ -90,7 +88,7 @@ final class ProfileControllerTest extends TestCase
 
     public function testUpdateRejectsIncompleteAddress(): void
     {
-        $response = $this->controller(new User())->update(new Request(content: json_encode([
+        $this->assertHttpExceptionStatus(422, fn () => $this->controller(new User())->update(new Request(content: json_encode([
             'firstname' => 'Jane',
             'lastname' => 'Doe',
             'address' => [
@@ -99,9 +97,7 @@ final class ProfileControllerTest extends TestCase
                 'city' => 'Paris',
                 'country' => 'France',
             ],
-        ])));
-
-        self::assertSame(422, $response->getStatusCode());
+        ]))));
     }
 
     public function testUpdateReusesExistingAddressAndKeepsLine2(): void
@@ -130,12 +126,10 @@ final class ProfileControllerTest extends TestCase
 
     public function testRequestPasswordResetReturnsUnauthenticated(): void
     {
-        $response = $this->controller(null)->requestPasswordReset(
+        $this->assertHttpExceptionStatus(401, fn () => $this->controller(null)->requestPasswordReset(
             $this->createMock(ResetPasswordHelperInterface::class),
             $this->createMock(MailerInterface::class),
-        );
-
-        self::assertSame(401, $response->getStatusCode());
+        ));
     }
 
     public function testRequestPasswordResetSendsEmail(): void
@@ -180,9 +174,18 @@ final class ProfileControllerTest extends TestCase
 
     private function controller(?User $user, ?EntityManagerInterface $em = null, string $frontendUrl = 'https://front.example'): ProfileController
     {
-        $controller = new ProfileController($em ?? $this->createMock(EntityManagerInterface::class));
         $parameterBag = $this->createMock(ParameterBagInterface::class);
         $parameterBag->method('get')->with('frontend_url')->willReturn($frontendUrl);
+        $currentUser = new CurrentUserProvider($this->tokenStorage($user));
+        $controller = new ProfileController(
+            new ProfileService(
+                $currentUser,
+                new ProfilePayloadValidator(),
+                new UserProfileSerializer(),
+                $em ?? $this->createMock(EntityManagerInterface::class),
+            ),
+            new ProfilePasswordResetService($currentUser, $parameterBag),
+        );
         $controller->setContainer(new ControllerTestContainer([
             'security.token_storage' => $this->tokenStorage($user),
             'parameter_bag' => $parameterBag,
@@ -199,5 +202,18 @@ final class ProfileControllerTest extends TestCase
         $storage->method('getToken')->willReturn($token);
 
         return $storage;
+    }
+
+    private function assertHttpExceptionStatus(int $statusCode, callable $callback): void
+    {
+        try {
+            $callback();
+        } catch (HttpExceptionInterface $exception) {
+            self::assertSame($statusCode, $exception->getStatusCode());
+
+            return;
+        }
+
+        self::fail(sprintf('Expected HTTP exception with status %d.', $statusCode));
     }
 }

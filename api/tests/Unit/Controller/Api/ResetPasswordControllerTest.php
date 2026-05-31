@@ -4,10 +4,12 @@ namespace App\Tests\Unit\Controller\Api;
 
 use App\Controller\Api\ResetPasswordController;
 use App\Entity\User;
+use App\Service\PasswordResetService;
 use App\Tests\Unit\Controller\ControllerTestContainer;
 use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use SymfonyCasts\Bundle\ResetPassword\Exception\ResetPasswordExceptionInterface;
 use SymfonyCasts\Bundle\ResetPassword\ResetPasswordHelperInterface;
@@ -16,26 +18,22 @@ final class ResetPasswordControllerTest extends TestCase
 {
     public function testRejectsInvalidJson(): void
     {
-        $response = $this->controller()->reset(
+        $this->assertHttpExceptionStatus(400, fn () => $this->controller()->reset(
             'token',
             new Request(content: '{invalid'),
             $this->createMock(ResetPasswordHelperInterface::class),
             $this->createMock(UserPasswordHasherInterface::class),
-        );
-
-        self::assertSame(400, $response->getStatusCode());
+        ));
     }
 
     public function testRejectsTooShortPassword(): void
     {
-        $response = $this->controller()->reset(
+        $this->assertHttpExceptionStatus(422, fn () => $this->controller()->reset(
             'token',
             new Request(content: json_encode(['password' => 'short'])),
             $this->createMock(ResetPasswordHelperInterface::class),
             $this->createMock(UserPasswordHasherInterface::class),
-        );
-
-        self::assertSame(422, $response->getStatusCode());
+        ));
     }
 
     public function testRejectsInvalidToken(): void
@@ -48,14 +46,12 @@ final class ResetPasswordControllerTest extends TestCase
             }
         });
 
-        $response = $this->controller()->reset(
+        $this->assertHttpExceptionStatus(400, fn () => $this->controller()->reset(
             'token',
             new Request(content: json_encode(['password' => 'long-enough'])),
             $helper,
             $this->createMock(UserPasswordHasherInterface::class),
-        );
-
-        self::assertSame(400, $response->getStatusCode());
+        ));
     }
 
     public function testRejectsTokenForUnknownUser(): void
@@ -64,26 +60,22 @@ final class ResetPasswordControllerTest extends TestCase
         $helper->method('validateTokenAndFetchUser')->with('token')->willReturn(new \stdClass());
         $helper->expects(self::never())->method('removeResetRequest');
 
-        $response = $this->controller()->reset(
+        $this->assertHttpExceptionStatus(404, fn () => $this->controller()->reset(
             'token',
             new Request(content: json_encode(['password' => 'long-enough'])),
             $helper,
             $this->createMock(UserPasswordHasherInterface::class),
-        );
-
-        self::assertSame(404, $response->getStatusCode());
+        ));
     }
 
     public function testRejectsMissingPassword(): void
     {
-        $response = $this->controller()->reset(
+        $this->assertHttpExceptionStatus(422, fn () => $this->controller()->reset(
             'token',
             new Request(content: json_encode([])),
             $this->createMock(ResetPasswordHelperInterface::class),
             $this->createMock(UserPasswordHasherInterface::class),
-        );
-
-        self::assertSame(422, $response->getStatusCode());
+        ));
     }
 
     public function testResetsUserPassword(): void
@@ -110,9 +102,22 @@ final class ResetPasswordControllerTest extends TestCase
 
     private function controller(?EntityManagerInterface $em = null): ResetPasswordController
     {
-        $controller = new ResetPasswordController($em ?? $this->createMock(EntityManagerInterface::class));
+        $controller = new ResetPasswordController(new PasswordResetService($em ?? $this->createMock(EntityManagerInterface::class)));
         $controller->setContainer(new ControllerTestContainer([]));
 
         return $controller;
+    }
+
+    private function assertHttpExceptionStatus(int $statusCode, callable $callback): void
+    {
+        try {
+            $callback();
+        } catch (HttpExceptionInterface $exception) {
+            self::assertSame($statusCode, $exception->getStatusCode());
+
+            return;
+        }
+
+        self::fail(sprintf('Expected HTTP exception with status %d.', $statusCode));
     }
 }

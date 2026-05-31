@@ -4,8 +4,11 @@ namespace App\Tests\Unit\Controller\Api;
 
 use App\Controller\Api\MeController;
 use App\Entity\User;
+use App\Service\CurrentUserProvider;
+use App\Service\CurrentUserSerializer;
 use App\Tests\Unit\Controller\ControllerTestContainer;
 use PHPUnit\Framework\TestCase;
+use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 
@@ -13,15 +16,7 @@ final class MeControllerTest extends TestCase
 {
     public function testReturnsUnauthenticatedWhenNoUserIsAvailable(): void
     {
-        $controller = new MeController();
-        $controller->setContainer(new ControllerTestContainer([
-            'security.token_storage' => $this->tokenStorage(null),
-        ]));
-
-        $response = $controller();
-
-        self::assertSame(401, $response->getStatusCode());
-        self::assertSame(['message' => 'Unauthenticated'], json_decode($response->getContent(), true));
+        $this->assertHttpExceptionStatus(401, fn () => $this->controller(null)());
     }
 
     public function testReturnsCurrentUserPayload(): void
@@ -31,10 +26,7 @@ final class MeControllerTest extends TestCase
             ->setFirstname('Jane')
             ->setLastname('Doe')
             ->setRoles(['ROLE_ADMIN']);
-        $controller = new MeController();
-        $controller->setContainer(new ControllerTestContainer([
-            'security.token_storage' => $this->tokenStorage($user),
-        ]));
+        $controller = $this->controller($user);
 
         $response = $controller();
         $payload = json_decode($response->getContent(), true);
@@ -53,5 +45,26 @@ final class MeControllerTest extends TestCase
         $storage->method('getToken')->willReturn($token);
 
         return $storage;
+    }
+
+    private function controller(?User $user): MeController
+    {
+        $controller = new MeController(new CurrentUserProvider($this->tokenStorage($user)), new CurrentUserSerializer());
+        $controller->setContainer(new ControllerTestContainer([]));
+
+        return $controller;
+    }
+
+    private function assertHttpExceptionStatus(int $statusCode, callable $callback): void
+    {
+        try {
+            $callback();
+        } catch (HttpExceptionInterface $exception) {
+            self::assertSame($statusCode, $exception->getStatusCode());
+
+            return;
+        }
+
+        self::fail(sprintf('Expected HTTP exception with status %d.', $statusCode));
     }
 }

@@ -9,6 +9,7 @@ use App\Entity\User;
 use App\Entity\Vehicle;
 use App\Entity\VehicleInspection;
 use App\Entity\VehicleInsurance;
+use App\Service\DashboardService;
 use App\Tests\Unit\Controller\ControllerTestContainer;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Query;
@@ -24,7 +25,7 @@ final class DashboardControllerTest extends TestCase
     {
         $storage = $this->createMock(TokenStorageInterface::class);
         $storage->method('getToken')->willReturn(null);
-        $controller = new DashboardController($this->createMock(EntityManagerInterface::class));
+        $controller = new DashboardController(new DashboardService($this->createMock(EntityManagerInterface::class), $this->authorizationChecker(false)));
         $controller->setContainer(new ControllerTestContainer(['security.token_storage' => $storage]));
 
         $response = $controller();
@@ -186,7 +187,7 @@ final class DashboardControllerTest extends TestCase
 
     private function controller(User $user, EntityManagerInterface $entityManager, bool $isAdmin = false): DashboardController
     {
-        $controller = new DashboardController($entityManager);
+        $controller = new DashboardController(new DashboardService($entityManager, $this->authorizationChecker($isAdmin)));
         $controller->setContainer(new ControllerTestContainer([
             'security.token_storage' => $this->tokenStorage($user),
             'security.authorization_checker' => $this->authorizationChecker($isAdmin),
