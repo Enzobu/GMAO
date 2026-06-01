@@ -12,6 +12,7 @@ import { createVehicle, getUsers, getVehicle, updateVehicle } from "@/api/vehicl
 import { useAuthStore } from "@/stores/auth-store"
 import type { Vehicle, VehiclePayload, VehicleUser } from "@/types/vehicle"
 import { MIN_INPUT_DATE, MAX_INPUT_DATE } from "@/lib/date-limits"
+import { capitalizeFirstLetter } from "@/lib/text-format"
 import {
   VEHICLE_COLORS,
   VEHICLE_FUEL_TYPES,
@@ -183,10 +184,10 @@ export default function VehicleFormPage() {
             <CardTitle>Identité</CardTitle>
           </CardHeader>
           <CardContent className="grid gap-4 md:grid-cols-2">
-            <Field label="Nom" value={form.name} onChange={(value) => updateField("name", value)} required disabled={!canEdit} />
+            <Field label="Nom" value={form.name} onChange={(value) => updateField("name", capitalizeFirstLetter(value))} required disabled={!canEdit} />
             <Field label="Immatriculation" value={form.registration} maxLength={REGISTRATION_MAX_LENGTH} onChange={updateRegistration} required disabled={!canEdit} />
-            <Field label="Marque" value={form.brand} onChange={(value) => updateField("brand", value)} required disabled={!canEdit} />
-            <Field label="Modèle" value={form.model} onChange={(value) => updateField("model", value)} required disabled={!canEdit} />
+            <Field label="Marque" value={form.brand} onChange={(value) => updateField("brand", capitalizeFirstLetter(value))} required disabled={!canEdit} />
+            <Field label="Modèle" value={form.model} onChange={(value) => updateField("model", capitalizeFirstLetter(value))} required disabled={!canEdit} />
             <SelectField label="Type" value={form.type} options={VEHICLE_TYPES} onChange={(value) => updateField("type", value)} disabled={!canEdit} />
             <SelectField label="Statut" value={form.status} options={VEHICLE_STATUSES} onChange={(value) => updateField("status", value)} required disabled={!canEdit} />
             {isAdmin && (
@@ -256,10 +257,10 @@ function SelectField({ label, value, options, onChange, required = false, disabl
 
 function vehicleToForm(vehicle: Vehicle): VehicleFormState {
   return {
-    name: vehicle.name ?? "",
+    name: capitalizeFirstLetter(vehicle.name),
     registration: vehicle.registration ?? "",
-    brand: vehicle.brand ?? "",
-    model: vehicle.model ?? "",
+    brand: capitalizeFirstLetter(vehicle.brand),
+    model: capitalizeFirstLetter(vehicle.model),
     type: vehicle.type ?? "",
     year: vehicle.year ? String(vehicle.year) : "",
     vin: vehicle.vin ?? "",
@@ -302,7 +303,7 @@ function formToPayload(form: VehicleFormState, isAdmin: boolean): VehiclePayload
 }
 
 function userLabel(user: VehicleUser) {
-  const name = `${user.firstname ?? ""} ${user.lastname ?? ""}`.trim()
+  const name = `${capitalizeFirstLetter(user.firstname)} ${capitalizeFirstLetter(user.lastname)}`.trim()
 
   return name ? `${name} - ${user.email}` : user.email
 }

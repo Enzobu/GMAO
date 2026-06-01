@@ -1,7 +1,8 @@
 import type { AppUser } from "@/types/user"
+import { capitalizeFirstLetter } from "@/lib/text-format"
 
 export function userDisplayName(user: AppUser) {
-  return `${capitalize(user.firstname)} ${user.lastname?.toUpperCase() ?? ""}`.trim() || user.email
+  return `${capitalizeFirstLetter(user.firstname)} ${capitalizeFirstLetter(user.lastname)}`.trim() || user.email
 }
 
 export function userInitials(user: AppUser) {
@@ -16,8 +17,4 @@ export function roleLabel(role: string) {
   if (role === "ROLE_ADMIN") return "Administrateur"
   if (role === "ROLE_USER") return "Utilisateur"
   return role
-}
-
-function capitalize(value?: string | null) {
-  return value ? value.charAt(0).toUpperCase() + value.slice(1) : ""
 }

@@ -1,6 +1,7 @@
 import type { ReactNode } from "react"
 
 import { Badge } from "@/components/ui/badge"
+import { capitalizeFirstLetter } from "@/lib/text-format"
 import type { Vehicle } from "@/types/vehicle"
 
 export { PageHeader as VehicleEventHeader } from "@/components/page-primitives"
@@ -33,7 +34,7 @@ export function vehicleDescription(vehicle: Vehicle | null) {
     return "Véhicule"
   }
 
-  return `${vehicle.brand} ${vehicle.model} - ${vehicle.registration}`
+  return `${capitalizeFirstLetter(vehicle.brand)} ${capitalizeFirstLetter(vehicle.model)} - ${vehicle.registration}`
 }
 
 export function canEditVehicle(vehicle: Vehicle | null, userId?: number, isAdmin = false) {

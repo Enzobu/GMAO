@@ -20,6 +20,7 @@ import {
   vehicleOption,
 } from "@/lib/vehicle-labels"
 import { INSPECTION_RESULTS, isInsuranceActive, optionLabel, PAYMENT_FREQUENCIES } from "@/lib/vehicle-events"
+import { capitalizeFirstLetter, displayValue } from "@/lib/text-format"
 
 export default function VehicleDetailPage() {
   const { id } = useParams()
@@ -151,9 +152,9 @@ export default function VehicleDetailPage() {
         <h2 className="text-lg font-semibold">Informations générales</h2>
         <div className="grid gap-4 xl:grid-cols-2">
           <InfoCard title="Identité" rows={[
-            ["Nom", capitalize(vehicle.name)],
-            ["Marque", capitalize(vehicle.brand)],
-            ["Modèle", capitalize(vehicle.model)],
+            ["Nom", displayValue(vehicle.name)],
+            ["Marque", displayValue(vehicle.brand)],
+            ["Modèle", displayValue(vehicle.model)],
             ["Immatriculation", vehicle.registration.toUpperCase()],
             ["Type", labelFor(VEHICLE_TYPES, vehicle.type)],
             ["Statut", labelFor(VEHICLE_STATUSES, vehicle.status)],
@@ -401,17 +402,13 @@ function labelFor(collection: readonly { value: string; label: string }[], value
 }
 
 function displayVehicleName(vehicle: Vehicle) {
-  return vehicle.name || `${vehicle.brand} ${vehicle.model}`.trim()
+  return capitalizeFirstLetter(vehicle.name) || `${capitalizeFirstLetter(vehicle.brand)} ${capitalizeFirstLetter(vehicle.model)}`.trim()
 }
 
 function userLabel(user: Vehicle["user"]) {
-  const name = `${user.firstname ?? ""} ${user.lastname ?? ""}`.trim()
+  const name = `${capitalizeFirstLetter(user.firstname)} ${capitalizeFirstLetter(user.lastname)}`.trim()
 
   return name || user.email
-}
-
-function capitalize(value: string) {
-  return value ? value.charAt(0).toUpperCase() + value.slice(1) : "—"
 }
 
 function formatDate(value?: string | null) {

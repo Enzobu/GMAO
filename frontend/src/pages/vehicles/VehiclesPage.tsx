@@ -13,6 +13,7 @@ import { PaginationControls } from "@/components/ui/pagination-controls"
 import { useLocalStorageState } from "@/hooks/use-local-storage-state"
 import { useAuthStore } from "@/stores/auth-store"
 import type { Vehicle } from "@/types/vehicle"
+import { capitalizeFirstLetter } from "@/lib/text-format"
 import {
   VEHICLE_COLORS,
   VEHICLE_FUEL_TYPES,
@@ -407,7 +408,7 @@ function VehicleBadge({ collection, value }: Readonly<{ collection: readonly { v
 }
 
 function displayVehicleName(vehicle: Vehicle) {
-  return vehicle.name || `${vehicle.brand} ${vehicle.model}`.trim()
+  return capitalizeFirstLetter(vehicle.name) || `${capitalizeFirstLetter(vehicle.brand)} ${capitalizeFirstLetter(vehicle.model)}`.trim()
 }
 
 function canEditVehicle(vehicle: Vehicle, currentUserId: number | undefined, isAdmin: boolean) {

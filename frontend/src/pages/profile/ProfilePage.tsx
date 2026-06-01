@@ -8,6 +8,7 @@ import {
   updateProfile,
 } from "@/api/profile"
 import { useAuthStore } from "@/stores/auth-store"
+import { capitalizeFirstLetter } from "@/lib/text-format"
 import type { Profile, UpdateProfilePayload } from "@/types/profile"
 
 import { DocumentsPanel } from "@/components/documents-panel"
@@ -58,8 +59,8 @@ export default function ProfilePage() {
         if (isMounted) {
           setProfile(data)
           setForm({
-            firstname: data.firstname,
-            lastname: data.lastname,
+            firstname: capitalizeFirstLetter(data.firstname),
+            lastname: capitalizeFirstLetter(data.lastname),
             address: data.address,
           })
         }
@@ -165,7 +166,7 @@ export default function ProfilePage() {
                     disabled={loading || saving}
                     onChange={(event) => setForm((current) => ({
                       ...current,
-                      firstname: event.target.value,
+                      firstname: capitalizeFirstLetter(event.target.value),
                     }))}
                   />
                 </Field>
@@ -177,7 +178,7 @@ export default function ProfilePage() {
                     disabled={loading || saving}
                     onChange={(event) => setForm((current) => ({
                       ...current,
-                      lastname: event.target.value,
+                      lastname: capitalizeFirstLetter(event.target.value),
                     }))}
                   />
                 </Field>

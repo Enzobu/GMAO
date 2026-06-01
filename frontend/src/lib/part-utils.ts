@@ -1,12 +1,13 @@
 import type { Part } from "@/types/part"
 import type { Vehicle } from "@/types/vehicle"
+import { capitalizeFirstLetter } from "@/lib/text-format"
 
 export function partName(part: Part) {
   return part.partType?.name ?? `Pièce #${part.id}`
 }
 
 export function vehicleDisplayName(vehicle: Vehicle) {
-  return vehicle.name || `${vehicle.brand} ${vehicle.model}`.trim() || `Véhicule #${vehicle.id}`
+  return capitalizeFirstLetter(vehicle.name) || `${capitalizeFirstLetter(vehicle.brand)} ${capitalizeFirstLetter(vehicle.model)}`.trim() || `Véhicule #${vehicle.id}`
 }
 
 export function stockStatus(quantity: number) {

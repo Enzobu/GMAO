@@ -13,6 +13,7 @@ import type { Part } from "@/types/part"
 import type { AppUser } from "@/types/user"
 import type { Vehicle } from "@/types/vehicle"
 import { formatDateTime, interventionStatusLabel, vehicleDisplayName } from "@/lib/intervention-utils"
+import { capitalizeFirstLetter } from "@/lib/text-format"
 import { cn } from "@/lib/utils"
 
 type SearchCategory = "vehicle" | "intervention" | "part" | "user"
@@ -239,7 +240,7 @@ function buildResults(data: SearchData): SearchResult[] {
 
 function vehicleResult(vehicle: Vehicle): SearchResult {
   const title = vehicleDisplayName(vehicle)
-  const description = `${vehicle.registration.toUpperCase()} - ${[vehicle.brand, vehicle.model].filter(Boolean).join(" ")}`
+  const description = `${vehicle.registration.toUpperCase()} - ${[capitalizeFirstLetter(vehicle.brand), capitalizeFirstLetter(vehicle.model)].filter(Boolean).join(" ")}`
 
   return {
     id: `vehicle-${vehicle.id}`,
@@ -304,7 +305,7 @@ function groupResults(results: SearchResult[]): [SearchCategory, SearchResult[]]
 }
 
 function userLabel(user: AppUser) {
-  return `${user.firstname ?? ""} ${user.lastname ?? ""}`.trim() || user.email
+  return `${capitalizeFirstLetter(user.firstname)} ${capitalizeFirstLetter(user.lastname)}`.trim() || user.email
 }
 
 function isVisible(item: { isDeleted?: boolean; deleted?: boolean }) {

@@ -1,5 +1,6 @@
 import type { Intervention, InterventionStatus } from "@/types/intervention"
 import type { Vehicle } from "@/types/vehicle"
+import { capitalizeFirstLetter } from "@/lib/text-format"
 
 export const INTERVENTION_STATUSES: { value: InterventionStatus; label: string; variant: "destructive" | "outline" | "secondary" }[] = [
   { value: "todo", label: "À faire", variant: "destructive" },
@@ -31,7 +32,7 @@ export function formatNumber(value?: number | null) {
 }
 
 export function vehicleDisplayName(vehicle: Vehicle) {
-  return vehicle.name || `${vehicle.brand} ${vehicle.model}`.trim() || vehicle.registration
+  return capitalizeFirstLetter(vehicle.name) || `${capitalizeFirstLetter(vehicle.brand)} ${capitalizeFirstLetter(vehicle.model)}`.trim() || vehicle.registration
 }
 
 export function latestIntervention(interventions?: Intervention[]) {

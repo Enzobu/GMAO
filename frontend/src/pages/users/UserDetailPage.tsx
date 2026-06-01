@@ -11,6 +11,7 @@ import { ConfirmDialog } from "@/components/ui/confirm-dialog"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { useAuthStore } from "@/stores/auth-store"
 import type { AppUser } from "@/types/user"
+import { displayValue } from "@/lib/text-format"
 import { userDisplayName } from "@/lib/user-utils"
 import { ReadOnlyBadge, RoleBadges } from "@/pages/users/UsersPage"
 
@@ -85,7 +86,7 @@ export default function UserDetailPage() {
       {error && <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive">{error}</div>}
 
       <div className="grid gap-4 xl:grid-cols-2">
-        <Card><CardHeader><CardTitle>Informations</CardTitle></CardHeader><CardContent className="grid gap-3 md:grid-cols-2"><Metric label="Email" value={user.email} /><Metric label="ID" value={String(user.id)} /><Metric label="Prénom" value={user.firstname || "—"} /><Metric label="Nom" value={user.lastname || "—"} /></CardContent></Card>
+        <Card><CardHeader><CardTitle>Informations</CardTitle></CardHeader><CardContent className="grid gap-3 md:grid-cols-2"><Metric label="Email" value={user.email} /><Metric label="ID" value={String(user.id)} /><Metric label="Prénom" value={displayValue(user.firstname)} /><Metric label="Nom" value={displayValue(user.lastname)} /></CardContent></Card>
         <Card><CardHeader><CardTitle>Adresse</CardTitle></CardHeader><CardContent className="grid gap-3 md:grid-cols-2"><Metric label="Adresse" value={user.address?.line1 || "—"} /><Metric label="Complément" value={user.address?.line2 || "—"} /><Metric label="Code postal" value={user.address?.postalCode || "—"} /><Metric label="Ville" value={user.address?.city || "—"} /><Metric label="Pays" value={user.address?.country || "—"} /></CardContent></Card>
       </div>
 
