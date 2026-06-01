@@ -11,7 +11,7 @@ services:
             - MARIADB_PASSWORD=${MARIADB_PASSWORD}
             - MARIADB_DATABASE=${MARIADB_DATABASE}
         volumes:
-            - ./database_data:/var/lib/mysql
+            - /etc/dokploy_volumes/GMAO/database_data:/var/lib/mysql
         networks:
             - project_network
         expose:
@@ -43,8 +43,8 @@ services:
         depends_on:
             - database
         volumes:
-          - ./api/var/storage/documents:/var/www/var/storage/documents
-          - ./api/config/jwt:/var/www/config/jwt
+          - /etc/dokploy_volumes/GMAO/api/storage/documents:/var/www/var/storage/documents
+          - /etc/dokploy_volumes/GMAO/api/config/jwt:/var/www/config/jwt
         environment:
             APP_ENV: prod
             DOCKER_PROJECT_NAME: ${DOCKER_PROJECT_NAME}
