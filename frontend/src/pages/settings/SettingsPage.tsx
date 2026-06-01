@@ -11,6 +11,12 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 
+const paletteCardClassName = [
+  "group rounded-3xl border bg-card p-4 text-left transition-all",
+  "hover:-translate-y-0.5 hover:border-primary/70 hover:shadow-md",
+  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+]
+
 export default function SettingsPage() {
   const palette = usePaletteStore((state) => state.palette)
   const setPalette = usePaletteStore((state) => state.setPalette)
@@ -36,9 +42,10 @@ export default function SettingsPage() {
 
         <CardContent className="space-y-6">
           <p className="max-w-2xl text-sm text-muted-foreground">
-            La palette pilote les éléments actifs, les boutons primaires, les états de survol,
-            les icônes mises en avant et les couleurs de focus. Elle fonctionne avec les modes
-            clair, sombre et système.
+            La palette pilote les éléments actifs, les boutons primaires,
+            les états de survol, les icônes mises en avant et les couleurs
+            de focus. Elle fonctionne avec les modes clair, sombre et
+            système.
           </p>
 
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
@@ -50,7 +57,7 @@ export default function SettingsPage() {
                   key={item.name}
                   type="button"
                   className={[
-                    "group rounded-3xl border bg-card p-4 text-left transition-all hover:-translate-y-0.5 hover:border-primary/70 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                    ...paletteCardClassName,
                     isSelected ? "border-primary shadow-sm" : "border-border",
                   ].join(" ")}
                   onClick={() => setPalette(item.name)}
@@ -58,7 +65,11 @@ export default function SettingsPage() {
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex items-center gap-3">
                       <span
-                        className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl text-primary-foreground shadow-sm"
+                        className={[
+                          "flex h-11 w-11 shrink-0 items-center",
+                          "justify-center rounded-2xl text-primary-foreground",
+                          "shadow-sm",
+                        ].join(" ")}
                         style={{ backgroundColor: item.preview }}
                       >
                         {isSelected && <Check className="h-5 w-5" />}
@@ -103,7 +114,9 @@ export default function SettingsPage() {
             </div>
 
             <div className="grid gap-3 md:grid-cols-3">
-              <div className="rounded-2xl bg-primary p-4 text-primary-foreground">
+              <div
+                className="rounded-2xl bg-primary p-4 text-primary-foreground"
+              >
                 Élément actif
               </div>
 

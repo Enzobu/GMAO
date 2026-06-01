@@ -19,13 +19,13 @@ import PartFormPage from "@/pages/parts/PartFormPage"
 import UsersPage from "@/pages/users/UsersPage"
 import UserDetailPage from "@/pages/users/UserDetailPage"
 import UserFormPage from "@/pages/users/UserFormPage"
-import VehicleInsuranceDetailPage from "@/pages/vehicle-events/VehicleInsuranceDetailPage"
-import VehicleInsuranceFormPage from "@/pages/vehicle-events/VehicleInsuranceFormPage"
+import InsuranceDetail from "@/pages/vehicle-events/VehicleInsuranceDetailPage"
+import InsuranceForm from "@/pages/vehicle-events/VehicleInsuranceFormPage"
 import VehicleInsurancesPage from "@/pages/vehicle-events/VehicleInsurancesPage"
-import VehicleInspectionDetailPage from "@/pages/vehicle-events/VehicleInspectionDetailPage"
-import VehicleInspectionFormPage from "@/pages/vehicle-events/VehicleInspectionFormPage"
-import VehicleInspectionsPage from "@/pages/vehicle-events/VehicleInspectionsPage"
-import InterventionDetailPage from "@/pages/interventions/InterventionDetailPage"
+import InspectDetail from "@/pages/vehicle-events/VehicleInspectionDetailPage"
+import InspectionForm from "@/pages/vehicle-events/VehicleInspectionFormPage"
+import InspectionsPage from "@/pages/vehicle-events/VehicleInspectionsPage"
+import InterventionDetail from "@/pages/interventions/InterventionDetailPage"
 import InterventionFormPage from "@/pages/interventions/InterventionFormPage"
 import InterventionsPage from "@/pages/interventions/InterventionsPage"
 
@@ -90,31 +90,31 @@ export const router = createBrowserRouter([
           },
           {
             path: "/vehicles/:vehicleId/insurances/new",
-            element: <VehicleInsuranceFormPage />,
+            element: <InsuranceForm />,
           },
           {
             path: "/vehicles/:vehicleId/insurances/:insuranceId",
-            element: <VehicleInsuranceDetailPage />,
+            element: <InsuranceDetail />,
           },
           {
             path: "/vehicles/:vehicleId/insurances/:insuranceId/edit",
-            element: <VehicleInsuranceFormPage />,
+            element: <InsuranceForm />,
           },
           {
             path: "/vehicles/:vehicleId/inspections",
-            element: <VehicleInspectionsPage />,
+            element: <InspectionsPage />,
           },
           {
             path: "/vehicles/:vehicleId/inspections/new",
-            element: <VehicleInspectionFormPage />,
+            element: <InspectionForm />,
           },
           {
             path: "/vehicles/:vehicleId/inspections/:inspectionId",
-            element: <VehicleInspectionDetailPage />,
+            element: <InspectDetail />,
           },
           {
             path: "/vehicles/:vehicleId/inspections/:inspectionId/edit",
-            element: <VehicleInspectionFormPage />,
+            element: <InspectionForm />,
           },
           {
             path: "/vehicles/:vehicleId/interventions",
@@ -126,7 +126,7 @@ export const router = createBrowserRouter([
           },
           {
             path: "/vehicles/:vehicleId/interventions/:interventionId",
-            element: <InterventionDetailPage vehicleScoped />,
+            element: <InterventionDetail vehicleScoped />,
           },
           {
             path: "/vehicles/:vehicleId/interventions/:interventionId/edit",
@@ -138,7 +138,7 @@ export const router = createBrowserRouter([
           },
           {
             path: "/interventions/:id",
-            element: <InterventionDetailPage />,
+            element: <InterventionDetail />,
           },
           {
             path: "/configuration",

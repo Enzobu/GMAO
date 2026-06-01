@@ -5,22 +5,46 @@ import { useNavigate, useParams } from "react-router-dom"
 import { Plus, Trash2 } from "lucide-react"
 
 import { getMaintenanceTypes } from "@/api/configuration"
-import { createIntervention, getIntervention, updateIntervention } from "@/api/interventions"
+import {
+  createIntervention,
+  getIntervention,
+  updateIntervention,
+} from "@/api/interventions"
 import { getParts } from "@/api/parts"
 import { getVehicle } from "@/api/vehicles"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 import { NativeSelect } from "@/components/ui/native-select"
 import { Textarea } from "@/components/ui/textarea"
 import { useAuthStore } from "@/stores/auth-store"
 import type { ConfigurationItem } from "@/types/configuration"
-import type { Intervention, InterventionPayload, InterventionStatus } from "@/types/intervention"
+import type {
+  Intervention,
+  InterventionPayload,
+  InterventionStatus,
+} from "@/types/intervention"
 import type { Part } from "@/types/part"
 import type { Vehicle } from "@/types/vehicle"
 import { MIN_INPUT_DATETIME, MAX_INPUT_DATETIME } from "@/lib/date-limits"
-import { INTERVENTION_STATUSES, vehicleDisplayName } from "@/lib/intervention-utils"
-import { ErrorMessage, Field, InterventionFormActions, InterventionHeader, MileageWarningDialog } from "./components"
+import {
+  INTERVENTION_STATUSES,
+  vehicleDisplayName,
+} from "@/lib/intervention-utils"
+import {
+  ErrorMessage,
+  Field,
+  InterventionFormActions,
+  InterventionHeader,
+  MileageWarningDialog,
+} from "./components"
 
 const emptyForm = {
   maintenanceTypeId: "",
@@ -67,12 +91,15 @@ export default function InterventionFormPage() {
     async function load() {
       if (!vehicleId) return
       try {
-        const [vehicleData, interventionData, typeData, partData] = await Promise.all([
-          getVehicle(vehicleId),
-          interventionId ? getIntervention(interventionId) : Promise.resolve(null),
-          getMaintenanceTypes(),
-          getParts(),
-        ])
+        const [vehicleData, interventionData, typeData, partData] =
+          await Promise.all([
+            getVehicle(vehicleId),
+            interventionId
+              ? getIntervention(interventionId)
+              : Promise.resolve(null),
+            getMaintenanceTypes(),
+            getParts(),
+          ])
         if (ignore) return
         setVehicle(vehicleData)
         setIntervention(interventionData)
@@ -81,7 +108,10 @@ export default function InterventionFormPage() {
         if (interventionData) {
           setForm(interventionToForm(interventionData))
         } else if (typeData[0]) {
-          setForm((current) => ({ ...current, maintenanceTypeId: String(typeData[0].id) }))
+          setForm((current) => ({
+            ...current,
+            maintenanceTypeId: String(typeData[0].id),
+          }))
         }
       } catch {
         if (!ignore) setError("Impossible de charger le formulaire.")
@@ -91,13 +121,24 @@ export default function InterventionFormPage() {
     }
 
     load()
-    return () => { ignore = true }
+    return () => {
+      ignore = true
+    }
   }, [vehicleId, interventionId])
 
-  const canEdit = useMemo(() => isAdmin || vehicle?.user.id === user?.id, [isAdmin, vehicle?.user.id, user?.id])
+  const canEdit = useMemo(
+    () => isAdmin || vehicle?.user.id === user?.id,
+    [isAdmin, vehicle?.user.id, user?.id],
+  )
   const isCompleted = form.status === "completed"
-  const canEditStartDate = form.status === "in_progress" || form.status === "completed"
-  const compatibleParts = useMemo(() => vehicle ? parts.filter((part) => isPartCompatibleWithVehicle(part, vehicle.id)) : [], [parts, vehicle])
+  const canEditStartDate =
+    form.status === "in_progress" || form.status === "completed"
+  const compatibleParts = useMemo(
+    () => vehicle
+      ? parts.filter((part) => isPartCompatibleWithVehicle(part, vehicle.id))
+      : [],
+    [parts, vehicle],
+  )
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -123,11 +164,21 @@ export default function InterventionFormPage() {
       return
     }
     if (form.parts.some((line) => !line.partId)) {
-      setError("Sélectionnez une pièce pour chaque ligne de pièces utilisées.")
+      setError(
+        "Sélectionnez une pièce pour chaque ligne de pièces utilisées.",
+      )
       return
     }
-    if (form.parts.some((line) => !compatibleParts.some((part) => String(part.id) === line.partId))) {
-      setError("Une pièce sélectionnée n’est pas compatible avec ce véhicule.")
+    if (
+      form.parts.some(
+        (line) => !compatibleParts.some(
+          (part) => String(part.id) === line.partId,
+        ),
+      )
+    ) {
+      setError(
+        "Une pièce sélectionnée n’est pas compatible avec ce véhicule.",
+      )
       return
     }
 
@@ -152,10 +203,17 @@ export default function InterventionFormPage() {
   }
 
   function shouldAskStockRestore() {
-    return Boolean(intervention?.finishedAt && (!isCompleted || !form.finishedAt) && intervention.maintenanceParts?.length)
+    return Boolean(
+      intervention?.finishedAt
+        && (!isCompleted || !form.finishedAt)
+        && intervention.maintenanceParts?.length,
+    )
   }
 
-  function updateField<K extends keyof typeof emptyForm>(field: K, value: (typeof emptyForm)[K]) {
+  function updateField<K extends keyof typeof emptyForm>(
+    field: K,
+    value: (typeof emptyForm)[K],
+  ) {
     setForm((current) => ({ ...current, [field]: value }))
   }
 
@@ -163,7 +221,9 @@ export default function InterventionFormPage() {
     setForm((current) => ({
       ...current,
       status,
-      startedAt: status === "in_progress" || status === "completed" ? current.startedAt : "",
+      startedAt: status === "in_progress" || status === "completed"
+        ? current.startedAt
+        : "",
       finishedAt: status === "completed" ? current.finishedAt : "",
       mileage: status === "completed" ? current.mileage : "",
     }))
@@ -172,20 +232,47 @@ export default function InterventionFormPage() {
   function addPartLine() {
     setForm((current) => ({
       ...current,
-      parts: [...current.parts, { partId: compatibleParts[0] ? String(compatibleParts[0].id) : "", quantity: "1", notes: "" }],
+      parts: [
+        ...current.parts,
+        {
+          partId: compatibleParts[0]
+            ? String(compatibleParts[0].id)
+            : "",
+          quantity: "1",
+          notes: "",
+        },
+      ],
     }))
   }
 
   function updatePartLine(index: number, line: InterventionPartForm) {
-    setForm((current) => ({ ...current, parts: current.parts.map((item, itemIndex) => itemIndex === index ? line : item) }))
+    setForm((current) => ({
+      ...current,
+      parts: current.parts.map((item, itemIndex) => itemIndex === index
+        ? line
+        : item,
+      ),
+    }))
   }
 
   function removePartLine(index: number) {
-    setForm((current) => ({ ...current, parts: current.parts.filter((_, itemIndex) => itemIndex !== index) }))
+    setForm((current) => ({
+      ...current,
+      parts: current.parts.filter((_, itemIndex) => itemIndex !== index),
+    }))
   }
 
-  if (isLoading) return <div className="text-sm text-muted-foreground">Chargement du formulaire...</div>
-  if (error && isEditing && !intervention) return <ErrorMessage>{error}</ErrorMessage>
+  if (isLoading) {
+    return (
+      <div className="text-sm text-muted-foreground">
+        Chargement du formulaire...
+      </div>
+    )
+  }
+
+  if (error && isEditing && !intervention) {
+    return <ErrorMessage>{error}</ErrorMessage>
+  }
 
   return (
     <div className="space-y-6">
@@ -193,7 +280,10 @@ export default function InterventionFormPage() {
         open={restoreDialogOpen}
         isLoading={isSaving}
         onOpenChange={setRestoreDialogOpen}
-        onConfirm={() => { setRestoreDialogOpen(false); void save(false) }}
+        onConfirm={() => {
+          setRestoreDialogOpen(false)
+          void save(false)
+        }}
       />
       <MileageWarningDialog
         open={mileageDialogOpen}
@@ -201,27 +291,47 @@ export default function InterventionFormPage() {
         isAdmin={isAdmin}
         isLoading={isSaving}
         onOpenChange={setMileageDialogOpen}
-        onForce={() => { setMileageDialogOpen(false); void save(true) }}
+        onForce={() => {
+          setMileageDialogOpen(false)
+          void save(true)
+        }}
       />
 
       <InterventionHeader
-        title={isEditing ? "Modifier l’intervention" : "Ajouter une intervention"}
+        title={isEditing
+          ? "Modifier l’intervention"
+          : "Ajouter une intervention"}
         description={vehicle ? vehicleDisplayName(vehicle) : undefined}
-        backTo={interventionId ? `/vehicles/${vehicleId}/interventions/${interventionId}` : `/vehicles/${vehicleId}/interventions`}
+        backTo={interventionId
+          ? `/vehicles/${vehicleId}/interventions/${interventionId}`
+          : `/vehicles/${vehicleId}/interventions`}
       />
 
-      {!canEdit && <ErrorMessage>Vous pouvez consulter cette intervention, mais seul le propriétaire ou un administrateur peut la modifier.</ErrorMessage>}
+      {!canEdit && (
+        <ErrorMessage>
+          Vous pouvez consulter cette intervention, mais seul le propriétaire
+          ou un administrateur peut la modifier.
+        </ErrorMessage>
+      )}
       {error && <ErrorMessage>{error}</ErrorMessage>}
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <Card>
-          <CardHeader><CardTitle>Informations</CardTitle></CardHeader>
+          <CardHeader>
+            <CardTitle>Informations</CardTitle>
+          </CardHeader>
           <CardContent className="grid gap-4 md:grid-cols-2">
             <NativeSelect
               label="Type"
               value={form.maintenanceTypeId}
-              options={types.map((type) => ({ value: String(type.id), label: type.name }))}
-              onChange={(event) => updateField("maintenanceTypeId", event.target.value)}
+              options={types.map((type) => ({
+                value: String(type.id),
+                label: type.name,
+              }))}
+              onChange={(event) => updateField(
+                "maintenanceTypeId",
+                event.target.value,
+              )}
               required
               disabled={!canEdit}
             />
@@ -229,7 +339,9 @@ export default function InterventionFormPage() {
               label="Statut"
               value={form.status}
               options={INTERVENTION_STATUSES}
-              onChange={(event) => updateStatus(event.target.value as InterventionStatus)}
+              onChange={(event) => updateStatus(
+                event.target.value as InterventionStatus,
+              )}
               required
               disabled={!canEdit}
             />
@@ -246,17 +358,64 @@ export default function InterventionFormPage() {
               label="Mode"
               value={form.isExternal}
               options={MODE_OPTIONS}
-              onChange={(event) => updateField("isExternal", event.target.value)}
+              onChange={(event) => updateField(
+                "isExternal",
+                event.target.value,
+              )}
               disabled={!canEdit}
             />
-            <Field label="Date prévue" type="datetime-local" min={MIN_INPUT_DATETIME} max={MAX_INPUT_DATETIME} value={form.plannedAt} onChange={(value) => updateField("plannedAt", value)} disabled={!canEdit} />
-            <Field label="Date de début" type="datetime-local" min={MIN_INPUT_DATETIME} max={MAX_INPUT_DATETIME} value={form.startedAt} onChange={(value) => updateField("startedAt", value)} disabled={!canEdit || !canEditStartDate} />
-            <Field label="Date de fin" type="datetime-local" min={MIN_INPUT_DATETIME} max={MAX_INPUT_DATETIME} value={form.finishedAt} onChange={(value) => updateField("finishedAt", value)} disabled={!canEdit || !isCompleted} required={isCompleted} />
-            <Field label="Prochaine échéance km" type="number" min="0" value={form.nextDueMileage} onChange={(value) => updateField("nextDueMileage", value)} disabled={!canEdit} />
-            <Field label="Prochaine échéance date" type="datetime-local" min={MIN_INPUT_DATETIME} max={MAX_INPUT_DATETIME} value={form.nextDueAt} onChange={(value) => updateField("nextDueAt", value)} disabled={!canEdit} />
+            <Field
+              label="Date prévue"
+              type="datetime-local"
+              min={MIN_INPUT_DATETIME}
+              max={MAX_INPUT_DATETIME}
+              value={form.plannedAt}
+              onChange={(value) => updateField("plannedAt", value)}
+              disabled={!canEdit}
+            />
+            <Field
+              label="Date de début"
+              type="datetime-local"
+              min={MIN_INPUT_DATETIME}
+              max={MAX_INPUT_DATETIME}
+              value={form.startedAt}
+              onChange={(value) => updateField("startedAt", value)}
+              disabled={!canEdit || !canEditStartDate}
+            />
+            <Field
+              label="Date de fin"
+              type="datetime-local"
+              min={MIN_INPUT_DATETIME}
+              max={MAX_INPUT_DATETIME}
+              value={form.finishedAt}
+              onChange={(value) => updateField("finishedAt", value)}
+              disabled={!canEdit || !isCompleted}
+              required={isCompleted}
+            />
+            <Field
+              label="Prochaine échéance km"
+              type="number"
+              min="0"
+              value={form.nextDueMileage}
+              onChange={(value) => updateField("nextDueMileage", value)}
+              disabled={!canEdit}
+            />
+            <Field
+              label="Prochaine échéance date"
+              type="datetime-local"
+              min={MIN_INPUT_DATETIME}
+              max={MAX_INPUT_DATETIME}
+              value={form.nextDueAt}
+              onChange={(value) => updateField("nextDueAt", value)}
+              disabled={!canEdit}
+            />
             <label className="grid gap-1.5 text-sm font-medium md:col-span-2">
               <span>Notes</span>
-              <Textarea value={form.notes} onChange={(event) => updateField("notes", event.target.value)} disabled={!canEdit} />
+              <Textarea
+                value={form.notes}
+                onChange={(event) => updateField("notes", event.target.value)}
+                disabled={!canEdit}
+              />
             </label>
           </CardContent>
         </Card>
@@ -264,21 +423,46 @@ export default function InterventionFormPage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle>Pièces utilisées</CardTitle>
-            <Button type="button" variant="outline" size="sm" onClick={addPartLine} disabled={!canEdit || compatibleParts.length === 0}>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={addPartLine}
+              disabled={!canEdit || compatibleParts.length === 0}
+            >
               <Plus />
               Ajouter
             </Button>
           </CardHeader>
           <CardContent className="space-y-3">
-            {compatibleParts.length === 0 && <div className="text-sm text-destructive">Aucune pièce compatible avec ce véhicule.</div>}
-            {form.parts.length === 0 && <div className="text-sm text-muted-foreground">Aucune pièce ajoutée.</div>}
+            {compatibleParts.length === 0 && (
+              <div className="text-sm text-destructive">
+                Aucune pièce compatible avec ce véhicule.
+              </div>
+            )}
+            {form.parts.length === 0 && (
+              <div className="text-sm text-muted-foreground">
+                Aucune pièce ajoutée.
+              </div>
+            )}
             {form.parts.map((line, index) => (
-              <div key={`${line.id ?? "new"}-${index}`} className="grid gap-3 rounded-lg border p-3 md:grid-cols-[1fr_8rem_auto]">
+              <div
+                key={`${line.id ?? "new"}-${index}`}
+                className={
+                  "grid gap-3 rounded-lg border p-3 "
+                    + "md:grid-cols-[1fr_8rem_auto]"
+                }
+              >
                 <NativeSelect
                   label="Pièce"
                   value={line.partId}
-                  options={partOptions(partsForLine(compatibleParts, parts, line.partId))}
-                  onChange={(event) => updatePartLine(index, { ...line, partId: event.target.value })}
+                  options={partOptions(
+                    partsForLine(compatibleParts, parts, line.partId),
+                  )}
+                  onChange={(event) => updatePartLine(index, {
+                    ...line,
+                    partId: event.target.value,
+                  })}
                   required
                   disabled={!canEdit}
                 />
@@ -287,18 +471,32 @@ export default function InterventionFormPage() {
                   type="number"
                   min="1"
                   value={line.quantity}
-                  onChange={(value) => updatePartLine(index, { ...line, quantity: value })}
+                  onChange={(value) => updatePartLine(index, {
+                    ...line,
+                    quantity: value,
+                  })}
                   required
                   disabled={!canEdit}
                 />
-                <Button type="button" variant="destructive" className="self-end" onClick={() => removePartLine(index)} disabled={!canEdit}><Trash2 />Retirer</Button>
+                <Button
+                  type="button"
+                  variant="destructive"
+                  className="self-end"
+                  onClick={() => removePartLine(index)}
+                  disabled={!canEdit}
+                >
+                  <Trash2 />
+                  Retirer
+                </Button>
               </div>
             ))}
           </CardContent>
         </Card>
 
         <InterventionFormActions
-          cancelTo={interventionId ? `/vehicles/${vehicleId}/interventions/${interventionId}` : `/vehicles/${vehicleId}/interventions`}
+          cancelTo={interventionId
+            ? `/vehicles/${vehicleId}/interventions/${interventionId}`
+            : `/vehicles/${vehicleId}/interventions`}
           canEdit={canEdit}
           isSaving={isSaving}
         />
@@ -317,7 +515,9 @@ function interventionToForm(intervention: Intervention) {
     status: intervention.status,
     isExternal: String(Boolean(intervention.isExternal)),
     notes: intervention.notes ?? "",
-    nextDueMileage: intervention.nextDueMileage == null ? "" : String(intervention.nextDueMileage),
+    nextDueMileage: intervention.nextDueMileage == null
+      ? ""
+      : String(intervention.nextDueMileage),
     nextDueAt: dateTimeInput(intervention.nextDueAt),
     parts: intervention.maintenanceParts?.map((line) => ({
       id: line.id,
@@ -328,14 +528,23 @@ function interventionToForm(intervention: Intervention) {
   }
 }
 
-function formToPayload(form: typeof emptyForm, vehicleId: string): InterventionPayload {
+function formToPayload(
+  form: typeof emptyForm,
+  vehicleId: string,
+): InterventionPayload {
   return {
     vehicle: `/api/vehicles/${vehicleId}`,
     maintenanceType: `/api/maintenance_types/${form.maintenanceTypeId}`,
-    mileage: form.status === "completed" && form.mileage ? Number(form.mileage) : null,
+    mileage: form.status === "completed" && form.mileage
+      ? Number(form.mileage)
+      : null,
     plannedAt: toApiDateTime(form.plannedAt),
-    startedAt: form.status === "in_progress" || form.status === "completed" ? toApiDateTime(form.startedAt) : null,
-    finishedAt: form.status === "completed" ? toApiDateTime(form.finishedAt) : null,
+    startedAt: form.status === "in_progress" || form.status === "completed"
+      ? toApiDateTime(form.startedAt)
+      : null,
+    finishedAt: form.status === "completed"
+      ? toApiDateTime(form.finishedAt)
+      : null,
     status: form.status,
     isExternal: form.isExternal === "true",
     notes: form.notes || null,
@@ -356,7 +565,11 @@ function dateTimeInput(value?: string | null) {
   return value ? value.slice(0, 16) : ""
 }
 
-function partId(part: Intervention["maintenanceParts"] extends (infer T)[] | undefined ? T extends { part: infer P } ? P : never : never) {
+function partId(
+  part: Intervention["maintenanceParts"] extends (infer T)[] | undefined
+    ? T extends { part: infer P } ? P : never
+    : never,
+) {
   if (typeof part === "string") {
     return part.split("/").findLast(Boolean) ?? ""
   }
@@ -370,26 +583,44 @@ function toApiDateTime(value: string) {
 
 function errorMessage(error: unknown) {
   if (isAxiosError(error)) {
-    const data = error.response?.data as { detail?: string; description?: string; message?: string } | undefined
-    return data?.detail ?? data?.description ?? data?.message ?? "Impossible d’enregistrer l’intervention."
+    const data = error.response?.data as
+      | { detail?: string; description?: string; message?: string }
+      | undefined
+
+    return data?.detail
+      ?? data?.description
+      ?? data?.message
+      ?? "Impossible d’enregistrer l’intervention."
   }
   return "Impossible d’enregistrer l’intervention."
 }
 
 function partOptions(parts: Part[]) {
-  return parts.map((part) => ({ value: String(part.id), label: `${part.partType.name} ・ stock ${part.quantity}` }))
+  return parts.map((part) => ({
+    value: String(part.id),
+    label: `${part.partType.name} ・ stock ${part.quantity}`,
+  }))
 }
 
 function isPartCompatibleWithVehicle(part: Part, vehicleId: number) {
   return part.vehicles.some((vehicle) => vehicle.id === vehicleId)
 }
 
-function partsForLine(compatibleParts: Part[], allParts: Part[], selectedPartId: string) {
-  if (!selectedPartId || compatibleParts.some((part) => String(part.id) === selectedPartId)) {
+function partsForLine(
+  compatibleParts: Part[],
+  allParts: Part[],
+  selectedPartId: string,
+) {
+  if (
+    !selectedPartId
+      || compatibleParts.some((part) => String(part.id) === selectedPartId)
+  ) {
     return compatibleParts
   }
 
-  const selectedPart = allParts.find((part) => String(part.id) === selectedPartId)
+  const selectedPart = allParts.find(
+    (part) => String(part.id) === selectedPartId,
+  )
   return selectedPart ? [selectedPart, ...compatibleParts] : compatibleParts
 }
 
@@ -410,12 +641,21 @@ function StockRestoreDialog({
         <DialogHeader>
           <DialogTitle>Restaurer les pièces en stock ?</DialogTitle>
           <DialogDescription>
-            Vous retirez la date de réalisation. Les pièces consommées par cette intervention seront restaurées en stock.
+            Vous retirez la date de réalisation. Les pièces consommées par
+            cette intervention seront restaurées en stock.
           </DialogDescription>
         </DialogHeader>
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isLoading}>Annuler</Button>
-          <Button onClick={onConfirm} disabled={isLoading}>{isLoading ? "Enregistrement..." : "Confirmer"}</Button>
+          <Button
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+            disabled={isLoading}
+          >
+            Annuler
+          </Button>
+          <Button onClick={onConfirm} disabled={isLoading}>
+            {isLoading ? "Enregistrement..." : "Confirmer"}
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

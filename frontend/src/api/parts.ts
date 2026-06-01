@@ -37,7 +37,10 @@ export async function updatePart(id: string | number, payload: PartPayload) {
   return response.data
 }
 
-export async function updatePartQuantity(id: string | number, quantity: number) {
+export async function updatePartQuantity(
+  id: string | number,
+  quantity: number,
+) {
   const response = await api.patch<Part>(`/parts/${id}`, { quantity }, {
     headers: { "Content-Type": "application/merge-patch+json" },
   })

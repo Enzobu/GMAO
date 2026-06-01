@@ -3,14 +3,17 @@ import type { ComponentProps, FormEvent } from "react"
 import { Link, useNavigate, useParams } from "react-router-dom"
 import { ArrowLeft, Save } from "lucide-react"
 
+import {
+  createVehicle,
+  getUsers,
+  getVehicle,
+  updateVehicle,
+} from "@/api/vehicles"
+import { LabelText } from "@/components/page-primitives"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { NativeSelect } from "@/components/ui/native-select"
-import { LabelText } from "@/components/page-primitives"
-import { createVehicle, getUsers, getVehicle, updateVehicle } from "@/api/vehicles"
-import { useAuthStore } from "@/stores/auth-store"
-import type { Vehicle, VehiclePayload, VehicleUser } from "@/types/vehicle"
 import { MIN_INPUT_DATE, MAX_INPUT_DATE } from "@/lib/date-limits"
 import { capitalizeFirstLetter } from "@/lib/text-format"
 import {
@@ -20,6 +23,8 @@ import {
   VEHICLE_TRANSMISSIONS,
   VEHICLE_TYPES,
 } from "@/lib/vehicle-labels"
+import { useAuthStore } from "@/stores/auth-store"
+import type { Vehicle, VehiclePayload, VehicleUser } from "@/types/vehicle"
 
 const emptyForm = {
   name: "",
@@ -44,6 +49,26 @@ const VIN_MAX_LENGTH = 17
 const REGISTRATION_MAX_LENGTH = 9
 const MIN_VEHICLE_YEAR = 1800
 const MAX_VEHICLE_YEAR = 2100
+
+const ERROR_CLASS = [
+  "rounded-lg border border-destructive/30 bg-destructive/10 p-4",
+  "text-sm text-destructive",
+].join(" ")
+
+const WARNING_CLASS = [
+  "rounded-lg border border-amber-500/30 bg-amber-500/10 p-4",
+  "text-sm text-amber-700 dark:text-amber-300",
+].join(" ")
+
+const PAGE_HEADER_CLASS = [
+  "flex flex-col gap-3 sm:flex-row sm:items-start",
+  "sm:justify-between",
+].join(" ")
+
+const SAVE_ERROR = [
+  "Impossible d’enregistrer le véhicule.",
+  "Vérifiez les champs saisis.",
+].join(" ")
 
 type VehicleFormState = typeof emptyForm
 
@@ -120,11 +145,13 @@ export default function VehicleFormPage() {
 
     try {
       const payload = formToPayload(form, isAdmin)
-      const saved = id ? await updateVehicle(id, payload) : await createVehicle(payload)
+      const saved = id
+        ? await updateVehicle(id, payload)
+        : await createVehicle(payload)
 
       navigate(`/vehicles/${saved.id}`)
     } catch {
-      setError("Impossible d’enregistrer le véhicule. Vérifiez les champs saisis.")
+      setError(SAVE_ERROR)
     } finally {
       setIsSaving(false)
     }
@@ -132,6 +159,13 @@ export default function VehicleFormPage() {
 
   function updateField(field: keyof VehicleFormState, value: string) {
     setForm((current) => ({ ...current, [field]: value }))
+  }
+
+  function updateCapitalizedField(
+    field: keyof VehicleFormState,
+    value: string,
+  ) {
+    updateField(field, capitalizeFirstLetter(value))
   }
 
   function updateRegistration(value: string) {
@@ -143,40 +177,29 @@ export default function VehicleFormPage() {
   }
 
   if (isLoading) {
-    return <div className="text-sm text-muted-foreground">Chargement du véhicule...</div>
+    return (
+      <div className="text-sm text-muted-foreground">
+        Chargement du véhicule...
+      </div>
+    )
   }
 
   if (error && isEditing && !vehicle) {
-    return <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive">{error}</div>
+    return <ErrorMessage>{error}</ErrorMessage>
   }
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">
-            {isEditing ? "Modifier le véhicule" : "Ajouter un véhicule"}
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            {isEditing ? "Mettez à jour les informations du véhicule." : "Créez un nouveau véhicule dans le parc."}
-          </p>
-        </div>
-
-        <Button variant="outline" asChild>
-          <Link to={id ? `/vehicles/${id}` : "/vehicles"}>
-            <ArrowLeft />
-            Retour
-          </Link>
-        </Button>
-      </div>
+      <PageHeader isEditing={isEditing} id={id} />
 
       {!canEdit && (
-        <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-4 text-sm text-amber-700 dark:text-amber-300">
-          Vous pouvez consulter ce véhicule, mais seul son propriétaire ou un administrateur peut le modifier.
+        <div className={WARNING_CLASS}>
+          Vous pouvez consulter ce véhicule, mais seul son propriétaire ou un
+          administrateur peut le modifier.
         </div>
       )}
 
-      {error && <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive">{error}</div>}
+      {error && <ErrorMessage>{error}</ErrorMessage>}
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <Card>
@@ -184,17 +207,55 @@ export default function VehicleFormPage() {
             <CardTitle>Identité</CardTitle>
           </CardHeader>
           <CardContent className="grid gap-4 md:grid-cols-2">
-            <Field label="Nom" value={form.name} onChange={(value) => updateField("name", capitalizeFirstLetter(value))} required disabled={!canEdit} />
-            <Field label="Immatriculation" value={form.registration} maxLength={REGISTRATION_MAX_LENGTH} onChange={updateRegistration} required disabled={!canEdit} />
-            <Field label="Marque" value={form.brand} onChange={(value) => updateField("brand", capitalizeFirstLetter(value))} required disabled={!canEdit} />
-            <Field label="Modèle" value={form.model} onChange={(value) => updateField("model", capitalizeFirstLetter(value))} required disabled={!canEdit} />
-            <SelectField label="Type" value={form.type} options={VEHICLE_TYPES} onChange={(value) => updateField("type", value)} disabled={!canEdit} />
-            <SelectField label="Statut" value={form.status} options={VEHICLE_STATUSES} onChange={(value) => updateField("status", value)} required disabled={!canEdit} />
+            <Field
+              label="Nom"
+              value={form.name}
+              onChange={(value) => updateCapitalizedField("name", value)}
+              required
+              disabled={!canEdit}
+            />
+            <Field
+              label="Immatriculation"
+              value={form.registration}
+              maxLength={REGISTRATION_MAX_LENGTH}
+              onChange={updateRegistration}
+              required
+              disabled={!canEdit}
+            />
+            <Field
+              label="Marque"
+              value={form.brand}
+              onChange={(value) => updateCapitalizedField("brand", value)}
+              required
+              disabled={!canEdit}
+            />
+            <Field
+              label="Modèle"
+              value={form.model}
+              onChange={(value) => updateCapitalizedField("model", value)}
+              required
+              disabled={!canEdit}
+            />
+            <SelectField
+              label="Type"
+              value={form.type}
+              options={VEHICLE_TYPES}
+              onChange={(value) => updateField("type", value)}
+              disabled={!canEdit}
+            />
+            <SelectField
+              label="Statut"
+              value={form.status}
+              options={VEHICLE_STATUSES}
+              onChange={(value) => updateField("status", value)}
+              required
+              disabled={!canEdit}
+            />
             {isAdmin && (
               <SelectField
                 label="Propriétaire"
                 value={form.userId}
-                options={users.map((user) => ({ value: String(user.id), label: userLabel(user) }))}
+                options={userOptions(users)}
                 onChange={(value) => updateField("userId", value)}
                 required
                 disabled={!canEdit}
@@ -208,12 +269,50 @@ export default function VehicleFormPage() {
             <CardTitle>Caractéristiques</CardTitle>
           </CardHeader>
           <CardContent className="grid gap-4 md:grid-cols-2">
-            <Field label="Année" type="number" min={MIN_VEHICLE_YEAR} max={MAX_VEHICLE_YEAR} value={form.year} onChange={(value) => updateField("year", value)} disabled={!canEdit} />
-            <Field label="VIN" value={form.vin} maxLength={VIN_MAX_LENGTH} onChange={updateVin} disabled={!canEdit} />
-            <Field label="Moteur" value={form.engine} onChange={(value) => updateField("engine", value)} disabled={!canEdit} />
-            <SelectField label="Carburant" value={form.fuelType} options={VEHICLE_FUEL_TYPES} onChange={(value) => updateField("fuelType", value)} disabled={!canEdit} />
-            <SelectField label="Transmission" value={form.transmission} options={VEHICLE_TRANSMISSIONS} onChange={(value) => updateField("transmission", value)} disabled={!canEdit} />
-            <SelectField label="Couleur" value={form.color} options={VEHICLE_COLORS} onChange={(value) => updateField("color", value)} required disabled={!canEdit} />
+            <Field
+              label="Année"
+              type="number"
+              min={MIN_VEHICLE_YEAR}
+              max={MAX_VEHICLE_YEAR}
+              value={form.year}
+              onChange={(value) => updateField("year", value)}
+              disabled={!canEdit}
+            />
+            <Field
+              label="VIN"
+              value={form.vin}
+              maxLength={VIN_MAX_LENGTH}
+              onChange={updateVin}
+              disabled={!canEdit}
+            />
+            <Field
+              label="Moteur"
+              value={form.engine}
+              onChange={(value) => updateField("engine", value)}
+              disabled={!canEdit}
+            />
+            <SelectField
+              label="Carburant"
+              value={form.fuelType}
+              options={VEHICLE_FUEL_TYPES}
+              onChange={(value) => updateField("fuelType", value)}
+              disabled={!canEdit}
+            />
+            <SelectField
+              label="Transmission"
+              value={form.transmission}
+              options={VEHICLE_TRANSMISSIONS}
+              onChange={(value) => updateField("transmission", value)}
+              disabled={!canEdit}
+            />
+            <SelectField
+              label="Couleur"
+              value={form.color}
+              options={VEHICLE_COLORS}
+              onChange={(value) => updateField("color", value)}
+              required
+              disabled={!canEdit}
+            />
           </CardContent>
         </Card>
 
@@ -222,37 +321,141 @@ export default function VehicleFormPage() {
             <CardTitle>Achat et suivi</CardTitle>
           </CardHeader>
           <CardContent className="grid gap-4 md:grid-cols-2">
-            <Field label="Kilométrage" type="number" min="0" value={form.lastMileage} onChange={(value) => updateField("lastMileage", value)} required disabled={!canEdit || disableMileage} />
-            <Field label="Date d’achat" type="date" min={MIN_INPUT_DATE} max={MAX_INPUT_DATE} value={form.purchaseDate} onChange={(value) => updateField("purchaseDate", value)} disabled={!canEdit} />
-            <Field label="Prix d’achat" type="number" min="0" step="0.01" value={form.purchasePrice} onChange={(value) => updateField("purchasePrice", value)} disabled={!canEdit} />
+            <Field
+              label="Kilométrage"
+              type="number"
+              min="0"
+              value={form.lastMileage}
+              onChange={(value) => updateField("lastMileage", value)}
+              required
+              disabled={!canEdit || disableMileage}
+            />
+            <Field
+              label="Date d’achat"
+              type="date"
+              min={MIN_INPUT_DATE}
+              max={MAX_INPUT_DATE}
+              value={form.purchaseDate}
+              onChange={(value) => updateField("purchaseDate", value)}
+              disabled={!canEdit}
+            />
+            <Field
+              label="Prix d’achat"
+              type="number"
+              min="0"
+              step="0.01"
+              value={form.purchasePrice}
+              onChange={(value) => updateField("purchasePrice", value)}
+              disabled={!canEdit}
+            />
           </CardContent>
         </Card>
 
-        <div className="flex justify-end gap-2">
-          <Button variant="outline" asChild>
-            <Link to={id ? `/vehicles/${id}` : "/vehicles"}>Annuler</Link>
-          </Button>
-          <Button type="submit" disabled={!canEdit || isSaving}>
-            <Save />
-            {isSaving ? "Enregistrement..." : "Enregistrer"}
-          </Button>
-        </div>
+        <FormActions id={id} canEdit={canEdit} isSaving={isSaving} />
       </form>
     </div>
   )
 }
 
-function Field({ label, value, onChange, required, ...props }: Readonly<{ label: string; value: string; onChange: (value: string) => void } & Omit<ComponentProps<typeof Input>, "value" | "onChange">>) {
+function PageHeader({
+  isEditing,
+  id,
+}: Readonly<{ isEditing: boolean; id?: string }>) {
+  return (
+    <div className={PAGE_HEADER_CLASS}>
+      <div>
+        <h1 className="text-2xl font-semibold tracking-tight">
+          {isEditing ? "Modifier le véhicule" : "Ajouter un véhicule"}
+        </h1>
+        <p className="text-sm text-muted-foreground">
+          {isEditing
+            ? "Mettez à jour les informations du véhicule."
+            : "Créez un nouveau véhicule dans le parc."}
+        </p>
+      </div>
+
+      <Button variant="outline" asChild>
+        <Link to={id ? `/vehicles/${id}` : "/vehicles"}>
+          <ArrowLeft />
+          Retour
+        </Link>
+      </Button>
+    </div>
+  )
+}
+
+function FormActions({
+  id,
+  canEdit,
+  isSaving,
+}: Readonly<{ id?: string; canEdit: boolean; isSaving: boolean }>) {
+  return (
+    <div className="flex justify-end gap-2">
+      <Button variant="outline" asChild>
+        <Link to={id ? `/vehicles/${id}` : "/vehicles"}>Annuler</Link>
+      </Button>
+      <Button type="submit" disabled={!canEdit || isSaving}>
+        <Save />
+        {isSaving ? "Enregistrement..." : "Enregistrer"}
+      </Button>
+    </div>
+  )
+}
+
+function Field({
+  label,
+  value,
+  onChange,
+  required,
+  ...props
+}: Readonly<{
+  label: string
+  value: string
+  onChange: (value: string) => void
+} & Omit<ComponentProps<typeof Input>, "value" | "onChange">>) {
   return (
     <label className="grid gap-1.5 text-sm font-medium">
       <LabelText label={label} required={required} />
-      <Input value={value} required={required} onChange={(event) => onChange(event.target.value)} {...props} />
+      <Input
+        value={value}
+        required={required}
+        onChange={(event) => onChange(event.target.value)}
+        {...props}
+      />
     </label>
   )
 }
 
-function SelectField({ label, value, options, onChange, required = false, disabled = false }: Readonly<{ label: string; value: string; options: readonly { value: string; label: string }[]; onChange: (value: string) => void; required?: boolean; disabled?: boolean }>) {
-  return <NativeSelect label={label} value={value} options={options} onChange={(event) => onChange(event.target.value)} required={required} disabled={disabled} placeholder={required ? undefined : "—"} />
+function SelectField({
+  label,
+  value,
+  options,
+  onChange,
+  required = false,
+  disabled = false,
+}: Readonly<{
+  label: string
+  value: string
+  options: readonly { value: string; label: string }[]
+  onChange: (value: string) => void
+  required?: boolean
+  disabled?: boolean
+}>) {
+  return (
+    <NativeSelect
+      label={label}
+      value={value}
+      options={options}
+      onChange={(event) => onChange(event.target.value)}
+      required={required}
+      disabled={disabled}
+      placeholder={required ? undefined : "—"}
+    />
+  )
+}
+
+function ErrorMessage({ children }: Readonly<{ children: string }>) {
+  return <div className={ERROR_CLASS}>{children}</div>
 }
 
 function vehicleToForm(vehicle: Vehicle): VehicleFormState {
@@ -267,7 +470,7 @@ function vehicleToForm(vehicle: Vehicle): VehicleFormState {
     engine: vehicle.engine ?? "",
     fuelType: vehicle.fuelType ?? "",
     transmission: vehicle.transmission ?? "",
-    lastMileage: vehicle.lastMileage !== null && vehicle.lastMileage !== undefined ? String(vehicle.lastMileage) : "",
+    lastMileage: mileageToString(vehicle.lastMileage),
     color: vehicle.color ?? "gray",
     purchaseDate: vehicle.purchaseDate?.slice(0, 10) ?? "",
     purchasePrice: vehicle.purchasePrice ?? "",
@@ -276,7 +479,10 @@ function vehicleToForm(vehicle: Vehicle): VehicleFormState {
   }
 }
 
-function formToPayload(form: VehicleFormState, isAdmin: boolean): VehiclePayload {
+function formToPayload(
+  form: VehicleFormState,
+  isAdmin: boolean,
+): VehiclePayload {
   const payload: VehiclePayload = {
     name: form.name,
     registration: form.registration,
@@ -302,8 +508,22 @@ function formToPayload(form: VehicleFormState, isAdmin: boolean): VehiclePayload
   return payload
 }
 
+function mileageToString(value?: number | null) {
+  return value !== null && value !== undefined ? String(value) : ""
+}
+
+function userOptions(users: VehicleUser[]) {
+  return users.map((user) => ({
+    value: String(user.id),
+    label: userLabel(user),
+  }))
+}
+
 function userLabel(user: VehicleUser) {
-  const name = `${capitalizeFirstLetter(user.firstname)} ${capitalizeFirstLetter(user.lastname)}`.trim()
+  const name = [
+    capitalizeFirstLetter(user.firstname),
+    capitalizeFirstLetter(user.lastname),
+  ].join(" ").trim()
 
   return name ? `${name} - ${user.email}` : user.email
 }
@@ -321,7 +541,11 @@ function formatRegistration(value: string) {
     }
   }
 
-  return [result.slice(0, 2), result.slice(2, 5), result.slice(5, 7)].filter(Boolean).join("-")
+  return [
+    result.slice(0, 2),
+    result.slice(2, 5),
+    result.slice(5, 7),
+  ].filter(Boolean).join("-")
 }
 
 function registrationGroupIndex(length: number) {

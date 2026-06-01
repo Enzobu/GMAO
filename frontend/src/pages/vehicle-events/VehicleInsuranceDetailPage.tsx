@@ -2,7 +2,10 @@ import { useEffect, useMemo, useState } from "react"
 import { Link, useNavigate, useParams } from "react-router-dom"
 import { Pencil, Trash2 } from "lucide-react"
 
-import { deleteVehicleInsurance, getVehicleInsurance } from "@/api/vehicle-events"
+import {
+  deleteVehicleInsurance,
+  getVehicleInsurance,
+} from "@/api/vehicle-events"
 import { getVehicle } from "@/api/vehicles"
 import { DocumentsPanel } from "@/components/documents-panel"
 import { Badge } from "@/components/ui/badge"
@@ -12,8 +15,21 @@ import { ConfirmDialog } from "@/components/ui/confirm-dialog"
 import { useAuthStore } from "@/stores/auth-store"
 import type { Vehicle } from "@/types/vehicle"
 import type { VehicleInsuranceEvent } from "@/types/vehicle-events"
-import { formatDate, formatDateTime, isInsuranceActive, optionLabel, PAYMENT_FREQUENCIES } from "@/lib/vehicle-events"
-import { DetailItem, ErrorMessage, ReadOnlyBadge, VehicleEventHeader } from "./components"
+import {
+  formatDate,
+  formatDateTime,
+  isInsuranceActive,
+  optionLabel,
+  PAYMENT_FREQUENCIES,
+} from "@/lib/vehicle-events"
+import {
+  DetailItem,
+  ErrorMessage,
+  ReadOnlyBadge,
+  VehicleEventHeader,
+} from "./components"
+
+const DETAILS_GRID_CLASS = "grid gap-4 text-sm md:grid-cols-2 xl:grid-cols-4"
 
 export default function VehicleInsuranceDetailPage() {
   const { vehicleId, insuranceId } = useParams()
@@ -85,7 +101,11 @@ export default function VehicleInsuranceDetailPage() {
   }
 
   if (isLoading) {
-    return <div className="text-sm text-muted-foreground">Chargement de l’assurance...</div>
+    return (
+      <div className="text-sm text-muted-foreground">
+        Chargement de l’assurance...
+      </div>
+    )
   }
 
   if (error || !insurance) {
@@ -99,7 +119,9 @@ export default function VehicleInsuranceDetailPage() {
       <ConfirmDialog
         open={isDeleteDialogOpen}
         title="Supprimer l’assurance ?"
-        description={`${insurance.providerName} sera masquée de la plateforme.`}
+        description={
+          `${insurance.providerName} sera masquée de la plateforme.`
+        }
         confirmLabel="Supprimer"
         isLoading={isDeleting}
         onOpenChange={(open) => {
@@ -117,14 +139,22 @@ export default function VehicleInsuranceDetailPage() {
           <>
             {canEdit && (
               <Button asChild>
-                <Link to={`/vehicles/${routeVehicleId}/insurances/${insurance.id}/edit`}>
+                <Link
+                  to={
+                    `/vehicles/${routeVehicleId}/insurances/`
+                    + `${insurance.id}/edit`
+                  }
+                >
                   <Pencil />
                   Modifier
                 </Link>
               </Button>
             )}
             {isAdmin && (
-              <Button variant="destructive" onClick={() => setIsDeleteDialogOpen(true)}>
+              <Button
+                variant="destructive"
+                onClick={() => setIsDeleteDialogOpen(true)}
+              >
                 <Trash2 />
                 Supprimer
               </Button>
@@ -137,7 +167,9 @@ export default function VehicleInsuranceDetailPage() {
         <Badge variant={isInsuranceActive(insurance) ? "secondary" : "outline"}>
           {isInsuranceActive(insurance) ? "Active" : "Inactive"}
         </Badge>
-        <Badge variant="outline">{optionLabel(PAYMENT_FREQUENCIES, insurance.paymentFrequency)}</Badge>
+        <Badge variant="outline">
+          {optionLabel(PAYMENT_FREQUENCIES, insurance.paymentFrequency)}
+        </Badge>
         {!canEdit && <ReadOnlyBadge />}
       </div>
 
@@ -145,17 +177,42 @@ export default function VehicleInsuranceDetailPage() {
         <CardHeader>
           <CardTitle>Détails</CardTitle>
         </CardHeader>
-        <CardContent className="grid gap-4 text-sm md:grid-cols-2 xl:grid-cols-4">
-          <DetailItem boxed label="Police" value={insurance.policyNumber || "—"} />
-          <DetailItem boxed label="Début" value={formatDate(insurance.startDate)} />
+        <CardContent className={DETAILS_GRID_CLASS}>
+          <DetailItem
+            boxed
+            label="Police"
+            value={insurance.policyNumber || "—"}
+          />
+          <DetailItem
+            boxed
+            label="Début"
+            value={formatDate(insurance.startDate)}
+          />
           <DetailItem boxed label="Fin" value={formatDate(insurance.endDate)} />
-          <DetailItem boxed label="Paiement" value={optionLabel(PAYMENT_FREQUENCIES, insurance.paymentFrequency)} />
-          <DetailItem boxed label="Créée le" value={formatDateTime(insurance.createdAt)} />
-          <DetailItem boxed label="Mise à jour" value={formatDateTime(insurance.updatedAt)} />
+          <DetailItem
+            boxed
+            label="Paiement"
+            value={optionLabel(PAYMENT_FREQUENCIES, insurance.paymentFrequency)}
+          />
+          <DetailItem
+            boxed
+            label="Créée le"
+            value={formatDateTime(insurance.createdAt)}
+          />
+          <DetailItem
+            boxed
+            label="Mise à jour"
+            value={formatDateTime(insurance.updatedAt)}
+          />
         </CardContent>
       </Card>
 
-      <DocumentsPanel parent={{ type: "vehicle_insurances", id: insurance.id }} canManage={canEdit} canDelete={isAdmin} emptyLabel="Aucun document disponible pour cette assurance." />
+      <DocumentsPanel
+        parent={{ type: "vehicle_insurances", id: insurance.id }}
+        canManage={canEdit}
+        canDelete={isAdmin}
+        emptyLabel="Aucun document disponible pour cette assurance."
+      />
     </div>
   )
 }

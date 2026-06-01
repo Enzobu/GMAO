@@ -9,17 +9,39 @@ export default function NotFoundPage() {
 
   return (
     <div className="flex min-h-[calc(100vh-10rem)] items-center justify-center">
-      <Card className="w-full max-w-2xl border border-foreground/10 bg-card/80 text-center ring-0">
+      <Card
+        className={[
+          "w-full max-w-2xl border border-foreground/10 bg-card/80",
+          "text-center ring-0",
+        ].join(" ")}
+      >
         <CardContent className="space-y-6 py-12">
-          <div className="mx-auto flex size-20 items-center justify-center rounded-3xl bg-primary/10 text-primary">
+          <div
+            className={[
+              "mx-auto flex size-20 items-center justify-center rounded-3xl",
+              "bg-primary/10 text-primary",
+            ].join(" ")}
+          >
             <SearchX className="size-9" />
           </div>
 
           <div className="space-y-2">
-            <p className="text-sm font-medium uppercase tracking-[0.3em] text-muted-foreground">Erreur 404</p>
-            <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">Page introuvable</h1>
+            <p
+              className={[
+                "text-sm font-medium uppercase tracking-[0.3em]",
+                "text-muted-foreground",
+              ].join(" ")}
+            >
+              Erreur 404
+            </p>
+
+            <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">
+              Page introuvable
+            </h1>
+
             <p className="mx-auto max-w-md text-sm text-muted-foreground">
-              La page demandée n’existe pas, a été déplacée, ou vous avez suivi un lien expiré.
+              La page demandée n’existe pas, a été déplacée, ou vous avez
+              suivi un lien expiré.
             </p>
           </div>
 

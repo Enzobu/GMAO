@@ -29,7 +29,10 @@ export async function createVehicle(payload: VehiclePayload) {
   return response.data
 }
 
-export async function updateVehicle(id: string | number, payload: VehiclePayload) {
+export async function updateVehicle(
+  id: string | number,
+  payload: VehiclePayload,
+) {
   const response = await api.patch<Vehicle>(`/vehicles/${id}`, payload, {
     headers: { "Content-Type": "application/merge-patch+json" },
   })

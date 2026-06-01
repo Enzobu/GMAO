@@ -20,10 +20,17 @@ export function PageHeader({
   actions?: ReactNode
 }>) {
   return (
-    <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+    <div
+      className={[
+        "flex flex-col gap-3 sm:flex-row sm:items-start",
+        "sm:justify-between",
+      ].join(" ")}
+    >
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">{title}</h1>
-        {description && <p className="text-sm text-muted-foreground">{description}</p>}
+        {description && (
+          <p className="text-sm text-muted-foreground">{description}</p>
+        )}
       </div>
       <div className="flex flex-wrap gap-2">
         {backTo && (
@@ -40,7 +47,11 @@ export function PageHeader({
   )
 }
 
-export function DetailItem({ label, value, boxed = false }: Readonly<{ label: string; value: string; boxed?: boolean }>) {
+export function DetailItem({
+  label,
+  value,
+  boxed = false,
+}: Readonly<{ label: string; value: string; boxed?: boolean }>) {
   return (
     <div className={boxed ? "rounded-lg border p-3" : undefined}>
       <div className="text-xs text-muted-foreground">{label}</div>
@@ -52,13 +63,24 @@ export function DetailItem({ label, value, boxed = false }: Readonly<{ label: st
 export function EmptyCard({ children }: Readonly<{ children: ReactNode }>) {
   return (
     <Card>
-      <CardContent className="py-8 text-sm text-muted-foreground">{children}</CardContent>
+      <CardContent className="py-8 text-sm text-muted-foreground">
+        {children}
+      </CardContent>
     </Card>
   )
 }
 
 export function ErrorMessage({ children }: Readonly<{ children: ReactNode }>) {
-  return <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive">{children}</div>
+  return (
+    <div
+      className={[
+        "rounded-lg border border-destructive/30 bg-destructive/10",
+        "p-4 text-sm text-destructive",
+      ].join(" ")}
+    >
+      {children}
+    </div>
+  )
 }
 
 export function Field({
@@ -75,12 +97,20 @@ export function Field({
   return (
     <label className="grid gap-1.5 text-sm font-medium">
       <LabelText label={label} required={required} />
-      <Input value={value} required={required} onChange={(event) => onChange(event.target.value)} {...props} />
+      <Input
+        value={value}
+        required={required}
+        onChange={(event) => onChange(event.target.value)}
+        {...props}
+      />
     </label>
   )
 }
 
-export function LabelText({ label, required }: Readonly<{ label: string; required?: boolean }>) {
+export function LabelText({
+  label,
+  required,
+}: Readonly<{ label: string; required?: boolean }>) {
   return (
     <span>
       {label}

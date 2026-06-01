@@ -5,7 +5,13 @@ import { Plus, Search, Trash2, X } from "lucide-react"
 import { deleteVehicle, getVehicles } from "@/api/vehicles"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
 import { ConfirmDialog } from "@/components/ui/confirm-dialog"
 import { Input } from "@/components/ui/input"
 import { NativeSelect } from "@/components/ui/native-select"
@@ -35,6 +41,56 @@ const ITEMS_PER_PAGE_OPTIONS = [
   { value: "all", label: "Tous" },
 ] as const
 
+const ALERT_CLASS = [
+  "rounded-lg border border-destructive/30 bg-destructive/10 p-4",
+  "text-sm text-destructive",
+].join(" ")
+
+const EMPTY_CARD_CONTENT_CLASS = [
+  "py-8 text-center text-sm",
+  "text-muted-foreground",
+].join(" ")
+
+const VEHICLE_CARD_CLASS = [
+  "relative border border-foreground/10 ring-0 transition-colors",
+  "hover:border-primary/35 hover:bg-muted/30",
+].join(" ")
+
+const VEHICLE_LINK_CLASS = [
+  "absolute inset-0 z-10 rounded-xl focus-visible:outline-none",
+  "focus-visible:ring-3 focus-visible:ring-ring/50",
+].join(" ")
+
+const READONLY_BADGE_CLASS = [
+  "border-amber-500/30 bg-amber-500/10 text-amber-700",
+  "dark:text-amber-300",
+].join(" ")
+
+const VEHICLE_META_CLASS = [
+  "flex flex-wrap gap-x-4 gap-y-1 text-sm",
+  "text-muted-foreground",
+].join(" ")
+
+const PAGE_HEADER_CLASS = [
+  "flex flex-col gap-3 sm:flex-row sm:items-start",
+  "sm:justify-between",
+].join(" ")
+
+const FILTER_GRID_CLASS = [
+  "grid min-w-0 gap-3 sm:grid-cols-2 lg:grid-cols-3",
+  "xl:grid-cols-5",
+].join(" ")
+
+const SEARCH_LABEL_CLASS = [
+  "grid min-w-0 gap-1.5 text-sm font-medium sm:col-span-2",
+  "lg:col-span-3 xl:col-span-1",
+].join(" ")
+
+const SEARCH_ICON_CLASS = [
+  "pointer-events-none absolute top-1/2 left-2.5 size-4",
+  "-translate-y-1/2 text-muted-foreground",
+].join(" ")
+
 export default function VehiclesPage() {
   const currentUser = useAuthStore((state) => state.user)
   const isAdmin = currentUser?.roles.includes("ROLE_ADMIN") ?? false
@@ -44,9 +100,11 @@ export default function VehiclesPage() {
   const [search, setSearch] = useState("")
   const [typeFilter, setTypeFilter] = useState("all")
   const [statusFilter, setStatusFilter] = useState("all")
-  const [editabilityFilter, setEditabilityFilter] = useState<EditabilityFilter>("all")
+  const [editabilityFilter, setEditabilityFilter] =
+    useState<EditabilityFilter>("all")
   const [sort, setSort] = useState<SortValue>("name")
-  const [itemsPerPage, setItemsPerPage] = useLocalStorageState<ItemsPerPageValue>("vehicles.itemsPerPage", "6")
+  const [itemsPerPage, setItemsPerPage] =
+    useLocalStorageState<ItemsPerPageValue>("vehicles.itemsPerPage", "6")
   const [page, setPage] = useState(1)
   const [vehicleToDelete, setVehicleToDelete] = useState<Vehicle | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
@@ -57,17 +115,21 @@ export default function VehiclesPage() {
     return vehicles
       .filter((vehicle) => {
         const canEdit = canEditVehicle(vehicle, currentUser?.id, isAdmin)
-        const searchable = normalize([
-          vehicle.name,
-          vehicle.registration,
-          vehicle.brand,
-          vehicle.model,
-          vehicle.year,
-          vehicle.lastMileage,
-          vehicle.user.email,
-          vehicle.user.firstname,
-          vehicle.user.lastname,
-        ].filter(Boolean).join(" "))
+        const searchable = normalize(
+          [
+            vehicle.name,
+            vehicle.registration,
+            vehicle.brand,
+            vehicle.model,
+            vehicle.year,
+            vehicle.lastMileage,
+            vehicle.user.email,
+            vehicle.user.firstname,
+            vehicle.user.lastname,
+          ]
+            .filter(Boolean)
+            .join(" "),
+        )
 
         if (normalizedSearch && !searchable.includes(normalizedSearch)) {
           return false
@@ -92,17 +154,38 @@ export default function VehiclesPage() {
         return true
       })
       .sort((first, second) => compareVehicles(first, second, sort))
-  }, [vehicles, search, typeFilter, statusFilter, editabilityFilter, sort, currentUser?.id, isAdmin])
+  }, [
+    vehicles,
+    search,
+    typeFilter,
+    statusFilter,
+    editabilityFilter,
+    sort,
+    currentUser?.id,
+    isAdmin,
+  ])
 
-  const pageSize = itemsPerPage === "all" ? filteredVehicles.length || 1 : Number(itemsPerPage)
+  const pageSize =
+    itemsPerPage === "all" ? filteredVehicles.length || 1 : Number(itemsPerPage)
   const pageCount = Math.max(1, Math.ceil(filteredVehicles.length / pageSize))
   const currentPage = Math.min(page, pageCount)
   const pageStart = (currentPage - 1) * pageSize
   const pageEnd = pageStart + pageSize
-  const paginatedVehicles = itemsPerPage === "all" ? filteredVehicles : filteredVehicles.slice(pageStart, pageEnd)
+  const paginatedVehicles =
+    itemsPerPage === "all"
+      ? filteredVehicles
+      : filteredVehicles.slice(pageStart, pageEnd)
   const visibleStart = filteredVehicles.length === 0 ? 0 : pageStart + 1
-  const visibleEnd = itemsPerPage === "all" ? filteredVehicles.length : Math.min(pageEnd, filteredVehicles.length)
-  const hasActiveFilters = search || typeFilter !== "all" || statusFilter !== "all" || editabilityFilter !== "all" || sort !== "name"
+  const visibleEnd =
+    itemsPerPage === "all"
+      ? filteredVehicles.length
+      : Math.min(pageEnd, filteredVehicles.length)
+  const hasActiveFilters =
+    search ||
+    typeFilter !== "all" ||
+    statusFilter !== "all" ||
+    editabilityFilter !== "all" ||
+    sort !== "name"
 
   useEffect(() => {
     setPage(1)
@@ -151,7 +234,9 @@ export default function VehiclesPage() {
 
     try {
       await deleteVehicle(vehicleToDelete.id)
-      setVehicles((current) => current.filter((item) => item.id !== vehicleToDelete.id))
+      setVehicles((current) =>
+        current.filter((item) => item.id !== vehicleToDelete.id),
+      )
       setVehicleToDelete(null)
     } finally {
       setIsDeleting(false)
@@ -175,18 +260,31 @@ export default function VehiclesPage() {
   }
 
   if (isLoading) {
-    return <div className="text-sm text-muted-foreground">Chargement des véhicules...</div>
+    return (
+      <div className="text-sm text-muted-foreground">
+        Chargement des véhicules...
+      </div>
+    )
   }
 
   if (error) {
-    return <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive">{error}</div>
+    return <div className={ALERT_CLASS}>{error}</div>
   }
+
+  const deleteDialogDescription = vehicleToDelete
+    ? [
+        `${displayVehicleName(vehicleToDelete)} sera masqué de la plateforme.`,
+        "Aucune donnée ne sera supprimée définitivement.",
+      ].join(" ")
+    : ""
 
   function renderVehiclesContent() {
     if (vehicles.length === 0) {
       return (
         <Card>
-          <CardContent className="py-8 text-center text-sm text-muted-foreground">Aucun véhicule pour le moment.</CardContent>
+          <CardContent className={EMPTY_CARD_CONTENT_CLASS}>
+            Aucun véhicule pour le moment.
+          </CardContent>
         </Card>
       )
     }
@@ -194,7 +292,7 @@ export default function VehiclesPage() {
     if (filteredVehicles.length === 0) {
       return (
         <Card>
-          <CardContent className="py-8 text-center text-sm text-muted-foreground">
+          <CardContent className={EMPTY_CARD_CONTENT_CLASS}>
             Aucun véhicule ne correspond à ces critères.
           </CardContent>
         </Card>
@@ -211,7 +309,9 @@ export default function VehiclesPage() {
           visibleEnd={visibleEnd}
           itemsPerPage={itemsPerPage}
           itemsPerPageOptions={ITEMS_PER_PAGE_OPTIONS}
-          onItemsPerPageChange={(value) => setItemsPerPage(value as ItemsPerPageValue)}
+          onItemsPerPageChange={(value) =>
+            setItemsPerPage(value as ItemsPerPageValue)
+          }
           onPreviousPage={previousPage}
           onNextPage={nextPage}
           itemLabel="véhicule(s)"
@@ -222,43 +322,64 @@ export default function VehiclesPage() {
             const canEdit = canEditVehicle(vehicle, currentUser?.id, isAdmin)
 
             return (
-              <Card
-                key={vehicle.id}
-                className="relative border border-foreground/10 ring-0 transition-colors hover:border-primary/35 hover:bg-muted/30"
-              >
+              <Card key={vehicle.id} className={VEHICLE_CARD_CLASS}>
                 <Link
                   to={`/vehicles/${vehicle.id}`}
-                  className="absolute inset-0 z-10 rounded-xl focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+                  className={VEHICLE_LINK_CLASS}
                   aria-label={`Voir ${displayVehicleName(vehicle)}`}
                 />
                 <CardHeader>
                   <CardTitle className="flex flex-wrap items-center gap-2">
                     <span>{displayVehicleName(vehicle)}</span>
-                    <VehicleBadge collection={VEHICLE_TYPES} value={vehicle.type} />
-                    <VehicleBadge collection={VEHICLE_STATUSES} value={vehicle.status} />
+                    <VehicleBadge
+                      collection={VEHICLE_TYPES}
+                      value={vehicle.type}
+                    />
+                    <VehicleBadge
+                      collection={VEHICLE_STATUSES}
+                      value={vehicle.status}
+                    />
                     {!canEdit && (
-                      <Badge
-                        variant="outline"
-                        className="border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-300"
-                      >
+                      <Badge variant="outline" className={READONLY_BADGE_CLASS}>
                         Lecture seule
                       </Badge>
                     )}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
-                  <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted-foreground">
-                    <span><strong className="text-foreground">Immat.</strong> {vehicle.registration.toUpperCase()}</span>
-                    {vehicle.year && <span><strong className="text-foreground">Année</strong> {vehicle.year}</span>}
-                    {vehicle.lastMileage !== null && vehicle.lastMileage !== undefined && (
-                      <span><strong className="text-foreground">Km</strong> {formatNumber(vehicle.lastMileage)}</span>
+                  <div className={VEHICLE_META_CLASS}>
+                    <span>
+                      <strong className="text-foreground">Immat.</strong>{" "}
+                      {vehicle.registration.toUpperCase()}
+                    </span>
+                    {vehicle.year && (
+                      <span>
+                        <strong className="text-foreground">Année</strong>{" "}
+                        {vehicle.year}
+                      </span>
                     )}
+                    {vehicle.lastMileage !== null &&
+                      vehicle.lastMileage !== undefined && (
+                        <span>
+                          <strong className="text-foreground">Km</strong>{" "}
+                          {formatNumber(vehicle.lastMileage)}
+                        </span>
+                      )}
                   </div>
 
                   <div className="flex flex-wrap gap-2">
-                    <VehicleBadge collection={VEHICLE_FUEL_TYPES} value={vehicle.fuelType} />
-                    <VehicleBadge collection={VEHICLE_TRANSMISSIONS} value={vehicle.transmission} />
-                    <VehicleBadge collection={VEHICLE_COLORS} value={vehicle.color} />
+                    <VehicleBadge
+                      collection={VEHICLE_FUEL_TYPES}
+                      value={vehicle.fuelType}
+                    />
+                    <VehicleBadge
+                      collection={VEHICLE_TRANSMISSIONS}
+                      value={vehicle.transmission}
+                    />
+                    <VehicleBadge
+                      collection={VEHICLE_COLORS}
+                      value={vehicle.color}
+                    />
                   </div>
                 </CardContent>
                 <CardFooter className="relative z-20 justify-end gap-2">
@@ -268,7 +389,11 @@ export default function VehiclesPage() {
                     </Button>
                   )}
                   {isAdmin && (
-                    <Button variant="destructive" size="sm" onClick={() => setVehicleToDelete(vehicle)}>
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      onClick={() => setVehicleToDelete(vehicle)}
+                    >
                       <Trash2 />
                       Supprimer
                     </Button>
@@ -288,7 +413,9 @@ export default function VehiclesPage() {
             visibleEnd={visibleEnd}
             itemsPerPage={itemsPerPage}
             itemsPerPageOptions={ITEMS_PER_PAGE_OPTIONS}
-            onItemsPerPageChange={(value) => setItemsPerPage(value as ItemsPerPageValue)}
+            onItemsPerPageChange={(value) =>
+              setItemsPerPage(value as ItemsPerPageValue)
+            }
             onPreviousPage={previousPage}
             onNextPage={nextPage}
             itemLabel="véhicule(s)"
@@ -303,7 +430,7 @@ export default function VehiclesPage() {
       <ConfirmDialog
         open={vehicleToDelete !== null}
         title="Archiver le véhicule ?"
-        description={vehicleToDelete ? `${displayVehicleName(vehicleToDelete)} sera masqué de la plateforme. Aucune donnée ne sera supprimée définitivement.` : ""}
+        description={deleteDialogDescription}
         confirmLabel="Supprimer"
         isLoading={isDeleting}
         onOpenChange={(open) => {
@@ -314,7 +441,7 @@ export default function VehiclesPage() {
         onConfirm={confirmDelete}
       />
 
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+      <div className={PAGE_HEADER_CLASS}>
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">Véhicules</h1>
           <p className="text-sm text-muted-foreground">
@@ -331,11 +458,11 @@ export default function VehiclesPage() {
       </div>
 
       <Card>
-        <CardContent className="grid min-w-0 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
-          <label className="grid min-w-0 gap-1.5 text-sm font-medium sm:col-span-2 lg:col-span-3 xl:col-span-1" htmlFor="vehicle-search">
+        <CardContent className={FILTER_GRID_CLASS}>
+          <label className={SEARCH_LABEL_CLASS} htmlFor="vehicle-search">
             <span>Recherche</span>
             <div className="relative min-w-0">
-              <Search className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" />
+              <Search className={SEARCH_ICON_CLASS} />
               <Input
                 id="vehicle-search"
                 value={search}
@@ -363,7 +490,9 @@ export default function VehiclesPage() {
           <NativeSelect
             label="Droit"
             value={editabilityFilter}
-            onChange={(event) => setEditabilityFilter(event.target.value as EditabilityFilter)}
+            onChange={(event) =>
+              setEditabilityFilter(event.target.value as EditabilityFilter)
+            }
             options={[
               { value: "all", label: "Tous" },
               { value: "editable", label: "Modifiables" },
@@ -384,7 +513,12 @@ export default function VehiclesPage() {
           />
 
           <div className="flex items-end">
-            <Button variant="outline" className="w-full" onClick={resetFilters} disabled={!hasActiveFilters}>
+            <Button
+              variant="outline"
+              className="w-full"
+              onClick={resetFilters}
+              disabled={!hasActiveFilters}
+            >
               <X />
               Réinitialiser
             </Button>
@@ -397,21 +531,38 @@ export default function VehiclesPage() {
   )
 }
 
-function VehicleBadge({ collection, value }: Readonly<{ collection: readonly { value: string; label: string; variant: string }[]; value?: string | null }>) {
+function VehicleBadge({
+  collection,
+  value,
+}: Readonly<{
+  collection: readonly { value: string; label: string; variant: string }[]
+  value?: string | null
+}>) {
   const option = vehicleOption(collection, value)
 
   if (!option) {
     return null
   }
 
-  return <Badge variant={vehicleBadgeVariant(option.variant)}>{option.label}</Badge>
+  return (
+    <Badge variant={vehicleBadgeVariant(option.variant)}>{option.label}</Badge>
+  )
 }
 
 function displayVehicleName(vehicle: Vehicle) {
-  return capitalizeFirstLetter(vehicle.name) || `${capitalizeFirstLetter(vehicle.brand)} ${capitalizeFirstLetter(vehicle.model)}`.trim()
+  return (
+    capitalizeFirstLetter(vehicle.name) ||
+    [capitalizeFirstLetter(vehicle.brand), capitalizeFirstLetter(vehicle.model)]
+      .join(" ")
+      .trim()
+  )
 }
 
-function canEditVehicle(vehicle: Vehicle, currentUserId: number | undefined, isAdmin: boolean) {
+function canEditVehicle(
+  vehicle: Vehicle,
+  currentUserId: number | undefined,
+  isAdmin: boolean,
+) {
   return isAdmin || vehicle.user.id === currentUserId
 }
 
@@ -428,7 +579,10 @@ function compareVehicles(first: Vehicle, second: Vehicle, sort: SortValue) {
     return (second.lastMileage ?? 0) - (first.lastMileage ?? 0)
   }
 
-  return displayVehicleName(first).localeCompare(displayVehicleName(second), "fr")
+  return displayVehicleName(first).localeCompare(
+    displayVehicleName(second),
+    "fr",
+  )
 }
 
 function normalize(value: string) {

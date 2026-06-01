@@ -23,10 +23,25 @@ import {
 import { NativeSelect } from "@/components/ui/native-select"
 import { useAuthStore } from "@/stores/auth-store"
 import type { Vehicle } from "@/types/vehicle"
-import type { VehicleInsuranceEvent, VehicleInsurancePayload } from "@/types/vehicle-events"
+import type {
+  VehicleInsuranceEvent,
+  VehicleInsurancePayload,
+} from "@/types/vehicle-events"
 import { MIN_INPUT_DATE, MAX_INPUT_DATE } from "@/lib/date-limits"
-import { formatDate, isInsuranceActive, PAYMENT_FREQUENCIES, todayInputValue } from "@/lib/vehicle-events"
-import { ErrorMessage, Field, FormActions, VehicleEventHeader, vehicleDescription, WarningMessage } from "./components"
+import {
+  formatDate,
+  isInsuranceActive,
+  PAYMENT_FREQUENCIES,
+  todayInputValue,
+} from "@/lib/vehicle-events"
+import {
+  ErrorMessage,
+  Field,
+  FormActions,
+  VehicleEventHeader,
+  vehicleDescription,
+  WarningMessage,
+} from "./components"
 
 const emptyForm = {
   providerName: "",
@@ -47,9 +62,12 @@ export default function VehicleInsuranceFormPage() {
 
   const [vehicle, setVehicle] = useState<Vehicle | null>(null)
   const [insurance, setInsurance] = useState<VehicleInsuranceEvent | null>(null)
-  const [previousActiveInsurance, setPreviousActiveInsurance] = useState<VehicleInsuranceEvent | null>(null)
+  const [previousActiveInsurance, setPreviousActiveInsurance] =
+    useState<VehicleInsuranceEvent | null>(null)
   const [form, setForm] = useState<InsuranceFormState>(emptyForm)
-  const [closePreviousEndDate, setClosePreviousEndDate] = useState(todayInputValue())
+  const [closePreviousEndDate, setClosePreviousEndDate] = useState(
+    todayInputValue()
+  )
   const [isCloseDialogOpen, setIsCloseDialogOpen] = useState(false)
   const [isClosingPrevious, setIsClosingPrevious] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
@@ -65,10 +83,18 @@ export default function VehicleInsuranceFormPage() {
       }
 
       try {
-        const [vehicleData, insuranceData, insuranceDataCollection] = await Promise.all([
+        const [
+          vehicleData,
+          insuranceData,
+          insuranceDataCollection,
+        ] = await Promise.all([
           getVehicle(vehicleId),
-          insuranceId ? getVehicleInsurance(insuranceId) : Promise.resolve(null),
-          insuranceId ? Promise.resolve([]) : getVehicleInsurances(),
+          insuranceId
+            ? getVehicleInsurance(insuranceId)
+            : Promise.resolve(null),
+          insuranceId
+            ? Promise.resolve([])
+            : getVehicleInsurances(),
         ])
 
         if (ignore) {
@@ -78,7 +104,10 @@ export default function VehicleInsuranceFormPage() {
         setVehicle(vehicleData)
         setInsurance(insuranceData)
 
-        const activeInsurance = findActiveVehicleInsurance(insuranceDataCollection, vehicleId)
+        const activeInsurance = findActiveVehicleInsurance(
+          insuranceDataCollection,
+          vehicleId
+        )
         setPreviousActiveInsurance(activeInsurance)
 
         if (activeInsurance) {
@@ -133,7 +162,9 @@ export default function VehicleInsuranceFormPage() {
 
       navigate(`/vehicles/${vehicleId}/insurances/${saved.id}`)
     } catch {
-      setError("Impossible d’enregistrer l’assurance. Vérifiez les champs saisis.")
+      setError(
+        "Impossible d’enregistrer l’assurance. Vérifiez les champs saisis."
+      )
     } finally {
       setIsSaving(false)
     }
@@ -148,7 +179,10 @@ export default function VehicleInsuranceFormPage() {
     setError(null)
 
     try {
-      const closedInsurance = await closeVehicleInsurance(previousActiveInsurance.id, closePreviousEndDate)
+      const closedInsurance = await closeVehicleInsurance(
+        previousActiveInsurance.id,
+        closePreviousEndDate
+      )
       setPreviousActiveInsurance(closedInsurance)
       setIsCloseDialogOpen(false)
     } catch {
@@ -159,7 +193,11 @@ export default function VehicleInsuranceFormPage() {
   }
 
   if (isLoading) {
-    return <div className="text-sm text-muted-foreground">Chargement de l’assurance...</div>
+    return (
+      <div className="text-sm text-muted-foreground">
+        Chargement de l’assurance...
+      </div>
+    )
   }
 
   if (error && isEditing && !insurance) {
@@ -181,12 +219,17 @@ export default function VehicleInsuranceFormPage() {
       <VehicleEventHeader
         title={isEditing ? "Modifier l’assurance" : "Ajouter une assurance"}
         description={vehicleDescription(vehicle)}
-        backTo={insuranceId ? `/vehicles/${vehicleId}/insurances/${insuranceId}` : `/vehicles/${vehicleId}/insurances`}
+        backTo={
+          insuranceId
+            ? `/vehicles/${vehicleId}/insurances/${insuranceId}`
+            : `/vehicles/${vehicleId}/insurances`
+        }
       />
 
       {!canEdit && (
         <WarningMessage>
-          Seul le propriétaire ou un administrateur peut modifier cette assurance.
+          Seul le propriétaire ou un administrateur peut modifier cette
+          assurance.
         </WarningMessage>
       )}
 
@@ -233,7 +276,9 @@ export default function VehicleInsuranceFormPage() {
               label="Paiement"
               value={form.paymentFrequency}
               options={PAYMENT_FREQUENCIES}
-              onChange={(event) => updateField("paymentFrequency", event.target.value)}
+              onChange={(event) => {
+                updateField("paymentFrequency", event.target.value)
+              }}
               required
               disabled={!canEdit}
             />
@@ -241,7 +286,11 @@ export default function VehicleInsuranceFormPage() {
         </Card>
 
         <FormActions
-          cancelTo={insuranceId ? `/vehicles/${vehicleId}/insurances/${insuranceId}` : `/vehicles/${vehicleId}/insurances`}
+          cancelTo={
+            insuranceId
+              ? `/vehicles/${vehicleId}/insurances/${insuranceId}`
+              : `/vehicles/${vehicleId}/insurances`
+          }
           canEdit={canEdit}
           isSaving={isSaving}
         />
@@ -260,21 +309,34 @@ function insuranceToForm(insurance: VehicleInsuranceEvent): InsuranceFormState {
   }
 }
 
-function formToPayload(form: InsuranceFormState, vehicleId: string): VehicleInsurancePayload {
+function formToPayload(
+  form: InsuranceFormState,
+  vehicleId: string
+): VehicleInsurancePayload {
   return {
     vehicle: `/api/vehicles/${vehicleId}`,
     providerName: form.providerName,
     policyNumber: form.policyNumber || null,
     startDate: form.startDate || null,
     endDate: form.endDate || null,
-    paymentFrequency: form.paymentFrequency as VehicleInsurancePayload["paymentFrequency"],
+    paymentFrequency:
+      form.paymentFrequency as VehicleInsurancePayload["paymentFrequency"],
   }
 }
 
-function findActiveVehicleInsurance(items: VehicleInsuranceEvent[], vehicleId: string) {
+function findActiveVehicleInsurance(
+  items: VehicleInsuranceEvent[],
+  vehicleId: string
+) {
   return items
-    .filter((item) => item.vehicle.id === Number(vehicleId) && !item.isDeleted && isInsuranceActive(item))
-    .sort((a, b) => String(b.startDate ?? "").localeCompare(String(a.startDate ?? "")))[0] ?? null
+    .filter((item) => (
+      item.vehicle.id === Number(vehicleId)
+      && !item.isDeleted
+      && isInsuranceActive(item)
+    ))
+    .sort((a, b) => (
+      String(b.startDate ?? "").localeCompare(String(a.startDate ?? ""))
+    ))[0] ?? null
 }
 
 function ClosePreviousInsuranceDialog({
@@ -304,8 +366,13 @@ function ClosePreviousInsuranceDialog({
         <DialogHeader>
           <DialogTitle>Clôturer l’assurance active ?</DialogTitle>
           <DialogDescription>
-            Une assurance active existe déjà pour ce véhicule : {insurance.providerName}
-            {insurance.startDate ? ` depuis le ${formatDate(insurance.startDate)}` : ""}.
+            {`Une assurance active existe déjà pour ce véhicule : ${
+              insurance.providerName
+            }${
+              insurance.startDate
+                ? ` depuis le ${formatDate(insurance.startDate)}`
+                : ""
+            }.`}
           </DialogDescription>
         </DialogHeader>
 
@@ -320,7 +387,11 @@ function ClosePreviousInsuranceDialog({
         />
 
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isLoading}>
+          <Button
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+            disabled={isLoading}
+          >
             Ignorer
           </Button>
           <Button onClick={onConfirm} disabled={isLoading || !endDate}>

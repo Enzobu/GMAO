@@ -2,11 +2,19 @@ import type { AppUser } from "@/types/user"
 import { capitalizeFirstLetter } from "@/lib/text-format"
 
 export function userDisplayName(user: AppUser) {
-  return `${capitalizeFirstLetter(user.firstname)} ${capitalizeFirstLetter(user.lastname)}`.trim() || user.email
+  return (
+    [
+      capitalizeFirstLetter(user.firstname),
+      capitalizeFirstLetter(user.lastname),
+    ].join(" ").trim() ||
+    user.email
+  )
 }
 
 export function userInitials(user: AppUser) {
-  return `${user.firstname?.[0] ?? ""}${user.lastname?.[0] ?? ""}`.toUpperCase() || "?"
+  return [user.firstname?.[0] ?? "", user.lastname?.[0] ?? ""]
+    .join("")
+    .toUpperCase() || "?"
 }
 
 export function isUserAdmin(user: AppUser) {

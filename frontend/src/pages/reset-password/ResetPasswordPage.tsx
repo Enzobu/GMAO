@@ -6,6 +6,11 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { PasswordInput } from "@/components/password-input"
 
+const resetPasswordErrorMessage = [
+  "Le lien est invalide, expiré ou le mot de passe n'a pas pu être",
+  "réinitialisé.",
+].join(" ")
+
 export default function ResetPasswordPage() {
   const navigate = useNavigate()
   const { token } = useParams<{ token: string }>()
@@ -43,14 +48,16 @@ export default function ResetPasswordPage() {
       setMessage(response.message)
       globalThis.setTimeout(() => navigate("/login"), 1200)
     } catch {
-      setError("Le lien est invalide, expiré ou le mot de passe n'a pas pu être réinitialisé.")
+      setError(resetPasswordErrorMessage)
     } finally {
       setLoading(false)
     }
   }
 
   return (
-    <Card className="w-full max-w-md rounded-3xl border-border bg-card shadow-xl">
+    <Card
+      className="w-full max-w-md rounded-3xl border-border bg-card shadow-xl"
+    >
       <CardHeader>
         <CardTitle className="text-2xl">
           Réinitialiser le mot de passe

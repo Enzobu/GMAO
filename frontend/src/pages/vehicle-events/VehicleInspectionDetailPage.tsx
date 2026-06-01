@@ -2,7 +2,10 @@ import { useEffect, useMemo, useState } from "react"
 import { Link, useNavigate, useParams } from "react-router-dom"
 import { Pencil, Trash2 } from "lucide-react"
 
-import { deleteVehicleInspection, getVehicleInspection } from "@/api/vehicle-events"
+import {
+  deleteVehicleInspection,
+  getVehicleInspection,
+} from "@/api/vehicle-events"
 import { getVehicle } from "@/api/vehicles"
 import { DocumentsPanel } from "@/components/documents-panel"
 import { Badge } from "@/components/ui/badge"
@@ -12,8 +15,26 @@ import { ConfirmDialog } from "@/components/ui/confirm-dialog"
 import { useAuthStore } from "@/stores/auth-store"
 import type { Vehicle } from "@/types/vehicle"
 import type { VehicleInspectionEvent } from "@/types/vehicle-events"
-import { formatDate, formatDateTime, INSPECTION_RESULTS, inspectionResultVariant, optionLabel } from "@/lib/vehicle-events"
-import { DetailItem, ErrorMessage, ReadOnlyBadge, VehicleEventHeader } from "./components"
+import {
+  formatDate,
+  formatDateTime,
+  INSPECTION_RESULTS,
+  inspectionResultVariant,
+  optionLabel,
+} from "@/lib/vehicle-events"
+import {
+  DetailItem,
+  ErrorMessage,
+  ReadOnlyBadge,
+  VehicleEventHeader,
+} from "./components"
+
+const DETAILS_GRID_CLASS = "grid gap-4 text-sm md:grid-cols-2 xl:grid-cols-4"
+const NOTES_CLASS = "whitespace-pre-wrap text-sm text-muted-foreground"
+const COUNTER_VISIT_BADGE_CLASS = [
+  "border-amber-500/30 bg-amber-500/10 text-amber-700",
+  "dark:text-amber-300",
+].join(" ")
 
 export default function VehicleInspectionDetailPage() {
   const { vehicleId, inspectionId } = useParams()
@@ -21,7 +42,8 @@ export default function VehicleInspectionDetailPage() {
   const user = useAuthStore((state) => state.user)
   const isAdmin = user?.roles.includes("ROLE_ADMIN") ?? false
 
-  const [inspection, setInspection] = useState<VehicleInspectionEvent | null>(null)
+  const [inspection, setInspection] =
+    useState<VehicleInspectionEvent | null>(null)
   const [vehicle, setVehicle] = useState<Vehicle | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -85,11 +107,19 @@ export default function VehicleInspectionDetailPage() {
   }
 
   if (isLoading) {
-    return <div className="text-sm text-muted-foreground">Chargement du contrôle...</div>
+    return (
+      <div className="text-sm text-muted-foreground">
+        Chargement du contrôle...
+      </div>
+    )
   }
 
   if (error || !inspection) {
-    return <ErrorMessage>{error ?? "Contrôle technique introuvable."}</ErrorMessage>
+    return (
+      <ErrorMessage>
+        {error ?? "Contrôle technique introuvable."}
+      </ErrorMessage>
+    )
   }
 
   const routeVehicleId = vehicleId ?? String(inspection.vehicle.id)
@@ -99,7 +129,11 @@ export default function VehicleInspectionDetailPage() {
       <ConfirmDialog
         open={isDeleteDialogOpen}
         title="Supprimer le contrôle technique ?"
-        description={`Le contrôle du ${formatDate(inspection.inspectionDate)} sera masqué de la plateforme.`}
+        description={
+          `Le contrôle du ${formatDate(inspection.inspectionDate)} `
+          + "sera masqué "
+          + "de la plateforme."
+        }
         confirmLabel="Supprimer"
         isLoading={isDeleting}
         onOpenChange={(open) => {
@@ -117,14 +151,22 @@ export default function VehicleInspectionDetailPage() {
           <>
             {canEdit && (
               <Button asChild>
-                <Link to={`/vehicles/${routeVehicleId}/inspections/${inspection.id}/edit`}>
+                <Link
+                  to={
+                    `/vehicles/${routeVehicleId}/inspections/`
+                    + `${inspection.id}/edit`
+                  }
+                >
                   <Pencil />
                   Modifier
                 </Link>
               </Button>
             )}
             {isAdmin && (
-              <Button variant="destructive" onClick={() => setIsDeleteDialogOpen(true)}>
+              <Button
+                variant="destructive"
+                onClick={() => setIsDeleteDialogOpen(true)}
+              >
                 <Trash2 />
                 Supprimer
               </Button>
@@ -145,14 +187,42 @@ export default function VehicleInspectionDetailPage() {
         <CardHeader>
           <CardTitle>Détails</CardTitle>
         </CardHeader>
-        <CardContent className="grid gap-4 text-sm md:grid-cols-2 xl:grid-cols-4">
-          <DetailItem boxed label="Date" value={formatDate(inspection.inspectionDate)} />
-          <DetailItem boxed label="Valide jusqu’au" value={formatDate(inspection.validUntil)} />
-          <DetailItem boxed label="Kilométrage" value={formatMileage(inspection.mileage)} />
-          <DetailItem boxed label="Centre" value={inspection.center?.name ?? "—"} />
-          <DetailItem boxed label="Contre-visite avant" value={formatDate(inspection.counterVisitDueAt)} />
-          <DetailItem boxed label="Créé le" value={formatDateTime(inspection.createdAt)} />
-          <DetailItem boxed label="Mise à jour" value={formatDateTime(inspection.updatedAt)} />
+        <CardContent className={DETAILS_GRID_CLASS}>
+          <DetailItem
+            boxed
+            label="Date"
+            value={formatDate(inspection.inspectionDate)}
+          />
+          <DetailItem
+            boxed
+            label="Valide jusqu’au"
+            value={formatDate(inspection.validUntil)}
+          />
+          <DetailItem
+            boxed
+            label="Kilométrage"
+            value={formatMileage(inspection.mileage)}
+          />
+          <DetailItem
+            boxed
+            label="Centre"
+            value={inspection.center?.name ?? "—"}
+          />
+          <DetailItem
+            boxed
+            label="Contre-visite avant"
+            value={formatDate(inspection.counterVisitDueAt)}
+          />
+          <DetailItem
+            boxed
+            label="Créé le"
+            value={formatDateTime(inspection.createdAt)}
+          />
+          <DetailItem
+            boxed
+            label="Mise à jour"
+            value={formatDateTime(inspection.updatedAt)}
+          />
         </CardContent>
       </Card>
 
@@ -161,13 +231,18 @@ export default function VehicleInspectionDetailPage() {
           <CardHeader>
             <CardTitle>Notes</CardTitle>
           </CardHeader>
-          <CardContent className="whitespace-pre-wrap text-sm text-muted-foreground">
+          <CardContent className={NOTES_CLASS}>
             {inspection.notes}
           </CardContent>
         </Card>
       )}
 
-      <DocumentsPanel parent={{ type: "vehicle_inspections", id: inspection.id }} canManage={canEdit} canDelete={isAdmin} emptyLabel="Aucun document disponible pour ce contrôle technique." />
+      <DocumentsPanel
+        parent={{ type: "vehicle_inspections", id: inspection.id }}
+        canManage={canEdit}
+        canDelete={isAdmin}
+        emptyLabel="Aucun document disponible pour ce contrôle technique."
+      />
     </div>
   )
 }
@@ -178,12 +253,17 @@ function CounterVisitBadge({ required }: Readonly<{ required: boolean }>) {
   }
 
   return (
-    <Badge variant="outline" className="border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-300">
+    <Badge
+      variant="outline"
+      className={COUNTER_VISIT_BADGE_CLASS}
+    >
       Contre-visite requise
     </Badge>
   )
 }
 
 function formatMileage(value?: number | null) {
-  return value == null ? "—" : `${new Intl.NumberFormat("fr-FR").format(value)} km`
+  return value == null
+    ? "—"
+    : `${new Intl.NumberFormat("fr-FR").format(value)} km`
 }

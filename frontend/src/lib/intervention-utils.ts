@@ -2,7 +2,11 @@ import type { Intervention, InterventionStatus } from "@/types/intervention"
 import type { Vehicle } from "@/types/vehicle"
 import { capitalizeFirstLetter } from "@/lib/text-format"
 
-export const INTERVENTION_STATUSES: { value: InterventionStatus; label: string; variant: "destructive" | "outline" | "secondary" }[] = [
+export const INTERVENTION_STATUSES: {
+  value: InterventionStatus
+  label: string
+  variant: "destructive" | "outline" | "secondary"
+}[] = [
   { value: "todo", label: "À faire", variant: "destructive" },
   { value: "in_progress", label: "En cours", variant: "outline" },
   { value: "completed", label: "Terminé", variant: "secondary" },
@@ -10,11 +14,17 @@ export const INTERVENTION_STATUSES: { value: InterventionStatus; label: string; 
 ]
 
 export function interventionStatusLabel(value?: string | null) {
-  return INTERVENTION_STATUSES.find((status) => status.value === value)?.label ?? "—"
+  return (
+    INTERVENTION_STATUSES.find((status) => status.value === value)?.label ??
+    "—"
+  )
 }
 
 export function interventionStatusVariant(value?: string | null) {
-  return INTERVENTION_STATUSES.find((status) => status.value === value)?.variant ?? "outline"
+  return (
+    INTERVENTION_STATUSES.find((status) => status.value === value)?.variant ??
+    "outline"
+  )
 }
 
 export function formatDate(value?: string | null) {
@@ -24,7 +34,10 @@ export function formatDate(value?: string | null) {
 
 export function formatDateTime(value?: string | null) {
   if (!value) return "—"
-  return new Intl.DateTimeFormat("fr-FR", { dateStyle: "short", timeStyle: "short" }).format(new Date(value))
+  return new Intl.DateTimeFormat("fr-FR", {
+    dateStyle: "short",
+    timeStyle: "short",
+  }).format(new Date(value))
 }
 
 export function formatNumber(value?: number | null) {
@@ -32,13 +45,27 @@ export function formatNumber(value?: number | null) {
 }
 
 export function vehicleDisplayName(vehicle: Vehicle) {
-  return capitalizeFirstLetter(vehicle.name) || `${capitalizeFirstLetter(vehicle.brand)} ${capitalizeFirstLetter(vehicle.model)}`.trim() || vehicle.registration
+  return (
+    capitalizeFirstLetter(vehicle.name) ||
+    [
+      capitalizeFirstLetter(vehicle.brand),
+      capitalizeFirstLetter(vehicle.model),
+    ].join(" ").trim() ||
+    vehicle.registration
+  )
 }
 
 export function latestIntervention(interventions?: Intervention[]) {
   return interventions
     ?.filter((intervention) => !intervention.isDeleted)
-    .sort((a, b) => String(b.finishedAt ?? b.startedAt ?? b.plannedAt ?? b.createdAt ?? "").localeCompare(String(a.finishedAt ?? a.startedAt ?? a.plannedAt ?? a.createdAt ?? "")))[0]
+    .sort((a, b) => {
+      const latestB =
+        b.finishedAt ?? b.startedAt ?? b.plannedAt ?? b.createdAt ?? ""
+      const latestA =
+        a.finishedAt ?? a.startedAt ?? a.plannedAt ?? a.createdAt ?? ""
+
+      return String(latestB).localeCompare(String(latestA))
+    })[0]
 }
 
 export function isPerformed(intervention: Intervention) {

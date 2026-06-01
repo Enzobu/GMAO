@@ -38,12 +38,29 @@ function ConfirmDialog({
           <DialogTitle>{title}</DialogTitle>
           <DialogDescription>{description}</DialogDescription>
         </DialogHeader>
-        {error && <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">{error}</div>}
+        {error && (
+          <div
+            className={[
+              "rounded-lg border border-destructive/30 bg-destructive/10",
+              "p-3 text-sm text-destructive",
+            ].join(" ")}
+          >
+            {error}
+          </div>
+        )}
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isLoading}>
+          <Button
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+            disabled={isLoading}
+          >
             {cancelLabel}
           </Button>
-          <Button variant="destructive" onClick={onConfirm} disabled={isLoading}>
+          <Button
+            variant="destructive"
+            onClick={onConfirm}
+            disabled={isLoading}
+          >
             {isLoading ? "Suppression..." : confirmLabel}
           </Button>
         </DialogFooter>

@@ -4,7 +4,12 @@ import { isAxiosError } from "axios"
 import { useNavigate, useParams } from "react-router-dom"
 
 import { createParentDocument } from "@/api/documents"
-import { createVehicleInspection, getInspectionCenters, getVehicleInspection, updateVehicleInspection } from "@/api/vehicle-events"
+import {
+  createVehicleInspection,
+  getInspectionCenters,
+  getVehicleInspection,
+  updateVehicleInspection,
+} from "@/api/vehicle-events"
 import { getVehicle } from "@/api/vehicles"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -12,10 +17,27 @@ import { NativeSelect } from "@/components/ui/native-select"
 import { Textarea } from "@/components/ui/textarea"
 import { useAuthStore } from "@/stores/auth-store"
 import type { Vehicle } from "@/types/vehicle"
-import type { InspectionCenter, VehicleInspectionEvent, VehicleInspectionPayload } from "@/types/vehicle-events"
+import type {
+  InspectionCenter,
+  VehicleInspectionEvent,
+  VehicleInspectionPayload,
+} from "@/types/vehicle-events"
 import { MIN_INPUT_DATE, MAX_INPUT_DATE } from "@/lib/date-limits"
 import { INSPECTION_RESULTS } from "@/lib/vehicle-events"
-import { ErrorMessage, Field, FormActions, MileageWarningDialog, VehicleEventHeader, vehicleDescription, WarningMessage } from "./components"
+import {
+  ErrorMessage,
+  Field,
+  FormActions,
+  MileageWarningDialog,
+  VehicleEventHeader,
+  vehicleDescription,
+  WarningMessage,
+} from "./components"
+
+const REMOVE_DOCUMENT_BUTTON_CLASS = [
+  "rounded-lg border px-3 py-2 text-sm hover:bg-muted",
+  "disabled:pointer-events-none disabled:opacity-50",
+].join(" ")
 
 const emptyForm = {
   inspectionDate: "",
@@ -37,7 +59,8 @@ export default function VehicleInspectionFormPage() {
   const isEditing = Boolean(inspectionId)
 
   const [vehicle, setVehicle] = useState<Vehicle | null>(null)
-  const [inspection, setInspection] = useState<VehicleInspectionEvent | null>(null)
+  const [inspection, setInspection] =
+    useState<VehicleInspectionEvent | null>(null)
   const [centers, setCenters] = useState<InspectionCenter[]>([])
   const [form, setForm] = useState<InspectionFormState>(emptyForm)
   const [documentFiles, setDocumentFiles] = useState<(File | null)[]>([null])
@@ -58,7 +81,9 @@ export default function VehicleInspectionFormPage() {
       try {
         const [vehicleData, inspectionData, centerData] = await Promise.all([
           getVehicle(vehicleId),
-          inspectionId ? getVehicleInspection(inspectionId) : Promise.resolve(null),
+          inspectionId
+            ? getVehicleInspection(inspectionId)
+            : Promise.resolve(null),
           getInspectionCenters().catch(() => []),
         ])
 
@@ -104,20 +129,33 @@ export default function VehicleInspectionFormPage() {
     setForm((current) => ({
       ...current,
       result: value,
-      counterVisitDueAt: isCounterVisitRequired(value) && !current.counterVisitDueAt ? defaultCounterVisitDueAt(current.inspectionDate) : "",
+      counterVisitDueAt:
+        isCounterVisitRequired(value) && !current.counterVisitDueAt
+          ? defaultCounterVisitDueAt(current.inspectionDate)
+          : "",
     }))
   }
 
   function updateInspectionDate(value: string) {
     setForm((current) => {
       const previousDefault = defaultValidUntil(current.inspectionDate)
-      const previousCounterVisitDefault = defaultCounterVisitDueAt(current.inspectionDate)
+      const previousCounterVisitDefault = defaultCounterVisitDueAt(
+        current.inspectionDate
+      )
 
       return {
         ...current,
         inspectionDate: value,
-        validUntil: !current.validUntil || current.validUntil === previousDefault ? defaultValidUntil(value) : current.validUntil,
-        counterVisitDueAt: isCounterVisitRequired(current.result) && (!current.counterVisitDueAt || current.counterVisitDueAt === previousCounterVisitDefault) ? defaultCounterVisitDueAt(value) : current.counterVisitDueAt,
+        validUntil:
+          !current.validUntil || current.validUntil === previousDefault
+            ? defaultValidUntil(value)
+            : current.validUntil,
+        counterVisitDueAt:
+          isCounterVisitRequired(current.result)
+          && (!current.counterVisitDueAt
+            || current.counterVisitDueAt === previousCounterVisitDefault)
+            ? defaultCounterVisitDueAt(value)
+            : current.counterVisitDueAt,
       }
     })
   }
@@ -167,7 +205,10 @@ export default function VehicleInspectionFormPage() {
         ? await updateVehicleInspection(inspectionId, payload, forceMileage)
         : await createVehicleInspection(payload, forceMileage)
 
-      await uploadInspectionDocuments(saved.id, documentFiles.filter((file): file is File => file !== null))
+      await uploadInspectionDocuments(
+        saved.id,
+        documentFiles.filter((file): file is File => file !== null)
+      )
 
       navigate(`/vehicles/${vehicleId}/inspections/${saved.id}`)
     } catch (error_) {
@@ -183,7 +224,11 @@ export default function VehicleInspectionFormPage() {
   }
 
   if (isLoading) {
-    return <div className="text-sm text-muted-foreground">Chargement du contrôle...</div>
+    return (
+      <div className="text-sm text-muted-foreground">
+        Chargement du contrôle...
+      </div>
+    )
   }
 
   if (error && isEditing && !inspection) {
@@ -198,18 +243,30 @@ export default function VehicleInspectionFormPage() {
         isAdmin={isAdmin}
         isLoading={isSaving}
         onOpenChange={setMileageDialogOpen}
-        onForce={() => { setMileageDialogOpen(false); void save(true) }}
+        onForce={() => {
+          setMileageDialogOpen(false)
+          void save(true)
+        }}
       />
 
       <VehicleEventHeader
-        title={isEditing ? "Modifier le contrôle technique" : "Ajouter un contrôle technique"}
+        title={
+          isEditing
+            ? "Modifier le contrôle technique"
+            : "Ajouter un contrôle technique"
+        }
         description={vehicleDescription(vehicle)}
-        backTo={inspectionId ? `/vehicles/${vehicleId}/inspections/${inspectionId}` : `/vehicles/${vehicleId}/inspections`}
+        backTo={
+          inspectionId
+            ? `/vehicles/${vehicleId}/inspections/${inspectionId}`
+            : `/vehicles/${vehicleId}/inspections`
+        }
       />
 
       {!canEdit && (
         <WarningMessage>
-          Seul le propriétaire ou un administrateur peut modifier ce contrôle technique.
+          Seul le propriétaire ou un administrateur peut modifier ce contrôle
+          technique.
         </WarningMessage>
       )}
 
@@ -300,18 +357,26 @@ export default function VehicleInspectionFormPage() {
           <CardContent className="space-y-2">
             <div className="space-y-3">
               {documentFiles.map((file, index) => (
-                <label key={`${index}-${file?.name ?? "empty"}`} className="grid gap-1.5 text-sm font-medium">
+                <label
+                  key={`${index}-${file?.name ?? "empty"}`}
+                  className="grid gap-1.5 text-sm font-medium"
+                >
                   <span>Document {index + 1}</span>
                   <div className="flex flex-col gap-2 sm:flex-row">
                     <Input
                       type="file"
                       disabled={!canEdit || isSaving}
-                      onChange={(event) => updateDocumentFile(index, event.target.files?.[0] ?? null)}
+                      onChange={(event) => {
+                        updateDocumentFile(
+                          index,
+                          event.target.files?.[0] ?? null
+                        )
+                      }}
                     />
                     {file && (
                       <button
                         type="button"
-                        className="rounded-lg border px-3 py-2 text-sm hover:bg-muted disabled:pointer-events-none disabled:opacity-50"
+                        className={REMOVE_DOCUMENT_BUTTON_CLASS}
                         disabled={!canEdit || isSaving}
                         onClick={() => removeDocumentFile(index)}
                       >
@@ -322,12 +387,19 @@ export default function VehicleInspectionFormPage() {
                 </label>
               ))}
             </div>
-            <p className="text-xs text-muted-foreground">Les documents sélectionnés seront liés au contrôle technique après l’enregistrement.</p>
+            <p className="text-xs text-muted-foreground">
+              Les documents sélectionnés seront liés au contrôle technique
+              après l’enregistrement.
+            </p>
           </CardContent>
         </Card>
 
         <FormActions
-          cancelTo={inspectionId ? `/vehicles/${vehicleId}/inspections/${inspectionId}` : `/vehicles/${vehicleId}/inspections`}
+          cancelTo={
+            inspectionId
+              ? `/vehicles/${vehicleId}/inspections/${inspectionId}`
+              : `/vehicles/${vehicleId}/inspections`
+          }
           canEdit={canEdit}
           isSaving={isSaving}
         />
@@ -336,7 +408,9 @@ export default function VehicleInspectionFormPage() {
   )
 }
 
-function inspectionToForm(inspection: VehicleInspectionEvent): InspectionFormState {
+function inspectionToForm(
+  inspection: VehicleInspectionEvent
+): InspectionFormState {
   const result = inspection.result ?? "pass"
 
   return {
@@ -344,20 +418,27 @@ function inspectionToForm(inspection: VehicleInspectionEvent): InspectionFormSta
     validUntil: inspection.validUntil?.slice(0, 10) ?? "",
     mileage: inspection.mileage == null ? "" : String(inspection.mileage),
     result,
-    counterVisitDueAt: isCounterVisitRequired(result) ? inspection.counterVisitDueAt?.slice(0, 10) ?? "" : "",
+    counterVisitDueAt: isCounterVisitRequired(result)
+      ? inspection.counterVisitDueAt?.slice(0, 10) ?? ""
+      : "",
     notes: inspection.notes ?? "",
     centerId: inspection.center ? String(inspection.center.id) : "",
   }
 }
 
-function formToPayload(form: InspectionFormState, vehicleId: string): VehicleInspectionPayload {
+function formToPayload(
+  form: InspectionFormState,
+  vehicleId: string
+): VehicleInspectionPayload {
   const payload: VehicleInspectionPayload = {
     vehicle: `/api/vehicles/${vehicleId}`,
     inspectionDate: form.inspectionDate,
     validUntil: form.validUntil || null,
     mileage: Number(form.mileage),
     result: form.result as VehicleInspectionPayload["result"],
-    counterVisitDueAt: isCounterVisitRequired(form.result) ? form.counterVisitDueAt || null : null,
+    counterVisitDueAt: isCounterVisitRequired(form.result)
+      ? form.counterVisitDueAt || null
+      : null,
     notes: form.notes || null,
   }
 
@@ -369,7 +450,10 @@ function formToPayload(form: InspectionFormState, vehicleId: string): VehicleIns
 }
 
 function centerOptions(centers: InspectionCenter[]) {
-  return centers.map((center) => ({ value: String(center.id), label: center.name }))
+  return centers.map((center) => ({
+    value: String(center.id),
+    label: center.name,
+  }))
 }
 
 function defaultValidUntil(value: string) {
@@ -408,19 +492,31 @@ function formatInputDate(date: Date) {
 }
 
 async function uploadInspectionDocuments(inspectionId: number, files: File[]) {
-  await Promise.all(files.map((file) => createParentDocument(
-    { type: "vehicle_inspections", id: inspectionId },
-    { file, name: file.name.replaceAll(/\.[^.]+$/g, "") || file.name }
-  )))
+  await Promise.all(
+    files.map((file) => createParentDocument(
+      { type: "vehicle_inspections", id: inspectionId },
+      { file, name: file.name.replaceAll(/\.[^.]+$/g, "") || file.name }
+    ))
+  )
 }
 
 function errorMessage(error: unknown) {
   if (isAxiosError(error)) {
-    const data = error.response?.data as { detail?: string; description?: string; message?: string } | undefined
-    return data?.detail ?? data?.description ?? data?.message ?? "Impossible d’enregistrer le contrôle technique. Vérifiez les champs saisis."
+    const data = error.response?.data as
+      | { detail?: string; description?: string; message?: string }
+      | undefined
+
+    return (
+      data?.detail
+      ?? data?.description
+      ?? data?.message
+      ?? "Impossible d’enregistrer le contrôle technique. Vérifiez les "
+        + "champs saisis."
+    )
   }
 
-  return "Impossible d’enregistrer le contrôle technique. Vérifiez les champs saisis."
+  return "Impossible d’enregistrer le contrôle technique. Vérifiez les "
+    + "champs saisis."
 }
 
 function isCounterVisitRequired(result: string) {

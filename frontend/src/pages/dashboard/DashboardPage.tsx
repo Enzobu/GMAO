@@ -80,6 +80,7 @@ export default function DashboardPage() {
     }
   }, [])
 
+  const maintenanceHealth = dashboard?.stats.maintenanceHealth
   const stats = [
     {
       title: "Véhicules",
@@ -93,9 +94,12 @@ export default function DashboardPage() {
     },
     {
       title: "Entretiens à jour",
-      value: dashboard ? `${dashboard.stats.maintenanceHealth.percentage}%` : undefined,
-      subtitle: dashboard
-        ? `${dashboard.stats.maintenanceHealth.upToDateVehicles}/${dashboard.stats.maintenanceHealth.totalVehicles} véhicules`
+      value: maintenanceHealth ? `${maintenanceHealth.percentage}%` : undefined,
+      subtitle: maintenanceHealth
+        ? [
+            `${maintenanceHealth.upToDateVehicles}`,
+            `/${maintenanceHealth.totalVehicles} véhicules`,
+          ].join("")
         : undefined,
       icon: ClipboardCheck,
     },
@@ -119,14 +123,24 @@ export default function DashboardPage() {
       </div>
 
       {error && (
-        <Card className="rounded-3xl border-red-500/40 bg-red-500/10 text-red-500 shadow-sm">
+        <Card
+          className={[
+            "rounded-3xl border-red-500/40 bg-red-500/10",
+            "text-red-500 shadow-sm",
+          ].join(" ")}
+        >
           <CardContent className="p-5">
             {error}
           </CardContent>
         </Card>
       )}
 
-      <div className="grid min-w-0 gap-4 sm:gap-5 md:grid-cols-2 xl:grid-cols-4">
+      <div
+        className={[
+          "grid min-w-0 gap-4 sm:gap-5 md:grid-cols-2",
+          "xl:grid-cols-4",
+        ].join(" ")}
+      >
         {stats.map((stat) => {
           const Icon = stat.icon
 
@@ -135,12 +149,24 @@ export default function DashboardPage() {
               key={stat.title}
               className="rounded-3xl border-border bg-card shadow-sm"
             >
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="min-w-0 break-words text-sm font-medium text-muted-foreground">
+              <CardHeader
+                className="flex flex-row items-center justify-between pb-2"
+              >
+                <CardTitle
+                  className={[
+                    "min-w-0 break-words text-sm font-medium",
+                    "text-muted-foreground",
+                  ].join(" ")}
+                >
                   {stat.title}
                 </CardTitle>
 
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                <div
+                  className={[
+                    "flex h-10 w-10 items-center justify-center",
+                    "rounded-xl bg-primary/10 text-primary",
+                  ].join(" ")}
+                >
                   <Icon className="h-5 w-5" />
                 </div>
               </CardHeader>
@@ -163,7 +189,10 @@ export default function DashboardPage() {
 
       <DashboardListCard
         title="Activité à venir"
-        description="Entretiens prévus, contrôles techniques et assurances à surveiller sur les 30 prochains jours."
+        description={[
+          "Entretiens prévus, contrôles techniques et assurances",
+          "à surveiller sur les 30 prochains jours.",
+        ].join(" ")}
         emptyLabel="Aucune échéance à venir."
         loading={loading}
         items={dashboard?.upcoming ?? []}
@@ -177,7 +206,10 @@ export default function DashboardPage() {
 
       <DashboardListCard
         title="Activité récente"
-        description="Entretiens, contrôles techniques et assurances ajoutés sur les 30 derniers jours."
+        description={[
+          "Entretiens, contrôles techniques et assurances ajoutés",
+          "sur les 30 derniers jours.",
+        ].join(" ")}
         emptyLabel="Aucune activité récente."
         loading={loading}
         items={dashboard?.recentActivity ?? []}
@@ -211,7 +243,12 @@ function MaintenanceHistoryTooltip({
   const count = Number(payload[0].value ?? 0)
 
   return (
-    <div className="rounded-xl border border-border bg-popover px-3 py-2 text-sm text-popover-foreground shadow-md">
+    <div
+      className={[
+        "rounded-xl border border-border bg-popover px-3 py-2",
+        "text-sm text-popover-foreground shadow-md",
+      ].join(" ")}
+    >
       <p className="font-medium">
         {label}
       </p>
@@ -222,7 +259,10 @@ function MaintenanceHistoryTooltip({
   )
 }
 
-function MaintenanceHistoryChart({ loading, data }: MaintenanceHistoryChartProps) {
+function MaintenanceHistoryChart({
+  loading,
+  data,
+}: MaintenanceHistoryChartProps) {
   const hasMaintenance = data.some((item) => item.count > 0)
 
   return (
@@ -239,7 +279,12 @@ function MaintenanceHistoryChart({ loading, data }: MaintenanceHistoryChartProps
             </p>
           </div>
 
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+          <div
+            className={[
+              "flex h-10 w-10 shrink-0 items-center justify-center",
+              "rounded-xl bg-primary/10 text-primary",
+            ].join(" ")}
+          >
             <BarChart3 className="h-5 w-5" />
           </div>
         </div>
@@ -252,7 +297,10 @@ function MaintenanceHistoryChart({ loading, data }: MaintenanceHistoryChartProps
           <div className="min-w-0 space-y-4">
             <div className="h-72 min-w-0 sm:h-80">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={data} margin={{ top: 10, right: 8, left: -20, bottom: 0 }}>
+                <BarChart
+                  data={data}
+                  margin={{ top: 10, right: 8, left: -20, bottom: 0 }}
+                >
                   <CartesianGrid
                     vertical={false}
                     stroke="hsl(var(--border))"
@@ -345,33 +393,54 @@ function DashboardListCard({
           return (
             <div
               key={`${item.type}-${item.title}-${item.meta}-${index}`}
-              className="min-w-0 rounded-2xl border border-border bg-muted/20 p-4"
+              className={[
+                "min-w-0 rounded-2xl border border-border",
+                "bg-muted/20 p-4",
+              ].join(" ")}
             >
               <div className="flex min-w-0 items-start gap-3 sm:gap-4">
-                <div className={[
-                  "flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border",
-                  showSeverity ? severityClassName : "border-border bg-primary/10 text-primary",
-                ].join(" ")}
+                <div
+                  className={[
+                    "flex h-11 w-11 shrink-0 items-center justify-center",
+                    "rounded-xl border",
+                    showSeverity
+                      ? severityClassName
+                      : "border-border bg-primary/10 text-primary",
+                  ].join(" ")}
                 >
                   <Icon className="h-5 w-5" />
                 </div>
 
                 <div className="min-w-0 flex-1">
-                  <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                  <div
+                    className={[
+                      "flex min-w-0 flex-col gap-2 sm:flex-row",
+                      "sm:items-center sm:justify-between",
+                    ].join(" ")}
+                  >
                     <p className="min-w-0 break-words font-medium">
                       {item.title}
                     </p>
 
-                    <span className={[
-                      "w-fit max-w-full break-words rounded-full px-2.5 py-1 text-xs font-medium",
-                      showSeverity ? severityClassName : "bg-primary/10 text-primary",
-                    ].join(" ")}
+                    <span
+                      className={[
+                        "w-fit max-w-full break-words rounded-full px-2.5",
+                        "py-1 text-xs font-medium",
+                        showSeverity
+                          ? severityClassName
+                          : "bg-primary/10 text-primary",
+                      ].join(" ")}
                     >
                       {item.meta}
                     </span>
                   </div>
 
-                  <p className="mt-1 min-w-0 break-words text-sm text-muted-foreground">
+                  <p
+                    className={[
+                      "mt-1 min-w-0 break-words text-sm",
+                      "text-muted-foreground",
+                    ].join(" ")}
+                  >
                     {item.subtitle}
                   </p>
                 </div>
@@ -383,7 +452,12 @@ function DashboardListCard({
     )
   } else {
     content = (
-      <div className="rounded-2xl border border-dashed border-border bg-muted/20 p-8 text-center text-muted-foreground">
+      <div
+        className={[
+          "rounded-2xl border border-dashed border-border bg-muted/20",
+          "p-8 text-center text-muted-foreground",
+        ].join(" ")}
+      >
         {emptyLabel}
       </div>
     )
@@ -403,7 +477,12 @@ function DashboardListCard({
             </p>
           </div>
 
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+          <div
+            className={[
+              "flex h-10 w-10 shrink-0 items-center justify-center",
+              "rounded-xl bg-primary/10 text-primary",
+            ].join(" ")}
+          >
             <CalendarClock className="h-5 w-5" />
           </div>
         </div>

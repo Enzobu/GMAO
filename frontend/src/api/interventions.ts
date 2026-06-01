@@ -1,12 +1,14 @@
 import { api } from "@/api/client"
 import type { Intervention, InterventionPayload } from "@/types/intervention"
 
-type ApiCollection<T> = T[] | {
-  member?: T[]
-  "hydra:member"?: T[]
-  view?: { next?: string }
-  "hydra:view"?: { "hydra:next"?: string }
-}
+type ApiCollection<T> =
+  | T[]
+  | {
+      member?: T[]
+      "hydra:member"?: T[]
+      view?: { next?: string }
+      "hydra:view"?: { "hydra:next"?: string }
+    }
 
 function collectionItems<T>(data: ApiCollection<T>) {
   if (Array.isArray(data)) return data
@@ -19,9 +21,10 @@ export async function getInterventions() {
   let nextPage = collectionNextPage(firstPage.data)
 
   while (nextPage !== null) {
-    const response = await api.get<ApiCollection<Intervention>>("/maintenances", {
-      params: { page: nextPage },
-    })
+    const response = await api.get<ApiCollection<Intervention>>(
+      "/maintenances",
+      { params: { page: nextPage } },
+    )
 
     items.push(...collectionItems(response.data))
     nextPage = collectionNextPage(response.data)
@@ -47,18 +50,29 @@ export async function getIntervention(id: string | number) {
   return response.data
 }
 
-export async function createIntervention(payload: InterventionPayload, forceMileage = false) {
+export async function createIntervention(
+  payload: InterventionPayload,
+  forceMileage = false,
+) {
   const response = await api.post<Intervention>("/maintenances", payload, {
     params: forceMileage ? { forceMileage: true } : undefined,
   })
   return response.data
 }
 
-export async function updateIntervention(id: string | number, payload: Partial<InterventionPayload>, forceMileage = false) {
-  const response = await api.patch<Intervention>(`/maintenances/${id}`, payload, {
-    headers: { "Content-Type": "application/merge-patch+json" },
-    params: forceMileage ? { forceMileage: true } : undefined,
-  })
+export async function updateIntervention(
+  id: string | number,
+  payload: Partial<InterventionPayload>,
+  forceMileage = false,
+) {
+  const response = await api.patch<Intervention>(
+    `/maintenances/${id}`,
+    payload,
+    {
+      headers: { "Content-Type": "application/merge-patch+json" },
+      params: forceMileage ? { forceMileage: true } : undefined,
+    },
+  )
   return response.data
 }
 

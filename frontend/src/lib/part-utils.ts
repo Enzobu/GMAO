@@ -7,7 +7,14 @@ export function partName(part: Part) {
 }
 
 export function vehicleDisplayName(vehicle: Vehicle) {
-  return capitalizeFirstLetter(vehicle.name) || `${capitalizeFirstLetter(vehicle.brand)} ${capitalizeFirstLetter(vehicle.model)}`.trim() || `Véhicule #${vehicle.id}`
+  return (
+    capitalizeFirstLetter(vehicle.name) ||
+    [
+      capitalizeFirstLetter(vehicle.brand),
+      capitalizeFirstLetter(vehicle.model),
+    ].join(" ").trim() ||
+    `Véhicule #${vehicle.id}`
+  )
 }
 
 export function stockStatus(quantity: number) {
