@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react"
-import type { ComponentProps, FormEvent } from "react"
-import { Link, useNavigate, useParams } from "react-router-dom"
-import { ArrowLeft, Save } from "lucide-react"
+import type { FormEvent } from "react"
+import { useNavigate, useParams } from "react-router-dom"
 
 import {
   createVehicle,
@@ -9,10 +8,9 @@ import {
   getVehicle,
   updateVehicle,
 } from "@/api/vehicles"
-import { LabelText } from "@/components/page-primitives"
-import { Button } from "@/components/ui/button"
+import { FormActions } from "@/components/form-actions"
+import { ErrorMessage, Field, PageHeader } from "@/components/page-primitives"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
 import { NativeSelect } from "@/components/ui/native-select"
 import { MIN_INPUT_DATE, MAX_INPUT_DATE } from "@/lib/date-limits"
 import { capitalizeFirstLetter } from "@/lib/text-format"
@@ -50,19 +48,9 @@ const REGISTRATION_MAX_LENGTH = 9
 const MIN_VEHICLE_YEAR = 1800
 const MAX_VEHICLE_YEAR = 2100
 
-const ERROR_CLASS = [
-  "rounded-lg border border-destructive/30 bg-destructive/10 p-4",
-  "text-sm text-destructive",
-].join(" ")
-
 const WARNING_CLASS = [
   "rounded-lg border border-amber-500/30 bg-amber-500/10 p-4",
   "text-sm text-amber-700 dark:text-amber-300",
-].join(" ")
-
-const PAGE_HEADER_CLASS = [
-  "flex flex-col gap-3 sm:flex-row sm:items-start",
-  "sm:justify-between",
 ].join(" ")
 
 const SAVE_ERROR = [
@@ -190,7 +178,11 @@ export default function VehicleFormPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader isEditing={isEditing} id={id} />
+      <PageHeader
+        title={isEditing ? "Modifier le véhicule" : "Ajouter un véhicule"}
+        description={vehicleFormDescription(isEditing)}
+        backTo={id ? `/vehicles/${id}` : "/vehicles"}
+      />
 
       {!canEdit && (
         <div className={WARNING_CLASS}>
@@ -351,78 +343,13 @@ export default function VehicleFormPage() {
           </CardContent>
         </Card>
 
-        <FormActions id={id} canEdit={canEdit} isSaving={isSaving} />
+        <FormActions
+          cancelTo={id ? `/vehicles/${id}` : "/vehicles"}
+          canEdit={canEdit}
+          isSaving={isSaving}
+        />
       </form>
     </div>
-  )
-}
-
-function PageHeader({
-  isEditing,
-  id,
-}: Readonly<{ isEditing: boolean; id?: string }>) {
-  return (
-    <div className={PAGE_HEADER_CLASS}>
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight">
-          {isEditing ? "Modifier le véhicule" : "Ajouter un véhicule"}
-        </h1>
-        <p className="text-sm text-muted-foreground">
-          {isEditing
-            ? "Mettez à jour les informations du véhicule."
-            : "Créez un nouveau véhicule dans le parc."}
-        </p>
-      </div>
-
-      <Button variant="outline" asChild>
-        <Link to={id ? `/vehicles/${id}` : "/vehicles"}>
-          <ArrowLeft />
-          Retour
-        </Link>
-      </Button>
-    </div>
-  )
-}
-
-function FormActions({
-  id,
-  canEdit,
-  isSaving,
-}: Readonly<{ id?: string; canEdit: boolean; isSaving: boolean }>) {
-  return (
-    <div className="flex justify-end gap-2">
-      <Button variant="outline" asChild>
-        <Link to={id ? `/vehicles/${id}` : "/vehicles"}>Annuler</Link>
-      </Button>
-      <Button type="submit" disabled={!canEdit || isSaving}>
-        <Save />
-        {isSaving ? "Enregistrement..." : "Enregistrer"}
-      </Button>
-    </div>
-  )
-}
-
-function Field({
-  label,
-  value,
-  onChange,
-  required,
-  ...props
-}: Readonly<{
-  label: string
-  value: string
-  onChange: (value: string) => void
-} & Omit<ComponentProps<typeof Input>, "value" | "onChange">>) {
-  return (
-    <label className="grid gap-1.5 text-sm font-medium">
-      <LabelText label={label} required={required} />
-      <Input
-        value={value}
-        required={required}
-        onChange={(event) => onChange(event.target.value)}
-        {...props}
-      />
-    </label>
   )
 }
 
@@ -452,10 +379,6 @@ function SelectField({
       placeholder={required ? undefined : "—"}
     />
   )
-}
-
-function ErrorMessage({ children }: Readonly<{ children: string }>) {
-  return <div className={ERROR_CLASS}>{children}</div>
 }
 
 function vehicleToForm(vehicle: Vehicle): VehicleFormState {
@@ -554,4 +477,10 @@ function registrationGroupIndex(length: number) {
   }
 
   return length < 5 ? 1 : 2
+}
+
+function vehicleFormDescription(isEditing: boolean) {
+  return isEditing
+    ? "Mettez à jour les informations du véhicule."
+    : "Créez un nouveau véhicule dans le parc."
 }

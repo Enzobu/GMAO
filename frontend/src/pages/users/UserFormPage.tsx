@@ -1,13 +1,11 @@
 import { useEffect, useState } from "react"
 import type { FormEvent } from "react"
-import { Link, useNavigate, useParams } from "react-router-dom"
-import { ArrowLeft, Save } from "lucide-react"
+import { useNavigate, useParams } from "react-router-dom"
 
 import { createUser, getUser, updateUser } from "@/api/users"
-import { LabelText } from "@/components/page-primitives"
-import { Button } from "@/components/ui/button"
+import { FormActions } from "@/components/form-actions"
+import { ErrorMessage, Field, PageHeader } from "@/components/page-primitives"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
 import { capitalizeFirstLetter } from "@/lib/text-format"
 import type { AppUser, UserPayload } from "@/types/user"
 
@@ -24,16 +22,6 @@ const emptyForm = {
     country: "France",
   },
 }
-
-const ERROR_CLASS = [
-  "rounded-lg border border-destructive/30 bg-destructive/10 p-4",
-  "text-sm text-destructive",
-].join(" ")
-
-const PAGE_HEADER_CLASS = [
-  "flex flex-col gap-3 sm:flex-row sm:items-start",
-  "sm:justify-between",
-].join(" ")
 
 const SAVE_ERROR = [
   "Impossible d’enregistrer l’utilisateur.",
@@ -128,11 +116,13 @@ export default function UserFormPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader isEditing={isEditing} id={id} />
+      <PageHeader
+        title={userFormTitle(isEditing)}
+        description={formDescription(isEditing)}
+        backTo={id ? `/users/${id}` : "/users"}
+      />
 
-      {error && (
-        <div className={ERROR_CLASS}>{error}</div>
-      )}
+      {error && <ErrorMessage>{error}</ErrorMessage>}
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="grid gap-4 xl:grid-cols-2">
@@ -218,35 +208,12 @@ export default function UserFormPage() {
           </Card>
         </div>
 
-        <FormActions id={id} isSaving={isSaving} />
+        <FormActions
+          cancelTo={id ? `/users/${id}` : "/users"}
+          canEdit
+          isSaving={isSaving}
+        />
       </form>
-    </div>
-  )
-}
-
-function PageHeader({
-  isEditing,
-  id,
-}: Readonly<{ isEditing: boolean; id?: string }>) {
-  return (
-    <div className={PAGE_HEADER_CLASS}>
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight">
-          {isEditing ? "Modifier l’utilisateur" : "Ajouter un utilisateur"}
-        </h1>
-        <p className="text-sm text-muted-foreground">
-          {isEditing
-            ? "Mettez à jour ses informations."
-            : "Un email de définition du mot de passe sera envoyé."}
-        </p>
-      </div>
-
-      <Button variant="outline" asChild>
-        <Link to={id ? `/users/${id}` : "/users"}>
-          <ArrowLeft />
-          Retour
-        </Link>
-      </Button>
     </div>
   )
 }
@@ -260,54 +227,13 @@ function RolesField({
       <span className="text-sm font-medium">Rôles</span>
       <label className="flex items-center gap-2 rounded-lg border p-3 text-sm">
         <input type="checkbox" checked disabled />
-        Utilisateur
+        <span>Utilisateur</span>
       </label>
       <label className="flex items-center gap-2 rounded-lg border p-3 text-sm">
         <input type="checkbox" checked={isAdmin} onChange={onToggleAdmin} />
-        Administrateur
+        <span>Administrateur</span>
       </label>
     </div>
-  )
-}
-
-function FormActions({
-  id,
-  isSaving,
-}: Readonly<{ id?: string; isSaving: boolean }>) {
-  return (
-    <div className="flex justify-end gap-2">
-      <Button variant="outline" asChild>
-        <Link to={id ? `/users/${id}` : "/users"}>Annuler</Link>
-      </Button>
-      <Button type="submit" disabled={isSaving}>
-        <Save />
-        {isSaving ? "Enregistrement..." : "Enregistrer"}
-      </Button>
-    </div>
-  )
-}
-
-function Field({
-  label,
-  value,
-  onChange,
-  required,
-  ...props
-}: Readonly<{
-  label: string
-  value: string
-  onChange: (value: string) => void
-} & Omit<React.ComponentProps<typeof Input>, "value" | "onChange">>) {
-  return (
-    <label className="grid gap-1.5 text-sm font-medium">
-      <LabelText label={label} required={required} />
-      <Input
-        value={value}
-        required={required}
-        onChange={(event) => onChange(event.target.value)}
-        {...props}
-      />
-    </label>
   )
 }
 
@@ -342,4 +268,14 @@ function userToForm(user: AppUser): UserPayload {
       country: user.address?.country ?? "France",
     },
   }
+}
+
+function formDescription(isEditing: boolean) {
+  return isEditing
+    ? "Mettez à jour ses informations."
+    : "Un email de définition du mot de passe sera envoyé."
+}
+
+function userFormTitle(isEditing: boolean) {
+  return isEditing ? "Modifier l’utilisateur" : "Ajouter un utilisateur"
 }
