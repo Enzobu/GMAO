@@ -27,7 +27,9 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     const requestUrl = error.config?.url ?? ""
-    const isAuthRequest = requestUrl.includes("/login") || requestUrl.includes("/reset-password")
+    const isAuthRequest =
+      requestUrl.includes("/login") ||
+      requestUrl.includes("/reset-password")
     const isAlreadyOnLogin = globalThis.location.pathname === "/login"
 
     if (error.response?.status === 401 && !isAuthRequest) {

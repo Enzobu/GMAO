@@ -17,7 +17,21 @@ import type { Part, PartPayload } from "@/types/part"
 import type { Vehicle } from "@/types/vehicle"
 import { vehicleDisplayName } from "@/lib/part-utils"
 
-const emptyForm = { partTypeId: "", quantity: "0", vehicleIds: [] as string[], note: "" }
+const emptyForm = {
+  partTypeId: "",
+  quantity: "0",
+  vehicleIds: [] as string[],
+  note: "",
+}
+
+const SAVE_ERROR = [
+  "Impossible d’enregistrer le stock.",
+  "Vérifiez les champs saisis.",
+].join(" ")
+
+const DESTRUCTIVE_MESSAGE_CLASS =
+  "rounded-lg border border-destructive/30 bg-destructive/10 p-4 " +
+  "text-sm text-destructive"
 
 export default function PartFormPage() {
   const { id } = useParams()
@@ -34,7 +48,11 @@ export default function PartFormPage() {
     let ignore = false
     async function load() {
       try {
-        const [part, types, vehicleData] = await Promise.all([id ? getPart(id) : Promise.resolve(null), getPartTypes(), getVehicles()])
+        const [part, types, vehicleData] = await Promise.all([
+          id ? getPart(id) : Promise.resolve(null),
+          getPartTypes(),
+          getVehicles(),
+        ])
         if (ignore) return
         setPartTypes(types)
         setVehicles(vehicleData)
@@ -46,7 +64,9 @@ export default function PartFormPage() {
       }
     }
     load()
-    return () => { ignore = true }
+    return () => {
+      ignore = true
+    }
   }, [id])
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -54,10 +74,12 @@ export default function PartFormPage() {
     setIsSaving(true)
     setError(null)
     try {
-      const saved = id ? await updatePart(id, formToPayload(form)) : await createPart(formToPayload(form))
+      const saved = id
+        ? await updatePart(id, formToPayload(form))
+        : await createPart(formToPayload(form))
       navigate(`/parts/${saved.id}`)
     } catch {
-      setError("Impossible d’enregistrer le stock. Vérifiez les champs saisis.")
+      setError(SAVE_ERROR)
     } finally {
       setIsSaving(false)
     }
@@ -66,51 +88,160 @@ export default function PartFormPage() {
   function toggleVehicle(vehicleId: string) {
     setForm((current) => ({
       ...current,
-      vehicleIds: current.vehicleIds.includes(vehicleId) ? current.vehicleIds.filter((id) => id !== vehicleId) : [...current.vehicleIds, vehicleId],
+      vehicleIds: current.vehicleIds.includes(vehicleId)
+        ? current.vehicleIds.filter((id) => id !== vehicleId)
+        : [...current.vehicleIds, vehicleId],
     }))
   }
 
-  if (isLoading) return <div className="text-sm text-muted-foreground">Chargement du formulaire...</div>
+  if (isLoading) {
+    return (
+      <div className="text-sm text-muted-foreground">
+        Chargement du formulaire...
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <div><h1 className="text-2xl font-semibold tracking-tight">{isEditing ? "Modifier le stock" : "Ajouter un stock"}</h1><p className="text-sm text-muted-foreground">Gérez la quantité et les véhicules compatibles.</p></div>
-        <Button variant="outline" asChild><Link to={id ? `/parts/${id}` : "/parts"}><ArrowLeft />Retour</Link></Button>
+      <div
+        className={
+          "flex flex-col gap-3 sm:flex-row sm:items-start " +
+          "sm:justify-between"
+        }
+      >
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight">
+            {isEditing ? "Modifier le stock" : "Ajouter un stock"}
+          </h1>
+          <p className="text-sm text-muted-foreground">
+            Gérez la quantité et les véhicules compatibles.
+          </p>
+        </div>
+        <Button variant="outline" asChild>
+          <Link to={id ? `/parts/${id}` : "/parts"}>
+            <ArrowLeft />
+            Retour
+          </Link>
+        </Button>
       </div>
 
-      {error && <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive">{error}</div>}
+      {error && (
+        <div className={DESTRUCTIVE_MESSAGE_CLASS}>
+          {error}
+        </div>
+      )}
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <Card>
-          <CardHeader><CardTitle>Informations</CardTitle></CardHeader>
+          <CardHeader>
+            <CardTitle>Informations</CardTitle>
+          </CardHeader>
           <CardContent className="grid gap-4 md:grid-cols-2">
-            <NativeSelect label="Type de pièce" value={form.partTypeId} onChange={(event) => setForm((current) => ({ ...current, partTypeId: event.target.value }))} required options={partTypes.map((type) => ({ value: String(type.id), label: type.name }))} placeholder="Sélectionner" />
-            <label className="grid gap-1.5 text-sm font-medium"><LabelText label="Quantité" required /><Input type="number" min="0" value={form.quantity} onChange={(event) => setForm((current) => ({ ...current, quantity: event.target.value }))} required /></label>
-            <label className="grid gap-1.5 text-sm font-medium md:col-span-2"><span>Note</span><Textarea value={form.note} onChange={(event) => setForm((current) => ({ ...current, note: event.target.value }))} /></label>
+            <NativeSelect
+              label="Type de pièce"
+              value={form.partTypeId}
+              onChange={(event) =>
+                setForm((current) => ({
+                  ...current,
+                  partTypeId: event.target.value,
+                }))
+              }
+              required
+              options={partTypes.map((type) => ({
+                value: String(type.id),
+                label: type.name,
+              }))}
+              placeholder="Sélectionner"
+            />
+            <label className="grid gap-1.5 text-sm font-medium">
+              <LabelText label="Quantité" required />
+              <Input
+                type="number"
+                min="0"
+                value={form.quantity}
+                onChange={(event) =>
+                  setForm((current) => ({
+                    ...current,
+                    quantity: event.target.value,
+                  }))
+                }
+                required
+              />
+            </label>
+            <label className="grid gap-1.5 text-sm font-medium md:col-span-2">
+              <span>Note</span>
+              <Textarea
+                value={form.note}
+                onChange={(event) =>
+                  setForm((current) => ({
+                    ...current,
+                    note: event.target.value,
+                  }))
+                }
+              />
+            </label>
           </CardContent>
         </Card>
 
         <Card>
-          <CardHeader><CardTitle>Véhicules compatibles</CardTitle></CardHeader>
+          <CardHeader>
+            <CardTitle>Véhicules compatibles</CardTitle>
+          </CardHeader>
           <CardContent className="grid gap-2 md:grid-cols-2">
             {vehicles.map((vehicle) => {
               const value = String(vehicle.id)
-              return <label key={vehicle.id} className="flex items-center gap-2 rounded-lg border p-3 text-sm"><input type="checkbox" checked={form.vehicleIds.includes(value)} onChange={() => toggleVehicle(value)} /> <span>{vehicleDisplayName(vehicle)} ・ {vehicle.registration.toUpperCase()}</span></label>
+              return (
+                <label
+                  key={vehicle.id}
+                  className={
+                    "flex items-center gap-2 rounded-lg border p-3 " +
+                    "text-sm"
+                  }
+                >
+                  <input
+                    type="checkbox"
+                    checked={form.vehicleIds.includes(value)}
+                    onChange={() => toggleVehicle(value)}
+                  />
+                  <span>
+                    {vehicleDisplayName(vehicle)} ・{" "}
+                    {vehicle.registration.toUpperCase()}
+                  </span>
+                </label>
+              )
             })}
           </CardContent>
         </Card>
 
-        <div className="flex justify-end gap-2"><Button variant="outline" asChild><Link to={id ? `/parts/${id}` : "/parts"}>Annuler</Link></Button><Button type="submit" disabled={isSaving}><Save />{isSaving ? "Enregistrement..." : "Enregistrer"}</Button></div>
+        <div className="flex justify-end gap-2">
+          <Button variant="outline" asChild>
+            <Link to={id ? `/parts/${id}` : "/parts"}>Annuler</Link>
+          </Button>
+          <Button type="submit" disabled={isSaving}>
+            <Save />
+            {isSaving ? "Enregistrement..." : "Enregistrer"}
+          </Button>
+        </div>
       </form>
     </div>
   )
 }
 
 function partToForm(part: Part) {
-  return { partTypeId: String(part.partType.id), quantity: String(part.quantity), vehicleIds: part.vehicles.map((vehicle) => String(vehicle.id)), note: part.note ?? "" }
+  return {
+    partTypeId: String(part.partType.id),
+    quantity: String(part.quantity),
+    vehicleIds: part.vehicles.map((vehicle) => String(vehicle.id)),
+    note: part.note ?? "",
+  }
 }
 
 function formToPayload(form: typeof emptyForm): PartPayload {
-  return { partType: `/api/part_types/${form.partTypeId}`, quantity: Number(form.quantity), vehicles: form.vehicleIds.map((id) => `/api/vehicles/${id}`), note: form.note || null }
+  return {
+    partType: `/api/part_types/${form.partTypeId}`,
+    quantity: Number(form.quantity),
+    vehicles: form.vehicleIds.map((id) => `/api/vehicles/${id}`),
+    note: form.note || null,
+  }
 }

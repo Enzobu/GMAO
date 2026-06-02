@@ -1,6 +1,13 @@
-import { useEffect, useMemo, useRef, useState } from "react"
+import { useEffect, useEffectEvent, useMemo, useRef, useState } from "react"
 import { useNavigate } from "react-router-dom"
-import { CarFront, Loader2, Search, User, Warehouse, Wrench } from "lucide-react"
+import {
+  CarFront,
+  Loader2,
+  Search,
+  User,
+  Warehouse,
+  Wrench,
+} from "lucide-react"
 
 import { getInterventions } from "@/api/interventions"
 import { getParts } from "@/api/parts"
@@ -12,7 +19,12 @@ import type { Intervention } from "@/types/intervention"
 import type { Part } from "@/types/part"
 import type { AppUser } from "@/types/user"
 import type { Vehicle } from "@/types/vehicle"
-import { formatDateTime, interventionStatusLabel, vehicleDisplayName } from "@/lib/intervention-utils"
+import {
+  formatDateTime,
+  interventionStatusLabel,
+  vehicleDisplayName,
+} from "@/lib/intervention-utils"
+import { capitalizeFirstLetter } from "@/lib/text-format"
 import { cn } from "@/lib/utils"
 
 type SearchCategory = "vehicle" | "intervention" | "part" | "user"
@@ -59,7 +71,13 @@ export function GlobalSearch({ className }: Readonly<{ className?: string }>) {
   const [isOpen, setIsOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [hasLoaded, setHasLoaded] = useState(false)
-  const [data, setData] = useState<SearchData>({ vehicles: [], interventions: [], parts: [], users: [] })
+  const [data, setData] = useState<SearchData>({
+    vehicles: [],
+    interventions: [],
+    parts: [],
+    users: [],
+  })
+  const loadSearchDataEvent = useEffectEvent(loadSearchData)
 
   useEffect(() => {
     function handleSearchShortcut(event: KeyboardEvent) {
@@ -68,7 +86,7 @@ export function GlobalSearch({ className }: Readonly<{ className?: string }>) {
         searchInputRef.current?.focus()
         searchInputRef.current?.select()
         setIsOpen(true)
-        void loadSearchData()
+        loadSearchDataEvent()
       }
     }
 
@@ -85,7 +103,7 @@ export function GlobalSearch({ className }: Readonly<{ className?: string }>) {
       globalThis.removeEventListener("keydown", handleSearchShortcut)
       globalThis.removeEventListener("pointerdown", handlePointerDown)
     }
-  }, [hasLoaded, isAdmin])
+  }, [])
 
   const results = useMemo(() => {
     const normalizedQuery = normalize(query)
@@ -95,7 +113,9 @@ export function GlobalSearch({ className }: Readonly<{ className?: string }>) {
     }
 
     return buildResults(data)
-      .filter((result) => normalize(result.searchable).includes(normalizedQuery))
+      .filter((result) =>
+        normalize(result.searchable).includes(normalizedQuery),
+      )
       .slice(0, 12)
   }, [data, query])
 
@@ -141,7 +161,12 @@ export function GlobalSearch({ className }: Readonly<{ className?: string }>) {
   function renderDropdownContent() {
     if (isLoading) {
       return (
-        <div className="flex items-center gap-2 px-4 py-3 text-sm text-muted-foreground">
+        <div
+          className={cn(
+            "flex items-center gap-2 px-4 py-3 text-sm",
+            "text-muted-foreground",
+          )}
+        >
           <Loader2 className="size-4 animate-spin" />
           Recherche en cours...
         </div>
@@ -149,16 +174,31 @@ export function GlobalSearch({ className }: Readonly<{ className?: string }>) {
     }
 
     if (query.trim().length < MIN_SEARCH_LENGTH) {
-      return <div className="px-4 py-3 text-sm text-muted-foreground">Saisissez au moins {MIN_SEARCH_LENGTH} caractères.</div>
+      return (
+        <div className="px-4 py-3 text-sm text-muted-foreground">
+          Saisissez au moins {MIN_SEARCH_LENGTH} caractères.
+        </div>
+      )
     }
 
     if (results.length === 0) {
-      return <div className="px-4 py-3 text-sm text-muted-foreground">Aucun résultat trouvé.</div>
+      return (
+        <div className="px-4 py-3 text-sm text-muted-foreground">
+          Aucun résultat trouvé.
+        </div>
+      )
     }
 
     return (
       <div className="max-h-[28rem] overflow-y-auto py-2">
-        {groupedResults.map(([category, categoryResults]) => <SearchResultGroup key={category} category={category} results={categoryResults} onOpenResult={openResult} />)}
+        {groupedResults.map(([category, categoryResults]) => (
+          <SearchResultGroup
+            key={category}
+            category={category}
+            results={categoryResults}
+            onOpenResult={openResult}
+          />
+        ))}
       </div>
     )
   }
@@ -166,13 +206,24 @@ export function GlobalSearch({ className }: Readonly<{ className?: string }>) {
   const shouldShowDropdown = isOpen && (query.length > 0 || isLoading)
 
   return (
-    <div ref={containerRef} className={cn("relative w-full min-w-0 max-w-lg", className)}>
-      <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
+    <div
+      ref={containerRef}
+      className={cn("relative w-full min-w-0 max-w-lg", className)}
+    >
+      <Search
+        className={cn(
+          "pointer-events-none absolute top-1/2 left-3 size-4",
+          "-translate-y-1/2 text-muted-foreground",
+        )}
+      />
       <Input
         ref={searchInputRef}
         value={query}
         placeholder="Rechercher..."
-        className="h-11 rounded-xl border-border bg-card pr-10 pl-10 sm:h-12 sm:pr-20"
+        className={cn(
+          "h-11 rounded-xl border-border bg-card pr-10 pl-10",
+          "sm:h-12 sm:pr-20",
+        )}
         onFocus={() => {
           setIsOpen(true)
           void loadSearchData()
@@ -185,13 +236,40 @@ export function GlobalSearch({ className }: Readonly<{ className?: string }>) {
         onKeyDown={handleKeyDown}
       />
 
-      <div className="pointer-events-none absolute right-3 top-1/2 hidden -translate-y-1/2 items-center gap-1 text-xs text-muted-foreground sm:flex">
-        <kbd className="rounded-md border border-border bg-muted px-1.5 py-0.5 font-sans">Ctrl</kbd>
-        <kbd className="rounded-md border border-border bg-muted px-1.5 py-0.5 font-sans">K</kbd>
+      <div
+        className={cn(
+          "pointer-events-none absolute right-3 top-1/2 hidden",
+          "-translate-y-1/2 items-center gap-1 text-xs",
+          "text-muted-foreground sm:flex",
+        )}
+      >
+        <kbd
+          className={cn(
+            "rounded-md border border-border bg-muted px-1.5 py-0.5",
+            "font-sans",
+          )}
+        >
+          Ctrl
+        </kbd>
+        <kbd
+          className={cn(
+            "rounded-md border border-border bg-muted px-1.5 py-0.5",
+            "font-sans",
+          )}
+        >
+          K
+        </kbd>
       </div>
 
       {shouldShowDropdown && (
-        <div className="absolute top-full right-0 left-0 z-50 mt-2 min-w-[min(22rem,calc(100vw-2rem))] overflow-hidden rounded-xl border bg-popover text-popover-foreground shadow-xl sm:min-w-0">
+        <div
+          className={cn(
+            "absolute top-full right-0 left-0 z-50 mt-2",
+            "min-w-[min(22rem,calc(100vw-2rem))] overflow-hidden",
+            "rounded-xl border bg-popover text-popover-foreground",
+            "shadow-xl sm:min-w-0",
+          )}
+        >
           {renderDropdownContent()}
         </div>
       )}
@@ -199,31 +277,63 @@ export function GlobalSearch({ className }: Readonly<{ className?: string }>) {
   )
 }
 
-function SearchResultGroup({ category, results, onOpenResult }: Readonly<{ category: SearchCategory; results: SearchResult[]; onOpenResult: (result: SearchResult) => void }>) {
+type SearchResultGroupProps = Readonly<{
+  category: SearchCategory
+  results: SearchResult[]
+  onOpenResult: (result: SearchResult) => void
+}>
+
+function SearchResultGroup({
+  category,
+  results,
+  onOpenResult,
+}: SearchResultGroupProps) {
   const Icon = categoryIcons[category]
 
   return (
     <div className="py-1">
-      <div className="flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-muted-foreground">
+      <div
+        className={cn(
+          "flex items-center gap-2 px-3 py-1.5 text-xs font-medium",
+          "text-muted-foreground",
+        )}
+      >
         <Icon className="size-3.5" />
         {categoryLabels[category]}
       </div>
       {results.map((result) => (
-        <SearchResultButton key={result.id} result={result} onOpenResult={onOpenResult} />
+        <SearchResultButton
+          key={result.id}
+          result={result}
+          onOpenResult={onOpenResult}
+        />
       ))}
     </div>
   )
 }
 
-function SearchResultButton({ result, onOpenResult }: Readonly<{ result: SearchResult; onOpenResult: (result: SearchResult) => void }>) {
+type SearchResultButtonProps = Readonly<{
+  result: SearchResult
+  onOpenResult: (result: SearchResult) => void
+}>
+
+function SearchResultButton({
+  result,
+  onOpenResult,
+}: SearchResultButtonProps) {
   return (
     <button
       type="button"
-      className="grid w-full gap-0.5 px-4 py-2 text-left text-sm hover:bg-muted focus:bg-muted focus:outline-none"
+      className={cn(
+        "grid w-full gap-0.5 px-4 py-2 text-left text-sm",
+        "hover:bg-muted focus:bg-muted focus:outline-none",
+      )}
       onClick={() => onOpenResult(result)}
     >
       <span className="font-medium">{result.title}</span>
-      <span className="truncate text-xs text-muted-foreground">{result.description}</span>
+      <span className="truncate text-xs text-muted-foreground">
+        {result.description}
+      </span>
     </button>
   )
 }
@@ -239,7 +349,14 @@ function buildResults(data: SearchData): SearchResult[] {
 
 function vehicleResult(vehicle: Vehicle): SearchResult {
   const title = vehicleDisplayName(vehicle)
-  const description = `${vehicle.registration.toUpperCase()} - ${[vehicle.brand, vehicle.model].filter(Boolean).join(" ")}`
+  const vehicleDetails = [
+    capitalizeFirstLetter(vehicle.brand),
+    capitalizeFirstLetter(vehicle.model),
+  ]
+    .filter(Boolean)
+    .join(" ")
+  const registration = vehicle.registration.toUpperCase()
+  const description = `${registration} - ${vehicleDetails}`
 
   return {
     id: `vehicle-${vehicle.id}`,
@@ -247,7 +364,16 @@ function vehicleResult(vehicle: Vehicle): SearchResult {
     title,
     description,
     to: `/vehicles/${vehicle.id}`,
-    searchable: [title, vehicle.name, vehicle.brand, vehicle.model, vehicle.registration, vehicle.vin].filter(Boolean).join(" "),
+    searchable: [
+      title,
+      vehicle.name,
+      vehicle.brand,
+      vehicle.model,
+      vehicle.registration,
+      vehicle.vin,
+    ]
+      .filter(Boolean)
+      .join(" "),
   }
 }
 
@@ -255,22 +381,35 @@ function interventionResult(intervention: Intervention): SearchResult {
   const vehicle = intervention.vehicle
   const type = intervention.maintenanceType?.name ?? "Intervention"
   const status = interventionStatusLabel(intervention.status)
-  const date = intervention.finishedAt ?? intervention.startedAt ?? intervention.plannedAt ?? intervention.createdAt
-  const vehicleLabel = vehicle ? `${vehicleDisplayName(vehicle)} ${vehicle.registration}` : "Véhicule inconnu"
+  const date =
+    intervention.finishedAt
+    ?? intervention.startedAt
+    ?? intervention.plannedAt
+    ?? intervention.createdAt
+  const vehicleLabel = vehicle
+    ? `${vehicleDisplayName(vehicle)} ${vehicle.registration}`
+    : "Véhicule inconnu"
+  const to = vehicle
+    ? `/vehicles/${vehicle.id}/interventions/${intervention.id}`
+    : `/interventions/${intervention.id}`
 
   return {
     id: `intervention-${intervention.id}`,
     category: "intervention",
     title: type,
     description: `${status} - ${formatDateTime(date)} - ${vehicleLabel}`,
-    to: vehicle ? `/vehicles/${vehicle.id}/interventions/${intervention.id}` : `/interventions/${intervention.id}`,
-    searchable: [type, status, date, formatDateTime(date), vehicleLabel].filter(Boolean).join(" "),
+    to,
+    searchable: [type, status, date, formatDateTime(date), vehicleLabel]
+      .filter(Boolean)
+      .join(" "),
   }
 }
 
 function partResult(part: Part): SearchResult {
   const type = part.partType?.name ?? "Pièce"
-  const vehicles = part.vehicles?.map((vehicle) => vehicle.registration).join(", ")
+  const vehicles = part.vehicles
+    ?.map((vehicle) => vehicle.registration)
+    .join(", ")
 
   return {
     id: `part-${part.id}`,
@@ -278,7 +417,9 @@ function partResult(part: Part): SearchResult {
     title: type,
     description: `Stock: ${part.quantity} - ${vehicles || "Aucun véhicule"}`,
     to: `/parts/${part.id}`,
-    searchable: [type, part.partType?.description, part.note, vehicles].filter(Boolean).join(" "),
+    searchable: [type, part.partType?.description, part.note, vehicles]
+      .filter(Boolean)
+      .join(" "),
   }
 }
 
@@ -291,20 +432,36 @@ function userResult(user: AppUser): SearchResult {
     title,
     description: user.email,
     to: `/users/${user.id}`,
-    searchable: [user.firstname, user.lastname, user.email].filter(Boolean).join(" "),
+    searchable: [user.firstname, user.lastname, user.email]
+      .filter(Boolean)
+      .join(" "),
   }
 }
 
-function groupResults(results: SearchResult[]): [SearchCategory, SearchResult[]][] {
-  const categories: SearchCategory[] = ["vehicle", "intervention", "part", "user"]
+function groupResults(
+  results: SearchResult[],
+): [SearchCategory, SearchResult[]][] {
+  const categories: SearchCategory[] = [
+    "vehicle",
+    "intervention",
+    "part",
+    "user",
+  ]
 
   return categories
-    .map((category): [SearchCategory, SearchResult[]] => [category, results.filter((result) => result.category === category)])
+    .map((category): [SearchCategory, SearchResult[]] => [
+      category,
+      results.filter((result) => result.category === category),
+    ])
     .filter(([, categoryResults]) => categoryResults.length > 0)
 }
 
 function userLabel(user: AppUser) {
-  return `${user.firstname ?? ""} ${user.lastname ?? ""}`.trim() || user.email
+  const firstName = capitalizeFirstLetter(user.firstname)
+  const lastName = capitalizeFirstLetter(user.lastname)
+  const fullName = `${firstName} ${lastName}`.trim()
+
+  return fullName || user.email
 }
 
 function isVisible(item: { isDeleted?: boolean; deleted?: boolean }) {

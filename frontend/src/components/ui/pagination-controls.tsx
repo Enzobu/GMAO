@@ -29,12 +29,22 @@ function PaginationControls({
   itemLabel = "élément(s)",
 }: PaginationControlsProps) {
   return (
-    <div className="flex flex-col gap-3 text-sm text-muted-foreground lg:flex-row lg:items-center lg:justify-between">
+    <div
+      className={[
+        "flex flex-col gap-3 text-sm text-muted-foreground",
+        "lg:flex-row lg:items-center lg:justify-between",
+      ].join(" ")}
+    >
       <span>
         Affichage {visibleStart}-{visibleEnd} sur {totalItems} {itemLabel}
       </span>
 
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-end">
+      <div
+        className={[
+          "flex flex-col gap-2 sm:flex-row sm:items-center",
+          "sm:justify-end",
+        ].join(" ")}
+      >
         <label className="flex items-center gap-2 whitespace-nowrap">
           <span>Par page</span>
           <NativeSelect
@@ -47,11 +57,23 @@ function PaginationControls({
 
         {itemsPerPage !== "all" && (
           <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" onClick={onPreviousPage} disabled={currentPage === 1}>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={onPreviousPage}
+              disabled={currentPage === 1}
+            >
               Précédent
             </Button>
-            <span className="whitespace-nowrap">Page {currentPage} / {pageCount}</span>
-            <Button variant="outline" size="sm" onClick={onNextPage} disabled={currentPage === pageCount}>
+            <span className="whitespace-nowrap">
+              Page {currentPage} / {pageCount}
+            </span>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={onNextPage}
+              disabled={currentPage === pageCount}
+            >
               Suivant
             </Button>
           </div>

@@ -120,4 +120,34 @@ class MaintenanceRepository extends ServiceEntityRepository
             ->getQuery()
             ->getOneOrNullResult();
     }
+
+    /**
+     * @return Maintenance[]
+     */
+    public function findTodoScheduledForReminderDate(\DateTimeImmutable $date): array
+    {
+        $start = $date->setTime(0, 0);
+        $end = $start->modify('+1 day');
+
+        return $this->createQueryBuilder('m')
+            ->join('m.vehicle', 'v')
+            ->addSelect('v')
+            ->join('v.user', 'u')
+            ->addSelect('u')
+            ->join('m.maintenanceType', 'mt')
+            ->addSelect('mt')
+            ->andWhere(self::IS_DELETED_CONDITION)
+            ->andWhere('v.isDeleted = :isDeleted')
+            ->andWhere('u.isDeleted = :isDeleted')
+            ->andWhere('m.status = :status')
+            ->andWhere('m.plannedAt >= :start')
+            ->andWhere('m.plannedAt < :end')
+            ->setParameter('isDeleted', false)
+            ->setParameter('status', MaintenanceStatusEnum::ToDo->value)
+            ->setParameter('start', $start)
+            ->setParameter('end', $end)
+            ->orderBy('m.plannedAt', 'ASC')
+            ->getQuery()
+            ->getResult();
+    }
 }

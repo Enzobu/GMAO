@@ -1,33 +1,67 @@
 import { useEffect, useMemo, useState } from "react"
 import { Link } from "react-router-dom"
-import { Info, Plus, Search, Trash2, X } from "lucide-react"
+import { Info, Trash2 } from "lucide-react"
 import { AxiosError } from "axios"
 
 import { deleteUser, getUsers } from "@/api/users"
+import {
+  CARD_LINK_CLASS,
+  FILTER_GRID_CLASS,
+  RESOURCE_CARD_CLASS,
+} from "@/components/list-page-classes"
+import {
+  EmptyListCard,
+  ListPageHeader,
+  ReadOnlyBadge,
+  ResetFiltersButton,
+  SearchField,
+} from "@/components/list-page-primitives"
+import {
+  ITEMS_PER_PAGE_OPTIONS,
+  type ItemsPerPageValue,
+  type PaginationState,
+  getPaginatedItems,
+  getPaginationState,
+} from "@/components/list-page-pagination"
+import { ErrorMessage } from "@/components/page-primitives"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
 import { ConfirmDialog } from "@/components/ui/confirm-dialog"
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 import { NativeSelect } from "@/components/ui/native-select"
 import { PaginationControls } from "@/components/ui/pagination-controls"
 import { useLocalStorageState } from "@/hooks/use-local-storage-state"
+import {
+  isUserAdmin,
+  roleLabel,
+  userDisplayName,
+  userInitials,
+} from "@/lib/user-utils"
 import { useAuthStore } from "@/stores/auth-store"
 import type { AppUser } from "@/types/user"
-import { isUserAdmin, roleLabel, userDisplayName, userInitials } from "@/lib/user-utils"
 
 type RoleFilter = "all" | "admin" | "user"
 type EditabilityFilter = "all" | "editable" | "readonly"
 type SortValue = "name" | "email" | "role"
-type ItemsPerPageValue = "6" | "12" | "24" | "all"
 
-const ITEMS_PER_PAGE_OPTIONS = [
-  { value: "6", label: "6" },
-  { value: "12", label: "12" },
-  { value: "24", label: "24" },
-  { value: "all", label: "Tous" },
-] as const
+const AVATAR_CLASS = [
+  "flex size-8 items-center justify-center rounded-lg bg-primary",
+  "text-xs font-semibold text-primary-foreground",
+].join(" ")
 
 export default function UsersPage() {
   const currentUser = useAuthStore((state) => state.user)
@@ -37,9 +71,11 @@ export default function UsersPage() {
   const [error, setError] = useState<string | null>(null)
   const [search, setSearch] = useState("")
   const [roleFilter, setRoleFilter] = useState<RoleFilter>("all")
-  const [editabilityFilter, setEditabilityFilter] = useState<EditabilityFilter>("all")
+  const [editabilityFilter, setEditabilityFilter] =
+    useState<EditabilityFilter>("all")
   const [sort, setSort] = useState<SortValue>("name")
-  const [itemsPerPage, setItemsPerPage] = useLocalStorageState<ItemsPerPageValue>("users.itemsPerPage", "6")
+  const [itemsPerPage, setItemsPerPage] =
+    useLocalStorageState<ItemsPerPageValue>("users.itemsPerPage", "6")
   const [page, setPage] = useState(1)
   const [userToDelete, setUserToDelete] = useState<AppUser | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
@@ -51,53 +87,90 @@ export default function UsersPage() {
     async function loadUsers() {
       try {
         const data = await getUsers()
-        if (!ignore) setUsers(data)
+        if (!ignore) {
+          setUsers(data)
+        }
       } catch {
-        if (!ignore) setError("Impossible de charger les utilisateurs.")
+        if (!ignore) {
+          setError("Impossible de charger les utilisateurs.")
+        }
       } finally {
-        if (!ignore) setIsLoading(false)
+        if (!ignore) {
+          setIsLoading(false)
+        }
       }
     }
 
     loadUsers()
-    return () => { ignore = true }
+
+    return () => {
+      ignore = true
+    }
   }, [])
 
   const filteredUsers = useMemo(() => {
     const normalizedSearch = normalize(search)
+
     return users
       .filter((user) => {
         const canEdit = canEditUser(user, currentUser?.id, isAdmin)
-        const searchable = normalize([userDisplayName(user), user.email, ...user.roles.map(roleLabel)].join(" "))
-        if (normalizedSearch && !searchable.includes(normalizedSearch)) return false
-        if (roleFilter === "admin" && !isUserAdmin(user)) return false
-        if (roleFilter === "user" && isUserAdmin(user)) return false
-        if (editabilityFilter === "editable" && !canEdit) return false
-        if (editabilityFilter === "readonly" && canEdit) return false
+        const searchable = normalize(searchableUser(user))
+
+        if (normalizedSearch && !searchable.includes(normalizedSearch)) {
+          return false
+        }
+        if (roleFilter === "admin" && !isUserAdmin(user)) {
+          return false
+        }
+        if (roleFilter === "user" && isUserAdmin(user)) {
+          return false
+        }
+        if (editabilityFilter === "editable" && !canEdit) {
+          return false
+        }
+        if (editabilityFilter === "readonly" && canEdit) {
+          return false
+        }
+
         return true
       })
       .sort((first, second) => compareUsers(first, second, sort))
-  }, [users, search, roleFilter, editabilityFilter, sort, currentUser?.id, isAdmin])
+  }, [
+    users,
+    search,
+    roleFilter,
+    editabilityFilter,
+    sort,
+    currentUser?.id,
+    isAdmin,
+  ])
 
-  const pageSize = itemsPerPage === "all" ? filteredUsers.length || 1 : Number(itemsPerPage)
-  const pageCount = Math.max(1, Math.ceil(filteredUsers.length / pageSize))
-  const currentPage = Math.min(page, pageCount)
-  const pageStart = (currentPage - 1) * pageSize
-  const pageEnd = pageStart + pageSize
-  const paginatedUsers = itemsPerPage === "all" ? filteredUsers : filteredUsers.slice(pageStart, pageEnd)
-  const visibleStart = filteredUsers.length === 0 ? 0 : pageStart + 1
-  const visibleEnd = itemsPerPage === "all" ? filteredUsers.length : Math.min(pageEnd, filteredUsers.length)
-  const hasActiveFilters = search || roleFilter !== "all" || editabilityFilter !== "all" || sort !== "name"
-
-  useEffect(() => { setPage(1) }, [search, roleFilter, editabilityFilter, sort, itemsPerPage])
+  const pagination = getPaginationState(filteredUsers.length, itemsPerPage, page)
+  const paginatedUsers = getPaginatedItems(
+    filteredUsers,
+    itemsPerPage,
+    pagination,
+  )
+  const hasActiveFilters = Boolean(
+    search
+      || roleFilter !== "all"
+      || editabilityFilter !== "all"
+      || sort !== "name",
+  )
 
   async function confirmDelete() {
-    if (!userToDelete) return
+    if (!userToDelete) {
+      return
+    }
+
     setIsDeleting(true)
     setError(null)
+
     try {
       await deleteUser(userToDelete.id)
-      setUsers((current) => current.filter((user) => user.id !== userToDelete.id))
+      setUsers((current) => {
+        return current.filter((user) => user.id !== userToDelete.id)
+      })
       setUserToDelete(null)
     } catch (error_) {
       setError(errorMessage(error_, "Impossible de supprimer cet utilisateur."))
@@ -108,9 +181,12 @@ export default function UsersPage() {
 
   function handleDeleteClick(user: AppUser) {
     if (user.id === currentUser?.id) {
-      setBlockedMessage("Vous ne pouvez pas supprimer votre propre compte administrateur.")
+      setBlockedMessage(
+        "Vous ne pouvez pas supprimer votre propre compte administrateur.",
+      )
       return
     }
+
     setUserToDelete(user)
   }
 
@@ -121,84 +197,320 @@ export default function UsersPage() {
     setSort("name")
   }
 
-  if (isLoading) return <div className="text-sm text-muted-foreground">Chargement des utilisateurs...</div>
-  if (error && users.length === 0) return <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive">{error}</div>
+  if (isLoading) {
+    return (
+      <div className="text-sm text-muted-foreground">
+        Chargement des utilisateurs...
+      </div>
+    )
+  }
+
+  if (error && users.length === 0) {
+    return <ErrorMessage>{error}</ErrorMessage>
+  }
 
   return (
     <div className="space-y-6">
-      <ConfirmDialog open={userToDelete !== null} title="Supprimer l’utilisateur ?" description={userToDelete ? `${userDisplayName(userToDelete)} sera masqué de la plateforme. Aucune donnée ne sera supprimée définitivement.` : ""} confirmLabel="Supprimer" isLoading={isDeleting} onOpenChange={(open) => !open && !isDeleting && setUserToDelete(null)} onConfirm={confirmDelete} />
-      <InfoDialog message={blockedMessage} onOpenChange={(open) => !open && setBlockedMessage(null)} />
+      <ConfirmDialog
+        open={userToDelete !== null}
+        title="Supprimer l’utilisateur ?"
+        description={userToDelete ? deleteDescription(userToDelete) : ""}
+        confirmLabel="Supprimer"
+        isLoading={isDeleting}
+        onOpenChange={(open) => {
+          if (!open && !isDeleting) {
+            setUserToDelete(null)
+          }
+        }}
+        onConfirm={confirmDelete}
+      />
+      <InfoDialog
+        message={blockedMessage}
+        onOpenChange={(open) => !open && setBlockedMessage(null)}
+      />
 
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Utilisateurs</h1>
-          <p className="text-sm text-muted-foreground">{filteredUsers.length} sur {users.length} utilisateur(s)</p>
-        </div>
-        {isAdmin && <Button asChild><Link to="/users/new"><Plus />Ajouter un utilisateur</Link></Button>}
-      </div>
+      <ListPageHeader
+        title="Utilisateurs"
+        countLabel={countLabel(filteredUsers.length, users.length)}
+        addTo={isAdmin ? "/users/new" : undefined}
+        addLabel="Ajouter un utilisateur"
+      />
 
-      {error && <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive">{error}</div>}
+      {error && <ErrorMessage>{error}</ErrorMessage>}
 
-      <Card>
-        <CardContent className="grid min-w-0 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
-          <label className="grid min-w-0 gap-1.5 text-sm font-medium sm:col-span-2 lg:col-span-3 xl:col-span-1" htmlFor="user-search">
-            <span>Recherche</span>
-            <div className="relative min-w-0"><Search className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" /><Input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Nom, email, rôle..." className="pl-8" id="user-search" /></div>
-          </label>
-          <NativeSelect label="Rôle" value={roleFilter} onChange={(event) => setRoleFilter(event.target.value as RoleFilter)} options={[{ value: "all", label: "Tous" }, { value: "admin", label: "Administrateurs" }, { value: "user", label: "Utilisateurs" }]} />
-          <NativeSelect label="Droit" value={editabilityFilter} onChange={(event) => setEditabilityFilter(event.target.value as EditabilityFilter)} options={[{ value: "all", label: "Tous" }, { value: "editable", label: "Modifiables" }, { value: "readonly", label: "Lecture seule" }]} />
-          <NativeSelect label="Tri" value={sort} onChange={(event) => setSort(event.target.value as SortValue)} options={[{ value: "name", label: "Nom A-Z" }, { value: "email", label: "Email A-Z" }, { value: "role", label: "Rôle" }]} />
-          <div className="flex items-end"><Button variant="outline" className="w-full" onClick={resetFilters} disabled={!hasActiveFilters}><X />Réinitialiser</Button></div>
-        </CardContent>
-      </Card>
+      <FiltersCard
+        search={search}
+        roleFilter={roleFilter}
+        editabilityFilter={editabilityFilter}
+        sort={sort}
+        hasActiveFilters={hasActiveFilters}
+        onSearchChange={(value) => updateFilter(setSearch, value, setPage)}
+        onRoleChange={(value) => updateFilter(setRoleFilter, value, setPage)}
+        onEditabilityChange={(value) => {
+          updateFilter(setEditabilityFilter, value, setPage)
+        }}
+        onSortChange={(value) => updateFilter(setSort, value, setPage)}
+        onReset={resetFilters}
+      />
 
-      {filteredUsers.length === 0 ? <Card><CardContent className="py-8 text-center text-sm text-muted-foreground">Aucun utilisateur ne correspond aux critères.</CardContent></Card> : (
+      {filteredUsers.length === 0 ? (
+        <EmptyListCard>
+          Aucun utilisateur ne correspond aux critères.
+        </EmptyListCard>
+      ) : (
         <>
-          <PaginationControls currentPage={currentPage} pageCount={pageCount} totalItems={filteredUsers.length} visibleStart={visibleStart} visibleEnd={visibleEnd} itemsPerPage={itemsPerPage} itemsPerPageOptions={ITEMS_PER_PAGE_OPTIONS} onItemsPerPageChange={(value) => setItemsPerPage(value as ItemsPerPageValue)} onPreviousPage={() => setPage((current) => Math.max(1, current - 1))} onNextPage={() => setPage((current) => Math.min(pageCount, current + 1))} itemLabel="utilisateur(s)" />
+          <UsersPagination
+            pagination={pagination}
+            itemsPerPage={itemsPerPage}
+            totalItems={filteredUsers.length}
+            onItemsPerPageChange={setItemsPerPage}
+            onPageChange={setPage}
+          />
           <div className="grid gap-4 xl:grid-cols-2">
-            {paginatedUsers.map((user) => {
-              const canEdit = canEditUser(user, currentUser?.id, isAdmin)
-              const isCurrentUser = user.id === currentUser?.id
-              return (
-                <Card key={user.id} className="relative border border-foreground/10 ring-0 transition-colors hover:border-primary/35 hover:bg-muted/30">
-                  <Link to={`/users/${user.id}`} className="absolute inset-0 z-10 rounded-xl focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50" aria-label={`Voir ${userDisplayName(user)}`} />
-                  <CardHeader><CardTitle className="flex flex-wrap items-center gap-2"><Avatar user={user} /><span>{userDisplayName(user)}</span><RoleBadges user={user} />{isCurrentUser && <Badge>Vous</Badge>}{!canEdit && <ReadOnlyBadge />}</CardTitle></CardHeader>
-                  <CardContent><div className="text-sm text-muted-foreground"><strong className="text-foreground">Email</strong> {user.email}</div></CardContent>
-                  {(canEdit || isAdmin) && <CardFooter className="relative z-20 justify-end gap-2">{canEdit && <Button variant="outline" size="sm" asChild><Link to={isCurrentUser && !isAdmin ? "/profile" : `/users/${user.id}/edit`}>Modifier</Link></Button>}{isAdmin && <Button variant="destructive" size="sm" onClick={() => handleDeleteClick(user)}><Trash2 />Supprimer</Button>}</CardFooter>}
-                </Card>
-              )
-            })}
+            {paginatedUsers.map((user) => (
+              <UserCard
+                key={user.id}
+                user={user}
+                currentUserId={currentUser?.id}
+                isAdmin={isAdmin}
+                onDelete={handleDeleteClick}
+              />
+            ))}
           </div>
-          {pageCount > 1 && <PaginationControls currentPage={currentPage} pageCount={pageCount} totalItems={filteredUsers.length} visibleStart={visibleStart} visibleEnd={visibleEnd} itemsPerPage={itemsPerPage} itemsPerPageOptions={ITEMS_PER_PAGE_OPTIONS} onItemsPerPageChange={(value) => setItemsPerPage(value as ItemsPerPageValue)} onPreviousPage={() => setPage((current) => Math.max(1, current - 1))} onNextPage={() => setPage((current) => Math.min(pageCount, current + 1))} itemLabel="utilisateur(s)" />}
+          {pagination.pageCount > 1 && (
+            <UsersPagination
+              pagination={pagination}
+              itemsPerPage={itemsPerPage}
+              totalItems={filteredUsers.length}
+              onItemsPerPageChange={setItemsPerPage}
+              onPageChange={setPage}
+            />
+          )}
         </>
       )}
     </div>
   )
 }
 
-export function RoleBadges({ user }: Readonly<{ user: AppUser }>) {
-  return <>{user.roles.map((role) => <Badge key={role} variant={role === "ROLE_ADMIN" ? "destructive" : "secondary"}>{roleLabel(role)}</Badge>)}</>
+function FiltersCard({
+  search,
+  roleFilter,
+  editabilityFilter,
+  sort,
+  hasActiveFilters,
+  onSearchChange,
+  onRoleChange,
+  onEditabilityChange,
+  onSortChange,
+  onReset,
+}: Readonly<{
+  search: string
+  roleFilter: RoleFilter
+  editabilityFilter: EditabilityFilter
+  sort: SortValue
+  hasActiveFilters: boolean
+  onSearchChange: (value: string) => void
+  onRoleChange: (value: RoleFilter) => void
+  onEditabilityChange: (value: EditabilityFilter) => void
+  onSortChange: (value: SortValue) => void
+  onReset: () => void
+}>) {
+  return (
+    <Card>
+      <CardContent className={FILTER_GRID_CLASS}>
+        <SearchField
+          id="user-search"
+          value={search}
+          placeholder="Nom, email, rôle..."
+          onChange={onSearchChange}
+        />
+        <NativeSelect
+          label="Rôle"
+          value={roleFilter}
+          onChange={(event) => onRoleChange(event.target.value as RoleFilter)}
+          options={ROLE_FILTER_OPTIONS}
+        />
+        <NativeSelect
+          label="Droit"
+          value={editabilityFilter}
+          onChange={(event) => {
+            onEditabilityChange(event.target.value as EditabilityFilter)
+          }}
+          options={EDITABILITY_FILTER_OPTIONS}
+        />
+        <NativeSelect
+          label="Tri"
+          value={sort}
+          onChange={(event) => onSortChange(event.target.value as SortValue)}
+          options={SORT_OPTIONS}
+        />
+        <ResetFiltersButton
+          disabled={!hasActiveFilters}
+          onReset={onReset}
+        />
+      </CardContent>
+    </Card>
+  )
 }
 
-export function ReadOnlyBadge() {
-  return <Badge variant="outline" className="border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-300">Lecture seule</Badge>
+function UsersPagination({
+  pagination,
+  itemsPerPage,
+  totalItems,
+  onItemsPerPageChange,
+  onPageChange,
+}: Readonly<{
+  pagination: PaginationState
+  itemsPerPage: ItemsPerPageValue
+  totalItems: number
+  onItemsPerPageChange: (value: ItemsPerPageValue) => void
+  onPageChange: (value: React.SetStateAction<number>) => void
+}>) {
+  return (
+    <PaginationControls
+      currentPage={pagination.currentPage}
+      pageCount={pagination.pageCount}
+      totalItems={totalItems}
+      visibleStart={pagination.visibleStart}
+      visibleEnd={pagination.visibleEnd}
+      itemsPerPage={itemsPerPage}
+      itemsPerPageOptions={ITEMS_PER_PAGE_OPTIONS}
+      onItemsPerPageChange={(value) => {
+        onItemsPerPageChange(value as ItemsPerPageValue)
+      }}
+      onPreviousPage={() => {
+        onPageChange((current) => Math.max(1, current - 1))
+      }}
+      onNextPage={() => {
+        onPageChange((current) => Math.min(pagination.pageCount, current + 1))
+      }}
+      itemLabel="utilisateur(s)"
+    />
+  )
+}
+
+function UserCard({
+  user,
+  currentUserId,
+  isAdmin,
+  onDelete,
+}: Readonly<{
+  user: AppUser
+  currentUserId?: number
+  isAdmin: boolean
+  onDelete: (user: AppUser) => void
+}>) {
+  const canEdit = canEditUser(user, currentUserId, isAdmin)
+  const isCurrentUser = user.id === currentUserId
+
+  return (
+    <Card className={RESOURCE_CARD_CLASS}>
+      <Link
+        to={`/users/${user.id}`}
+        className={CARD_LINK_CLASS}
+        aria-label={`Voir ${userDisplayName(user)}`}
+      />
+      <CardHeader>
+        <CardTitle className="flex flex-wrap items-center gap-2">
+          <Avatar user={user} />
+          <span>{userDisplayName(user)}</span>
+          <RoleBadges user={user} />
+          {isCurrentUser && <Badge>Vous</Badge>}
+          {!canEdit && <ReadOnlyBadge />}
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="text-sm text-muted-foreground">
+          <strong className="text-foreground">Email</strong> {user.email}
+        </div>
+      </CardContent>
+      {(canEdit || isAdmin) && (
+        <CardFooter className="relative z-20 justify-end gap-2">
+          {canEdit && (
+            <Button variant="outline" size="sm" asChild>
+              <Link to={editPath(user, isCurrentUser, isAdmin)}>Modifier</Link>
+            </Button>
+          )}
+          {isAdmin && (
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={() => onDelete(user)}
+            >
+              <Trash2 />
+              Supprimer
+            </Button>
+          )}
+        </CardFooter>
+      )}
+    </Card>
+  )
+}
+
+export function RoleBadges({ user }: Readonly<{ user: AppUser }>) {
+  return (
+    <>
+      {user.roles.map((role) => (
+        <Badge
+          key={role}
+          variant={role === "ROLE_ADMIN" ? "destructive" : "secondary"}
+        >
+          {roleLabel(role)}
+        </Badge>
+      ))}
+    </>
+  )
 }
 
 function Avatar({ user }: Readonly<{ user: AppUser }>) {
-  return <span className="flex size-8 items-center justify-center rounded-lg bg-primary text-xs font-semibold text-primary-foreground">{userInitials(user)}</span>
+  return (
+    <span className={AVATAR_CLASS}>
+      {userInitials(user)}
+    </span>
+  )
 }
 
-function InfoDialog({ message, onOpenChange }: Readonly<{ message: string | null; onOpenChange: (open: boolean) => void }>) {
-  return <Dialog open={message !== null} onOpenChange={onOpenChange}><DialogContent><DialogHeader><DialogTitle className="flex items-center gap-2"><Info className="size-5" />Action impossible</DialogTitle><DialogDescription>{message}</DialogDescription></DialogHeader><DialogFooter><Button onClick={() => onOpenChange(false)}>Compris</Button></DialogFooter></DialogContent></Dialog>
+function InfoDialog({
+  message,
+  onOpenChange,
+}: Readonly<{
+  message: string | null
+  onOpenChange: (open: boolean) => void
+}>) {
+  return (
+    <Dialog open={message !== null} onOpenChange={onOpenChange}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <Info className="size-5" />
+            Action impossible
+          </DialogTitle>
+          <DialogDescription>{message}</DialogDescription>
+        </DialogHeader>
+        <DialogFooter>
+          <Button onClick={() => onOpenChange(false)}>Compris</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  )
 }
 
-function canEditUser(user: AppUser, currentUserId: number | undefined, isAdmin: boolean) {
+function canEditUser(
+  user: AppUser,
+  currentUserId: number | undefined,
+  isAdmin: boolean,
+) {
   return isAdmin || user.id === currentUserId
 }
 
 function compareUsers(first: AppUser, second: AppUser, sort: SortValue) {
-  if (sort === "email") return first.email.localeCompare(second.email, "fr")
-  if (sort === "role") return Number(isUserAdmin(second)) - Number(isUserAdmin(first))
+  if (sort === "email") {
+    return first.email.localeCompare(second.email, "fr")
+  }
+  if (sort === "role") {
+    return Number(isUserAdmin(second)) - Number(isUserAdmin(first))
+  }
+
   return userDisplayName(first).localeCompare(userDisplayName(second), "fr")
 }
 
@@ -208,8 +520,63 @@ function normalize(value: string) {
 
 function errorMessage(caught: unknown, fallback: string) {
   if (caught instanceof AxiosError) {
-    const detail = caught.response?.data?.detail ?? caught.response?.data?.message
-    if (typeof detail === "string") return detail
+    const detail = caught.response?.data?.detail
+      ?? caught.response?.data?.message
+
+    if (typeof detail === "string") {
+      return detail
+    }
   }
+
   return fallback
+}
+
+function searchableUser(user: AppUser) {
+  return [
+    userDisplayName(user),
+    user.email,
+    ...user.roles.map(roleLabel),
+  ].join(" ")
+}
+
+function deleteDescription(user: AppUser) {
+  return [
+    `${userDisplayName(user)} sera masqué de la plateforme.`,
+    "Aucune donnée ne sera supprimée définitivement.",
+  ].join(" ")
+}
+
+function editPath(user: AppUser, isCurrentUser: boolean, isAdmin: boolean) {
+  return isCurrentUser && !isAdmin ? "/profile" : `/users/${user.id}/edit`
+}
+
+const ROLE_FILTER_OPTIONS = [
+  { value: "all", label: "Tous" },
+  { value: "admin", label: "Administrateurs" },
+  { value: "user", label: "Utilisateurs" },
+] as const
+
+const EDITABILITY_FILTER_OPTIONS = [
+  { value: "all", label: "Tous" },
+  { value: "editable", label: "Modifiables" },
+  { value: "readonly", label: "Lecture seule" },
+] as const
+
+const SORT_OPTIONS = [
+  { value: "name", label: "Nom A-Z" },
+  { value: "email", label: "Email A-Z" },
+  { value: "role", label: "Rôle" },
+] as const
+
+function countLabel(filteredCount: number, totalCount: number) {
+  return `${filteredCount} sur ${totalCount} utilisateur(s)`
+}
+
+function updateFilter<T>(
+  setter: (value: T) => void,
+  value: T,
+  setPage: (value: number) => void,
+) {
+  setter(value)
+  setPage(1)
 }

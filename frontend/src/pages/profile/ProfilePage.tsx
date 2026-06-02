@@ -8,6 +8,7 @@ import {
   updateProfile,
 } from "@/api/profile"
 import { useAuthStore } from "@/stores/auth-store"
+import { capitalizeFirstLetter } from "@/lib/text-format"
 import type { Profile, UpdateProfilePayload } from "@/types/profile"
 
 import { DocumentsPanel } from "@/components/documents-panel"
@@ -58,8 +59,8 @@ export default function ProfilePage() {
         if (isMounted) {
           setProfile(data)
           setForm({
-            firstname: data.firstname,
-            lastname: data.lastname,
+            firstname: capitalizeFirstLetter(data.firstname),
+            lastname: capitalizeFirstLetter(data.lastname),
             address: data.address,
           })
         }
@@ -131,13 +132,23 @@ export default function ProfilePage() {
       </div>
 
       {message && (
-        <div className="rounded-2xl border border-primary/30 bg-primary/10 p-4 text-sm text-primary">
+        <div
+          className={[
+            "rounded-2xl border border-primary/30 bg-primary/10 p-4",
+            "text-sm text-primary",
+          ].join(" ")}
+        >
           {message}
         </div>
       )}
 
       {error && (
-        <div className="rounded-2xl border border-red-500/40 bg-red-500/10 p-4 text-sm text-red-500">
+        <div
+          className={[
+            "rounded-2xl border border-red-500/40 bg-red-500/10 p-4",
+            "text-sm text-red-500",
+          ].join(" ")}
+        >
           {error}
         </div>
       )}
@@ -163,10 +174,12 @@ export default function ProfilePage() {
                     value={form.firstname}
                     required
                     disabled={loading || saving}
-                    onChange={(event) => setForm((current) => ({
-                      ...current,
-                      firstname: event.target.value,
-                    }))}
+                    onChange={(event) =>
+                      setForm((current) => ({
+                        ...current,
+                        firstname: capitalizeFirstLetter(event.target.value),
+                      }))
+                    }
                   />
                 </Field>
 
@@ -175,10 +188,12 @@ export default function ProfilePage() {
                     value={form.lastname}
                     required
                     disabled={loading || saving}
-                    onChange={(event) => setForm((current) => ({
-                      ...current,
-                      lastname: event.target.value,
-                    }))}
+                    onChange={(event) =>
+                      setForm((current) => ({
+                        ...current,
+                        lastname: capitalizeFirstLetter(event.target.value),
+                      }))
+                    }
                   />
                 </Field>
               </div>
@@ -199,7 +214,9 @@ export default function ProfilePage() {
                   value={form.address.line1}
                   required
                   disabled={loading || saving}
-                  onChange={(event) => updateAddress("line1", event.target.value)}
+                  onChange={(event) =>
+                    updateAddress("line1", event.target.value)
+                  }
                 />
               </Field>
 
@@ -207,7 +224,9 @@ export default function ProfilePage() {
                 <Input
                   value={form.address.line2}
                   disabled={loading || saving}
-                  onChange={(event) => updateAddress("line2", event.target.value)}
+                  onChange={(event) =>
+                    updateAddress("line2", event.target.value)
+                  }
                 />
               </Field>
 
@@ -218,7 +237,12 @@ export default function ProfilePage() {
                     maxLength={5}
                     required
                     disabled={loading || saving}
-                    onChange={(event) => updateAddress("postalCode", formatPostalCode(event.target.value))}
+                    onChange={(event) =>
+                      updateAddress(
+                        "postalCode",
+                        formatPostalCode(event.target.value),
+                      )
+                    }
                   />
                 </Field>
 
@@ -227,7 +251,9 @@ export default function ProfilePage() {
                     value={form.address.city}
                     required
                     disabled={loading || saving}
-                    onChange={(event) => updateAddress("city", event.target.value)}
+                    onChange={(event) =>
+                      updateAddress("city", event.target.value)
+                    }
                   />
                 </Field>
 
@@ -236,7 +262,9 @@ export default function ProfilePage() {
                     value={form.address.country}
                     required
                     disabled={loading || saving}
-                    onChange={(event) => updateAddress("country", event.target.value)}
+                    onChange={(event) =>
+                      updateAddress("country", event.target.value)
+                    }
                   />
                 </Field>
               </div>
@@ -260,7 +288,12 @@ export default function ProfilePage() {
           </CardTitle>
         </CardHeader>
 
-        <CardContent className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+        <CardContent
+          className={[
+            "flex flex-col gap-4 md:flex-row md:items-center",
+            "md:justify-between",
+          ].join(" ")}
+        >
           <div>
             <p className="font-medium">
               Réinitialisation du mot de passe
@@ -283,12 +316,18 @@ export default function ProfilePage() {
       </Card>
 
       {profile && (
-        <DocumentsPanel parent={{ type: "users", id: profile.id }} canDelete={isAdmin} />
+        <DocumentsPanel
+          parent={{ type: "users", id: profile.id }}
+          canDelete={isAdmin}
+        />
       )}
     </div>
   )
 
-  function updateAddress(key: keyof UpdateProfilePayload["address"], value: string) {
+  function updateAddress(
+    key: keyof UpdateProfilePayload["address"],
+    value: string,
+  ) {
     setForm((current) => ({
       ...current,
       address: {

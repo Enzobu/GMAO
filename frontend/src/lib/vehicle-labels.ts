@@ -55,12 +55,19 @@ export const VEHICLE_COLORS = [
   { value: "white", label: "Blanc", variant: "outline" },
 ] as const
 
-export function vehicleOption(collection: readonly { value: string; label: string; variant: string }[], value?: string | null) {
+export function vehicleOption(
+  collection: readonly { value: string; label: string; variant: string }[],
+  value?: string | null,
+) {
   return collection.find((item) => item.value === value)
 }
 
 export function vehicleBadgeVariant(variant?: string): BadgeVariant {
-  if (variant === "destructive" || variant === "outline" || variant === "secondary") {
+  if (
+    variant === "destructive" ||
+    variant === "outline" ||
+    variant === "secondary"
+  ) {
     return variant
   }
 

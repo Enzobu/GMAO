@@ -2,17 +2,47 @@ import { useEffect, useMemo, useState } from "react"
 import { Link, useParams } from "react-router-dom"
 import { Plus, Trash2 } from "lucide-react"
 
-import { deleteVehicleInspection, getVehicleInspections } from "@/api/vehicle-events"
+import {
+  deleteVehicleInspection,
+  getVehicleInspections,
+} from "@/api/vehicle-events"
 import { getVehicle } from "@/api/vehicles"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
 import { ConfirmDialog } from "@/components/ui/confirm-dialog"
 import { useAuthStore } from "@/stores/auth-store"
 import type { Vehicle } from "@/types/vehicle"
 import type { VehicleInspectionEvent } from "@/types/vehicle-events"
-import { formatDate, INSPECTION_RESULTS, inspectionResultVariant, optionLabel } from "@/lib/vehicle-events"
-import { DetailItem, EmptyCard, ErrorMessage, ReadOnlyBadge, VehicleEventHeader } from "./components"
+import {
+  formatDate,
+  INSPECTION_RESULTS,
+  inspectionResultVariant,
+  optionLabel,
+} from "@/lib/vehicle-events"
+import {
+  DetailItem,
+  EmptyCard,
+  ErrorMessage,
+  ReadOnlyBadge,
+  VehicleEventHeader,
+} from "./components"
+
+const EVENT_CARD_CLASS = [
+  "relative border border-foreground/10 ring-0 transition-colors",
+  "hover:border-primary/35 hover:bg-muted/30",
+].join(" ")
+
+const COUNTER_VISIT_BADGE_CLASS = [
+  "border-amber-500/30 bg-amber-500/10 text-amber-700",
+  "dark:text-amber-300",
+].join(" ")
 
 export default function VehicleInspectionsPage() {
   const { vehicleId } = useParams()
@@ -23,7 +53,8 @@ export default function VehicleInspectionsPage() {
   const [inspections, setInspections] = useState<VehicleInspectionEvent[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [inspectionToDelete, setInspectionToDelete] = useState<VehicleInspectionEvent | null>(null)
+  const [inspectionToDelete, setInspectionToDelete] =
+    useState<VehicleInspectionEvent | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
 
   useEffect(() => {
@@ -78,7 +109,9 @@ export default function VehicleInspectionsPage() {
 
     try {
       await deleteVehicleInspection(inspectionToDelete.id)
-      setInspections((current) => current.filter((inspection) => inspection.id !== inspectionToDelete.id))
+      setInspections((current) => (
+        current.filter((inspection) => inspection.id !== inspectionToDelete.id)
+      ))
       setInspectionToDelete(null)
     } finally {
       setIsDeleting(false)
@@ -86,7 +119,11 @@ export default function VehicleInspectionsPage() {
   }
 
   if (isLoading) {
-    return <div className="text-sm text-muted-foreground">Chargement des contrôles...</div>
+    return (
+      <div className="text-sm text-muted-foreground">
+        Chargement des contrôles...
+      </div>
+    )
   }
 
   if (error || !vehicle) {
@@ -125,7 +162,9 @@ export default function VehicleInspectionsPage() {
       />
 
       {inspections.length === 0 ? (
-        <EmptyCard>Aucun contrôle technique trouvé pour ce véhicule.</EmptyCard>
+        <EmptyCard>
+          Aucun contrôle technique trouvé pour ce véhicule.
+        </EmptyCard>
       ) : (
         <div className="space-y-3">
           {inspections.map((inspection) => (
@@ -158,8 +197,11 @@ function InspectionCard({
   onDelete: (inspection: VehicleInspectionEvent) => void
 }>) {
   return (
-    <Card className="relative border border-foreground/10 ring-0 transition-colors hover:border-primary/35 hover:bg-muted/30">
-      <Link to={`/vehicles/${vehicleId}/inspections/${inspection.id}`} className="absolute inset-0 z-10 rounded-xl" />
+    <Card className={EVENT_CARD_CLASS}>
+      <Link
+        to={`/vehicles/${vehicleId}/inspections/${inspection.id}`}
+        className="absolute inset-0 z-10 rounded-xl"
+      />
 
       <CardHeader>
         <CardTitle className="flex flex-wrap items-center gap-2">
@@ -173,9 +215,18 @@ function InspectionCard({
       </CardHeader>
 
       <CardContent className="grid gap-3 text-sm md:grid-cols-4">
-        <DetailItem label="Valide jusqu’au" value={formatDate(inspection.validUntil)} />
-        <DetailItem label="Kilométrage" value={formatMileage(inspection.mileage)} />
-        <DetailItem label="Contre-visite avant" value={formatDate(inspection.counterVisitDueAt)} />
+        <DetailItem
+          label="Valide jusqu’au"
+          value={formatDate(inspection.validUntil)}
+        />
+        <DetailItem
+          label="Kilométrage"
+          value={formatMileage(inspection.mileage)}
+        />
+        <DetailItem
+          label="Contre-visite avant"
+          value={formatDate(inspection.counterVisitDueAt)}
+        />
         <DetailItem label="Centre" value={inspection.center?.name ?? "—"} />
       </CardContent>
 
@@ -183,11 +234,22 @@ function InspectionCard({
         <CardFooter className="relative z-20 justify-end gap-2">
           {canEdit && (
             <Button variant="outline" size="sm" asChild>
-              <Link to={`/vehicles/${vehicleId}/inspections/${inspection.id}/edit`}>Modifier</Link>
+              <Link
+                to={
+                  `/vehicles/${vehicleId}/inspections/`
+                  + `${inspection.id}/edit`
+                }
+              >
+                Modifier
+              </Link>
             </Button>
           )}
           {isAdmin && (
-            <Button variant="destructive" size="sm" onClick={() => onDelete(inspection)}>
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={() => onDelete(inspection)}
+            >
               <Trash2 />
               Supprimer
             </Button>
@@ -204,22 +266,35 @@ function CounterVisitBadge({ required }: Readonly<{ required: boolean }>) {
   }
 
   return (
-    <Badge variant="outline" className="border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-300">
+    <Badge
+      variant="outline"
+      className={COUNTER_VISIT_BADGE_CLASS}
+    >
       Contre-visite requise
     </Badge>
   )
 }
 
-function filterVehicleInspections(items: VehicleInspectionEvent[], vehicleId: string) {
+function filterVehicleInspections(
+  items: VehicleInspectionEvent[],
+  vehicleId: string
+) {
   return items
     .filter((item) => item.vehicle.id === Number(vehicleId))
-    .sort((a, b) => String(b.inspectionDate).localeCompare(String(a.inspectionDate)))
+    .sort((a, b) => (
+      String(b.inspectionDate).localeCompare(String(a.inspectionDate))
+    ))
 }
 
 function deleteDescription(inspection: VehicleInspectionEvent | null) {
-  return inspection ? `Le contrôle du ${formatDate(inspection.inspectionDate)} sera masqué de la plateforme.` : ""
+  return inspection
+    ? `Le contrôle du ${formatDate(inspection.inspectionDate)} sera masqué `
+      + "de la plateforme."
+    : ""
 }
 
 function formatMileage(value?: number | null) {
-  return value == null ? "—" : `${new Intl.NumberFormat("fr-FR").format(value)} km`
+  return value == null
+    ? "—"
+    : `${new Intl.NumberFormat("fr-FR").format(value)} km`
 }

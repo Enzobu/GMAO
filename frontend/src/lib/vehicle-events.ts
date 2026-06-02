@@ -9,12 +9,17 @@ export const INSPECTION_RESULTS = [
   { value: "fail", label: "Défavorable", variant: "destructive" },
 ] as const
 
-export function optionLabel(options: readonly { value: string; label: string }[], value?: string | null) {
+export function optionLabel(
+  options: readonly { value: string; label: string }[],
+  value?: string | null,
+) {
   return options.find((option) => option.value === value)?.label ?? "—"
 }
 
 export function inspectionResultVariant(value?: string | null) {
-  const variant = INSPECTION_RESULTS.find((result) => result.value === value)?.variant
+  const variant = INSPECTION_RESULTS.find(
+    (result) => result.value === value,
+  )?.variant
 
   if (variant === "destructive") {
     return "destructive"
@@ -27,7 +32,13 @@ export function inspectionResultVariant(value?: string | null) {
   return "secondary"
 }
 
-export function isInsuranceActive(insurance?: { active?: boolean; isActive?: boolean; endDate?: string | null } | null) {
+export function isInsuranceActive(
+  insurance?: {
+    active?: boolean
+    isActive?: boolean
+    endDate?: string | null
+  } | null,
+) {
   if (typeof insurance?.active === "boolean") {
     return insurance.active
   }
@@ -60,5 +71,8 @@ export function formatDate(value?: string | null) {
 
 export function formatDateTime(value?: string | null) {
   if (!value) return "—"
-  return new Intl.DateTimeFormat("fr-FR", { dateStyle: "short", timeStyle: "short" }).format(new Date(value))
+  return new Intl.DateTimeFormat("fr-FR", {
+    dateStyle: "short",
+    timeStyle: "short",
+  }).format(new Date(value))
 }
