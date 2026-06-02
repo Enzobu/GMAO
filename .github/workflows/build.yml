@@ -195,7 +195,7 @@ jobs:
           echo "[Voir l'analyse SonarQube](${{ vars.SONAR_HOST_URL }}/dashboard?id=Enzobu_GMAO_81882c00-d927-4c30-85f8-a0a5a8983d34&codeScope=overall)" >> $GITHUB_STEP_SUMMARY
 
   deploy-pre-prod:
-    name: Deploy
+    name: Deploy pre-prod
     runs-on: ubuntu-latest
     needs: sonarqube
     if: github.ref == 'refs/heads/pre-prod'
@@ -217,7 +217,7 @@ jobs:
           fi
 
   deploy-prod:
-    name: Deploy
+    name: Deploy prod
     runs-on: ubuntu-latest
     needs: sonarqube
     if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
