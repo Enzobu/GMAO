@@ -1,8 +1,12 @@
 import { useEffect, useMemo, useState } from "react"
 import { Link, useNavigate, useParams } from "react-router-dom"
-import { ArrowLeft, Pencil, Trash2 } from "lucide-react"
+import { ArrowLeft, Download, Pencil, Trash2 } from "lucide-react"
 
-import { deleteVehicle, getVehicle } from "@/api/vehicles"
+import {
+  deleteVehicle,
+  getVehicle,
+  getVehicleHistoryArchive,
+} from "@/api/vehicles"
 import { DocumentsPanel } from "@/components/documents-panel"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -60,6 +64,8 @@ export default function VehicleDetailPage() {
   const [vehicle, setVehicle] = useState<Vehicle | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [archiveError, setArchiveError] = useState<string | null>(null)
+  const [isArchiveDownloading, setIsArchiveDownloading] = useState(false)
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
 
@@ -147,6 +153,33 @@ export default function VehicleDetailPage() {
     }
   }
 
+  async function downloadHistoryArchive() {
+    if (!vehicle) {
+      return
+    }
+
+    setArchiveError(null)
+    setIsArchiveDownloading(true)
+
+    try {
+      const { blob, filename } = await getVehicleHistoryArchive(
+        vehicle.id,
+        vehicleHistoryArchiveFilename(vehicle),
+      )
+      const url = URL.createObjectURL(blob)
+      const link = globalThis.document.createElement("a")
+
+      link.href = url
+      link.download = filename
+      link.click()
+      URL.revokeObjectURL(url)
+    } catch {
+      setArchiveError("Impossible de télécharger l’historique complet.")
+    } finally {
+      setIsArchiveDownloading(false)
+    }
+  }
+
   return (
     <div className="space-y-6">
       <ConfirmDialog
@@ -203,6 +236,17 @@ export default function VehicleDetailPage() {
               Retour
             </Link>
           </Button>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={downloadHistoryArchive}
+            disabled={isArchiveDownloading}
+          >
+            <Download />
+            {isArchiveDownloading
+              ? "Téléchargement..."
+              : "Télécharger l’historique"}
+          </Button>
           <Button asChild disabled={!canEdit}>
             <Link
               to={
@@ -226,6 +270,8 @@ export default function VehicleDetailPage() {
           )}
         </div>
       </div>
+
+      {archiveError && <div className={ALERT_CLASS}>{archiveError}</div>}
 
       <section className="space-y-3">
         <h2 className="text-lg font-semibold">Informations générales</h2>
@@ -626,6 +672,32 @@ function displayVehicleName(vehicle: Vehicle) {
       .join(" ")
       .trim()
   )
+}
+
+function vehicleHistoryArchiveFilename(vehicle: Vehicle) {
+  const registration = vehicle.registration.toUpperCase()
+
+  return sanitizeArchiveFilename(
+    `historique_${displayVehicleName(vehicle)}_${registration}`,
+  ) + ".zip"
+}
+
+function sanitizeArchiveFilename(value: string) {
+  let filename = value
+    .trim()
+    .replaceAll(/[\\/:*?"<>|]+/g, "_")
+    .replaceAll(/\s+/g, "_")
+    .replaceAll(/_+/g, "_")
+
+  while (filename.startsWith("_")) {
+    filename = filename.slice(1)
+  }
+
+  while (filename.endsWith("_")) {
+    filename = filename.slice(0, -1)
+  }
+
+  return filename
 }
 
 function userLabel(user: Vehicle["user"]) {
