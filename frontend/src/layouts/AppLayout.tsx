@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { NavLink, Outlet } from "react-router-dom"
 import { Button } from "@/components/ui/button"
+import { Breadcrumbs } from "@/components/breadcrumbs"
 import { GlobalSearch } from "@/components/global-search"
 import {
   Sheet,
@@ -213,6 +214,7 @@ export default function AppLayout() {
 
           {/* Content */}
           <main className="min-w-0 flex-1 p-4 sm:p-6 lg:p-8">
+            <Breadcrumbs />
             <Outlet />
           </main>
         </div>
