@@ -54,6 +54,12 @@ const emptyForm = {
 }
 
 type InspectionFormState = typeof emptyForm
+type DocumentFileInput = Readonly<{
+  id: string
+  file: File | null
+}>
+
+let documentFileInputCounter = 0
 
 export default function VehicleInspectionFormPage() {
   const { vehicleId, inspectionId } = useParams()
@@ -67,7 +73,9 @@ export default function VehicleInspectionFormPage() {
     useState<VehicleInspectionEvent | null>(null)
   const [centers, setCenters] = useState<InspectionCenter[]>([])
   const [form, setForm] = useState<InspectionFormState>(emptyForm)
-  const [documentFiles, setDocumentFiles] = useState<(File | null)[]>([null])
+  const [documentFiles, setDocumentFiles] = useState<DocumentFileInput[]>([
+    createDocumentFileInput(),
+  ])
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -186,24 +194,28 @@ export default function VehicleInspectionFormPage() {
     })
   }
 
-  function updateDocumentFile(index: number, file: File | null) {
+  function updateDocumentFile(id: string, file: File | null) {
     setDocumentFiles((current) => {
-      const next = [...current]
-      next[index] = file
+      const next = current.map((item) =>
+        item.id === id ? { ...item, file } : item,
+      )
+      const isLastInput = next.at(-1)?.id === id
 
-      if (file && index === next.length - 1) {
-        next.push(null)
+      if (file && isLastInput) {
+        next.push(createDocumentFileInput())
       }
 
       return next
     })
   }
 
-  function removeDocumentFile(index: number) {
+  function removeDocumentFile(id: string) {
     setDocumentFiles((current) => {
-      const next = current.filter((_, currentIndex) => currentIndex !== index)
+      const next = current.filter((item) => item.id !== id)
 
-      return next.length > 0 && next.at(-1) === null ? next : [...next, null]
+      return next.length > 0 && next.at(-1)?.file === null
+        ? next
+        : [...next, createDocumentFileInput()]
     })
   }
 
@@ -224,7 +236,7 @@ export default function VehicleInspectionFormPage() {
 
     setError(null)
 
-    if (documentFiles.some((file) => file && file.size > MAX_DOCUMENT_SIZE)) {
+    if (documentFiles.some((item) => isFileTooLarge(item.file))) {
       setError(FILE_TOO_LARGE_MESSAGE)
 
       return
@@ -240,7 +252,9 @@ export default function VehicleInspectionFormPage() {
 
       await uploadInspectionDocuments(
         saved.id,
-        documentFiles.filter((file): file is File => file !== null)
+        documentFiles
+          .map((item) => item.file)
+          .filter((file): file is File => file !== null)
       )
 
       navigate(`/vehicles/${vehicleId}/inspections/${saved.id}`)
@@ -391,9 +405,9 @@ export default function VehicleInspectionFormPage() {
           </CardHeader>
           <CardContent className="space-y-2">
             <div className="space-y-3">
-              {documentFiles.map((file, index) => (
+              {documentFiles.map(({ file, id }, index) => (
                 <label
-                  key={index}
+                  key={id}
                   className="grid gap-1.5 text-sm font-medium"
                 >
                   <span>Document {index + 1}</span>
@@ -403,7 +417,7 @@ export default function VehicleInspectionFormPage() {
                       disabled={!canEdit || isSaving}
                       onChange={(event) => {
                         updateDocumentFile(
-                          index,
+                          id,
                           event.target.files?.[0] ?? null
                         )
                       }}
@@ -414,7 +428,7 @@ export default function VehicleInspectionFormPage() {
                         type="button"
                         className={REMOVE_DOCUMENT_BUTTON_CLASS}
                         disabled={!canEdit || isSaving}
-                        onClick={() => removeDocumentFile(index)}
+                        onClick={() => removeDocumentFile(id)}
                       >
                         Retirer
                       </button>
@@ -522,6 +536,16 @@ function centerOptions(centers: InspectionCenter[]) {
     value: String(center.id),
     label: center.name,
   }))
+}
+
+function createDocumentFileInput(): DocumentFileInput {
+  documentFileInputCounter += 1
+
+  return { id: `document-${documentFileInputCounter}`, file: null }
+}
+
+function isFileTooLarge(file: File | null) {
+  return file !== null && file.size > MAX_DOCUMENT_SIZE
 }
 
 function defaultValidUntil(value: string) {

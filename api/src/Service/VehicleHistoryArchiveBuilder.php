@@ -32,9 +32,11 @@ final readonly class VehicleHistoryArchiveBuilder
         $zipPath = $this->temporaryZipPath();
         $zip = new ZipArchive();
 
+        // @codeCoverageIgnoreStart
         if ($zip->open($zipPath, ZipArchive::CREATE | ZipArchive::OVERWRITE) !== true) {
             throw new HttpException(500, 'Impossible de créer l’archive.');
         }
+        // @codeCoverageIgnoreEnd
 
         $archiveName = $this->formatter->historyDirectory($vehicle);
 
@@ -260,9 +262,11 @@ final readonly class VehicleHistoryArchiveBuilder
     {
         $path = tempnam(sys_get_temp_dir(), 'vehicle-history-');
 
+        // @codeCoverageIgnoreStart
         if ($path === false) {
             throw new HttpException(500, 'Impossible de préparer l’archive.');
         }
+        // @codeCoverageIgnoreEnd
 
         return $path;
     }

@@ -112,6 +112,45 @@ final class ReminderServiceTest extends TestCase
         $this->service(mailer: $mailer)->sendDebugReminder('debug@example.com');
     }
 
+    public function testSendReminderSkipsUsersWithoutEmail(): void
+    {
+        $vehicle = $this->vehicle(10);
+        $vehicle->getUser()->setEmail('');
+        $maintenance = $this->maintenance(20, $vehicle, '2026-06-09');
+        $mailer = $this->createMock(MailerInterface::class);
+        $mailer->expects(self::never())->method('send');
+        $entityManager = $this->createMock(EntityManagerInterface::class);
+        $entityManager->expects(self::never())->method('flush');
+        $service = $this->service(
+            maintenanceByDate: ['2026-06-09' => [$maintenance]],
+            mailer: $mailer,
+            entityManager: $entityManager,
+        );
+
+        self::assertSame(0, $service->sendReminder(new \DateTimeImmutable('2026-06-02')));
+    }
+
+    public function testGetRemindersSkipsRecordsWithoutVehicleAndSentInspections(): void
+    {
+        $maintenance = new Maintenance();
+        $sentInspection = new VehicleInspection();
+        $inspectionWithoutVehicle = new VehicleInspection();
+
+        $this->setId($maintenance, 20);
+        $this->setId($sentInspection, 30);
+        $this->setId($inspectionWithoutVehicle, 31);
+        $service = $this->service(
+            maintenanceByDate: ['2026-06-09' => [$maintenance]],
+            inspectionByDate: ['2026-06-04' => [
+                $sentInspection,
+                $inspectionWithoutVehicle,
+            ]],
+            sent: ['inspection:30:2026-06-04:48 heures' => true],
+        );
+
+        self::assertSame([], $service->getReminders(new \DateTimeImmutable('2026-06-02')));
+    }
+
     /**
      * @param array<string, Maintenance[]> $maintenanceByDate
      * @param array<string, VehicleInspection[]> $inspectionByDate

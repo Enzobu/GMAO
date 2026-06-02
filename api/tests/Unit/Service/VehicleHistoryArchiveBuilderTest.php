@@ -18,6 +18,7 @@ use App\Repository\VehicleInsuranceRepository;
 use App\Service\DocumentManager;
 use App\Service\VehicleHistoryArchiveBuilder;
 use App\Service\VehicleHistoryArchiveFormatter;
+use App\Exception\DocumentStorageException;
 use PHPUnit\Framework\TestCase;
 use ZipArchive;
 
@@ -183,6 +184,58 @@ final class VehicleHistoryArchiveBuilderTest extends TestCase
         unlink($archive->path);
     }
 
+    public function testBuildHandlesUndatedEventsAndStorageFailures(): void
+    {
+        $vehicle = $this->vehicle();
+        $inspection = (new VehicleInspection())
+            ->setVehicle($vehicle)
+            ->setMileage(125000)
+            ->setResult(InspectionResultEnum::Pass);
+        $maintenance = (new Maintenance())
+            ->setVehicle($vehicle)
+            ->setMaintenanceType((new MaintenanceType())->setName('Freins'))
+            ->setStartedAt(new \DateTimeImmutable('2026-03-04'))
+            ->setStatus(MaintenanceStatusEnum::InProgress)
+            ->setIsExternal(true);
+        $brokenDocument = (new Document())
+            ->setName('broken.pdf')
+            ->setOriginalFilename('broken.pdf')
+            ->setStoredFilename('broken.pdf');
+        $builder = $this->builder(
+            [],
+            [$inspection],
+            [$maintenance],
+            [
+                'inspection' => [$brokenDocument],
+                'maintenance' => [$this->document('devis.pdf', 'devis.pdf')],
+            ],
+            storageFailures: ['broken.pdf' => true],
+        );
+
+        $archive = $builder->build($vehicle);
+        $entries = $this->zipEntries($archive->path);
+        $stats = $this->zipStats($archive->path);
+
+        self::assertContains(
+            'controles_technique/controle_technique_sans_date/informations.md',
+            $entries,
+        );
+        self::assertNotContains(
+            'controles_technique/controle_technique_sans_date/broken.pdf',
+            $entries,
+        );
+        self::assertContains(
+            'interventions/intervention_04-03-2026_Freins/devis.pdf',
+            $entries,
+        );
+        self::assertSame(
+            (new \DateTimeImmutable('2026-03-04'))->getTimestamp(),
+            $stats['interventions/intervention_04-03-2026_Freins/devis.pdf']['mtime'],
+        );
+
+        unlink($archive->path);
+    }
+
     /**
      * @param VehicleInsurance[] $insurances
      * @param VehicleInspection[] $inspections
@@ -200,6 +253,7 @@ final class VehicleHistoryArchiveBuilderTest extends TestCase
         array $maintenances,
         array $documents,
         array $fileExistence = [],
+        array $storageFailures = [],
     ): VehicleHistoryArchiveBuilder {
         $insuranceRepository = $this->createMock(VehicleInsuranceRepository::class);
         $insuranceRepository->method('findByVehicle')->willReturn($insurances);
@@ -221,7 +275,13 @@ final class VehicleHistoryArchiveBuilderTest extends TestCase
             fn (Document $document): bool => $fileExistence[$document->getStoredFilename()] ?? true,
         );
         $documentManager->method('getAbsolutePath')->willReturnCallback(
-            fn (Document $document): string => $this->directory.'/'.$document->getStoredFilename(),
+            function (Document $document) use ($storageFailures): string {
+                if ($storageFailures[$document->getStoredFilename()] ?? false) {
+                    throw new DocumentStorageException('Missing file.');
+                }
+
+                return $this->directory.'/'.$document->getStoredFilename();
+            },
         );
 
         return new VehicleHistoryArchiveBuilder(

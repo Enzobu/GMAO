@@ -21,6 +21,8 @@ final readonly class ReminderService
     private const TYPE_INSPECTION = 'inspection';
     private const LABEL_ONE_WEEK = '1 semaine';
     private const LABEL_TWO_DAYS = '48 heures';
+    private const OFFSET_ONE_WEEK = '+7 days';
+    private const OFFSET_TWO_DAYS = '+2 days';
 
     public function __construct(
         private MaintenanceRepository $maintenances,
@@ -89,8 +91,8 @@ final readonly class ReminderService
     private function windows(\DateTimeImmutable $today): array
     {
         return [
-            ['date' => $today->modify('+7 days'), 'label' => self::LABEL_ONE_WEEK],
-            ['date' => $today->modify('+2 days'), 'label' => self::LABEL_TWO_DAYS],
+            ['date' => $today->modify(self::OFFSET_ONE_WEEK), 'label' => self::LABEL_ONE_WEEK],
+            ['date' => $today->modify(self::OFFSET_TWO_DAYS), 'label' => self::LABEL_TWO_DAYS],
         ];
     }
 
@@ -118,18 +120,19 @@ final readonly class ReminderService
             }
 
             $reminders[] = $this->reminder(
-                targetType: self::TYPE_MAINTENANCE,
-                targetId: (int) $maintenance->getId(),
+                target: [self::TYPE_MAINTENANCE, (int) $maintenance->getId()],
                 vehicle: $vehicle,
                 type: "l'intervention",
                 deadline: $date,
                 timeToDeadline: $timeToDeadline,
-                ctaLabel: "de l'intervention",
-                link: $this->frontendPath(sprintf(
-                    '/vehicles/%d/interventions/%d',
-                    $vehicle->getId(),
-                    $maintenance->getId(),
-                )),
+                cta: [
+                    "de l'intervention",
+                    $this->frontendPath(sprintf(
+                        '/vehicles/%d/interventions/%d',
+                        $vehicle->getId(),
+                        $maintenance->getId(),
+                    )),
+                ],
             );
         }
 
@@ -160,18 +163,19 @@ final readonly class ReminderService
             }
 
             $reminders[] = $this->reminder(
-                targetType: self::TYPE_INSPECTION,
-                targetId: (int) $inspection->getId(),
+                target: [self::TYPE_INSPECTION, (int) $inspection->getId()],
                 vehicle: $vehicle,
                 type: 'le contrôle technique',
                 deadline: $date,
                 timeToDeadline: $timeToDeadline,
-                ctaLabel: 'du contrôle technique',
-                link: $this->frontendPath(sprintf(
-                    '/vehicles/%d/inspections/%d',
-                    $vehicle->getId(),
-                    $inspection->getId(),
-                )),
+                cta: [
+                    'du contrôle technique',
+                    $this->frontendPath(sprintf(
+                        '/vehicles/%d/inspections/%d',
+                        $vehicle->getId(),
+                        $inspection->getId(),
+                    )),
+                ],
             );
         }
 
@@ -192,27 +196,30 @@ final readonly class ReminderService
         );
     }
 
-    /** @return array<string, mixed> */
+    /**
+     * @param array{0: string, 1: int} $target
+     * @param array{0: string, 1: string} $cta
+     *
+     * @return array<string, mixed>
+     */
     private function reminder(
-        string $targetType,
-        int $targetId,
+        array $target,
         Vehicle $vehicle,
         string $type,
         \DateTimeImmutable $deadline,
         string $timeToDeadline,
-        string $ctaLabel,
-        string $link,
+        array $cta,
     ): array {
         return [
-            'targetType' => $targetType,
-            'targetId' => $targetId,
+            'targetType' => $target[0],
+            'targetId' => $target[1],
             'vehicle' => $vehicle,
             'user' => $vehicle->getUser(),
             'type' => $type,
             'deadline' => $deadline->format('d-m-Y'),
             'deadlineDate' => $deadline,
             'timeToDeadline' => $timeToDeadline,
-            'cta' => ['label' => $ctaLabel, 'link' => $link],
+            'cta' => ['label' => $cta[0], 'link' => $cta[1]],
         ];
     }
 
@@ -259,8 +266,8 @@ final readonly class ReminderService
             'vehicle' => $vehicle,
             'user' => $user,
             'type' => "l'intervention",
-            'deadline' => (new \DateTimeImmutable('+7 days'))->format('d-m-Y'),
-            'deadlineDate' => new \DateTimeImmutable('+7 days'),
+            'deadline' => (new \DateTimeImmutable(self::OFFSET_ONE_WEEK))->format('d-m-Y'),
+            'deadlineDate' => new \DateTimeImmutable(self::OFFSET_ONE_WEEK),
             'timeToDeadline' => self::LABEL_ONE_WEEK,
             'cta' => [
                 'label' => "de l'intervention",

@@ -18,6 +18,12 @@ import {
   ResetFiltersButton,
   SearchField,
 } from "@/components/list-page-primitives"
+import {
+  ITEMS_PER_PAGE_OPTIONS,
+  type ItemsPerPageValue,
+  getPaginatedItems,
+  getPaginationState,
+} from "@/components/list-page-pagination"
 import { LabelText } from "@/components/page-primitives"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -54,14 +60,6 @@ import {
 
 type SortValue = "name" | "quantity-asc" | "quantity-desc" | "updated-desc"
 type StockFilter = "all" | "ok" | "low" | "out"
-type ItemsPerPageValue = "6" | "12" | "24" | "all"
-
-const ITEMS_PER_PAGE_OPTIONS = [
-  { value: "6", label: "6" },
-  { value: "12", label: "12" },
-  { value: "24", label: "24" },
-  { value: "all", label: "Tous" },
-] as const
 
 const LOW_STOCK_BADGE_CLASS =
   "border-amber-500/30 bg-amber-500/10 text-amber-700 " +
@@ -170,21 +168,16 @@ export default function PartsPage() {
       .sort((first, second) => compareParts(first, second, sort))
   }, [parts, search, vehicleFilter, partTypeFilter, stockFilter, sort])
 
-  const pageSize =
-    itemsPerPage === "all" ? filteredParts.length || 1 : Number(itemsPerPage)
-  const pageCount = Math.max(1, Math.ceil(filteredParts.length / pageSize))
-  const currentPage = Math.min(page, pageCount)
-  const pageStart = (currentPage - 1) * pageSize
-  const pageEnd = pageStart + pageSize
-  const paginatedParts =
-    itemsPerPage === "all"
-      ? filteredParts
-      : filteredParts.slice(pageStart, pageEnd)
-  const visibleStart = filteredParts.length === 0 ? 0 : pageStart + 1
-  const visibleEnd =
-    itemsPerPage === "all"
-      ? filteredParts.length
-      : Math.min(pageEnd, filteredParts.length)
+  const pagination = getPaginationState(
+    filteredParts.length,
+    itemsPerPage,
+    page,
+  )
+  const paginatedParts = getPaginatedItems(
+    filteredParts,
+    itemsPerPage,
+    pagination,
+  )
   const hasActiveFilters =
     search ||
     vehicleFilter !== "all" ||
@@ -250,11 +243,11 @@ export default function PartsPage() {
     return (
       <>
         <PaginationControls
-          currentPage={currentPage}
-          pageCount={pageCount}
+          currentPage={pagination.currentPage}
+          pageCount={pagination.pageCount}
           totalItems={filteredParts.length}
-          visibleStart={visibleStart}
-          visibleEnd={visibleEnd}
+          visibleStart={pagination.visibleStart}
+          visibleEnd={pagination.visibleEnd}
           itemsPerPage={itemsPerPage}
           itemsPerPageOptions={ITEMS_PER_PAGE_OPTIONS}
           onItemsPerPageChange={(value) => {
@@ -262,7 +255,7 @@ export default function PartsPage() {
           }}
           onPreviousPage={() => setPage((current) => Math.max(1, current - 1))}
           onNextPage={() => {
-            setPage((current) => Math.min(pageCount, current + 1))
+            setPage((current) => Math.min(pagination.pageCount, current + 1))
           }}
           itemLabel="ligne(s)"
         />
@@ -361,13 +354,13 @@ export default function PartsPage() {
           })}
         </div>
 
-        {pageCount > 1 && (
+        {pagination.pageCount > 1 && (
           <PaginationControls
-            currentPage={currentPage}
-            pageCount={pageCount}
+            currentPage={pagination.currentPage}
+            pageCount={pagination.pageCount}
             totalItems={filteredParts.length}
-            visibleStart={visibleStart}
-            visibleEnd={visibleEnd}
+            visibleStart={pagination.visibleStart}
+            visibleEnd={pagination.visibleEnd}
             itemsPerPage={itemsPerPage}
             itemsPerPageOptions={ITEMS_PER_PAGE_OPTIONS}
             onItemsPerPageChange={(value) => {
@@ -377,7 +370,7 @@ export default function PartsPage() {
               setPage((current) => Math.max(1, current - 1))
             }}
             onNextPage={() => {
-              setPage((current) => Math.min(pageCount, current + 1))
+              setPage((current) => Math.min(pagination.pageCount, current + 1))
             }}
             itemLabel="ligne(s)"
           />

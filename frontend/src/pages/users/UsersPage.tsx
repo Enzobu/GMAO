@@ -16,6 +16,13 @@ import {
   ResetFiltersButton,
   SearchField,
 } from "@/components/list-page-primitives"
+import {
+  ITEMS_PER_PAGE_OPTIONS,
+  type ItemsPerPageValue,
+  type PaginationState,
+  getPaginatedItems,
+  getPaginationState,
+} from "@/components/list-page-pagination"
 import { ErrorMessage } from "@/components/page-primitives"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -50,14 +57,6 @@ import type { AppUser } from "@/types/user"
 type RoleFilter = "all" | "admin" | "user"
 type EditabilityFilter = "all" | "editable" | "readonly"
 type SortValue = "name" | "email" | "role"
-type ItemsPerPageValue = "6" | "12" | "24" | "all"
-
-const ITEMS_PER_PAGE_OPTIONS = [
-  { value: "6", label: "6" },
-  { value: "12", label: "12" },
-  { value: "24", label: "24" },
-  { value: "all", label: "Tous" },
-] as const
 
 const AVATAR_CLASS = [
   "flex size-8 items-center justify-center rounded-lg bg-primary",
@@ -146,8 +145,8 @@ export default function UsersPage() {
     isAdmin,
   ])
 
-  const pagination = getPagination(filteredUsers, itemsPerPage, page)
-  const paginatedUsers = getPaginatedUsers(
+  const pagination = getPaginationState(filteredUsers.length, itemsPerPage, page)
+  const paginatedUsers = getPaginatedItems(
     filteredUsers,
     itemsPerPage,
     pagination,
@@ -549,56 +548,6 @@ function deleteDescription(user: AppUser) {
 
 function editPath(user: AppUser, isCurrentUser: boolean, isAdmin: boolean) {
   return isCurrentUser && !isAdmin ? "/profile" : `/users/${user.id}/edit`
-}
-
-type PaginationState = Readonly<{
-  pageSize: number
-  pageCount: number
-  currentPage: number
-  pageStart: number
-  pageEnd: number
-  visibleStart: number
-  visibleEnd: number
-}>
-
-function getPagination(
-  users: AppUser[],
-  itemsPerPage: ItemsPerPageValue,
-  page: number,
-): PaginationState {
-  const pageSize = itemsPerPage === "all"
-    ? users.length || 1
-    : Number(itemsPerPage)
-  const pageCount = Math.max(1, Math.ceil(users.length / pageSize))
-  const currentPage = Math.min(page, pageCount)
-  const pageStart = (currentPage - 1) * pageSize
-  const pageEnd = pageStart + pageSize
-  const visibleStart = users.length === 0 ? 0 : pageStart + 1
-  const visibleEnd = itemsPerPage === "all"
-    ? users.length
-    : Math.min(pageEnd, users.length)
-
-  return {
-    pageSize,
-    pageCount,
-    currentPage,
-    pageStart,
-    pageEnd,
-    visibleStart,
-    visibleEnd,
-  }
-}
-
-function getPaginatedUsers(
-  users: AppUser[],
-  itemsPerPage: ItemsPerPageValue,
-  pagination: PaginationState,
-) {
-  if (itemsPerPage === "all") {
-    return users
-  }
-
-  return users.slice(pagination.pageStart, pagination.pageEnd)
 }
 
 const ROLE_FILTER_OPTIONS = [

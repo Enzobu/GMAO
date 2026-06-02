@@ -16,6 +16,12 @@ import {
   ResetFiltersButton,
   SearchField,
 } from "@/components/list-page-primitives"
+import {
+  ITEMS_PER_PAGE_OPTIONS,
+  type ItemsPerPageValue,
+  getPaginatedItems,
+  getPaginationState,
+} from "@/components/list-page-pagination"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -44,14 +50,6 @@ import {
 
 type SortValue = "name" | "registration" | "year-desc" | "mileage-desc"
 type EditabilityFilter = "all" | "editable" | "readonly"
-type ItemsPerPageValue = "6" | "12" | "24" | "all"
-
-const ITEMS_PER_PAGE_OPTIONS = [
-  { value: "6", label: "6" },
-  { value: "12", label: "12" },
-  { value: "24", label: "24" },
-  { value: "all", label: "Tous" },
-] as const
 
 const ALERT_CLASS = [
   "rounded-lg border border-destructive/30 bg-destructive/10 p-4",
@@ -132,21 +130,16 @@ export default function VehiclesPage() {
     isAdmin,
   ])
 
-  const pageSize =
-    itemsPerPage === "all" ? filteredVehicles.length || 1 : Number(itemsPerPage)
-  const pageCount = Math.max(1, Math.ceil(filteredVehicles.length / pageSize))
-  const currentPage = Math.min(page, pageCount)
-  const pageStart = (currentPage - 1) * pageSize
-  const pageEnd = pageStart + pageSize
-  const paginatedVehicles =
-    itemsPerPage === "all"
-      ? filteredVehicles
-      : filteredVehicles.slice(pageStart, pageEnd)
-  const visibleStart = filteredVehicles.length === 0 ? 0 : pageStart + 1
-  const visibleEnd =
-    itemsPerPage === "all"
-      ? filteredVehicles.length
-      : Math.min(pageEnd, filteredVehicles.length)
+  const pagination = getPaginationState(
+    filteredVehicles.length,
+    itemsPerPage,
+    page,
+  )
+  const paginatedVehicles = getPaginatedItems(
+    filteredVehicles,
+    itemsPerPage,
+    pagination,
+  )
   const hasActiveFilters =
     search ||
     typeFilter !== "all" ||
@@ -213,7 +206,7 @@ export default function VehiclesPage() {
   }
 
   function nextPage() {
-    setPage((current) => Math.min(pageCount, current + 1))
+    setPage((current) => Math.min(pagination.pageCount, current + 1))
   }
 
   if (isLoading) {
@@ -251,11 +244,11 @@ export default function VehiclesPage() {
     return (
       <>
         <PaginationControls
-          currentPage={currentPage}
-          pageCount={pageCount}
+          currentPage={pagination.currentPage}
+          pageCount={pagination.pageCount}
           totalItems={filteredVehicles.length}
-          visibleStart={visibleStart}
-          visibleEnd={visibleEnd}
+          visibleStart={pagination.visibleStart}
+          visibleEnd={pagination.visibleEnd}
           itemsPerPage={itemsPerPage}
           itemsPerPageOptions={ITEMS_PER_PAGE_OPTIONS}
           onItemsPerPageChange={(value) =>
@@ -349,13 +342,13 @@ export default function VehiclesPage() {
           })}
         </div>
 
-        {pageCount > 1 && (
+        {pagination.pageCount > 1 && (
           <PaginationControls
-            currentPage={currentPage}
-            pageCount={pageCount}
+            currentPage={pagination.currentPage}
+            pageCount={pagination.pageCount}
             totalItems={filteredVehicles.length}
-            visibleStart={visibleStart}
-            visibleEnd={visibleEnd}
+            visibleStart={pagination.visibleStart}
+            visibleEnd={pagination.visibleEnd}
             itemsPerPage={itemsPerPage}
             itemsPerPageOptions={ITEMS_PER_PAGE_OPTIONS}
             onItemsPerPageChange={(value) =>
