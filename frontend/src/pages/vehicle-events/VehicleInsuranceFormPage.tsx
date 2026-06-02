@@ -39,9 +39,9 @@ import {
   Field,
   FormActions,
   VehicleEventHeader,
-  vehicleDescription,
   WarningMessage,
 } from "./components"
+import { vehicleDescription } from "./utils"
 
 const emptyForm = {
   providerName: "",

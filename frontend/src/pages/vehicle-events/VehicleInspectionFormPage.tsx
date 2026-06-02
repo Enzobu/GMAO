@@ -30,9 +30,9 @@ import {
   FormActions,
   MileageWarningDialog,
   VehicleEventHeader,
-  vehicleDescription,
   WarningMessage,
 } from "./components"
+import { vehicleDescription } from "./utils"
 
 const REMOVE_DOCUMENT_BUTTON_CLASS = [
   "rounded-lg border px-3 py-2 text-sm hover:bg-muted",

@@ -1,8 +1,21 @@
 import { useEffect, useMemo, useState } from "react"
 import { Link } from "react-router-dom"
-import { Plus, Search, Trash2, X } from "lucide-react"
+import { Trash2 } from "lucide-react"
 
 import { deleteVehicle, getVehicles } from "@/api/vehicles"
+import {
+  CARD_LINK_CLASS,
+  FILTER_GRID_CLASS,
+  RESOURCE_CARD_CLASS,
+  RESOURCE_META_CLASS,
+} from "@/components/list-page-classes"
+import {
+  EmptyListCard,
+  ListPageHeader,
+  ReadOnlyBadge,
+  ResetFiltersButton,
+  SearchField,
+} from "@/components/list-page-primitives"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -13,7 +26,6 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { ConfirmDialog } from "@/components/ui/confirm-dialog"
-import { Input } from "@/components/ui/input"
 import { NativeSelect } from "@/components/ui/native-select"
 import { PaginationControls } from "@/components/ui/pagination-controls"
 import { useLocalStorageState } from "@/hooks/use-local-storage-state"
@@ -44,51 +56,6 @@ const ITEMS_PER_PAGE_OPTIONS = [
 const ALERT_CLASS = [
   "rounded-lg border border-destructive/30 bg-destructive/10 p-4",
   "text-sm text-destructive",
-].join(" ")
-
-const EMPTY_CARD_CONTENT_CLASS = [
-  "py-8 text-center text-sm",
-  "text-muted-foreground",
-].join(" ")
-
-const VEHICLE_CARD_CLASS = [
-  "relative border border-foreground/10 ring-0 transition-colors",
-  "hover:border-primary/35 hover:bg-muted/30",
-].join(" ")
-
-const VEHICLE_LINK_CLASS = [
-  "absolute inset-0 z-10 rounded-xl focus-visible:outline-none",
-  "focus-visible:ring-3 focus-visible:ring-ring/50",
-].join(" ")
-
-const READONLY_BADGE_CLASS = [
-  "border-amber-500/30 bg-amber-500/10 text-amber-700",
-  "dark:text-amber-300",
-].join(" ")
-
-const VEHICLE_META_CLASS = [
-  "flex flex-wrap gap-x-4 gap-y-1 text-sm",
-  "text-muted-foreground",
-].join(" ")
-
-const PAGE_HEADER_CLASS = [
-  "flex flex-col gap-3 sm:flex-row sm:items-start",
-  "sm:justify-between",
-].join(" ")
-
-const FILTER_GRID_CLASS = [
-  "grid min-w-0 gap-3 sm:grid-cols-2 lg:grid-cols-3",
-  "xl:grid-cols-5",
-].join(" ")
-
-const SEARCH_LABEL_CLASS = [
-  "grid min-w-0 gap-1.5 text-sm font-medium sm:col-span-2",
-  "lg:col-span-3 xl:col-span-1",
-].join(" ")
-
-const SEARCH_ICON_CLASS = [
-  "pointer-events-none absolute top-1/2 left-2.5 size-4",
-  "-translate-y-1/2 text-muted-foreground",
 ].join(" ")
 
 export default function VehiclesPage() {
@@ -188,16 +155,6 @@ export default function VehiclesPage() {
     sort !== "name"
 
   useEffect(() => {
-    setPage(1)
-  }, [search, typeFilter, statusFilter, editabilityFilter, sort, itemsPerPage])
-
-  useEffect(() => {
-    if (page > pageCount) {
-      setPage(pageCount)
-    }
-  }, [page, pageCount])
-
-  useEffect(() => {
     let ignore = false
 
     async function loadVehicles() {
@@ -280,22 +237,14 @@ export default function VehiclesPage() {
 
   function renderVehiclesContent() {
     if (vehicles.length === 0) {
-      return (
-        <Card>
-          <CardContent className={EMPTY_CARD_CONTENT_CLASS}>
-            Aucun véhicule pour le moment.
-          </CardContent>
-        </Card>
-      )
+      return <EmptyListCard>Aucun véhicule pour le moment.</EmptyListCard>
     }
 
     if (filteredVehicles.length === 0) {
       return (
-        <Card>
-          <CardContent className={EMPTY_CARD_CONTENT_CLASS}>
-            Aucun véhicule ne correspond à ces critères.
-          </CardContent>
-        </Card>
+        <EmptyListCard>
+          Aucun véhicule ne correspond à ces critères.
+        </EmptyListCard>
       )
     }
 
@@ -322,10 +271,10 @@ export default function VehiclesPage() {
             const canEdit = canEditVehicle(vehicle, currentUser?.id, isAdmin)
 
             return (
-              <Card key={vehicle.id} className={VEHICLE_CARD_CLASS}>
+              <Card key={vehicle.id} className={RESOURCE_CARD_CLASS}>
                 <Link
                   to={`/vehicles/${vehicle.id}`}
-                  className={VEHICLE_LINK_CLASS}
+                  className={CARD_LINK_CLASS}
                   aria-label={`Voir ${displayVehicleName(vehicle)}`}
                 />
                 <CardHeader>
@@ -339,15 +288,11 @@ export default function VehiclesPage() {
                       collection={VEHICLE_STATUSES}
                       value={vehicle.status}
                     />
-                    {!canEdit && (
-                      <Badge variant="outline" className={READONLY_BADGE_CLASS}>
-                        Lecture seule
-                      </Badge>
-                    )}
+                    {!canEdit && <ReadOnlyBadge />}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
-                  <div className={VEHICLE_META_CLASS}>
+                  <div className={RESOURCE_META_CLASS}>
                     <span>
                       <strong className="text-foreground">Immat.</strong>{" "}
                       {vehicle.registration.toUpperCase()}
@@ -441,58 +386,50 @@ export default function VehiclesPage() {
         onConfirm={confirmDelete}
       />
 
-      <div className={PAGE_HEADER_CLASS}>
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Véhicules</h1>
-          <p className="text-sm text-muted-foreground">
-            {filteredVehicles.length} sur {vehicles.length} véhicule(s)
-          </p>
-        </div>
-
-        <Button asChild>
-          <Link to="/vehicles/new">
-            <Plus />
-            Ajouter un véhicule
-          </Link>
-        </Button>
-      </div>
+      <ListPageHeader
+        title="Véhicules"
+        countLabel={vehicleCountLabel(filteredVehicles.length, vehicles.length)}
+        addTo="/vehicles/new"
+        addLabel="Ajouter un véhicule"
+      />
 
       <Card>
         <CardContent className={FILTER_GRID_CLASS}>
-          <label className={SEARCH_LABEL_CLASS} htmlFor="vehicle-search">
-            <span>Recherche</span>
-            <div className="relative min-w-0">
-              <Search className={SEARCH_ICON_CLASS} />
-              <Input
-                id="vehicle-search"
-                value={search}
-                onChange={(event) => setSearch(event.target.value)}
-                placeholder="Nom, immat., marque..."
-                className="pl-8"
-              />
-            </div>
-          </label>
+          <SearchField
+            id="vehicle-search"
+            value={search}
+            placeholder="Nom, immat., marque..."
+            onChange={(value) => updateFilter(setSearch, value, setPage)}
+          />
 
           <NativeSelect
             label="Type"
             value={typeFilter}
-            onChange={(event) => setTypeFilter(event.target.value)}
+            onChange={(event) => {
+              updateFilter(setTypeFilter, event.target.value, setPage)
+            }}
             options={[{ value: "all", label: "Tous" }, ...VEHICLE_TYPES]}
           />
 
           <NativeSelect
             label="Statut"
             value={statusFilter}
-            onChange={(event) => setStatusFilter(event.target.value)}
+            onChange={(event) => {
+              updateFilter(setStatusFilter, event.target.value, setPage)
+            }}
             options={[{ value: "all", label: "Tous" }, ...VEHICLE_STATUSES]}
           />
 
           <NativeSelect
             label="Droit"
             value={editabilityFilter}
-            onChange={(event) =>
-              setEditabilityFilter(event.target.value as EditabilityFilter)
-            }
+            onChange={(event) => {
+              updateFilter(
+                setEditabilityFilter,
+                event.target.value as EditabilityFilter,
+                setPage,
+              )
+            }}
             options={[
               { value: "all", label: "Tous" },
               { value: "editable", label: "Modifiables" },
@@ -503,7 +440,9 @@ export default function VehiclesPage() {
           <NativeSelect
             label="Tri"
             value={sort}
-            onChange={(event) => setSort(event.target.value as SortValue)}
+            onChange={(event) => {
+              updateFilter(setSort, event.target.value as SortValue, setPage)
+            }}
             options={[
               { value: "name", label: "Nom A-Z" },
               { value: "registration", label: "Immat." },
@@ -512,17 +451,10 @@ export default function VehiclesPage() {
             ]}
           />
 
-          <div className="flex items-end">
-            <Button
-              variant="outline"
-              className="w-full"
-              onClick={resetFilters}
-              disabled={!hasActiveFilters}
-            >
-              <X />
-              Réinitialiser
-            </Button>
-          </div>
+          <ResetFiltersButton
+            disabled={!hasActiveFilters}
+            onReset={resetFilters}
+          />
         </CardContent>
       </Card>
 
@@ -594,4 +526,17 @@ function normalize(value: string) {
 
 function formatNumber(value: number) {
   return new Intl.NumberFormat("fr-FR").format(value)
+}
+
+function vehicleCountLabel(filteredCount: number, totalCount: number) {
+  return `${filteredCount} sur ${totalCount} véhicule(s)`
+}
+
+function updateFilter<T>(
+  setter: (value: T) => void,
+  value: T,
+  setPage: (value: number) => void,
+) {
+  setter(value)
+  setPage(1)
 }

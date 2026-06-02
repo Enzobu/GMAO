@@ -1,9 +1,22 @@
 import { useEffect, useMemo, useState } from "react"
 import { Link } from "react-router-dom"
-import { Info, Plus, Search, Trash2, X } from "lucide-react"
+import { Info, Trash2 } from "lucide-react"
 import { AxiosError } from "axios"
 
 import { deleteUser, getUsers } from "@/api/users"
+import {
+  CARD_LINK_CLASS,
+  FILTER_GRID_CLASS,
+  RESOURCE_CARD_CLASS,
+} from "@/components/list-page-classes"
+import {
+  EmptyListCard,
+  ListPageHeader,
+  ReadOnlyBadge,
+  ResetFiltersButton,
+  SearchField,
+} from "@/components/list-page-primitives"
+import { ErrorMessage } from "@/components/page-primitives"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -22,7 +35,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
 import { NativeSelect } from "@/components/ui/native-select"
 import { PaginationControls } from "@/components/ui/pagination-controls"
 import { useLocalStorageState } from "@/hooks/use-local-storage-state"
@@ -46,46 +58,6 @@ const ITEMS_PER_PAGE_OPTIONS = [
   { value: "24", label: "24" },
   { value: "all", label: "Tous" },
 ] as const
-
-const ERROR_CLASS = [
-  "rounded-lg border border-destructive/30 bg-destructive/10 p-4",
-  "text-sm text-destructive",
-].join(" ")
-
-const CARD_LINK_CLASS = [
-  "absolute inset-0 z-10 rounded-xl focus-visible:outline-none",
-  "focus-visible:ring-3 focus-visible:ring-ring/50",
-].join(" ")
-
-const PAGE_HEADER_CLASS = [
-  "flex flex-col gap-3 sm:flex-row sm:items-start",
-  "sm:justify-between",
-].join(" ")
-
-const FILTER_GRID_CLASS = [
-  "grid min-w-0 gap-3 sm:grid-cols-2 lg:grid-cols-3",
-  "xl:grid-cols-5",
-].join(" ")
-
-const SEARCH_LABEL_CLASS = [
-  "grid min-w-0 gap-1.5 text-sm font-medium sm:col-span-2",
-  "lg:col-span-3 xl:col-span-1",
-].join(" ")
-
-const SEARCH_ICON_CLASS = [
-  "pointer-events-none absolute top-1/2 left-2.5 size-4",
-  "-translate-y-1/2 text-muted-foreground",
-].join(" ")
-
-const USER_CARD_CLASS = [
-  "relative border border-foreground/10 ring-0 transition-colors",
-  "hover:border-primary/35 hover:bg-muted/30",
-].join(" ")
-
-const READ_ONLY_BADGE_CLASS = [
-  "border-amber-500/30 bg-amber-500/10 text-amber-700",
-  "dark:text-amber-300",
-].join(" ")
 
 const AVATAR_CLASS = [
   "flex size-8 items-center justify-center rounded-lg bg-primary",
@@ -187,10 +159,6 @@ export default function UsersPage() {
       || sort !== "name",
   )
 
-  useEffect(() => {
-    setPage(1)
-  }, [search, roleFilter, editabilityFilter, sort, itemsPerPage])
-
   async function confirmDelete() {
     if (!userToDelete) {
       return
@@ -262,10 +230,11 @@ export default function UsersPage() {
         onOpenChange={(open) => !open && setBlockedMessage(null)}
       />
 
-      <PageHeader
-        filteredCount={filteredUsers.length}
-        totalCount={users.length}
-        isAdmin={isAdmin}
+      <ListPageHeader
+        title="Utilisateurs"
+        countLabel={countLabel(filteredUsers.length, users.length)}
+        addTo={isAdmin ? "/users/new" : undefined}
+        addLabel="Ajouter un utilisateur"
       />
 
       {error && <ErrorMessage>{error}</ErrorMessage>}
@@ -276,15 +245,19 @@ export default function UsersPage() {
         editabilityFilter={editabilityFilter}
         sort={sort}
         hasActiveFilters={hasActiveFilters}
-        onSearchChange={setSearch}
-        onRoleChange={setRoleFilter}
-        onEditabilityChange={setEditabilityFilter}
-        onSortChange={setSort}
+        onSearchChange={(value) => updateFilter(setSearch, value, setPage)}
+        onRoleChange={(value) => updateFilter(setRoleFilter, value, setPage)}
+        onEditabilityChange={(value) => {
+          updateFilter(setEditabilityFilter, value, setPage)
+        }}
+        onSortChange={(value) => updateFilter(setSort, value, setPage)}
         onReset={resetFilters}
       />
 
       {filteredUsers.length === 0 ? (
-        <EmptyUsersCard />
+        <EmptyListCard>
+          Aucun utilisateur ne correspond aux critères.
+        </EmptyListCard>
       ) : (
         <>
           <UsersPagination
@@ -320,31 +293,6 @@ export default function UsersPage() {
   )
 }
 
-function PageHeader({
-  filteredCount,
-  totalCount,
-  isAdmin,
-}: Readonly<{ filteredCount: number; totalCount: number; isAdmin: boolean }>) {
-  return (
-    <div className={PAGE_HEADER_CLASS}>
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Utilisateurs</h1>
-        <p className="text-sm text-muted-foreground">
-          {filteredCount} sur {totalCount} utilisateur(s)
-        </p>
-      </div>
-      {isAdmin && (
-        <Button asChild>
-          <Link to="/users/new">
-            <Plus />
-            Ajouter un utilisateur
-          </Link>
-        </Button>
-      )}
-    </div>
-  )
-}
-
 function FiltersCard({
   search,
   roleFilter,
@@ -371,22 +319,12 @@ function FiltersCard({
   return (
     <Card>
       <CardContent className={FILTER_GRID_CLASS}>
-        <label
-          className={SEARCH_LABEL_CLASS}
-          htmlFor="user-search"
-        >
-          <span>Recherche</span>
-          <div className="relative min-w-0">
-            <Search className={SEARCH_ICON_CLASS} />
-            <Input
-              value={search}
-              onChange={(event) => onSearchChange(event.target.value)}
-              placeholder="Nom, email, rôle..."
-              className="pl-8"
-              id="user-search"
-            />
-          </div>
-        </label>
+        <SearchField
+          id="user-search"
+          value={search}
+          placeholder="Nom, email, rôle..."
+          onChange={onSearchChange}
+        />
         <NativeSelect
           label="Rôle"
           value={roleFilter}
@@ -407,27 +345,10 @@ function FiltersCard({
           onChange={(event) => onSortChange(event.target.value as SortValue)}
           options={SORT_OPTIONS}
         />
-        <div className="flex items-end">
-          <Button
-            variant="outline"
-            className="w-full"
-            onClick={onReset}
-            disabled={!hasActiveFilters}
-          >
-            <X />
-            Réinitialiser
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
-  )
-}
-
-function EmptyUsersCard() {
-  return (
-    <Card>
-      <CardContent className="py-8 text-center text-sm text-muted-foreground">
-        Aucun utilisateur ne correspond aux critères.
+        <ResetFiltersButton
+          disabled={!hasActiveFilters}
+          onReset={onReset}
+        />
       </CardContent>
     </Card>
   )
@@ -484,7 +405,7 @@ function UserCard({
   const isCurrentUser = user.id === currentUserId
 
   return (
-    <Card className={USER_CARD_CLASS}>
+    <Card className={RESOURCE_CARD_CLASS}>
       <Link
         to={`/users/${user.id}`}
         className={CARD_LINK_CLASS}
@@ -542,17 +463,6 @@ export function RoleBadges({ user }: Readonly<{ user: AppUser }>) {
   )
 }
 
-export function ReadOnlyBadge() {
-  return (
-    <Badge
-      variant="outline"
-      className={READ_ONLY_BADGE_CLASS}
-    >
-      Lecture seule
-    </Badge>
-  )
-}
-
 function Avatar({ user }: Readonly<{ user: AppUser }>) {
   return (
     <span className={AVATAR_CLASS}>
@@ -584,10 +494,6 @@ function InfoDialog({
       </DialogContent>
     </Dialog>
   )
-}
-
-function ErrorMessage({ children }: Readonly<{ children: string }>) {
-  return <div className={ERROR_CLASS}>{children}</div>
 }
 
 function canEditUser(
@@ -712,3 +618,16 @@ const SORT_OPTIONS = [
   { value: "email", label: "Email A-Z" },
   { value: "role", label: "Rôle" },
 ] as const
+
+function countLabel(filteredCount: number, totalCount: number) {
+  return `${filteredCount} sur ${totalCount} utilisateur(s)`
+}
+
+function updateFilter<T>(
+  setter: (value: T) => void,
+  value: T,
+  setPage: (value: number) => void,
+) {
+  setter(value)
+  setPage(1)
+}

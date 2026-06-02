@@ -1,5 +1,21 @@
+const paletteNames = [
+  "neutral",
+  "blue",
+  "slate",
+  "indigo",
+  "cyan",
+  "teal",
+  "emerald",
+  "orange",
+  "amber",
+  "rose",
+  "violet",
+] as const
+
+export type PaletteName = (typeof paletteNames)[number]
+
 type PaletteDefinition = Readonly<{
-  name: string
+  name: PaletteName
   label: string
   description: string
   preview: string
@@ -7,145 +23,129 @@ type PaletteDefinition = Readonly<{
   previewSteps: readonly [string, string, string]
 }>
 
-const paletteDefinitions = [
-  palette(
-    "neutral",
-    "Neutre",
-    "Sobre et contrasté, proche du thème actuel.",
-    "oklch(0.205 0 0)",
-    "#d4d4d4",
-    ["oklch(0.205 0 0)", "oklch(0.42 0 0)", "oklch(0.62 0 0)"],
-  ),
-  palette(
-    "blue",
-    "Bleu atelier",
-    "Technique, précis, adapté à une interface de suivi.",
+const paletteLabels = [
+  "Neutre",
+  "Bleu atelier",
+  "Ardoise",
+  "Indigo diagnostic",
+  "Cyan électrique",
+  "Teal contrôle",
+  "Vert maintenance",
+  "Orange garage",
+  "Ambre atelier",
+  "Rouge sport",
+  "Violet premium",
+] as const
+
+const paletteDescriptions = [
+  "Sobre et contrasté, proche du thème actuel.",
+  "Technique, précis, adapté à une interface de suivi.",
+  "Neutre bleuté, très professionnel et discret.",
+  "Technique, moderne et précis pour les écrans de suivi.",
+  "Frais, digital, très lisible sur les interfaces sombres.",
+  "Entre bleu et vert, propre et industriel.",
+  "Lisible, orienté statut et opérations validées.",
+  "Chaleureux, mécanique, plus marqué visuellement.",
+  "Signalétique et outillage, plus doux que l'orange.",
+  "Plus énergique, idéal pour une identité typée performance.",
+  "Plus premium, idéal pour une interface dashboard moderne.",
+] as const
+
+const palettePreviews = [
+  "oklch(0.205 0 0)",
+  "oklch(0.55 0.2 255)",
+  "oklch(0.42 0.04 255)",
+  "oklch(0.52 0.18 285)",
+  "oklch(0.64 0.14 220)",
+  "oklch(0.56 0.13 185)",
+  "oklch(0.58 0.16 155)",
+  "oklch(0.64 0.18 55)",
+  "oklch(0.69 0.15 80)",
+  "oklch(0.58 0.22 20)",
+  "oklch(0.56 0.2 315)",
+] as const
+
+const faviconColors = [
+  "#d4d4d4",
+  "#0f7ae5",
+  "#64748b",
+  "#6366f1",
+  "#06b6d4",
+  "#0d9488",
+  "#16a34a",
+  "#ea580c",
+  "#d97706",
+  "#e11d48",
+  "#a855f7",
+] as const
+
+const previewSteps = [
+  ["oklch(0.205 0 0)", "oklch(0.42 0 0)", "oklch(0.62 0 0)"],
+  step(
     "oklch(0.55 0.2 255)",
-    "#0f7ae5",
-    [
-      "oklch(0.55 0.2 255)",
-      "oklch(0.62 0.16 235)",
-      "oklch(0.44 0.14 270)",
-    ],
+    "oklch(0.62 0.16 235)",
+    "oklch(0.44 0.14 270)",
   ),
-  palette(
-    "slate",
-    "Ardoise",
-    "Neutre bleuté, très professionnel et discret.",
+  step(
     "oklch(0.42 0.04 255)",
-    "#64748b",
-    [
-      "oklch(0.42 0.04 255)",
-      "oklch(0.52 0.035 245)",
-      "oklch(0.34 0.03 265)",
-    ],
+    "oklch(0.52 0.035 245)",
+    "oklch(0.34 0.03 265)",
   ),
-  palette(
-    "indigo",
-    "Indigo diagnostic",
-    "Technique, moderne et précis pour les écrans de suivi.",
+  step(
     "oklch(0.52 0.18 285)",
-    "#6366f1",
-    [
-      "oklch(0.52 0.18 285)",
-      "oklch(0.62 0.14 300)",
-      "oklch(0.43 0.14 270)",
-    ],
+    "oklch(0.62 0.14 300)",
+    "oklch(0.43 0.14 270)",
   ),
-  palette(
-    "cyan",
-    "Cyan électrique",
-    "Frais, digital, très lisible sur les interfaces sombres.",
+  step(
     "oklch(0.64 0.14 220)",
-    "#06b6d4",
-    [
-      "oklch(0.64 0.14 220)",
-      "oklch(0.72 0.12 205)",
-      "oklch(0.48 0.11 230)",
-    ],
+    "oklch(0.72 0.12 205)",
+    "oklch(0.48 0.11 230)",
   ),
-  palette(
-    "teal",
-    "Teal contrôle",
-    "Entre bleu et vert, propre et industriel.",
+  step(
     "oklch(0.56 0.13 185)",
-    "#0d9488",
-    [
-      "oklch(0.56 0.13 185)",
-      "oklch(0.66 0.11 175)",
-      "oklch(0.42 0.09 195)",
-    ],
+    "oklch(0.66 0.11 175)",
+    "oklch(0.42 0.09 195)",
   ),
-  palette(
-    "emerald",
-    "Vert maintenance",
-    "Lisible, orienté statut et opérations validées.",
+  step(
     "oklch(0.58 0.16 155)",
-    "#16a34a",
-    [
-      "oklch(0.58 0.16 155)",
-      "oklch(0.64 0.13 170)",
-      "oklch(0.38 0.11 145)",
-    ],
+    "oklch(0.64 0.13 170)",
+    "oklch(0.38 0.11 145)",
   ),
-  palette(
-    "orange",
-    "Orange garage",
-    "Chaleureux, mécanique, plus marqué visuellement.",
+  step(
     "oklch(0.64 0.18 55)",
-    "#ea580c",
-    [
-      "oklch(0.64 0.18 55)",
-      "oklch(0.7 0.14 75)",
-      "oklch(0.48 0.13 40)",
-    ],
+    "oklch(0.7 0.14 75)",
+    "oklch(0.48 0.13 40)",
   ),
-  palette(
-    "amber",
-    "Ambre atelier",
-    "Signalétique et outillage, plus doux que l'orange.",
+  step(
     "oklch(0.69 0.15 80)",
-    "#d97706",
-    [
-      "oklch(0.69 0.15 80)",
-      "oklch(0.76 0.12 95)",
-      "oklch(0.52 0.12 70)",
-    ],
+    "oklch(0.76 0.12 95)",
+    "oklch(0.52 0.12 70)",
   ),
-  palette(
-    "rose",
-    "Rouge sport",
-    "Plus énergique, idéal pour une identité typée performance.",
+  step(
     "oklch(0.58 0.22 20)",
-    "#e11d48",
-    [
-      "oklch(0.58 0.22 20)",
-      "oklch(0.66 0.16 350)",
-      "oklch(0.44 0.15 15)",
-    ],
+    "oklch(0.66 0.16 350)",
+    "oklch(0.44 0.15 15)",
   ),
-  palette(
-    "violet",
-    "Violet premium",
-    "Plus premium, idéal pour une interface dashboard moderne.",
+  step(
     "oklch(0.56 0.2 315)",
-    "#a855f7",
-    [
-      "oklch(0.56 0.2 315)",
-      "oklch(0.66 0.16 330)",
-      "oklch(0.46 0.15 295)",
-    ],
+    "oklch(0.66 0.16 330)",
+    "oklch(0.46 0.15 295)",
   ),
 ] as const
 
-export const palettes = [...paletteDefinitions]
-
-export type PaletteName = (typeof palettes)[number]["name"]
+export const palettes = paletteNames.map((name, index): PaletteDefinition => ({
+  name,
+  label: paletteLabels[index],
+  description: paletteDescriptions[index],
+  preview: palettePreviews[index],
+  faviconColor: faviconColors[index],
+  previewSteps: previewSteps[index],
+}))
 
 export const defaultPalette: PaletteName = "neutral"
 
 export function isPaletteName(value: string | null): value is PaletteName {
-  return palettes.some((item) => item.name === value)
+  return paletteNames.some((name) => name === value)
 }
 
 export function applyPalette(paletteName: PaletteName) {
@@ -153,15 +153,12 @@ export function applyPalette(paletteName: PaletteName) {
   updateFavicon(paletteName)
 }
 
-function palette(
-  name: string,
-  label: string,
-  description: string,
-  preview: string,
-  faviconColor: string,
-  previewSteps: readonly [string, string, string],
-): PaletteDefinition {
-  return { name, label, description, preview, faviconColor, previewSteps }
+function step(
+  start: string,
+  middle: string,
+  end: string,
+): readonly [string, string, string] {
+  return [start, middle, end]
 }
 
 function updateFavicon(paletteName: PaletteName) {

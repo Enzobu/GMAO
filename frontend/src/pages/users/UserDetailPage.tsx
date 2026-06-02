@@ -5,6 +5,7 @@ import { AxiosError } from "axios"
 
 import { deleteUser, getUser } from "@/api/users"
 import { DocumentsPanel } from "@/components/documents-panel"
+import { ReadOnlyBadge } from "@/components/list-page-primitives"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { ConfirmDialog } from "@/components/ui/confirm-dialog"
@@ -20,7 +21,7 @@ import { displayValue } from "@/lib/text-format"
 import { userDisplayName } from "@/lib/user-utils"
 import { useAuthStore } from "@/stores/auth-store"
 import type { AppUser } from "@/types/user"
-import { ReadOnlyBadge, RoleBadges } from "@/pages/users/UsersPage"
+import { RoleBadges } from "@/pages/users/UsersPage"
 
 const ERROR_CLASS = [
   "rounded-lg border border-destructive/30 bg-destructive/10 p-4",

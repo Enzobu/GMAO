@@ -1,10 +1,23 @@
 import { useEffect, useMemo, useState } from "react"
 import { Link } from "react-router-dom"
-import { Plus, Search, Trash2, X } from "lucide-react"
+import { Trash2 } from "lucide-react"
 
 import { deletePart, getParts, updatePartQuantity } from "@/api/parts"
 import { getPartTypes } from "@/api/configuration"
 import { getVehicles } from "@/api/vehicles"
+import {
+  CARD_LINK_CLASS,
+  FILTER_GRID_WIDE_CLASS,
+  RESOURCE_CARD_CLASS,
+  RESOURCE_META_CLASS,
+} from "@/components/list-page-classes"
+import {
+  EmptyListCard,
+  ListPageHeader,
+  ReadOnlyBadge,
+  ResetFiltersButton,
+  SearchField,
+} from "@/components/list-page-primitives"
 import { LabelText } from "@/components/page-primitives"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -53,12 +66,6 @@ const ITEMS_PER_PAGE_OPTIONS = [
 const LOW_STOCK_BADGE_CLASS =
   "border-amber-500/30 bg-amber-500/10 text-amber-700 " +
   "dark:text-amber-300"
-const PART_CARD_CLASS =
-  "relative flex h-full flex-col border border-foreground/10 ring-0 " +
-  "transition-colors hover:border-primary/35 hover:bg-muted/30"
-const PART_LINK_CLASS =
-  "absolute inset-0 z-10 rounded-xl focus-visible:outline-none " +
-  "focus-visible:ring-3 focus-visible:ring-ring/50"
 const DESTRUCTIVE_MESSAGE_CLASS =
   "rounded-lg border border-destructive/30 bg-destructive/10 p-4 " +
   "text-sm text-destructive"
@@ -185,10 +192,6 @@ export default function PartsPage() {
     stockFilter !== "all" ||
     sort !== "quantity-asc"
 
-  useEffect(() => {
-    setPage(1)
-  }, [search, vehicleFilter, partTypeFilter, stockFilter, sort, itemsPerPage])
-
   async function confirmDelete() {
     if (!partToDelete) {
       return
@@ -233,26 +236,14 @@ export default function PartsPage() {
 
   function renderPartsContent() {
     if (parts.length === 0) {
-      return (
-        <Card>
-          <CardContent
-            className="py-8 text-center text-sm text-muted-foreground"
-          >
-            Aucun stock enregistré.
-          </CardContent>
-        </Card>
-      )
+      return <EmptyListCard>Aucun stock enregistré.</EmptyListCard>
     }
 
     if (filteredParts.length === 0) {
       return (
-        <Card>
-          <CardContent
-            className="py-8 text-center text-sm text-muted-foreground"
-          >
-            Aucune pièce ne correspond aux critères.
-          </CardContent>
-        </Card>
+        <EmptyListCard>
+          Aucune pièce ne correspond aux critères.
+        </EmptyListCard>
       )
     }
 
@@ -283,11 +274,11 @@ export default function PartsPage() {
             return (
               <Card
                 key={part.id}
-                className={PART_CARD_CLASS}
+                className={`${RESOURCE_CARD_CLASS} flex h-full flex-col`}
               >
                 <Link
                   to={`/parts/${part.id}`}
-                  className={PART_LINK_CLASS}
+                  className={CARD_LINK_CLASS}
                   aria-label={`Voir ${partName(part)}`}
                 />
                 <CardHeader>
@@ -308,23 +299,11 @@ export default function PartsPage() {
                         Aucun véhicule compatible
                       </Badge>
                     )}
-                    {!isAdmin && (
-                      <Badge
-                        variant="outline"
-                        className={LOW_STOCK_BADGE_CLASS}
-                      >
-                        Lecture seule
-                      </Badge>
-                    )}
+                    {!isAdmin && <ReadOnlyBadge />}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="flex-1 space-y-3">
-                  <div
-                    className={
-                      "flex flex-wrap gap-x-4 gap-y-1 text-sm " +
-                      "text-muted-foreground"
-                    }
-                  >
+                  <div className={RESOURCE_META_CLASS}>
                     <span>
                       <strong className="text-foreground">Quantité</strong>
                       {" "}
@@ -429,6 +408,7 @@ export default function PartsPage() {
       />
 
       <AddStockDialog
+        key={partToStock?.id ?? "stock"}
         part={partToStock}
         onOpenChange={(open) => !open && setPartToStock(null)}
         onSaved={(saved) => {
@@ -439,65 +419,28 @@ export default function PartsPage() {
         }}
       />
 
-      <div
-        className={
-          "flex flex-col gap-3 sm:flex-row sm:items-start " +
-          "sm:justify-between"
-        }
-      >
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Stock</h1>
-          <p className="text-sm text-muted-foreground">
-            {filteredParts.length} sur {parts.length} ligne(s) de stock
-          </p>
-        </div>
-
-        {isAdmin && (
-          <Button asChild>
-            <Link to="/parts/new">
-              <Plus />
-              Ajouter un stock
-            </Link>
-          </Button>
-        )}
-      </div>
+      <ListPageHeader
+        title="Stock"
+        countLabel={partCountLabel(filteredParts.length, parts.length)}
+        addTo={isAdmin ? "/parts/new" : undefined}
+        addLabel="Ajouter un stock"
+      />
 
       <Card>
-        <CardContent
-          className={
-            "grid min-w-0 gap-3 sm:grid-cols-2 lg:grid-cols-3 " +
-            "xl:grid-cols-6"
-          }
-        >
-          <label
-            className={
-              "grid min-w-0 gap-1.5 text-sm font-medium sm:col-span-2 " +
-              "lg:col-span-3 xl:col-span-1"
-            }
-            htmlFor="part-search"
-          >
-            <span>Recherche</span>
-            <div className="relative min-w-0">
-              <Search
-                className={
-                  "pointer-events-none absolute top-1/2 left-2.5 size-4 " +
-                  "-translate-y-1/2 text-muted-foreground"
-                }
-              />
-              <Input
-                value={search}
-                onChange={(event) => setSearch(event.target.value)}
-                placeholder="Pièce, note, véhicule..."
-                className="pl-8"
-                id="part-search"
-              />
-            </div>
-          </label>
+        <CardContent className={FILTER_GRID_WIDE_CLASS}>
+          <SearchField
+            id="part-search"
+            value={search}
+            placeholder="Pièce, note, véhicule..."
+            onChange={(value) => updateFilter(setSearch, value, setPage)}
+          />
 
           <NativeSelect
             label="Véhicule"
             value={vehicleFilter}
-            onChange={(event) => setVehicleFilter(event.target.value)}
+            onChange={(event) => {
+              updateFilter(setVehicleFilter, event.target.value, setPage)
+            }}
             options={[
               { value: "all", label: "Tous" },
               ...vehicles.map((vehicle) => ({
@@ -509,7 +452,9 @@ export default function PartsPage() {
           <NativeSelect
             label="Type"
             value={partTypeFilter}
-            onChange={(event) => setPartTypeFilter(event.target.value)}
+            onChange={(event) => {
+              updateFilter(setPartTypeFilter, event.target.value, setPage)
+            }}
             options={[
               { value: "all", label: "Tous" },
               ...partTypes.map((type) => ({
@@ -521,9 +466,13 @@ export default function PartsPage() {
           <NativeSelect
             label="Stock"
             value={stockFilter}
-            onChange={(event) =>
-              setStockFilter(event.target.value as StockFilter)
-            }
+            onChange={(event) => {
+              updateFilter(
+                setStockFilter,
+                event.target.value as StockFilter,
+                setPage,
+              )
+            }}
             options={[
               { value: "all", label: "Tous" },
               { value: "ok", label: "OK" },
@@ -534,7 +483,9 @@ export default function PartsPage() {
           <NativeSelect
             label="Tri"
             value={sort}
-            onChange={(event) => setSort(event.target.value as SortValue)}
+            onChange={(event) => {
+              updateFilter(setSort, event.target.value as SortValue, setPage)
+            }}
             options={[
               { value: "quantity-asc", label: "Qté croissante" },
               { value: "quantity-desc", label: "Qté décroissante" },
@@ -543,17 +494,10 @@ export default function PartsPage() {
             ]}
           />
 
-          <div className="flex items-end">
-            <Button
-              variant="outline"
-              className="w-full"
-              onClick={resetFilters}
-              disabled={!hasActiveFilters}
-            >
-              <X />
-              Réinitialiser
-            </Button>
-          </div>
+          <ResetFiltersButton
+            disabled={!hasActiveFilters}
+            onReset={resetFilters}
+          />
         </CardContent>
       </Card>
 
@@ -573,12 +517,6 @@ function AddStockDialog({
 }>) {
   const [quantity, setQuantity] = useState("1")
   const [isSaving, setIsSaving] = useState(false)
-
-  useEffect(() => {
-    if (part) {
-      setQuantity("1")
-    }
-  }, [part])
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -665,4 +603,17 @@ function normalize(value: string) {
     .toLowerCase()
     .normalize("NFD")
     .replaceAll(/[\u0300-\u036f]/g, "")
+}
+
+function partCountLabel(filteredCount: number, totalCount: number) {
+  return `${filteredCount} sur ${totalCount} ligne(s) de stock`
+}
+
+function updateFilter<T>(
+  setter: (value: T) => void,
+  value: T,
+  setPage: (value: number) => void,
+) {
+  setter(value)
+  setPage(1)
 }

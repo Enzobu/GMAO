@@ -362,6 +362,7 @@ function InspectionCentersPanel() {
       </AccordionContent>
 
       <InspectionCenterFormDialog
+        key={configurationDialogKey(formItem)}
         item={formItem}
         error={formItem ? error : null}
         isSaving={isSaving}
@@ -551,6 +552,7 @@ function ConfigurationResourcePanel({
       </AccordionContent>
 
       <ConfigurationFormDialog
+        key={`${resource.kind}-${configurationDialogKey(formItem)}`}
         item={formItem}
         title={
           formItem === "new"
@@ -593,17 +595,10 @@ function ConfigurationFormDialog({
   onOpenChange,
   onSubmit,
 }: ConfigurationFormDialogProps) {
-  const [name, setName] = useState("")
-  const [description, setDescription] = useState("")
-
-  useEffect(() => {
-    if (!item) {
-      return
-    }
-
-    setName(item === "new" ? "" : item.name)
-    setDescription(item === "new" ? "" : item.description ?? "")
-  }, [item])
+  const [name, setName] = useState(() => configurationItemName(item))
+  const [description, setDescription] = useState(() => {
+    return configurationItemDescription(item)
+  })
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -675,29 +670,8 @@ function InspectionCenterFormDialog({
   onSubmit,
 }: InspectionCenterFormDialogProps) {
   const [form, setForm] = useState<InspectionCenterConfigurationPayload>(
-    emptyInspectionCenterForm(),
+    () => inspectionCenterForm(item),
   )
-
-  useEffect(() => {
-    if (!item) {
-      return
-    }
-
-    setForm(item === "new"
-      ? emptyInspectionCenterForm()
-      : {
-        name: item.name,
-        phone: formatPhone(item.phone ?? ""),
-        email: item.email ?? "",
-        address: {
-          line1: item.address.line1 ?? "",
-          line2: item.address.line2 ?? "",
-          postalCode: formatPostalCode(item.address.postalCode ?? ""),
-          city: item.address.city ?? "",
-          country: item.address.country ?? "France",
-        },
-      })
-  }, [item])
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -1094,6 +1068,47 @@ function addressLabel(address: InspectionCenterConfigurationItem["address"]) {
     address.city,
     address.country,
   ].filter(Boolean).join(", ")
+}
+
+function configurationDialogKey(
+  item: { id: number } | "new" | null,
+) {
+  if (!item) {
+    return "closed"
+  }
+
+  return item === "new" ? "new" : String(item.id)
+}
+
+function configurationItemName(item: ConfigurationItem | "new" | null) {
+  return item && item !== "new" ? item.name : ""
+}
+
+function configurationItemDescription(
+  item: ConfigurationItem | "new" | null,
+) {
+  return item && item !== "new" ? item.description ?? "" : ""
+}
+
+function inspectionCenterForm(
+  item: InspectionCenterConfigurationItem | "new" | null,
+): InspectionCenterConfigurationPayload {
+  if (!item || item === "new") {
+    return emptyInspectionCenterForm()
+  }
+
+  return {
+    name: item.name,
+    phone: formatPhone(item.phone ?? ""),
+    email: item.email ?? "",
+    address: {
+      line1: item.address.line1 ?? "",
+      line2: item.address.line2 ?? "",
+      postalCode: formatPostalCode(item.address.postalCode ?? ""),
+      city: item.address.city ?? "",
+      country: item.address.country ?? "France",
+    },
+  }
 }
 
 function emptyInspectionCenterForm(): InspectionCenterConfigurationPayload {

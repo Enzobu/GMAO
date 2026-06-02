@@ -28,5 +28,19 @@ docker compose \
     exit 1
 }
 
-echo "Tests OK. Commit autorisé."
+echo "Tests OK."
+
+echo "Lancement du lint frontend..."
+
+cd "$PROJECT_DIR/frontend" || {
+    echo "Impossible d'accéder au dossier frontend. Commit bloqué."
+    exit 1
+}
+
+npm run lint || {
+    echo "Lint frontend échoué. Commit bloqué."
+    exit 1
+}
+
+echo "Lint frontend OK. Commit autorisé."
 exit 0

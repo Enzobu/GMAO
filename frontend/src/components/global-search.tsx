@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react"
+import { useEffect, useEffectEvent, useMemo, useRef, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import {
   CarFront,
@@ -77,6 +77,7 @@ export function GlobalSearch({ className }: Readonly<{ className?: string }>) {
     parts: [],
     users: [],
   })
+  const loadSearchDataEvent = useEffectEvent(loadSearchData)
 
   useEffect(() => {
     function handleSearchShortcut(event: KeyboardEvent) {
@@ -85,7 +86,7 @@ export function GlobalSearch({ className }: Readonly<{ className?: string }>) {
         searchInputRef.current?.focus()
         searchInputRef.current?.select()
         setIsOpen(true)
-        void loadSearchData()
+        void loadSearchDataEvent()
       }
     }
 
@@ -102,7 +103,7 @@ export function GlobalSearch({ className }: Readonly<{ className?: string }>) {
       globalThis.removeEventListener("keydown", handleSearchShortcut)
       globalThis.removeEventListener("pointerdown", handlePointerDown)
     }
-  }, [hasLoaded, isAdmin])
+  }, [])
 
   const results = useMemo(() => {
     const normalizedQuery = normalize(query)

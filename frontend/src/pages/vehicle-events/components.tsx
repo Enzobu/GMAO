@@ -1,8 +1,6 @@
 import type { ReactNode } from "react"
 
 import { Badge } from "@/components/ui/badge"
-import { capitalizeFirstLetter } from "@/lib/text-format"
-import type { Vehicle } from "@/types/vehicle"
 
 const READ_ONLY_BADGE_CLASS = [
   "border-amber-500/30 bg-amber-500/10 text-amber-700",
@@ -45,21 +43,3 @@ export {
   ErrorMessage,
   Field,
 } from "@/components/page-primitives"
-
-export function vehicleDescription(vehicle: Vehicle | null) {
-  if (!vehicle) {
-    return "Véhicule"
-  }
-
-  return `${capitalizeFirstLetter(vehicle.brand)} ${capitalizeFirstLetter(
-    vehicle.model
-  )} - ${vehicle.registration}`
-}
-
-export function canEditVehicle(
-  vehicle: Vehicle | null,
-  userId?: number,
-  isAdmin = false
-) {
-  return isAdmin || vehicle?.user.id === userId
-}
