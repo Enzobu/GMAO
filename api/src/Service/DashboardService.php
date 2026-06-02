@@ -20,6 +20,27 @@ final readonly class DashboardService
     private const MAINTENANCE_NOT_DELETED_CONDITION = 'm.isDeleted = false';
     private const UNKNOWN_VEHICLE_LABEL = 'Véhicule inconnu';
     private const NEXT_DAY_MODIFIER = '+1 day';
+    private const LATEST_INSPECTION_CONDITION = 'NOT EXISTS (
+        SELECT 1 FROM %s newerInspection
+        WHERE newerInspection.vehicle = vi.vehicle
+        AND newerInspection.isDeleted = false
+        AND (
+            newerInspection.inspectionDate > vi.inspectionDate
+            OR (
+                vi.inspectionDate IS NULL
+                AND newerInspection.inspectionDate IS NOT NULL
+            )
+            OR (
+                newerInspection.inspectionDate = vi.inspectionDate
+                AND newerInspection.id > vi.id
+            )
+            OR (
+                newerInspection.inspectionDate IS NULL
+                AND vi.inspectionDate IS NULL
+                AND newerInspection.id > vi.id
+            )
+        )
+    )';
 
     public function __construct(
         private readonly EntityManagerInterface $entityManager,
@@ -267,6 +288,10 @@ final readonly class DashboardService
             ->from(VehicleInspection::class, 'vi')
             ->join('vi.vehicle', 'v')
             ->andWhere('vi.isDeleted = false')
+            ->andWhere(sprintf(
+                self::LATEST_INSPECTION_CONDITION,
+                VehicleInspection::class,
+            ))
             ->andWhere('vi.validUntil <= :next30Days')
             ->setParameter('next30Days', $next30Days);
 
