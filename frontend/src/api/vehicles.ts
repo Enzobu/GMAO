@@ -1,15 +1,13 @@
 import { api } from "@/api/client"
-import type { Vehicle, VehiclePayload, VehicleUser } from "@/types/vehicle"
-
-type ApiCollection<T> = T[] | { member?: T[]; "hydra:member"?: T[] }
-
-function collectionItems<T>(data: ApiCollection<T>) {
-  if (Array.isArray(data)) {
-    return data
-  }
-
-  return data.member ?? data["hydra:member"] ?? []
-}
+import { collectionItems, type ApiCollection } from "@/api/api-collection"
+import type {
+  Vehicle,
+  VehicleInspection,
+  VehicleInsurance,
+  VehicleMaintenance,
+  VehiclePayload,
+  VehicleUser,
+} from "@/types/vehicle"
 
 export async function getVehicles() {
   const response = await api.get<ApiCollection<Vehicle>>("/vehicles")
@@ -18,9 +16,9 @@ export async function getVehicles() {
 }
 
 export async function getVehicle(id: string | number) {
-  const response = await api.get<Vehicle>(`/vehicles/${id}`)
+  const response = await api.get<VehicleResponse>(`/vehicles/${id}`)
 
-  return response.data
+  return normalizeVehicle(response.data)
 }
 
 export async function createVehicle(payload: VehiclePayload) {
@@ -83,5 +81,23 @@ function archiveFilename(
     return decodeURIComponent(filename)
   } catch {
     return filename
+  }
+}
+
+type VehicleResponse = Omit<
+  Vehicle,
+  "maintenances" | "vehicleInspections" | "vehicleInsurances"
+> & {
+  maintenances?: ApiCollection<VehicleMaintenance>
+  vehicleInspections?: ApiCollection<VehicleInspection>
+  vehicleInsurances?: ApiCollection<VehicleInsurance>
+}
+
+function normalizeVehicle(vehicle: VehicleResponse): Vehicle {
+  return {
+    ...vehicle,
+    maintenances: collectionItems(vehicle.maintenances),
+    vehicleInspections: collectionItems(vehicle.vehicleInspections),
+    vehicleInsurances: collectionItems(vehicle.vehicleInsurances),
   }
 }

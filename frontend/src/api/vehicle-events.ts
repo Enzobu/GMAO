@@ -1,4 +1,5 @@
 import { api } from "@/api/client"
+import { collectionItems, type ApiCollection } from "@/api/api-collection"
 import type {
   InspectionCenter,
   VehicleInspectionEvent,
@@ -6,13 +7,6 @@ import type {
   VehicleInsuranceEvent,
   VehicleInsurancePayload,
 } from "@/types/vehicle-events"
-
-type ApiCollection<T> = T[] | { member?: T[]; "hydra:member"?: T[] }
-
-function collectionItems<T>(data: ApiCollection<T>) {
-  if (Array.isArray(data)) return data
-  return data.member ?? data["hydra:member"] ?? []
-}
 
 export async function getVehicleInsurances() {
   const response = await api.get<ApiCollection<VehicleInsuranceEvent>>(

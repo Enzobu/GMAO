@@ -1,4 +1,5 @@
 import { api } from "@/api/client"
+import { collectionItems } from "@/api/api-collection"
 import type { Intervention, InterventionPayload } from "@/types/intervention"
 
 type ApiCollection<T> =
@@ -9,11 +10,6 @@ type ApiCollection<T> =
       view?: { next?: string }
       "hydra:view"?: { "hydra:next"?: string }
     }
-
-function collectionItems<T>(data: ApiCollection<T>) {
-  if (Array.isArray(data)) return data
-  return data.member ?? data["hydra:member"] ?? []
-}
 
 export async function getInterventions() {
   const firstPage = await api.get<ApiCollection<Intervention>>("/maintenances")
