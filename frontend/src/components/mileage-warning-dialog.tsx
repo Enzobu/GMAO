@@ -1,5 +1,12 @@
 import { Button } from "@/components/ui/button"
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 
 type MileageWarningDialogProps = Readonly<{
   open: boolean
@@ -28,8 +35,18 @@ export function MileageWarningDialog({
           <DialogDescription>{message}</DialogDescription>
         </DialogHeader>
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isLoading}>Fermer</Button>
-          {isAdmin && <Button onClick={onForce} disabled={isLoading}>{isLoading ? "Enregistrement..." : forceLabel}</Button>}
+          <Button
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+            disabled={isLoading}
+          >
+            Fermer
+          </Button>
+          {isAdmin && (
+            <Button onClick={onForce} disabled={isLoading}>
+              {isLoading ? "Enregistrement..." : forceLabel}
+            </Button>
+          )}
         </DialogFooter>
       </DialogContent>
     </Dialog>

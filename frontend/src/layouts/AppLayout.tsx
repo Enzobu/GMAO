@@ -19,8 +19,15 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { NavLink, Outlet } from "react-router-dom"
 import { Button } from "@/components/ui/button"
+import { Breadcrumbs } from "@/components/breadcrumbs"
 import { GlobalSearch } from "@/components/global-search"
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { useAuthStore } from "@/stores/auth-store"
 
@@ -62,34 +69,70 @@ export default function AppLayout() {
     <div className="min-h-screen bg-background text-foreground">
       <div className="flex min-w-0">
         {/* Sidebar */}
-        <aside className="fixed inset-y-0 left-0 z-50 hidden w-72 border-r border-border bg-card lg:block">
+        <aside
+          className={[
+            "fixed inset-y-0 left-0 z-50 hidden w-72 border-r",
+            "border-border bg-card lg:block",
+          ].join(" ")}
+        >
           <SidebarContent isAdmin={isAdmin} />
         </aside>
 
         {/* Main */}
         <div className="flex min-h-screen min-w-0 flex-1 flex-col lg:pl-72">
           {/* Header */}
-          <header className="sticky top-0 z-40 border-b border-border bg-background/80 backdrop-blur">
-            <div className="flex h-16 min-w-0 items-center gap-2 px-3 sm:h-20 sm:gap-4 sm:px-6 lg:px-8">
-              <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
+          <header
+            className={[
+              "sticky top-0 z-40 border-b border-border",
+              "bg-background/80 backdrop-blur",
+            ].join(" ")}
+          >
+            <div
+              className={[
+                "flex h-16 min-w-0 items-center gap-2 px-3",
+                "sm:h-20 sm:gap-4 sm:px-6 lg:px-8",
+              ].join(" ")}
+            >
+              <Sheet
+                open={isMobileMenuOpen}
+                onOpenChange={setIsMobileMenuOpen}
+              >
                 <SheetTrigger asChild>
-                  <Button variant="outline" size="icon" className="h-10 w-10 shrink-0 rounded-xl lg:hidden">
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="h-10 w-10 shrink-0 rounded-xl lg:hidden"
+                  >
                     <Menu className="h-4 w-4" />
                     <span className="sr-only">Ouvrir le menu</span>
                   </Button>
                 </SheetTrigger>
-                <SheetContent side="left" className="w-[18rem] p-0" showCloseButton={false}>
+
+                <SheetContent
+                  side="left"
+                  className="w-[18rem] p-0"
+                  showCloseButton={false}
+                >
                   <SheetHeader className="sr-only">
                     <SheetTitle>Navigation</SheetTitle>
                   </SheetHeader>
-                  <SidebarContent isAdmin={isAdmin} onNavigate={() => setIsMobileMenuOpen(false)} />
+
+                  <SidebarContent
+                    isAdmin={isAdmin}
+                    onNavigate={() => setIsMobileMenuOpen(false)}
+                  />
                 </SheetContent>
               </Sheet>
 
               <GlobalSearch className="max-w-none flex-1" />
 
               {/* Right */}
-              <div className="ml-auto flex shrink-0 items-center gap-2 sm:gap-4">
+              <div
+                className={[
+                  "ml-auto flex shrink-0 items-center gap-2",
+                  "sm:gap-4",
+                ].join(" ")}
+              >
                 <ThemeToggle />
 
                 <Button
@@ -102,8 +145,20 @@ export default function AppLayout() {
 
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <button className="flex items-center gap-3 rounded-xl border border-border bg-card p-1.5 shadow-sm transition hover:bg-muted/40 sm:px-4 sm:py-2">
-                      <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary font-semibold text-primary-foreground">
+                    <button
+                      className={[
+                        "flex items-center gap-3 rounded-xl border",
+                        "border-border bg-card p-1.5 shadow-sm transition",
+                        "hover:bg-muted/40 sm:px-4 sm:py-2",
+                      ].join(" ")}
+                    >
+                      <div
+                        className={[
+                          "flex h-10 w-10 items-center justify-center",
+                          "rounded-xl bg-primary font-semibold",
+                          "text-primary-foreground",
+                        ].join(" ")}
+                      >
                         {user?.initials ?? "?"}
                       </div>
 
@@ -126,7 +181,10 @@ export default function AppLayout() {
                     className="w-56 rounded-m p-2"
                   >
                     <DropdownMenuItem className="cursor-pointer">
-                      <NavLink to="/profile" className="flex w-full items-center">
+                      <NavLink
+                        to="/profile"
+                        className="flex w-full items-center"
+                      >
                         <Settings className="mr-2 h-4 w-4" />
                         Paramètres du profil
                       </NavLink>
@@ -136,7 +194,10 @@ export default function AppLayout() {
 
                     <DropdownMenuItem
                       variant="destructive"
-                      className="cursor-pointer text-red-500 focus:text-red-500 [&_svg]:text-red-500"
+                      className={[
+                        "cursor-pointer text-red-500 focus:text-red-500",
+                        "[&_svg]:text-red-500",
+                      ].join(" ")}
                       onClick={() => {
                         logout()
                         globalThis.location.href = "/login"
@@ -153,6 +214,7 @@ export default function AppLayout() {
 
           {/* Content */}
           <main className="min-w-0 flex-1 p-4 sm:p-6 lg:p-8">
+            <Breadcrumbs />
             <Outlet />
           </main>
         </div>
@@ -161,37 +223,69 @@ export default function AppLayout() {
   )
 }
 
-function SidebarContent({ isAdmin, onNavigate }: Readonly<{ isAdmin: boolean; onNavigate?: () => void }>) {
+type SidebarContentProps = Readonly<{
+  isAdmin: boolean
+  onNavigate?: () => void
+}>
+
+function SidebarContent({ isAdmin, onNavigate }: SidebarContentProps) {
   return (
     <div className="flex h-full flex-col">
       <div className="border-b border-border p-6">
         <div className="flex items-center gap-4">
-          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-lg">
+          <div
+            className={[
+              "flex h-14 w-14 items-center justify-center rounded-2xl",
+              "bg-primary text-primary-foreground shadow-lg",
+            ].join(" ")}
+          >
             <Wrench className="h-6 w-6" />
           </div>
 
           <div>
             <h1 className="text-lg font-semibold">GMAO</h1>
-            <p className="text-sm text-muted-foreground">Gestion d'entretien</p>
+            <p className="text-sm text-muted-foreground">
+              Gestion d'entretien
+            </p>
           </div>
         </div>
       </div>
 
       <nav className="flex-1 space-y-2 p-4">
         {navigation.map((item) => (
-          <SidebarNavLink key={item.path} item={item} onNavigate={onNavigate} />
+          <SidebarNavLink
+            key={item.path}
+            item={item}
+            onNavigate={onNavigate}
+          />
         ))}
       </nav>
 
       <div className="border-t border-border p-4">
-        <SidebarFooterLink to="/settings" onNavigate={onNavigate}>Paramètres</SidebarFooterLink>
-        {isAdmin && <SidebarFooterLink to="/configuration" onNavigate={onNavigate} className="mt-2">Configuration</SidebarFooterLink>}
+        <SidebarFooterLink to="/settings" onNavigate={onNavigate}>
+          Paramètres
+        </SidebarFooterLink>
+
+        {isAdmin && (
+          <SidebarFooterLink
+            to="/configuration"
+            onNavigate={onNavigate}
+            className="mt-2"
+          >
+            Configuration
+          </SidebarFooterLink>
+        )}
       </div>
     </div>
   )
 }
 
-function SidebarNavLink({ item, onNavigate }: Readonly<{ item: (typeof navigation)[number]; onNavigate?: () => void }>) {
+type SidebarNavLinkProps = Readonly<{
+  item: (typeof navigation)[number]
+  onNavigate?: () => void
+}>
+
+function SidebarNavLink({ item, onNavigate }: SidebarNavLinkProps) {
   const Icon = item.icon
 
   return (
@@ -199,8 +293,11 @@ function SidebarNavLink({ item, onNavigate }: Readonly<{ item: (typeof navigatio
       to={item.path}
       onClick={onNavigate}
       className={({ isActive }) => [
-        "flex h-12 items-center gap-3 rounded-xl px-4 text-sm font-medium transition-all",
-        isActive ? "bg-primary text-primary-foreground shadow-md" : "text-muted-foreground hover:bg-muted hover:text-foreground",
+        "flex h-12 items-center gap-3 rounded-xl px-4 text-sm",
+        "font-medium transition-all",
+        isActive
+          ? "bg-primary text-primary-foreground shadow-md"
+          : "text-muted-foreground hover:bg-muted hover:text-foreground",
       ].join(" ")}
     >
       <Icon className="h-4 w-4" />
@@ -209,9 +306,30 @@ function SidebarNavLink({ item, onNavigate }: Readonly<{ item: (typeof navigatio
   )
 }
 
-function SidebarFooterLink({ to, children, onNavigate, className }: Readonly<{ to: string; children: string; onNavigate?: () => void; className?: string }>) {
+type SidebarFooterLinkProps = Readonly<{
+  to: string
+  children: string
+  onNavigate?: () => void
+  className?: string
+}>
+
+function SidebarFooterLink({
+  to,
+  children,
+  onNavigate,
+  className,
+}: SidebarFooterLinkProps) {
   return (
-    <Button variant="ghost" className={["h-12 w-full justify-start rounded-xl", className].filter(Boolean).join(" ")} asChild>
+    <Button
+      variant="ghost"
+      className={[
+        "h-12 w-full justify-start rounded-xl",
+        className,
+      ]
+        .filter(Boolean)
+        .join(" ")}
+      asChild
+    >
       <NavLink to={to} onClick={onNavigate}>
         <Settings className="mr-3 h-4 w-4" />
         {children}

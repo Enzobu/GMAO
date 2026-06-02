@@ -82,4 +82,25 @@ class VehicleInspectionRepository extends ServiceEntityRepository
     {
         return strtoupper($direction) === 'ASC' ? 'ASC' : 'DESC';
     }
+
+    /**
+     * @return VehicleInspection[]
+     */
+    public function findExpiringForReminderDate(\DateTimeImmutable $date): array
+    {
+        return $this->createQueryBuilder('vi')
+            ->innerJoin('vi.vehicle', 'v')
+            ->addSelect('v')
+            ->innerJoin('v.user', 'u')
+            ->addSelect('u')
+            ->andWhere('vi.isDeleted = :isDeleted')
+            ->andWhere('v.isDeleted = :isDeleted')
+            ->andWhere('u.isDeleted = :isDeleted')
+            ->andWhere('vi.validUntil = :date')
+            ->setParameter('isDeleted', false)
+            ->setParameter('date', $date)
+            ->orderBy('vi.validUntil', 'ASC')
+            ->getQuery()
+            ->getResult();
+    }
 }

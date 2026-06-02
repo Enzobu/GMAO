@@ -194,14 +194,14 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "[Voir l'analyse SonarQube](${{ vars.SONAR_HOST_URL }}/dashboard?id=Enzobu_GMAO_81882c00-d927-4c30-85f8-a0a5a8983d34&codeScope=overall)" >> $GITHUB_STEP_SUMMARY
 
-  deploy-dev:
+  deploy-pre-prod:
     name: Deploy
     runs-on: ubuntu-latest
     needs: sonarqube
-    if: github.ref == 'refs/heads/dev'
+    if: github.ref == 'refs/heads/pre-prod'
 
     steps:
-      - name: Deploy dev
+      - name: Deploy pre-prod
         run: |
           HTTP_CODE=$(curl -sS -o /tmp/deploy-response.txt -w "%{http_code}" -X POST "https://dockploy-dev.enzo-palermo.com/api/compose.deploy" \
             -H "accept: application/json" \

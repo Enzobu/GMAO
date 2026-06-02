@@ -2,17 +2,43 @@ import { useEffect, useMemo, useState } from "react"
 import { Link, useParams } from "react-router-dom"
 import { Plus, Trash2 } from "lucide-react"
 
-import { deleteVehicleInsurance, getVehicleInsurances } from "@/api/vehicle-events"
+import {
+  deleteVehicleInsurance,
+  getVehicleInsurances,
+} from "@/api/vehicle-events"
 import { getVehicle } from "@/api/vehicles"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
 import { ConfirmDialog } from "@/components/ui/confirm-dialog"
 import { useAuthStore } from "@/stores/auth-store"
 import type { Vehicle } from "@/types/vehicle"
 import type { VehicleInsuranceEvent } from "@/types/vehicle-events"
-import { formatDate, formatDateTime, isInsuranceActive, optionLabel, PAYMENT_FREQUENCIES } from "@/lib/vehicle-events"
-import { DetailItem, EmptyCard, ErrorMessage, ReadOnlyBadge, VehicleEventHeader } from "./components"
+import {
+  formatDate,
+  formatDateTime,
+  isInsuranceActive,
+  optionLabel,
+  PAYMENT_FREQUENCIES,
+} from "@/lib/vehicle-events"
+import {
+  DetailItem,
+  EmptyCard,
+  ErrorMessage,
+  ReadOnlyBadge,
+  VehicleEventHeader,
+} from "./components"
+
+const EVENT_CARD_CLASS = [
+  "relative border border-foreground/10 ring-0 transition-colors",
+  "hover:border-primary/35 hover:bg-muted/30",
+].join(" ")
 
 export default function VehicleInsurancesPage() {
   const { vehicleId } = useParams()
@@ -23,7 +49,8 @@ export default function VehicleInsurancesPage() {
   const [insurances, setInsurances] = useState<VehicleInsuranceEvent[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [insuranceToDelete, setInsuranceToDelete] = useState<VehicleInsuranceEvent | null>(null)
+  const [insuranceToDelete, setInsuranceToDelete] =
+    useState<VehicleInsuranceEvent | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
 
   useEffect(() => {
@@ -78,7 +105,9 @@ export default function VehicleInsurancesPage() {
 
     try {
       await deleteVehicleInsurance(insuranceToDelete.id)
-      setInsurances((current) => current.filter((insurance) => insurance.id !== insuranceToDelete.id))
+      setInsurances((current) => (
+        current.filter((insurance) => insurance.id !== insuranceToDelete.id)
+      ))
       setInsuranceToDelete(null)
     } finally {
       setIsDeleting(false)
@@ -86,7 +115,11 @@ export default function VehicleInsurancesPage() {
   }
 
   if (isLoading) {
-    return <div className="text-sm text-muted-foreground">Chargement des assurances...</div>
+    return (
+      <div className="text-sm text-muted-foreground">
+        Chargement des assurances...
+      </div>
+    )
   }
 
   if (error || !vehicle) {
@@ -158,16 +191,23 @@ function InsuranceCard({
   onDelete: (insurance: VehicleInsuranceEvent) => void
 }>) {
   return (
-    <Card className="relative border border-foreground/10 ring-0 transition-colors hover:border-primary/35 hover:bg-muted/30">
-      <Link to={`/vehicles/${vehicleId}/insurances/${insurance.id}`} className="absolute inset-0 z-10 rounded-xl" />
+    <Card className={EVENT_CARD_CLASS}>
+      <Link
+        to={`/vehicles/${vehicleId}/insurances/${insurance.id}`}
+        className="absolute inset-0 z-10 rounded-xl"
+      />
 
       <CardHeader>
         <CardTitle className="flex flex-wrap items-center gap-2">
           <span>{insurance.providerName}</span>
-          <Badge variant={isInsuranceActive(insurance) ? "secondary" : "outline"}>
+          <Badge
+            variant={isInsuranceActive(insurance) ? "secondary" : "outline"}
+          >
             {isInsuranceActive(insurance) ? "Active" : "Inactive"}
           </Badge>
-          <Badge variant="outline">{optionLabel(PAYMENT_FREQUENCIES, insurance.paymentFrequency)}</Badge>
+          <Badge variant="outline">
+            {optionLabel(PAYMENT_FREQUENCIES, insurance.paymentFrequency)}
+          </Badge>
           {!canEdit && <ReadOnlyBadge />}
         </CardTitle>
       </CardHeader>
@@ -176,18 +216,32 @@ function InsuranceCard({
         <DetailItem label="Police" value={insurance.policyNumber || "—"} />
         <DetailItem label="Début" value={formatDate(insurance.startDate)} />
         <DetailItem label="Fin" value={formatDate(insurance.endDate)} />
-        <DetailItem label="Mise à jour" value={formatDateTime(insurance.updatedAt)} />
+        <DetailItem
+          label="Mise à jour"
+          value={formatDateTime(insurance.updatedAt)}
+        />
       </CardContent>
 
       {(canEdit || isAdmin) && (
         <CardFooter className="relative z-20 justify-end gap-2">
           {canEdit && (
             <Button variant="outline" size="sm" asChild>
-              <Link to={`/vehicles/${vehicleId}/insurances/${insurance.id}/edit`}>Modifier</Link>
+              <Link
+                to={
+                  `/vehicles/${vehicleId}/insurances/`
+                  + `${insurance.id}/edit`
+                }
+              >
+                Modifier
+              </Link>
             </Button>
           )}
           {isAdmin && (
-            <Button variant="destructive" size="sm" onClick={() => onDelete(insurance)}>
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={() => onDelete(insurance)}
+            >
               <Trash2 />
               Supprimer
             </Button>
@@ -198,12 +252,19 @@ function InsuranceCard({
   )
 }
 
-function filterVehicleInsurances(items: VehicleInsuranceEvent[], vehicleId: string) {
+function filterVehicleInsurances(
+  items: VehicleInsuranceEvent[],
+  vehicleId: string
+) {
   return items
     .filter((item) => item.vehicle.id === Number(vehicleId))
-    .sort((a, b) => String(b.startDate ?? "").localeCompare(String(a.startDate ?? "")))
+    .sort((a, b) => (
+      String(b.startDate ?? "").localeCompare(String(a.startDate ?? ""))
+    ))
 }
 
 function deleteDescription(insurance: VehicleInsuranceEvent | null) {
-  return insurance ? `${insurance.providerName} sera masquée de la plateforme.` : ""
+  return insurance
+    ? `${insurance.providerName} sera masquée de la plateforme.`
+    : ""
 }

@@ -14,7 +14,9 @@ export async function updateProfile(payload: UpdateProfilePayload) {
 }
 
 export async function requestProfilePasswordReset() {
-  const response = await api.post<{ message: string }>("/profile/password-reset-request")
+  const response = await api.post<{ message: string }>(
+    "/profile/password-reset-request",
+  )
 
   return response.data
 }

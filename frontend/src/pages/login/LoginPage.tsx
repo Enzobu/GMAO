@@ -47,7 +47,9 @@ export default function LoginPage() {
   }
 
   return (
-    <Card className="w-full max-w-md rounded-3xl border-border bg-card shadow-xl">
+    <Card
+      className="w-full max-w-md rounded-3xl border-border bg-card shadow-xl"
+    >
       <CardHeader>
         <CardTitle className="text-2xl">
           Connexion

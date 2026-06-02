@@ -2,7 +2,11 @@ import type { ConfigurationItem } from "@/types/configuration"
 import type { Part } from "@/types/part"
 import type { Vehicle } from "@/types/vehicle"
 
-export type InterventionStatus = "todo" | "in_progress" | "completed" | "cancelled"
+export type InterventionStatus =
+  | "todo"
+  | "in_progress"
+  | "completed"
+  | "cancelled"
 
 export interface InterventionPart {
   id?: number
