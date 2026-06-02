@@ -10,6 +10,7 @@ import {
   getVehicleInsurance,
 } from "@/api/vehicle-events"
 import { getVehicle } from "@/api/vehicles"
+import { capitalizeFirstLetter } from "@/lib/text-format"
 import type { Intervention } from "@/types/intervention"
 import type { Part } from "@/types/part"
 import type { AppUser } from "@/types/user"
@@ -473,23 +474,26 @@ function userItem(context: BreadcrumbContext): BreadcrumbItem {
 }
 
 function vehicleLabel(vehicle: Vehicle) {
-  return `${vehicle.name} (${vehicle.registration})`
+  return `${capitalizeFirstLetter(vehicle.name)} (${vehicle.registration.toUpperCase()})`
 }
 
 function userLabel(user: AppUser) {
-  return `${user.firstname} ${user.lastname}`.trim() || user.email
+  return [
+    capitalizeFirstLetter(user.firstname),
+    capitalizeFirstLetter(user.lastname),
+  ].join(" ").trim() || user.email
 }
 
 function partLabel(part: Part) {
-  return part.partType.name
+  return capitalizeFirstLetter(part.partType.name)
 }
 
 function interventionLabel(intervention: Intervention) {
-  return intervention.maintenanceType.name
+  return capitalizeFirstLetter(intervention.maintenanceType.name)
 }
 
 function insuranceLabel(insurance: VehicleInsuranceEvent) {
-  return insurance.providerName
+  return capitalizeFirstLetter(insurance.providerName)
 }
 
 function inspectionLabel(inspection: VehicleInspectionEvent) {
