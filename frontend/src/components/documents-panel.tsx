@@ -620,7 +620,7 @@ function DocumentPreviewDialog({
           )}
         </DialogHeader>
 
-        <div className="h-[70vh] overflow-hidden rounded-lg border bg-muted/40">
+        <div className="h-[80vh] overflow-hidden rounded-lg border bg-muted/40">
           {isLoading && (
             <div
               className={
