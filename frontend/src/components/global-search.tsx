@@ -86,7 +86,7 @@ export function GlobalSearch({ className }: Readonly<{ className?: string }>) {
         searchInputRef.current?.focus()
         searchInputRef.current?.select()
         setIsOpen(true)
-        void loadSearchDataEvent()
+        loadSearchDataEvent()
       }
     }
 

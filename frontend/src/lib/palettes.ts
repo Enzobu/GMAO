@@ -145,7 +145,7 @@ export const palettes = paletteNames.map((name, index): PaletteDefinition => ({
 export const defaultPalette: PaletteName = "neutral"
 
 export function isPaletteName(value: string | null): value is PaletteName {
-  return paletteNames.some((name) => name === value)
+  return value !== null && paletteNames.includes(value as PaletteName)
 }
 
 export function applyPalette(paletteName: PaletteName) {

@@ -46,6 +46,7 @@ import type {
 } from "@/types/configuration"
 
 type ResourceKind = "maintenance" | "part"
+type ConfigurationFormItem = ConfigurationItem | "new" | null
 
 interface ResourceConfig {
   kind: ResourceKind
@@ -65,7 +66,7 @@ interface ResourceConfig {
 }
 
 type ConfigurationFormDialogProps = Readonly<{
-  item: ConfigurationItem | "new" | null
+  item: ConfigurationFormItem
   title: string
   error: string | null
   isSaving: boolean
@@ -402,9 +403,7 @@ function ConfigurationResourcePanel({
   const [search, setSearch] = useState("")
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [formItem, setFormItem] = useState<ConfigurationItem | null | "new">(
-    null,
-  )
+  const [formItem, setFormItem] = useState<ConfigurationFormItem>(null)
   const [deleteItem, setDeleteItem] = useState<ConfigurationItem | null>(null)
   const [isSaving, setIsSaving] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
@@ -1080,13 +1079,11 @@ function configurationDialogKey(
   return item === "new" ? "new" : String(item.id)
 }
 
-function configurationItemName(item: ConfigurationItem | "new" | null) {
+function configurationItemName(item: ConfigurationFormItem) {
   return item && item !== "new" ? item.name : ""
 }
 
-function configurationItemDescription(
-  item: ConfigurationItem | "new" | null,
-) {
+function configurationItemDescription(item: ConfigurationFormItem) {
   return item && item !== "new" ? item.description ?? "" : ""
 }
 
