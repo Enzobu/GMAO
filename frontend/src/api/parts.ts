@@ -1,15 +1,6 @@
 import { api } from "@/api/client"
+import { collectionItems, type ApiCollection } from "@/api/api-collection"
 import type { Part, PartPayload } from "@/types/part"
-
-type ApiCollection<T> = T[] | { member?: T[]; "hydra:member"?: T[] }
-
-function collectionItems<T>(data: ApiCollection<T>) {
-  if (Array.isArray(data)) {
-    return data
-  }
-
-  return data.member ?? data["hydra:member"] ?? []
-}
 
 export async function getParts() {
   const response = await api.get<ApiCollection<Part>>("/parts")

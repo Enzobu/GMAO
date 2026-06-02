@@ -640,8 +640,12 @@ function latestByDate<T extends { isDeleted?: boolean }>(
   items: T[] | undefined,
   field: DateLikeKey<T>,
 ) {
+  if (!Array.isArray(items)) {
+    return undefined
+  }
+
   return items
-    ?.filter((item) => !isArchived(item) && item[field])
+    .filter((item) => !isArchived(item) && item[field])
     .toSorted((a, b) => {
       const aDate = a[field]
       const bDate = b[field]
