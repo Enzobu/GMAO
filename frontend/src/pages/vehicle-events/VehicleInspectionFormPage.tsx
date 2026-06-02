@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react"
+import { forwardRef, useEffect, useMemo, useRef, useState } from "react"
 import type { FormEvent } from "react"
 import { isAxiosError } from "axios"
 import { useNavigate, useParams } from "react-router-dom"
@@ -38,6 +38,10 @@ const REMOVE_DOCUMENT_BUTTON_CLASS = [
   "rounded-lg border px-3 py-2 text-sm hover:bg-muted",
   "disabled:pointer-events-none disabled:opacity-50",
 ].join(" ")
+const ERROR_SCROLL_OFFSET = 112
+const MAX_DOCUMENT_SIZE = 8 * 1024 * 1024
+const FILE_TOO_LARGE_MESSAGE = "Fichier trop volumineux. Max 8 Mo."
+const PDF_COMPRESSOR_URL = "https://www.ilovepdf.com/fr/compresser_pdf"
 
 const emptyForm = {
   inspectionDate: "",
@@ -67,6 +71,7 @@ export default function VehicleInspectionFormPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const errorRef = useRef<HTMLDivElement>(null)
   const [mileageDialogOpen, setMileageDialogOpen] = useState(false)
   const [mileageMessage, setMileageMessage] = useState("")
 
@@ -115,6 +120,27 @@ export default function VehicleInspectionFormPage() {
       ignore = true
     }
   }, [vehicleId, inspectionId])
+
+  useEffect(() => {
+    if (!error) {
+      return
+    }
+
+    const errorElement = errorRef.current
+
+    if (!errorElement) {
+      return
+    }
+
+    const top = errorElement.getBoundingClientRect().top
+      + window.scrollY
+      - ERROR_SCROLL_OFFSET
+
+    window.scrollTo({
+      behavior: "smooth",
+      top: Math.max(0, top),
+    })
+  }, [error])
 
   const canEdit = useMemo(
     () => isAdmin || vehicle?.user.id === user?.id,
@@ -196,8 +222,15 @@ export default function VehicleInspectionFormPage() {
       return
     }
 
-    setIsSaving(true)
     setError(null)
+
+    if (documentFiles.some((file) => file && file.size > MAX_DOCUMENT_SIZE)) {
+      setError(FILE_TOO_LARGE_MESSAGE)
+
+      return
+    }
+
+    setIsSaving(true)
 
     try {
       const payload = formToPayload(form, vehicleId)
@@ -270,7 +303,9 @@ export default function VehicleInspectionFormPage() {
         </WarningMessage>
       )}
 
-      {error && <ErrorMessage>{error}</ErrorMessage>}
+      {error && (
+        <InspectionFormErrorMessage ref={errorRef} message={error} />
+      )}
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <Card>
@@ -358,7 +393,7 @@ export default function VehicleInspectionFormPage() {
             <div className="space-y-3">
               {documentFiles.map((file, index) => (
                 <label
-                  key={`${index}-${file?.name ?? "empty"}`}
+                  key={index}
                   className="grid gap-1.5 text-sm font-medium"
                 >
                   <span>Document {index + 1}</span>
@@ -373,6 +408,7 @@ export default function VehicleInspectionFormPage() {
                         )
                       }}
                     />
+
                     {file && (
                       <button
                         type="button"
@@ -384,6 +420,12 @@ export default function VehicleInspectionFormPage() {
                       </button>
                     )}
                   </div>
+
+                  {file && (
+                    <span className="truncate text-xs text-muted-foreground">
+                      Fichier sélectionné : {file.name}
+                    </span>
+                  )}
                 </label>
               ))}
             </div>
@@ -407,6 +449,32 @@ export default function VehicleInspectionFormPage() {
     </div>
   )
 }
+
+const InspectionFormErrorMessage = forwardRef<
+  HTMLDivElement,
+  Readonly<{ message: string }>
+>(function InspectionFormErrorMessage({ message }, ref) {
+  return (
+    <div ref={ref}>
+      <ErrorMessage>
+        {message}
+        {message === FILE_TOO_LARGE_MESSAGE && (
+          <>
+            {" "}
+            <a
+              href={PDF_COMPRESSOR_URL}
+              target="_blank"
+              rel="noreferrer"
+              className="font-semibold underline underline-offset-2"
+            >
+              Compresser PDF
+            </a>
+          </>
+        )}
+      </ErrorMessage>
+    </div>
+  )
+})
 
 function inspectionToForm(
   inspection: VehicleInspectionEvent
