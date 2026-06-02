@@ -2,6 +2,7 @@
 
 namespace App\Tests\Unit\Controller\Api;
 
+use ArrayObject;
 use App\Controller\Api\DashboardController;
 use App\Entity\Maintenance;
 use App\Entity\MaintenanceType;
@@ -59,6 +60,7 @@ final class DashboardControllerTest extends TestCase
             ->setValidUntil($today->modify('+5 days'))
             ->setInspectionDate($today->modify('-1 day'));
 
+        $queryBuilderCalls = new ArrayObject();
         $entityManager = $this->entityManagerForResults([
             ['result' => [$plannedToday, $plannedWithoutRelations]],
             ['result' => [$insurance]],
@@ -75,7 +77,7 @@ final class DashboardControllerTest extends TestCase
                 ['finishedAt' => null],
                 ['finishedAt' => 'ignored'],
             ]],
-        ]);
+        ], $queryBuilderCalls);
 
         $response = $this->controller(new User(), $entityManager)();
         $payload = json_decode($response->getContent(), true);
@@ -104,6 +106,14 @@ final class DashboardControllerTest extends TestCase
         self::assertSame('maintenance', $payload['recentActivity'][2]['type']);
         self::assertSame('', $payload['recentActivity'][2]['date']);
         self::assertSame('', $payload['recentActivity'][2]['meta']);
+        self::assertQueryConditionContains(
+            $queryBuilderCalls,
+            'newerInspection.vehicle = vi.vehicle',
+        );
+        self::assertQueryConditionContains(
+            $queryBuilderCalls,
+            'newerInspection.inspectionDate > vi.inspectionDate',
+        );
     }
 
     public function testReturnsDashboardForAdminWithoutUserRestrictionsOrVehicles(): void
@@ -134,10 +144,16 @@ final class DashboardControllerTest extends TestCase
     /**
      * @param list<array{scalar?:string,result?:array<int, mixed>,column?:array<int, mixed>}> $results
      */
-    private function entityManagerForResults(array $results): EntityManagerInterface
+    private function entityManagerForResults(
+        array $results,
+        ?ArrayObject $calls = null,
+    ): EntityManagerInterface
     {
         $queryBuilders = array_map(
-            fn (array $result): QueryBuilder => $this->queryBuilderForResult($result),
+            fn (array $result): QueryBuilder => $this->queryBuilderForResult(
+                $result,
+                $calls,
+            ),
             $results,
         );
 
@@ -152,7 +168,10 @@ final class DashboardControllerTest extends TestCase
     /**
      * @param array{scalar?:string,result?:array<int, mixed>,column?:array<int, mixed>} $result
      */
-    private function queryBuilderForResult(array $result): QueryBuilder
+    private function queryBuilderForResult(
+        array $result,
+        ?ArrayObject $calls = null,
+    ): QueryBuilder
     {
         $query = new class($result) extends Query {
             /**
@@ -177,12 +196,37 @@ final class DashboardControllerTest extends TestCase
         };
 
         $queryBuilder = $this->createMock(QueryBuilder::class);
-        foreach (['select', 'from', 'join', 'andWhere', 'setParameter'] as $method) {
+        foreach (['select', 'from', 'join', 'setParameter'] as $method) {
             $queryBuilder->method($method)->willReturnSelf();
         }
+        $queryBuilder->method('andWhere')->willReturnCallback(
+            function (string $condition) use ($calls, $queryBuilder): QueryBuilder {
+                if ($calls !== null) {
+                    $calls[] = ['andWhere', $condition];
+                }
+
+                return $queryBuilder;
+            },
+        );
         $queryBuilder->method('getQuery')->willReturn($query);
 
         return $queryBuilder;
+    }
+
+    /** @param ArrayObject<int, array{0:string, 1:string}> $calls */
+    private static function assertQueryConditionContains(
+        ArrayObject $calls,
+        string $expected,
+    ): void {
+        foreach ($calls as [$method, $condition]) {
+            if ($method === 'andWhere' && str_contains($condition, $expected)) {
+                self::assertTrue(true);
+
+                return;
+            }
+        }
+
+        self::fail(sprintf('No query condition contains "%s".', $expected));
     }
 
     private function controller(User $user, EntityManagerInterface $entityManager, bool $isAdmin = false): DashboardController
