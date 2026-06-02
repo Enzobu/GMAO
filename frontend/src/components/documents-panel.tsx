@@ -48,6 +48,8 @@ const emptyForm: DocumentFormState = {
 }
 
 const MAX_DOCUMENT_SIZE = 8 * 1024 * 1024
+const FILE_TOO_LARGE_MESSAGE = "Fichier trop volumineux. Max 8 Mo."
+const PDF_COMPRESSOR_URL = "https://www.ilovepdf.com/fr/compresser_pdf"
 const DESTRUCTIVE_MESSAGE_CLASS =
   "rounded-lg border border-destructive/30 bg-destructive/10 p-3 " +
   "text-sm text-destructive"
@@ -151,7 +153,7 @@ export function DocumentsPanel({
     }
 
     if (!editingDocument && form.file && form.file.size > MAX_DOCUMENT_SIZE) {
-      setFormError("Fichier trop volumineux. Max 8 Mo.")
+      setFormError(FILE_TOO_LARGE_MESSAGE)
       return
     }
 
@@ -372,9 +374,7 @@ function DocumentFormDialog({
           </DialogHeader>
 
           {error && (
-          <div className={DESTRUCTIVE_MESSAGE_CLASS}>
-              {error}
-            </div>
+            <FormErrorMessage message={error} />
           )}
 
           {!document && (
@@ -435,6 +435,31 @@ function DocumentFormDialog({
         </form>
       </DialogContent>
     </Dialog>
+  )
+}
+
+function FormErrorMessage({
+  message,
+}: Readonly<{
+  message: string
+}>) {
+  return (
+    <div className={DESTRUCTIVE_MESSAGE_CLASS}>
+      {message}
+      {message === FILE_TOO_LARGE_MESSAGE && (
+        <>
+          {" "}
+          <a
+            href={PDF_COMPRESSOR_URL}
+            target="_blank"
+            rel="noreferrer"
+            className="font-semibold underline underline-offset-2"
+          >
+            Compresser PDF
+          </a>
+        </>
+      )}
+    </div>
   )
 }
 
@@ -592,7 +617,7 @@ function errorMessage(caught: unknown, fallback: string) {
     }
 
     if (caught.response?.status === 413) {
-      return "Fichier trop volumineux. Max 8 Mo."
+      return FILE_TOO_LARGE_MESSAGE
     }
   }
 
