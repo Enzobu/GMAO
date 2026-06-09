@@ -387,7 +387,7 @@ function interventionResult(intervention: Intervention): SearchResult {
     ?? intervention.plannedAt
     ?? intervention.createdAt
   const vehicleLabel = vehicle
-    ? `${vehicleDisplayName(vehicle)} ${vehicle.registration}`
+    ? `${vehicleDisplayName(vehicle)} ${vehicle.registration.toUpperCase()}`
     : "Véhicule inconnu"
   const to = vehicle
     ? `/vehicles/${vehicle.id}/interventions/${intervention.id}`
@@ -408,7 +408,7 @@ function interventionResult(intervention: Intervention): SearchResult {
 function partResult(part: Part): SearchResult {
   const type = part.partType?.name ?? "Pièce"
   const vehicles = part.vehicles
-    ?.map((vehicle) => vehicle.registration)
+    ?.map((vehicle) => vehicle.registration.toUpperCase())
     .join(", ")
 
   return {

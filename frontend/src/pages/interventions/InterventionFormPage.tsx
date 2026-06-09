@@ -12,6 +12,7 @@ import {
 } from "@/api/interventions"
 import { getParts } from "@/api/parts"
 import { getVehicle } from "@/api/vehicles"
+import { FormDocumentsField } from "@/components/form-documents-field"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import {
@@ -34,6 +35,14 @@ import type {
 import type { Part } from "@/types/part"
 import type { Vehicle } from "@/types/vehicle"
 import { MIN_INPUT_DATETIME, MAX_INPUT_DATETIME } from "@/lib/date-limits"
+import {
+  createDocumentFileInput,
+  FILE_TOO_LARGE_MESSAGE,
+  hasTooLargeDocument,
+  selectedDocumentFiles,
+  type DocumentFileInput,
+  uploadParentDocuments,
+} from "@/lib/form-documents"
 import {
   INTERVENTION_STATUSES,
   vehicleDisplayName,
@@ -73,11 +82,15 @@ export default function InterventionFormPage() {
   const user = useAuthStore((state) => state.user)
   const isAdmin = user?.roles.includes("ROLE_ADMIN") ?? false
   const isEditing = Boolean(interventionId)
+  const showDocumentFields = !isEditing
   const [vehicle, setVehicle] = useState<Vehicle | null>(null)
   const [intervention, setIntervention] = useState<Intervention | null>(null)
   const [types, setTypes] = useState<ConfigurationItem[]>([])
   const [parts, setParts] = useState<Part[]>([])
   const [form, setForm] = useState(emptyForm)
+  const [documentFiles, setDocumentFiles] = useState<DocumentFileInput[]>([
+    createDocumentFileInput(),
+  ])
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -182,6 +195,11 @@ export default function InterventionFormPage() {
       return
     }
 
+    if (showDocumentFields && hasTooLargeDocument(documentFiles)) {
+      setError(FILE_TOO_LARGE_MESSAGE)
+      return
+    }
+
     setIsSaving(true)
     setError(null)
     try {
@@ -189,6 +207,14 @@ export default function InterventionFormPage() {
       const saved = interventionId
         ? await updateIntervention(interventionId, payload, forceMileage)
         : await createIntervention(payload, forceMileage)
+
+      if (showDocumentFields) {
+        await uploadParentDocuments(
+          { type: "maintenances", id: saved.id },
+          selectedDocumentFiles(documentFiles),
+        )
+      }
+
       navigate(`/vehicles/${vehicleId}/interventions/${saved.id}`)
     } catch (error_) {
       if (isAxiosError(error_) && error_.response?.status === 409) {
@@ -492,6 +518,15 @@ export default function InterventionFormPage() {
             ))}
           </CardContent>
         </Card>
+
+        {showDocumentFields && (
+          <FormDocumentsField
+            canEdit={canEdit}
+            documentFiles={documentFiles}
+            isSaving={isSaving}
+            setDocumentFiles={setDocumentFiles}
+          />
+        )}
 
         <InterventionFormActions
           cancelTo={interventionId

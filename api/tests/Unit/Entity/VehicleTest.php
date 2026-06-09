@@ -26,7 +26,7 @@ final class VehicleTest extends TestCase
 
         $vehicle = (new Vehicle())
             ->setName('Camion A')
-            ->setRegistration('AB-123-CD')
+            ->setRegistration('ab-123-cd')
             ->setBrand('Renault')
             ->setModel('Master')
             ->setType(VehicleTypeEnum::Truck)

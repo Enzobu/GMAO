@@ -10,6 +10,7 @@ import {
   updateVehicleInsurance,
 } from "@/api/vehicle-events"
 import { getVehicle } from "@/api/vehicles"
+import { FormDocumentsField } from "@/components/form-documents-field"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import {
@@ -28,6 +29,14 @@ import type {
   VehicleInsurancePayload,
 } from "@/types/vehicle-events"
 import { MIN_INPUT_DATE, MAX_INPUT_DATE } from "@/lib/date-limits"
+import {
+  createDocumentFileInput,
+  FILE_TOO_LARGE_MESSAGE,
+  hasTooLargeDocument,
+  selectedDocumentFiles,
+  type DocumentFileInput,
+  uploadParentDocuments,
+} from "@/lib/form-documents"
 import {
   formatDate,
   isInsuranceActive,
@@ -59,12 +68,16 @@ export default function VehicleInsuranceFormPage() {
   const user = useAuthStore((state) => state.user)
   const isAdmin = user?.roles.includes("ROLE_ADMIN") ?? false
   const isEditing = Boolean(insuranceId)
+  const showDocumentFields = !isEditing
 
   const [vehicle, setVehicle] = useState<Vehicle | null>(null)
   const [insurance, setInsurance] = useState<VehicleInsuranceEvent | null>(null)
   const [previousActiveInsurance, setPreviousActiveInsurance] =
     useState<VehicleInsuranceEvent | null>(null)
   const [form, setForm] = useState<InsuranceFormState>(emptyForm)
+  const [documentFiles, setDocumentFiles] = useState<DocumentFileInput[]>([
+    createDocumentFileInput(),
+  ])
   const [closePreviousEndDate, setClosePreviousEndDate] = useState(
     todayInputValue()
   )
@@ -154,11 +167,25 @@ export default function VehicleInsuranceFormPage() {
     setIsSaving(true)
     setError(null)
 
+    if (showDocumentFields && hasTooLargeDocument(documentFiles)) {
+      setError(FILE_TOO_LARGE_MESSAGE)
+      setIsSaving(false)
+
+      return
+    }
+
     try {
       const payload = formToPayload(form, vehicleId)
       const saved = insuranceId
         ? await updateVehicleInsurance(insuranceId, payload)
         : await createVehicleInsurance(payload)
+
+      if (showDocumentFields) {
+        await uploadParentDocuments(
+          { type: "vehicle_insurances", id: saved.id },
+          selectedDocumentFiles(documentFiles),
+        )
+      }
 
       navigate(`/vehicles/${vehicleId}/insurances/${saved.id}`)
     } catch {
@@ -284,6 +311,15 @@ export default function VehicleInsuranceFormPage() {
             />
           </CardContent>
         </Card>
+
+        {showDocumentFields && (
+          <FormDocumentsField
+            canEdit={canEdit}
+            documentFiles={documentFiles}
+            isSaving={isSaving}
+            setDocumentFiles={setDocumentFiles}
+          />
+        )}
 
         <FormActions
           cancelTo={

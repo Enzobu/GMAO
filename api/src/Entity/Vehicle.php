@@ -197,7 +197,7 @@ class Vehicle
 
     public function displayName(): ?string
     {
-        return ucfirst($this->name) . ' ・ ' . $this->registration;
+        return ucfirst($this->name) . ' ・ ' . strtoupper($this->registration);
     }
 
     private function formatRegistration(string $registration): string

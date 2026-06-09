@@ -19,6 +19,7 @@ import {
   type DocumentParent,
   updateParentDocument,
 } from "@/api/documents"
+import { documentDisplayName } from "@/lib/form-documents"
 import { LabelText } from "@/components/page-primitives"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -390,7 +391,7 @@ function DocumentFormDialog({
                     file,
                     name:
                       form.name ||
-                      (file ? file.name.replaceAll(/\.[^.]+$/g, "") : ""),
+                      (file ? documentDisplayName(file.name) : ""),
                   })
                 }}
               />

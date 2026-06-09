@@ -726,5 +726,18 @@ function formatNumber(value: number) {
 }
 
 function formatPrice(value?: string | null) {
-  return value ? `${value} €` : "—"
+  if (!value) {
+    return "—"
+  }
+
+  const amount = Number(value)
+
+  if (!Number.isFinite(amount)) {
+    return `${value} €`
+  }
+
+  return `${new Intl.NumberFormat("fr-FR", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(amount)} €`
 }

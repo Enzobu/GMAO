@@ -46,7 +46,7 @@ final class DocumentManagerTest extends TestCase
     {
         $source = tempnam(sys_get_temp_dir(), 'upload-');
         file_put_contents($source, 'content');
-        $file = new UploadedFile($source, 'facture.pdf', 'application/pdf', null, true);
+        $file = new UploadedFile($source, 'facture achat.pdf', 'application/pdf', null, true);
         $vehicle = new Vehicle();
         $em = $this->createMock(EntityManagerInterface::class);
         $em->expects(self::once())->method('persist')->with(self::isInstanceOf(Document::class));
@@ -55,7 +55,7 @@ final class DocumentManagerTest extends TestCase
         $document = $this->manager($em)->createDocument($vehicle, $file, 'Facture', 'Description');
 
         self::assertSame('Facture', $document->getName());
-        self::assertSame('facture.pdf', $document->getOriginalFilename());
+        self::assertSame('facture_achat.pdf', $document->getOriginalFilename());
         self::assertSame('Description', $document->getDescription());
         self::assertSame($vehicle, $document->getVehicle());
         self::assertFileExists($this->uploadDirectory.'/'.$document->getStoredFilename());
