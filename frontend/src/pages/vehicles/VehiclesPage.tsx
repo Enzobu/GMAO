@@ -1,8 +1,9 @@
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useState } from "react"
 import { Link } from "react-router-dom"
 import { Trash2 } from "lucide-react"
 
-import { deleteVehicle, getVehicles } from "@/api/vehicles"
+import { emptyCollectionPage } from "@/api/api-collection"
+import { deleteVehicle, getVehiclesPage } from "@/api/vehicles"
 import {
   CARD_LINK_CLASS,
   FILTER_GRID_CLASS,
@@ -17,11 +18,10 @@ import {
   SearchField,
 } from "@/components/list-page-primitives"
 import {
-  ITEMS_PER_PAGE_OPTIONS,
+  itemsPerPageSize,
   type ItemsPerPageValue,
-  getPaginatedItems,
-  getPaginationState,
 } from "@/components/list-page-pagination"
+import { ListPaginationControls } from "@/components/list-pagination-controls"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -33,7 +33,6 @@ import {
 } from "@/components/ui/card"
 import { ConfirmDialog } from "@/components/ui/confirm-dialog"
 import { NativeSelect } from "@/components/ui/native-select"
-import { PaginationControls } from "@/components/ui/pagination-controls"
 import { useLocalStorageState } from "@/hooks/use-local-storage-state"
 import { useAuthStore } from "@/stores/auth-store"
 import type { Vehicle } from "@/types/vehicle"
@@ -60,6 +59,9 @@ export default function VehiclesPage() {
   const currentUser = useAuthStore((state) => state.user)
   const isAdmin = currentUser?.roles.includes("ROLE_ADMIN") ?? false
   const [vehicles, setVehicles] = useState<Vehicle[]>([])
+  const [vehiclesPage, setVehiclesPage] = useState(
+    emptyCollectionPage<Vehicle>(6),
+  )
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [search, setSearch] = useState("")
@@ -74,72 +76,6 @@ export default function VehiclesPage() {
   const [vehicleToDelete, setVehicleToDelete] = useState<Vehicle | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
 
-  const filteredVehicles = useMemo(() => {
-    const normalizedSearch = normalize(search)
-
-    return vehicles
-      .filter((vehicle) => {
-        const canEdit = canEditVehicle(vehicle, currentUser?.id, isAdmin)
-        const searchable = normalize(
-          [
-            vehicle.name,
-            vehicle.registration,
-            vehicle.brand,
-            vehicle.model,
-            vehicle.year,
-            vehicle.lastMileage,
-            vehicle.user.email,
-            vehicle.user.firstname,
-            vehicle.user.lastname,
-          ]
-            .filter(Boolean)
-            .join(" "),
-        )
-
-        if (normalizedSearch && !searchable.includes(normalizedSearch)) {
-          return false
-        }
-
-        if (typeFilter !== "all" && vehicle.type !== typeFilter) {
-          return false
-        }
-
-        if (statusFilter !== "all" && vehicle.status !== statusFilter) {
-          return false
-        }
-
-        if (editabilityFilter === "editable" && !canEdit) {
-          return false
-        }
-
-        if (editabilityFilter === "readonly" && canEdit) {
-          return false
-        }
-
-        return true
-      })
-      .sort((first, second) => compareVehicles(first, second, sort))
-  }, [
-    vehicles,
-    search,
-    typeFilter,
-    statusFilter,
-    editabilityFilter,
-    sort,
-    currentUser?.id,
-    isAdmin,
-  ])
-
-  const pagination = getPaginationState(
-    filteredVehicles.length,
-    itemsPerPage,
-    page,
-  )
-  const paginatedVehicles = getPaginatedItems(
-    filteredVehicles,
-    itemsPerPage,
-    pagination,
-  )
   const hasActiveFilters =
     search ||
     typeFilter !== "all" ||
@@ -152,10 +88,19 @@ export default function VehiclesPage() {
 
     async function loadVehicles() {
       try {
-        const data = await getVehicles()
+        const data = await getVehiclesPage({
+          page,
+          itemsPerPage: itemsPerPageSize(itemsPerPage),
+          search,
+          type: typeFilter,
+          status: statusFilter,
+          editability: editabilityFilter,
+          sort,
+        })
 
         if (!ignore) {
-          setVehicles(data)
+          setVehicles(data.items)
+          setVehiclesPage(data)
         }
       } catch {
         if (!ignore) {
@@ -173,7 +118,7 @@ export default function VehiclesPage() {
     return () => {
       ignore = true
     }
-  }, [])
+  }, [editabilityFilter, itemsPerPage, page, search, sort, statusFilter, typeFilter])
 
   async function confirmDelete() {
     if (!vehicleToDelete) {
@@ -184,9 +129,13 @@ export default function VehiclesPage() {
 
     try {
       await deleteVehicle(vehicleToDelete.id)
-      setVehicles((current) =>
-        current.filter((item) => item.id !== vehicleToDelete.id),
-      )
+      setVehicles((current) => current.filter(
+        (item) => item.id !== vehicleToDelete.id,
+      ))
+      setVehiclesPage((current) => ({
+        ...current,
+        totalItems: Math.max(0, current.totalItems - 1),
+      }))
       setVehicleToDelete(null)
     } finally {
       setIsDeleting(false)
@@ -199,14 +148,6 @@ export default function VehiclesPage() {
     setStatusFilter("all")
     setEditabilityFilter("all")
     setSort("name")
-  }
-
-  function previousPage() {
-    setPage((current) => Math.max(1, current - 1))
-  }
-
-  function nextPage() {
-    setPage((current) => Math.min(pagination.pageCount, current + 1))
   }
 
   if (isLoading) {
@@ -229,11 +170,11 @@ export default function VehiclesPage() {
     : ""
 
   function renderVehiclesContent() {
-    if (vehicles.length === 0) {
+    if (vehiclesPage.totalItems === 0 && !hasActiveFilters) {
       return <EmptyListCard>Aucun véhicule pour le moment.</EmptyListCard>
     }
 
-    if (filteredVehicles.length === 0) {
+    if (vehicles.length === 0) {
       return (
         <EmptyListCard>
           Aucun véhicule ne correspond à ces critères.
@@ -243,24 +184,19 @@ export default function VehiclesPage() {
 
     return (
       <>
-        <PaginationControls
-          currentPage={pagination.currentPage}
-          pageCount={pagination.pageCount}
-          totalItems={filteredVehicles.length}
-          visibleStart={pagination.visibleStart}
-          visibleEnd={pagination.visibleEnd}
-          itemsPerPage={itemsPerPage}
-          itemsPerPageOptions={ITEMS_PER_PAGE_OPTIONS}
-          onItemsPerPageChange={(value) =>
-            setItemsPerPage(value as ItemsPerPageValue)
-          }
-          onPreviousPage={previousPage}
-          onNextPage={nextPage}
+        <ListPaginationControls
           itemLabel="véhicule(s)"
+          pagination={vehiclesPage}
+          itemsPerPage={itemsPerPage}
+          onItemsPerPageChange={(value) => {
+            setItemsPerPage(value)
+            setPage(1)
+          }}
+          onPageChange={setPage}
         />
 
         <div className="grid gap-4 xl:grid-cols-2">
-          {paginatedVehicles.map((vehicle) => {
+          {vehicles.map((vehicle) => {
             const canEdit = canEditVehicle(vehicle, currentUser?.id, isAdmin)
 
             return (
@@ -342,23 +278,16 @@ export default function VehiclesPage() {
           })}
         </div>
 
-        {pagination.pageCount > 1 && (
-          <PaginationControls
-            currentPage={pagination.currentPage}
-            pageCount={pagination.pageCount}
-            totalItems={filteredVehicles.length}
-            visibleStart={pagination.visibleStart}
-            visibleEnd={pagination.visibleEnd}
-            itemsPerPage={itemsPerPage}
-            itemsPerPageOptions={ITEMS_PER_PAGE_OPTIONS}
-            onItemsPerPageChange={(value) =>
-              setItemsPerPage(value as ItemsPerPageValue)
-            }
-            onPreviousPage={previousPage}
-            onNextPage={nextPage}
-            itemLabel="véhicule(s)"
-          />
-        )}
+        <ListPaginationControls
+          itemLabel="véhicule(s)"
+          pagination={vehiclesPage}
+          itemsPerPage={itemsPerPage}
+          onItemsPerPageChange={(value) => {
+            setItemsPerPage(value)
+            setPage(1)
+          }}
+          onPageChange={setPage}
+        />
       </>
     )
   }
@@ -381,7 +310,7 @@ export default function VehiclesPage() {
 
       <ListPageHeader
         title="Véhicules"
-        countLabel={vehicleCountLabel(filteredVehicles.length, vehicles.length)}
+        countLabel={`${vehiclesPage.totalItems} véhicule(s)`}
         addTo="/vehicles/new"
         addLabel="Ajouter un véhicule"
       />
@@ -491,38 +420,8 @@ function canEditVehicle(
   return isAdmin || vehicle.user.id === currentUserId
 }
 
-function compareVehicles(first: Vehicle, second: Vehicle, sort: SortValue) {
-  if (sort === "registration") {
-    return first.registration.localeCompare(second.registration, "fr")
-  }
-
-  if (sort === "year-desc") {
-    return (second.year ?? 0) - (first.year ?? 0)
-  }
-
-  if (sort === "mileage-desc") {
-    return (second.lastMileage ?? 0) - (first.lastMileage ?? 0)
-  }
-
-  return displayVehicleName(first).localeCompare(
-    displayVehicleName(second),
-    "fr",
-  )
-}
-
-function normalize(value: string) {
-  return value
-    .toLowerCase()
-    .normalize("NFD")
-    .replaceAll(/[\u0300-\u036f]/g, "")
-}
-
 function formatNumber(value: number) {
   return new Intl.NumberFormat("fr-FR").format(value)
-}
-
-function vehicleCountLabel(filteredCount: number, totalCount: number) {
-  return `${filteredCount} sur ${totalCount} véhicule(s)`
 }
 
 function updateFilter<T>(

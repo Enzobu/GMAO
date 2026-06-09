@@ -1,11 +1,43 @@
 import { api } from "@/api/client"
-import { collectionItems, type ApiCollection } from "@/api/api-collection"
+import {
+  collectionItems,
+  collectionNextPage,
+  collectionPage,
+  collectionParams,
+  COLLECTION_REQUEST_HEADERS,
+  type ApiCollection,
+  type CollectionParams,
+} from "@/api/api-collection"
 import type { Part, PartPayload } from "@/types/part"
 
 export async function getParts() {
-  const response = await api.get<ApiCollection<Part>>("/parts")
+  const response = await api.get<ApiCollection<Part>>("/parts", {
+    headers: COLLECTION_REQUEST_HEADERS,
+    params: { itemsPerPage: 36 },
+  })
+  const items = [...collectionItems(response.data)]
+  let nextPage = collectionNextPage(response.data)
 
-  return collectionItems(response.data)
+  while (nextPage !== null) {
+    const nextResponse = await api.get<ApiCollection<Part>>("/parts", {
+      headers: COLLECTION_REQUEST_HEADERS,
+      params: { page: nextPage, itemsPerPage: 36 },
+    })
+
+    items.push(...collectionItems(nextResponse.data))
+    nextPage = collectionNextPage(nextResponse.data)
+  }
+
+  return items
+}
+
+export async function getPartsPage(params: CollectionParams) {
+  const response = await api.get<ApiCollection<Part>>("/parts", {
+    headers: COLLECTION_REQUEST_HEADERS,
+    params: collectionParams(params),
+  })
+
+  return collectionPage(response.data, params.page, params.itemsPerPage)
 }
 
 export async function getPart(id: string | number) {

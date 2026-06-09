@@ -1,5 +1,13 @@
 import { api } from "@/api/client"
-import { collectionItems, type ApiCollection } from "@/api/api-collection"
+import {
+  collectionItems,
+  collectionNextPage,
+  collectionPage,
+  collectionParams,
+  COLLECTION_REQUEST_HEADERS,
+  type ApiCollection,
+  type CollectionParams,
+} from "@/api/api-collection"
 import type {
   InspectionCenter,
   VehicleInspectionEvent,
@@ -11,8 +19,37 @@ import type {
 export async function getVehicleInsurances() {
   const response = await api.get<ApiCollection<VehicleInsuranceEvent>>(
     "/vehicle_insurances",
+    { headers: COLLECTION_REQUEST_HEADERS, params: { itemsPerPage: 36 } },
   )
-  return collectionItems(response.data)
+  const items = [...collectionItems(response.data)]
+  let nextPage = collectionNextPage(response.data)
+
+  while (nextPage !== null) {
+    const nextResponse = await api.get<ApiCollection<VehicleInsuranceEvent>>(
+      "/vehicle_insurances",
+      {
+        headers: COLLECTION_REQUEST_HEADERS,
+        params: { page: nextPage, itemsPerPage: 36 },
+      },
+    )
+
+    items.push(...collectionItems(nextResponse.data))
+    nextPage = collectionNextPage(nextResponse.data)
+  }
+
+  return items
+}
+
+export async function getVehicleInsurancesPage(params: CollectionParams) {
+  const response = await api.get<ApiCollection<VehicleInsuranceEvent>>(
+    "/vehicle_insurances",
+    {
+      headers: COLLECTION_REQUEST_HEADERS,
+      params: collectionParams(params),
+    },
+  )
+
+  return collectionPage(response.data, params.page, params.itemsPerPage)
 }
 
 export async function getVehicleInsurance(id: string | number) {
@@ -61,8 +98,37 @@ export async function deleteVehicleInsurance(id: string | number) {
 export async function getVehicleInspections() {
   const response = await api.get<ApiCollection<VehicleInspectionEvent>>(
     "/vehicle_inspections",
+    { headers: COLLECTION_REQUEST_HEADERS, params: { itemsPerPage: 36 } },
   )
-  return collectionItems(response.data)
+  const items = [...collectionItems(response.data)]
+  let nextPage = collectionNextPage(response.data)
+
+  while (nextPage !== null) {
+    const nextResponse = await api.get<ApiCollection<VehicleInspectionEvent>>(
+      "/vehicle_inspections",
+      {
+        headers: COLLECTION_REQUEST_HEADERS,
+        params: { page: nextPage, itemsPerPage: 36 },
+      },
+    )
+
+    items.push(...collectionItems(nextResponse.data))
+    nextPage = collectionNextPage(nextResponse.data)
+  }
+
+  return items
+}
+
+export async function getVehicleInspectionsPage(params: CollectionParams) {
+  const response = await api.get<ApiCollection<VehicleInspectionEvent>>(
+    "/vehicle_inspections",
+    {
+      headers: COLLECTION_REQUEST_HEADERS,
+      params: collectionParams(params),
+    },
+  )
+
+  return collectionPage(response.data, params.page, params.itemsPerPage)
 }
 
 export async function getVehicleInspection(id: string | number) {

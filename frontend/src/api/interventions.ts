@@ -1,25 +1,30 @@
 import { api } from "@/api/client"
-import { collectionItems } from "@/api/api-collection"
+import {
+  collectionItems,
+  collectionPage,
+  collectionParams,
+  collectionNextPage,
+  COLLECTION_REQUEST_HEADERS,
+  type ApiCollection,
+  type CollectionParams,
+} from "@/api/api-collection"
 import type { Intervention, InterventionPayload } from "@/types/intervention"
 
-type ApiCollection<T> =
-  | T[]
-  | {
-      member?: T[]
-      "hydra:member"?: T[]
-      view?: { next?: string }
-      "hydra:view"?: { "hydra:next"?: string }
-    }
-
 export async function getInterventions() {
-  const firstPage = await api.get<ApiCollection<Intervention>>("/maintenances")
+  const firstPage = await api.get<ApiCollection<Intervention>>("/maintenances", {
+    headers: COLLECTION_REQUEST_HEADERS,
+    params: { itemsPerPage: 36 },
+  })
   const items = [...collectionItems(firstPage.data)]
   let nextPage = collectionNextPage(firstPage.data)
 
   while (nextPage !== null) {
     const response = await api.get<ApiCollection<Intervention>>(
       "/maintenances",
-      { params: { page: nextPage } },
+      {
+        headers: COLLECTION_REQUEST_HEADERS,
+        params: { page: nextPage, itemsPerPage: 36 },
+      },
     )
 
     items.push(...collectionItems(response.data))
@@ -29,16 +34,13 @@ export async function getInterventions() {
   return items
 }
 
-function collectionNextPage<T>(data: ApiCollection<T>) {
-  if (Array.isArray(data)) return null
+export async function getInterventionsPage(params: CollectionParams) {
+  const response = await api.get<ApiCollection<Intervention>>("/maintenances", {
+    headers: COLLECTION_REQUEST_HEADERS,
+    params: collectionParams(params),
+  })
 
-  const next = data.view?.next ?? data["hydra:view"]?.["hydra:next"]
-  if (!next) return null
-
-  const url = new URL(next, globalThis.location.origin)
-  const page = Number(url.searchParams.get("page"))
-
-  return Number.isFinite(page) && page > 0 ? page : null
+  return collectionPage(response.data, params.page, params.itemsPerPage)
 }
 
 export async function getIntervention(id: string | number) {

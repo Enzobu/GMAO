@@ -1,9 +1,10 @@
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useState } from "react"
 import { Link } from "react-router-dom"
 import { Info, Trash2 } from "lucide-react"
 import { AxiosError } from "axios"
 
-import { deleteUser, getUsers } from "@/api/users"
+import { emptyCollectionPage } from "@/api/api-collection"
+import { deleteUser, getUsersPage } from "@/api/users"
 import {
   CARD_LINK_CLASS,
   FILTER_GRID_CLASS,
@@ -17,12 +18,10 @@ import {
   SearchField,
 } from "@/components/list-page-primitives"
 import {
-  ITEMS_PER_PAGE_OPTIONS,
+  itemsPerPageSize,
   type ItemsPerPageValue,
-  type PaginationState,
-  getPaginatedItems,
-  getPaginationState,
 } from "@/components/list-page-pagination"
+import { ListPaginationControls } from "@/components/list-pagination-controls"
 import { ErrorMessage } from "@/components/page-primitives"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -43,10 +42,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { NativeSelect } from "@/components/ui/native-select"
-import { PaginationControls } from "@/components/ui/pagination-controls"
 import { useLocalStorageState } from "@/hooks/use-local-storage-state"
 import {
-  isUserAdmin,
   roleLabel,
   userDisplayName,
   userInitials,
@@ -67,6 +64,7 @@ export default function UsersPage() {
   const currentUser = useAuthStore((state) => state.user)
   const isAdmin = currentUser?.roles.includes("ROLE_ADMIN") ?? false
   const [users, setUsers] = useState<AppUser[]>([])
+  const [usersPage, setUsersPage] = useState(emptyCollectionPage<AppUser>(6))
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [search, setSearch] = useState("")
@@ -86,9 +84,17 @@ export default function UsersPage() {
 
     async function loadUsers() {
       try {
-        const data = await getUsers()
+        const data = await getUsersPage({
+          page,
+          itemsPerPage: itemsPerPageSize(itemsPerPage),
+          search,
+          role: roleFilter,
+          editability: editabilityFilter,
+          sort,
+        })
         if (!ignore) {
-          setUsers(data)
+          setUsers(data.items)
+          setUsersPage(data)
         }
       } catch {
         if (!ignore) {
@@ -106,51 +112,8 @@ export default function UsersPage() {
     return () => {
       ignore = true
     }
-  }, [])
+  }, [editabilityFilter, itemsPerPage, page, roleFilter, search, sort])
 
-  const filteredUsers = useMemo(() => {
-    const normalizedSearch = normalize(search)
-
-    return users
-      .filter((user) => {
-        const canEdit = canEditUser(user, currentUser?.id, isAdmin)
-        const searchable = normalize(searchableUser(user))
-
-        if (normalizedSearch && !searchable.includes(normalizedSearch)) {
-          return false
-        }
-        if (roleFilter === "admin" && !isUserAdmin(user)) {
-          return false
-        }
-        if (roleFilter === "user" && isUserAdmin(user)) {
-          return false
-        }
-        if (editabilityFilter === "editable" && !canEdit) {
-          return false
-        }
-        if (editabilityFilter === "readonly" && canEdit) {
-          return false
-        }
-
-        return true
-      })
-      .sort((first, second) => compareUsers(first, second, sort))
-  }, [
-    users,
-    search,
-    roleFilter,
-    editabilityFilter,
-    sort,
-    currentUser?.id,
-    isAdmin,
-  ])
-
-  const pagination = getPaginationState(filteredUsers.length, itemsPerPage, page)
-  const paginatedUsers = getPaginatedItems(
-    filteredUsers,
-    itemsPerPage,
-    pagination,
-  )
   const hasActiveFilters = Boolean(
     search
       || roleFilter !== "all"
@@ -171,6 +134,10 @@ export default function UsersPage() {
       setUsers((current) => {
         return current.filter((user) => user.id !== userToDelete.id)
       })
+      setUsersPage((current) => ({
+        ...current,
+        totalItems: Math.max(0, current.totalItems - 1),
+      }))
       setUserToDelete(null)
     } catch (error_) {
       setError(errorMessage(error_, "Impossible de supprimer cet utilisateur."))
@@ -231,7 +198,7 @@ export default function UsersPage() {
 
       <ListPageHeader
         title="Utilisateurs"
-        countLabel={countLabel(filteredUsers.length, users.length)}
+        countLabel={`${usersPage.totalItems} utilisateur(s)`}
         addTo={isAdmin ? "/users/new" : undefined}
         addLabel="Ajouter un utilisateur"
       />
@@ -253,21 +220,23 @@ export default function UsersPage() {
         onReset={resetFilters}
       />
 
-      {filteredUsers.length === 0 ? (
+      {users.length === 0 ? (
         <EmptyListCard>
           Aucun utilisateur ne correspond aux critères.
         </EmptyListCard>
       ) : (
         <>
           <UsersPagination
-            pagination={pagination}
+            pagination={usersPage}
             itemsPerPage={itemsPerPage}
-            totalItems={filteredUsers.length}
-            onItemsPerPageChange={setItemsPerPage}
+            onItemsPerPageChange={(value) => {
+              setItemsPerPage(value)
+              setPage(1)
+            }}
             onPageChange={setPage}
           />
           <div className="grid gap-4 xl:grid-cols-2">
-            {paginatedUsers.map((user) => (
+            {users.map((user) => (
               <UserCard
                 key={user.id}
                 user={user}
@@ -277,15 +246,15 @@ export default function UsersPage() {
               />
             ))}
           </div>
-          {pagination.pageCount > 1 && (
-            <UsersPagination
-              pagination={pagination}
-              itemsPerPage={itemsPerPage}
-              totalItems={filteredUsers.length}
-              onItemsPerPageChange={setItemsPerPage}
-              onPageChange={setPage}
-            />
-          )}
+          <UsersPagination
+            pagination={usersPage}
+            itemsPerPage={itemsPerPage}
+            onItemsPerPageChange={(value) => {
+              setItemsPerPage(value)
+              setPage(1)
+            }}
+            onPageChange={setPage}
+          />
         </>
       )}
     </div>
@@ -353,40 +322,13 @@ function FiltersCard({
   )
 }
 
-function UsersPagination({
-  pagination,
-  itemsPerPage,
-  totalItems,
-  onItemsPerPageChange,
-  onPageChange,
-}: Readonly<{
-  pagination: PaginationState
+function UsersPagination(props: Readonly<{
+  pagination: Parameters<typeof ListPaginationControls>[0]["pagination"]
   itemsPerPage: ItemsPerPageValue
-  totalItems: number
   onItemsPerPageChange: (value: ItemsPerPageValue) => void
-  onPageChange: (value: React.SetStateAction<number>) => void
+  onPageChange: (value: number) => void
 }>) {
-  return (
-    <PaginationControls
-      currentPage={pagination.currentPage}
-      pageCount={pagination.pageCount}
-      totalItems={totalItems}
-      visibleStart={pagination.visibleStart}
-      visibleEnd={pagination.visibleEnd}
-      itemsPerPage={itemsPerPage}
-      itemsPerPageOptions={ITEMS_PER_PAGE_OPTIONS}
-      onItemsPerPageChange={(value) => {
-        onItemsPerPageChange(value as ItemsPerPageValue)
-      }}
-      onPreviousPage={() => {
-        onPageChange((current) => Math.max(1, current - 1))
-      }}
-      onNextPage={() => {
-        onPageChange((current) => Math.min(pagination.pageCount, current + 1))
-      }}
-      itemLabel="utilisateur(s)"
-    />
-  )
+  return <ListPaginationControls {...props} itemLabel="utilisateur(s)" />
 }
 
 function UserCard({
@@ -503,21 +445,6 @@ function canEditUser(
   return isAdmin || user.id === currentUserId
 }
 
-function compareUsers(first: AppUser, second: AppUser, sort: SortValue) {
-  if (sort === "email") {
-    return first.email.localeCompare(second.email, "fr")
-  }
-  if (sort === "role") {
-    return Number(isUserAdmin(second)) - Number(isUserAdmin(first))
-  }
-
-  return userDisplayName(first).localeCompare(userDisplayName(second), "fr")
-}
-
-function normalize(value: string) {
-  return value.toLowerCase().normalize("NFD").replaceAll(/[\u0300-\u036f]/g, "")
-}
-
 function errorMessage(caught: unknown, fallback: string) {
   if (caught instanceof AxiosError) {
     const detail = caught.response?.data?.detail
@@ -529,14 +456,6 @@ function errorMessage(caught: unknown, fallback: string) {
   }
 
   return fallback
-}
-
-function searchableUser(user: AppUser) {
-  return [
-    userDisplayName(user),
-    user.email,
-    ...user.roles.map(roleLabel),
-  ].join(" ")
 }
 
 function deleteDescription(user: AppUser) {
@@ -567,10 +486,6 @@ const SORT_OPTIONS = [
   { value: "email", label: "Email A-Z" },
   { value: "role", label: "Rôle" },
 ] as const
-
-function countLabel(filteredCount: number, totalCount: number) {
-  return `${filteredCount} sur ${totalCount} utilisateur(s)`
-}
 
 function updateFilter<T>(
   setter: (value: T) => void,

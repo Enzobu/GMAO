@@ -4,9 +4,15 @@ import { Plus, Trash2 } from "lucide-react"
 
 import {
   deleteVehicleInsurance,
-  getVehicleInsurances,
+  getVehicleInsurancesPage,
 } from "@/api/vehicle-events"
+import { emptyCollectionPage } from "@/api/api-collection"
 import { getVehicle } from "@/api/vehicles"
+import {
+  itemsPerPageSize,
+  type ItemsPerPageValue,
+} from "@/components/list-page-pagination"
+import { ListPaginationControls } from "@/components/list-pagination-controls"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -17,6 +23,7 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { ConfirmDialog } from "@/components/ui/confirm-dialog"
+import { useLocalStorageState } from "@/hooks/use-local-storage-state"
 import { useAuthStore } from "@/stores/auth-store"
 import type { Vehicle } from "@/types/vehicle"
 import type { VehicleInsuranceEvent } from "@/types/vehicle-events"
@@ -47,6 +54,15 @@ export default function VehicleInsurancesPage() {
 
   const [vehicle, setVehicle] = useState<Vehicle | null>(null)
   const [insurances, setInsurances] = useState<VehicleInsuranceEvent[]>([])
+  const [insurancesPage, setInsurancesPage] = useState(
+    emptyCollectionPage<VehicleInsuranceEvent>(12),
+  )
+  const [itemsPerPage, setItemsPerPage] =
+    useLocalStorageState<ItemsPerPageValue>(
+      "vehicleInsurances.itemsPerPage",
+      "12",
+    )
+  const [page, setPage] = useState(1)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [insuranceToDelete, setInsuranceToDelete] =
@@ -64,7 +80,11 @@ export default function VehicleInsurancesPage() {
       try {
         const [vehicleData, insuranceData] = await Promise.all([
           getVehicle(vehicleId),
-          getVehicleInsurances(),
+          getVehicleInsurancesPage({
+            page,
+            itemsPerPage: itemsPerPageSize(itemsPerPage),
+            vehicleId,
+          }),
         ])
 
         if (ignore) {
@@ -72,7 +92,8 @@ export default function VehicleInsurancesPage() {
         }
 
         setVehicle(vehicleData)
-        setInsurances(filterVehicleInsurances(insuranceData, vehicleId))
+        setInsurances(insuranceData.items)
+        setInsurancesPage(insuranceData)
       } catch {
         if (!ignore) {
           setError("Impossible de charger les assurances.")
@@ -89,7 +110,7 @@ export default function VehicleInsurancesPage() {
     return () => {
       ignore = true
     }
-  }, [vehicleId])
+  }, [itemsPerPage, page, vehicleId])
 
   const canEdit = useMemo(
     () => isAdmin || vehicle?.user.id === user?.id,
@@ -108,6 +129,10 @@ export default function VehicleInsurancesPage() {
       setInsurances((current) => (
         current.filter((insurance) => insurance.id !== insuranceToDelete.id)
       ))
+      setInsurancesPage((current) => ({
+        ...current,
+        totalItems: Math.max(0, current.totalItems - 1),
+      }))
       setInsuranceToDelete(null)
     } finally {
       setIsDeleting(false)
@@ -144,7 +169,7 @@ export default function VehicleInsurancesPage() {
 
       <VehicleEventHeader
         title="Assurances du véhicule"
-        description={`${insurances.length} assurance(s) enregistrée(s)`}
+        description={`${insurancesPage.totalItems} assurance(s) enregistrée(s)`}
         backTo={`/vehicles/${vehicle.id}`}
         backLabel="Retour au véhicule"
         actions={canEdit && (
@@ -155,6 +180,17 @@ export default function VehicleInsurancesPage() {
             </Link>
           </Button>
         )}
+      />
+
+      <ListPaginationControls
+        itemLabel="assurance(s)"
+        pagination={insurancesPage}
+        itemsPerPage={itemsPerPage}
+        onItemsPerPageChange={(value) => {
+          setItemsPerPage(value)
+          setPage(1)
+        }}
+        onPageChange={setPage}
       />
 
       {insurances.length === 0 ? (
@@ -173,6 +209,17 @@ export default function VehicleInsurancesPage() {
           ))}
         </div>
       )}
+
+      <ListPaginationControls
+        itemLabel="assurance(s)"
+        pagination={insurancesPage}
+        itemsPerPage={itemsPerPage}
+        onItemsPerPageChange={(value) => {
+          setItemsPerPage(value)
+          setPage(1)
+        }}
+        onPageChange={setPage}
+      />
     </div>
   )
 }
@@ -250,17 +297,6 @@ function InsuranceCard({
       )}
     </Card>
   )
-}
-
-function filterVehicleInsurances(
-  items: VehicleInsuranceEvent[],
-  vehicleId: string
-) {
-  return items
-    .filter((item) => item.vehicle.id === Number(vehicleId))
-    .sort((a, b) => (
-      String(b.startDate ?? "").localeCompare(String(a.startDate ?? ""))
-    ))
 }
 
 function deleteDescription(insurance: VehicleInsuranceEvent | null) {

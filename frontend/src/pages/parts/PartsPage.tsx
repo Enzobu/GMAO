@@ -1,8 +1,9 @@
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useState } from "react"
 import { Link } from "react-router-dom"
 import { Trash2 } from "lucide-react"
 
-import { deletePart, getParts, updatePartQuantity } from "@/api/parts"
+import { emptyCollectionPage } from "@/api/api-collection"
+import { deletePart, getPartsPage, updatePartQuantity } from "@/api/parts"
 import { getPartTypes } from "@/api/configuration"
 import { getVehicles } from "@/api/vehicles"
 import {
@@ -19,11 +20,10 @@ import {
   SearchField,
 } from "@/components/list-page-primitives"
 import {
-  ITEMS_PER_PAGE_OPTIONS,
+  itemsPerPageSize,
   type ItemsPerPageValue,
-  getPaginatedItems,
-  getPaginationState,
 } from "@/components/list-page-pagination"
+import { ListPaginationControls } from "@/components/list-pagination-controls"
 import { LabelText } from "@/components/page-primitives"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -45,7 +45,6 @@ import {
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { NativeSelect } from "@/components/ui/native-select"
-import { PaginationControls } from "@/components/ui/pagination-controls"
 import { useLocalStorageState } from "@/hooks/use-local-storage-state"
 import { useAuthStore } from "@/stores/auth-store"
 import type { ConfigurationItem } from "@/types/configuration"
@@ -72,6 +71,7 @@ export default function PartsPage() {
   const user = useAuthStore((state) => state.user)
   const isAdmin = user?.roles.includes("ROLE_ADMIN") ?? false
   const [parts, setParts] = useState<Part[]>([])
+  const [partsPage, setPartsPage] = useState(emptyCollectionPage<Part>(6))
   const [vehicles, setVehicles] = useState<Vehicle[]>([])
   const [partTypes, setPartTypes] = useState<ConfigurationItem[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -94,13 +94,22 @@ export default function PartsPage() {
     async function load() {
       try {
         const [partsData, vehiclesData, partTypesData] = await Promise.all([
-          getParts(),
+          getPartsPage({
+            page,
+            itemsPerPage: itemsPerPageSize(itemsPerPage),
+            search,
+            vehicle: vehicleFilter,
+            partType: partTypeFilter,
+            stock: stockFilter,
+            sort,
+          }),
           getVehicles(),
           getPartTypes(),
         ])
 
         if (!ignore) {
-          setParts(partsData)
+          setParts(partsData.items)
+          setPartsPage(partsData)
           setVehicles(vehiclesData)
           setPartTypes(partTypesData)
         }
@@ -120,64 +129,8 @@ export default function PartsPage() {
     return () => {
       ignore = true
     }
-  }, [])
+  }, [itemsPerPage, page, partTypeFilter, search, sort, stockFilter, vehicleFilter])
 
-  const filteredParts = useMemo(() => {
-    const normalizedSearch = normalize(search)
-
-    return parts
-      .filter((part) => {
-        const searchable = normalize(
-          [
-            partName(part),
-            part.note,
-            ...part.vehicles.map(vehicleDisplayName),
-            ...part.vehicles.map((vehicle) => vehicle.registration),
-          ]
-            .filter(Boolean)
-            .join(" "),
-        )
-
-        if (normalizedSearch && !searchable.includes(normalizedSearch)) {
-          return false
-        }
-
-        if (
-          vehicleFilter !== "all" &&
-          !part.vehicles.some((vehicle) => String(vehicle.id) === vehicleFilter)
-        ) {
-          return false
-        }
-
-        if (
-          partTypeFilter !== "all" &&
-          String(part.partType.id) !== partTypeFilter
-        ) {
-          return false
-        }
-
-        if (
-          stockFilter !== "all" &&
-          stockStatus(part.quantity).value !== stockFilter
-        ) {
-          return false
-        }
-
-        return true
-      })
-      .sort((first, second) => compareParts(first, second, sort))
-  }, [parts, search, vehicleFilter, partTypeFilter, stockFilter, sort])
-
-  const pagination = getPaginationState(
-    filteredParts.length,
-    itemsPerPage,
-    page,
-  )
-  const paginatedParts = getPaginatedItems(
-    filteredParts,
-    itemsPerPage,
-    pagination,
-  )
   const hasActiveFilters =
     search ||
     vehicleFilter !== "all" ||
@@ -197,6 +150,10 @@ export default function PartsPage() {
       setParts((current) =>
         current.filter((part) => part.id !== partToDelete.id),
       )
+      setPartsPage((current) => ({
+        ...current,
+        totalItems: Math.max(0, current.totalItems - 1),
+      }))
       setPartToDelete(null)
     } finally {
       setIsDeleting(false)
@@ -228,11 +185,11 @@ export default function PartsPage() {
   }
 
   function renderPartsContent() {
-    if (parts.length === 0) {
+    if (partsPage.totalItems === 0 && !hasActiveFilters) {
       return <EmptyListCard>Aucun stock enregistré.</EmptyListCard>
     }
 
-    if (filteredParts.length === 0) {
+    if (parts.length === 0) {
       return (
         <EmptyListCard>
           Aucune pièce ne correspond aux critères.
@@ -242,26 +199,19 @@ export default function PartsPage() {
 
     return (
       <>
-        <PaginationControls
-          currentPage={pagination.currentPage}
-          pageCount={pagination.pageCount}
-          totalItems={filteredParts.length}
-          visibleStart={pagination.visibleStart}
-          visibleEnd={pagination.visibleEnd}
+        <ListPaginationControls
+          pagination={partsPage}
           itemsPerPage={itemsPerPage}
-          itemsPerPageOptions={ITEMS_PER_PAGE_OPTIONS}
           onItemsPerPageChange={(value) => {
-            setItemsPerPage(value as ItemsPerPageValue)
+            setItemsPerPage(value)
+            setPage(1)
           }}
-          onPreviousPage={() => setPage((current) => Math.max(1, current - 1))}
-          onNextPage={() => {
-            setPage((current) => Math.min(pagination.pageCount, current + 1))
-          }}
+          onPageChange={setPage}
           itemLabel="ligne(s)"
         />
 
         <div className="grid gap-4 xl:grid-cols-2">
-          {paginatedParts.map((part) => {
+          {parts.map((part) => {
             const status = stockStatus(part.quantity)
 
             return (
@@ -354,27 +304,16 @@ export default function PartsPage() {
           })}
         </div>
 
-        {pagination.pageCount > 1 && (
-          <PaginationControls
-            currentPage={pagination.currentPage}
-            pageCount={pagination.pageCount}
-            totalItems={filteredParts.length}
-            visibleStart={pagination.visibleStart}
-            visibleEnd={pagination.visibleEnd}
-            itemsPerPage={itemsPerPage}
-            itemsPerPageOptions={ITEMS_PER_PAGE_OPTIONS}
-            onItemsPerPageChange={(value) => {
-              setItemsPerPage(value as ItemsPerPageValue)
-            }}
-            onPreviousPage={() => {
-              setPage((current) => Math.max(1, current - 1))
-            }}
-            onNextPage={() => {
-              setPage((current) => Math.min(pagination.pageCount, current + 1))
-            }}
-            itemLabel="ligne(s)"
-          />
-        )}
+        <ListPaginationControls
+          pagination={partsPage}
+          itemsPerPage={itemsPerPage}
+          onItemsPerPageChange={(value) => {
+            setItemsPerPage(value)
+            setPage(1)
+          }}
+          onPageChange={setPage}
+          itemLabel="ligne(s)"
+        />
       </>
     )
   }
@@ -414,7 +353,7 @@ export default function PartsPage() {
 
       <ListPageHeader
         title="Stock"
-        countLabel={partCountLabel(filteredParts.length, parts.length)}
+        countLabel={`${partsPage.totalItems} ligne(s) de stock`}
         addTo={isAdmin ? "/parts/new" : undefined}
         addLabel="Ajouter un stock"
       />
@@ -578,28 +517,6 @@ function AddStockDialog({
       </DialogContent>
     </Dialog>
   )
-}
-
-function compareParts(first: Part, second: Part, sort: SortValue) {
-  if (sort === "quantity-asc") return first.quantity - second.quantity
-  if (sort === "quantity-desc") return second.quantity - first.quantity
-  if (sort === "updated-desc") {
-    return String(second.updatedAt ?? "").localeCompare(
-      String(first.updatedAt ?? ""),
-    )
-  }
-  return partName(first).localeCompare(partName(second), "fr")
-}
-
-function normalize(value: string) {
-  return value
-    .toLowerCase()
-    .normalize("NFD")
-    .replaceAll(/[\u0300-\u036f]/g, "")
-}
-
-function partCountLabel(filteredCount: number, totalCount: number) {
-  return `${filteredCount} sur ${totalCount} ligne(s) de stock`
 }
 
 function updateFilter<T>(
