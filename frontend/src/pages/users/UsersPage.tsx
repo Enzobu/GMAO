@@ -17,6 +17,7 @@ import {
   ResetFiltersButton,
   SearchField,
 } from "@/components/list-page-primitives"
+import { ListPagePlaceholder } from "@/components/loading-placeholders"
 import {
   itemsPerPageSize,
   type ItemsPerPageValue,
@@ -165,11 +166,7 @@ export default function UsersPage() {
   }
 
   if (isLoading) {
-    return (
-      <div className="text-sm text-muted-foreground">
-        Chargement des utilisateurs...
-      </div>
-    )
+    return <ListPagePlaceholder />
   }
 
   if (error && users.length === 0) {

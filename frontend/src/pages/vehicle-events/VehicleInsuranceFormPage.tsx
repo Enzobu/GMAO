@@ -11,6 +11,7 @@ import {
 } from "@/api/vehicle-events"
 import { getVehicle } from "@/api/vehicles"
 import { FormDocumentsField } from "@/components/form-documents-field"
+import { FormPagePlaceholder } from "@/components/loading-placeholders"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import {
@@ -220,11 +221,7 @@ export default function VehicleInsuranceFormPage() {
   }
 
   if (isLoading) {
-    return (
-      <div className="text-sm text-muted-foreground">
-        Chargement de l’assurance...
-      </div>
-    )
+    return <FormPagePlaceholder sections={2} />
   }
 
   if (error && isEditing && !insurance) {

@@ -8,6 +8,7 @@ import {
 } from "@/api/vehicle-events"
 import { getVehicle } from "@/api/vehicles"
 import { DocumentsPanel } from "@/components/documents-panel"
+import { DetailPagePlaceholder } from "@/components/loading-placeholders"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -107,11 +108,7 @@ export default function VehicleInspectionDetailPage() {
   }
 
   if (isLoading) {
-    return (
-      <div className="text-sm text-muted-foreground">
-        Chargement du contrôle...
-      </div>
-    )
+    return <DetailPagePlaceholder />
   }
 
   if (error || !inspection) {

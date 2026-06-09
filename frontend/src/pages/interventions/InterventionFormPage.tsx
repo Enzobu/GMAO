@@ -13,6 +13,7 @@ import {
 import { getParts } from "@/api/parts"
 import { getVehicle } from "@/api/vehicles"
 import { FormDocumentsField } from "@/components/form-documents-field"
+import { FormPagePlaceholder } from "@/components/loading-placeholders"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import {
@@ -289,11 +290,7 @@ export default function InterventionFormPage() {
   }
 
   if (isLoading) {
-    return (
-      <div className="text-sm text-muted-foreground">
-        Chargement du formulaire...
-      </div>
-    )
+    return <FormPagePlaceholder sections={4} />
   }
 
   if (error && isEditing && !intervention) {

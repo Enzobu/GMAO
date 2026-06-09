@@ -5,6 +5,7 @@ import { Pencil, Trash2 } from "lucide-react"
 import { deleteIntervention, getIntervention } from "@/api/interventions"
 import { getVehicle } from "@/api/vehicles"
 import { DocumentsPanel } from "@/components/documents-panel"
+import { DetailPagePlaceholder } from "@/components/loading-placeholders"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { ConfirmDialog } from "@/components/ui/confirm-dialog"
@@ -89,11 +90,7 @@ export default function InterventionDetailPage({
   }
 
   if (isLoading) {
-    return (
-      <div className="text-sm text-muted-foreground">
-        Chargement de l’intervention...
-      </div>
-    )
+    return <DetailPagePlaceholder />
   }
 
   if (error || !intervention) {

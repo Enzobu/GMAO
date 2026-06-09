@@ -6,6 +6,7 @@ import { Pencil, Play, Plus, CheckCircle2 } from "lucide-react"
 import { emptyCollectionPage } from "@/api/api-collection"
 import { getInterventionsPage, updateIntervention } from "@/api/interventions"
 import { getVehicle } from "@/api/vehicles"
+import { ListPagePlaceholder } from "@/components/loading-placeholders"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -166,11 +167,7 @@ export default function InterventionsPage({
   }
 
   if (isLoading) {
-    return (
-      <div className="text-sm text-muted-foreground">
-        Chargement des interventions...
-      </div>
-    )
+    return <ListPagePlaceholder filters={2} items={5} />
   }
 
   if (error) {

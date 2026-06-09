@@ -6,6 +6,7 @@ import { AxiosError } from "axios"
 import { deleteUser, getUser } from "@/api/users"
 import { DocumentsPanel } from "@/components/documents-panel"
 import { ReadOnlyBadge } from "@/components/list-page-primitives"
+import { DetailPagePlaceholder } from "@/components/loading-placeholders"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { ConfirmDialog } from "@/components/ui/confirm-dialog"
@@ -113,11 +114,7 @@ export default function UserDetailPage() {
   }
 
   if (isLoading) {
-    return (
-      <div className="text-sm text-muted-foreground">
-        Chargement de l’utilisateur...
-      </div>
-    )
+    return <DetailPagePlaceholder />
   }
 
   if (error && !user) {

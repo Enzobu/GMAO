@@ -13,6 +13,7 @@ import {
   type ItemsPerPageValue,
 } from "@/components/list-page-pagination"
 import { ListPaginationControls } from "@/components/list-pagination-controls"
+import { ListPagePlaceholder } from "@/components/loading-placeholders"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -140,11 +141,7 @@ export default function VehicleInsurancesPage() {
   }
 
   if (isLoading) {
-    return (
-      <div className="text-sm text-muted-foreground">
-        Chargement des assurances...
-      </div>
-    )
+    return <ListPagePlaceholder filters={0} items={4} />
   }
 
   if (error || !vehicle) {

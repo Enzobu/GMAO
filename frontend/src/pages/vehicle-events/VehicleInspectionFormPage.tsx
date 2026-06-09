@@ -11,6 +11,7 @@ import {
 } from "@/api/vehicle-events"
 import { getVehicle } from "@/api/vehicles"
 import { FormDocumentsField } from "@/components/form-documents-field"
+import { FormPagePlaceholder } from "@/components/loading-placeholders"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { NativeSelect } from "@/components/ui/native-select"
 import { Textarea } from "@/components/ui/textarea"
@@ -242,11 +243,7 @@ export default function VehicleInspectionFormPage() {
   }
 
   if (isLoading) {
-    return (
-      <div className="text-sm text-muted-foreground">
-        Chargement du contrôle...
-      </div>
-    )
+    return <FormPagePlaceholder sections={2} />
   }
 
   if (error && isEditing && !inspection) {

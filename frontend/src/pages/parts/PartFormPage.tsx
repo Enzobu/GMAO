@@ -7,6 +7,7 @@ import { createPart, getPart, updatePart } from "@/api/parts"
 import { getPartTypes } from "@/api/configuration"
 import { getVehicles } from "@/api/vehicles"
 import { FormDocumentsField } from "@/components/form-documents-field"
+import { FormPagePlaceholder } from "@/components/loading-placeholders"
 import { LabelText } from "@/components/page-primitives"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -124,11 +125,7 @@ export default function PartFormPage() {
   }
 
   if (isLoading) {
-    return (
-      <div className="text-sm text-muted-foreground">
-        Chargement du formulaire...
-      </div>
-    )
+    return <FormPagePlaceholder sections={2} />
   }
 
   return (

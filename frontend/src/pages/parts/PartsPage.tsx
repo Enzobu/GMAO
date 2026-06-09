@@ -19,6 +19,7 @@ import {
   ResetFiltersButton,
   SearchField,
 } from "@/components/list-page-primitives"
+import { ListPagePlaceholder } from "@/components/loading-placeholders"
 import {
   itemsPerPageSize,
   type ItemsPerPageValue,
@@ -169,11 +170,7 @@ export default function PartsPage() {
   }
 
   if (isLoading) {
-    return (
-      <div className="text-sm text-muted-foreground">
-        Chargement du stock...
-      </div>
-    )
+    return <ListPagePlaceholder filters={5} />
   }
 
   if (error) {

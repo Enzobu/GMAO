@@ -37,6 +37,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
+import { Skeleton } from "@/components/ui/skeleton"
 import { Textarea } from "@/components/ui/textarea"
 import type {
   ConfigurationItem,
@@ -869,7 +870,7 @@ function ConfigurationItemsList<
   onDelete: (item: T) => void
 }>) {
   if (isLoading) {
-    return <div className="text-sm text-muted-foreground">Chargement...</div>
+    return <ConfigurationListPlaceholder />
   }
 
   if (items.length === 0) {
@@ -899,6 +900,30 @@ function ConfigurationItemsList<
           onEdit={onEdit}
           onDelete={onDelete}
         />
+      ))}
+    </div>
+  )
+}
+
+function ConfigurationListPlaceholder() {
+  return (
+    <div className="space-y-2">
+      {Array.from({ length: 4 }).map((_, index) => (
+        <div
+          key={`configuration-placeholder-${index}`}
+          className="rounded-lg border border-foreground/10 p-3"
+        >
+          <div className={listItemBodyClassName}>
+            <div className="min-w-0 space-y-2">
+              <Skeleton className="h-5 w-40" />
+              <Skeleton className="h-4 w-64 max-w-full" />
+            </div>
+            <div className="flex gap-2">
+              <Skeleton className="h-9 w-24" />
+              <Skeleton className="h-9 w-24" />
+            </div>
+          </div>
+        </div>
       ))}
     </div>
   )
