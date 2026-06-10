@@ -4,12 +4,7 @@ import { Trash2 } from "lucide-react"
 
 import { emptyCollectionPage } from "@/api/api-collection"
 import { deleteVehicle, getVehiclesPage } from "@/api/vehicles"
-import {
-  CARD_LINK_CLASS,
-  FILTER_GRID_CLASS,
-  RESOURCE_CARD_CLASS,
-  RESOURCE_META_CLASS,
-} from "@/components/list-page-classes"
+import { FILTER_GRID_CLASS } from "@/components/list-page-classes"
 import {
   EmptyListCard,
   ListPageHeader,
@@ -19,19 +14,14 @@ import {
 } from "@/components/list-page-primitives"
 import { ListPagePlaceholder } from "@/components/loading-placeholders"
 import { PaginatedListSection } from "@/components/paginated-list-section"
+import { ResourceCard, ResourceMeta } from "@/components/resource-card"
 import {
   itemsPerPageSize,
   type ItemsPerPageValue,
 } from "@/components/list-page-pagination"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
+import { Card, CardContent } from "@/components/ui/card"
 import { ConfirmDialog } from "@/components/ui/confirm-dialog"
 import { NativeSelect } from "@/components/ui/native-select"
 import { useLocalStorageState } from "@/hooks/use-local-storage-state"
@@ -195,28 +185,42 @@ export default function VehiclesPage() {
             const canEdit = canEditVehicle(vehicle, currentUser?.id, isAdmin)
 
             return (
-              <Card key={vehicle.id} className={RESOURCE_CARD_CLASS}>
-                <Link
-                  to={`/vehicles/${vehicle.id}`}
-                  className={CARD_LINK_CLASS}
-                  aria-label={`Voir ${displayVehicleName(vehicle)}`}
-                />
-                <CardHeader>
-                  <CardTitle className="flex flex-wrap items-center gap-2">
+              <ResourceCard
+                key={vehicle.id}
+                to={`/vehicles/${vehicle.id}`}
+                ariaLabel={`Voir ${displayVehicleName(vehicle)}`}
+                title={(
+                  <>
                     <span>{displayVehicleName(vehicle)}</span>
-                    <VehicleBadge
-                      collection={VEHICLE_TYPES}
-                      value={vehicle.type}
-                    />
+                    <VehicleBadge collection={VEHICLE_TYPES} value={vehicle.type} />
                     <VehicleBadge
                       collection={VEHICLE_STATUSES}
                       value={vehicle.status}
                     />
                     {!canEdit && <ReadOnlyBadge />}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  <div className={RESOURCE_META_CLASS}>
+                  </>
+                )}
+                footer={(
+                  <>
+                    {canEdit && (
+                      <Button variant="outline" size="sm" asChild>
+                        <Link to={`/vehicles/${vehicle.id}/edit`}>Modifier</Link>
+                      </Button>
+                    )}
+                    {isAdmin && (
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        onClick={() => setVehicleToDelete(vehicle)}
+                      >
+                        <Trash2 />
+                        Supprimer
+                      </Button>
+                    )}
+                  </>
+                )}
+              >
+                  <ResourceMeta>
                     <span>
                       <strong className="text-foreground">Immat.</strong>{" "}
                       {vehicle.registration.toUpperCase()}
@@ -234,7 +238,7 @@ export default function VehiclesPage() {
                           {formatNumber(vehicle.lastMileage)}
                         </span>
                       )}
-                  </div>
+                  </ResourceMeta>
 
                   <div className="flex flex-wrap gap-2">
                     <VehicleBadge
@@ -250,25 +254,7 @@ export default function VehiclesPage() {
                       value={vehicle.color}
                     />
                   </div>
-                </CardContent>
-                <CardFooter className="relative z-20 justify-end gap-2">
-                  {canEdit && (
-                    <Button variant="outline" size="sm" asChild>
-                      <Link to={`/vehicles/${vehicle.id}/edit`}>Modifier</Link>
-                    </Button>
-                  )}
-                  {isAdmin && (
-                    <Button
-                      variant="destructive"
-                      size="sm"
-                      onClick={() => setVehicleToDelete(vehicle)}
-                    >
-                      <Trash2 />
-                      Supprimer
-                    </Button>
-                  )}
-                </CardFooter>
-              </Card>
+              </ResourceCard>
             )
           })}
         </div>

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react"
 import { Link, useNavigate, useParams } from "react-router-dom"
-import { ArrowLeft, Download, Pencil, Trash2 } from "lucide-react"
+import { Download } from "lucide-react"
 
 import {
   deleteVehicle,
@@ -8,6 +8,7 @@ import {
   getVehicleHistoryArchive,
 } from "@/api/vehicles"
 import { DetailMetric } from "@/components/detail-metric"
+import { DetailPageActions } from "@/components/detail-page-actions"
 import { DocumentsPanel } from "@/components/documents-panel"
 import { DetailPagePlaceholder } from "@/components/loading-placeholders"
 import { Badge } from "@/components/ui/badge"
@@ -37,6 +38,7 @@ import {
   PAYMENT_FREQUENCIES,
 } from "@/lib/vehicle-events"
 import { capitalizeFirstLetter, displayValue } from "@/lib/text-format"
+import { softDeleteDescription } from "@/lib/delete-description"
 
 const ALERT_CLASS = [
   "rounded-lg border border-destructive/30 bg-destructive/10 p-4",
@@ -131,10 +133,9 @@ export default function VehicleDetailPage() {
   }
 
   const canEdit = isAdmin || vehicle.user.id === currentUser?.id
-  const deleteDialogDescription = [
-    `${displayVehicleName(vehicle)} sera masqué de la plateforme.`,
-    "Aucune donnée ne sera supprimée définitivement.",
-  ].join(" ")
+  const deleteDialogDescription = softDeleteDescription(
+    displayVehicleName(vehicle),
+  )
 
   async function confirmDelete() {
     if (!vehicle) {
@@ -227,46 +228,24 @@ export default function VehicleDetailPage() {
           </div>
         </div>
 
-        <div className="flex flex-col gap-2 sm:flex-row">
-          <Button variant="outline" asChild>
-            <Link to="/vehicles">
-              <ArrowLeft />
-              Retour
-            </Link>
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            onClick={downloadHistoryArchive}
-            disabled={isArchiveDownloading}
-          >
-            <Download />
-            {isArchiveDownloading
-              ? "Téléchargement..."
-              : "Télécharger l’historique"}
-          </Button>
-          <Button asChild disabled={!canEdit}>
-            <Link
-              to={
-                canEdit
-                  ? `/vehicles/${vehicle.id}/edit`
-                  : `/vehicles/${vehicle.id}`
-              }
-            >
-              <Pencil />
-              Modifier
-            </Link>
-          </Button>
-          {isAdmin && (
+        <DetailPageActions
+          backTo="/vehicles"
+          editTo={canEdit ? `/vehicles/${vehicle.id}/edit` : undefined}
+          extraActions={(
             <Button
-              variant="destructive"
-              onClick={() => setIsDeleteDialogOpen(true)}
+              type="button"
+              variant="outline"
+              onClick={downloadHistoryArchive}
+              disabled={isArchiveDownloading}
             >
-              <Trash2 />
-              Supprimer
+              <Download />
+              {isArchiveDownloading
+                ? "Téléchargement..."
+                : "Télécharger l’historique"}
             </Button>
           )}
-        </div>
+          onDelete={isAdmin ? () => setIsDeleteDialogOpen(true) : undefined}
+        />
       </div>
 
       {archiveError && <div className={ALERT_CLASS}>{archiveError}</div>}

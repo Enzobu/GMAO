@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react"
-import { Link, useNavigate, useParams } from "react-router-dom"
-import { ArrowLeft, Info, Pencil, Trash2 } from "lucide-react"
+import { useNavigate, useParams } from "react-router-dom"
+import { Info } from "lucide-react"
 import { AxiosError } from "axios"
 
 import { deleteUser, getUser } from "@/api/users"
 import { DetailMetric } from "@/components/detail-metric"
+import { DetailPageActions } from "@/components/detail-page-actions"
 import { DocumentsPanel } from "@/components/documents-panel"
 import { ReadOnlyBadge } from "@/components/list-page-primitives"
 import { DetailPagePlaceholder } from "@/components/loading-placeholders"
@@ -20,6 +21,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { displayValue } from "@/lib/text-format"
+import { softDeleteDescription } from "@/lib/delete-description"
 import { userDisplayName } from "@/lib/user-utils"
 import { useAuthStore } from "@/stores/auth-store"
 import type { AppUser } from "@/types/user"
@@ -134,7 +136,7 @@ export default function UserDetailPage() {
       <ConfirmDialog
         open={isDeleteOpen}
         title="Supprimer l’utilisateur ?"
-        description={deleteDescription(user)}
+        description={softDeleteDescription(userDisplayName(user))}
         confirmLabel="Supprimer"
         isLoading={isDeleting}
         onOpenChange={(open) => !isDeleting && setIsDeleteOpen(open)}
@@ -223,26 +225,12 @@ function PageHeader({
       </div>
 
       <div className="flex flex-col gap-2 sm:flex-row">
-        <Button variant="outline" asChild>
-          <Link to="/users">
-            <ArrowLeft />
-            Retour
-          </Link>
-        </Button>
-        {canEdit && (
-          <Button asChild>
-            <Link to={editPath(user, isCurrentUser, isAdmin)}>
-              <Pencil />
-              {isCurrentUser && !isAdmin ? "Modifier mon profil" : "Modifier"}
-            </Link>
-          </Button>
-        )}
-        {isAdmin && (
-          <Button variant="destructive" onClick={onDelete}>
-            <Trash2 />
-            Supprimer
-          </Button>
-        )}
+        <DetailPageActions
+          backTo="/users"
+          editTo={canEdit ? editPath(user, isCurrentUser, isAdmin) : undefined}
+          editLabel={isCurrentUser && !isAdmin ? "Modifier mon profil" : "Modifier"}
+          onDelete={isAdmin ? onDelete : undefined}
+        />
       </div>
     </div>
   )
@@ -287,13 +275,6 @@ function ErrorMessage({ children }: Readonly<{ children: string }>) {
       {children}
     </div>
   )
-}
-
-function deleteDescription(user: AppUser) {
-  return [
-    `${userDisplayName(user)} sera masqué de la plateforme.`,
-    "Aucune donnée ne sera supprimée définitivement.",
-  ].join(" ")
 }
 
 function editPath(user: AppUser, isCurrentUser: boolean, isAdmin: boolean) {

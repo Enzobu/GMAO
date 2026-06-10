@@ -6,12 +6,7 @@ import { emptyCollectionPage } from "@/api/api-collection"
 import { deletePart, getPartsPage, updatePartQuantity } from "@/api/parts"
 import { getPartTypes } from "@/api/configuration"
 import { getVehicles } from "@/api/vehicles"
-import {
-  CARD_LINK_CLASS,
-  FILTER_GRID_WIDE_CLASS,
-  RESOURCE_CARD_CLASS,
-  RESOURCE_META_CLASS,
-} from "@/components/list-page-classes"
+import { FILTER_GRID_WIDE_CLASS } from "@/components/list-page-classes"
 import {
   EmptyListCard,
   ListPageHeader,
@@ -21,6 +16,7 @@ import {
 } from "@/components/list-page-primitives"
 import { ListPagePlaceholder } from "@/components/loading-placeholders"
 import { PaginatedListSection } from "@/components/paginated-list-section"
+import { ResourceCard, ResourceMeta } from "@/components/resource-card"
 import {
   itemsPerPageSize,
   type ItemsPerPageValue,
@@ -28,13 +24,7 @@ import {
 import { LabelText } from "@/components/page-primitives"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
+import { Card, CardContent } from "@/components/ui/card"
 import { ConfirmDialog } from "@/components/ui/confirm-dialog"
 import {
   Dialog,
@@ -210,17 +200,13 @@ export default function PartsPage() {
             const status = stockStatus(part.quantity)
 
             return (
-              <Card
+              <ResourceCard
                 key={part.id}
-                className={`${RESOURCE_CARD_CLASS} flex h-full flex-col`}
-              >
-                <Link
-                  to={`/parts/${part.id}`}
-                  className={CARD_LINK_CLASS}
-                  aria-label={`Voir ${partName(part)}`}
-                />
-                <CardHeader>
-                  <CardTitle className="flex flex-wrap items-center gap-2">
+                to={`/parts/${part.id}`}
+                ariaLabel={`Voir ${partName(part)}`}
+                className="flex h-full flex-col"
+                title={(
+                  <>
                     <span>{partName(part)}</span>
                     <Badge
                       variant={status.variant}
@@ -238,10 +224,32 @@ export default function PartsPage() {
                       </Badge>
                     )}
                     {!isAdmin && <ReadOnlyBadge />}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="flex-1 space-y-3">
-                  <div className={RESOURCE_META_CLASS}>
+                  </>
+                )}
+                footer={isAdmin && (
+                  <>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setPartToStock(part)}
+                    >
+                      Ajouter stock
+                    </Button>
+                    <Button variant="outline" size="sm" asChild>
+                      <Link to={`/parts/${part.id}/edit`}>Modifier</Link>
+                    </Button>
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      onClick={() => setPartToDelete(part)}
+                    >
+                      <Trash2 />
+                      Supprimer
+                    </Button>
+                  </>
+                )}
+              >
+                  <ResourceMeta>
                     <span>
                       <strong className="text-foreground">Quantité</strong>
                       {" "}
@@ -251,7 +259,7 @@ export default function PartsPage() {
                       <strong className="text-foreground">Màj</strong>{" "}
                       {formatDateTime(part.updatedAt)}
                     </span>
-                  </div>
+                  </ResourceMeta>
                   {part.note && (
                     <p className="line-clamp-2 text-sm text-muted-foreground">
                       {part.note}
@@ -271,30 +279,7 @@ export default function PartsPage() {
                       </span>
                     )}
                   </div>
-                </CardContent>
-                {isAdmin && (
-                  <CardFooter className="relative z-20 justify-end gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setPartToStock(part)}
-                    >
-                      Ajouter stock
-                    </Button>
-                    <Button variant="outline" size="sm" asChild>
-                      <Link to={`/parts/${part.id}/edit`}>Modifier</Link>
-                    </Button>
-                    <Button
-                      variant="destructive"
-                      size="sm"
-                      onClick={() => setPartToDelete(part)}
-                    >
-                      <Trash2 />
-                      Supprimer
-                    </Button>
-                  </CardFooter>
-                )}
-              </Card>
+              </ResourceCard>
             )
           })}
         </div>

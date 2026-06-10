@@ -5,11 +5,7 @@ import { AxiosError } from "axios"
 
 import { emptyCollectionPage } from "@/api/api-collection"
 import { deleteUser, getUsersPage } from "@/api/users"
-import {
-  CARD_LINK_CLASS,
-  FILTER_GRID_CLASS,
-  RESOURCE_CARD_CLASS,
-} from "@/components/list-page-classes"
+import { FILTER_GRID_CLASS } from "@/components/list-page-classes"
 import {
   EmptyListCard,
   ListPageHeader,
@@ -19,6 +15,7 @@ import {
 } from "@/components/list-page-primitives"
 import { ListPagePlaceholder } from "@/components/loading-placeholders"
 import { PaginatedListSection } from "@/components/paginated-list-section"
+import { ResourceCard } from "@/components/resource-card"
 import {
   itemsPerPageSize,
   type ItemsPerPageValue,
@@ -26,13 +23,7 @@ import {
 import { ErrorMessage } from "@/components/page-primitives"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
+import { Card, CardContent } from "@/components/ui/card"
 import { ConfirmDialog } from "@/components/ui/confirm-dialog"
 import {
   Dialog,
@@ -325,28 +316,20 @@ function UserCard({
   const isCurrentUser = user.id === currentUserId
 
   return (
-    <Card className={RESOURCE_CARD_CLASS}>
-      <Link
-        to={`/users/${user.id}`}
-        className={CARD_LINK_CLASS}
-        aria-label={`Voir ${userDisplayName(user)}`}
-      />
-      <CardHeader>
-        <CardTitle className="flex flex-wrap items-center gap-2">
+    <ResourceCard
+      to={`/users/${user.id}`}
+      ariaLabel={`Voir ${userDisplayName(user)}`}
+      title={(
+        <>
           <Avatar user={user} />
           <span>{userDisplayName(user)}</span>
           <RoleBadges user={user} />
           {isCurrentUser && <Badge>Vous</Badge>}
           {!canEdit && <ReadOnlyBadge />}
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="text-sm text-muted-foreground">
-          <strong className="text-foreground">Email</strong> {user.email}
-        </div>
-      </CardContent>
-      {(canEdit || isAdmin) && (
-        <CardFooter className="relative z-20 justify-end gap-2">
+        </>
+      )}
+      footer={(canEdit || isAdmin) && (
+        <>
           {canEdit && (
             <Button variant="outline" size="sm" asChild>
               <Link to={editPath(user, isCurrentUser, isAdmin)}>Modifier</Link>
@@ -362,9 +345,13 @@ function UserCard({
               Supprimer
             </Button>
           )}
-        </CardFooter>
+        </>
       )}
-    </Card>
+    >
+        <div className="text-sm text-muted-foreground">
+          <strong className="text-foreground">Email</strong> {user.email}
+        </div>
+    </ResourceCard>
   )
 }
 
