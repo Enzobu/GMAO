@@ -16,6 +16,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Query;
 use Doctrine\ORM\QueryBuilder;
 use PHPUnit\Framework\TestCase;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
@@ -29,7 +30,7 @@ final class DashboardControllerTest extends TestCase
         $controller = new DashboardController(new DashboardService($this->createMock(EntityManagerInterface::class), $this->authorizationChecker(false)));
         $controller->setContainer(new ControllerTestContainer(['security.token_storage' => $storage]));
 
-        $response = $controller();
+        $response = $controller(new Request());
 
         self::assertSame(401, $response->getStatusCode());
         self::assertSame(['message' => 'Unauthenticated'], json_decode($response->getContent(), true));
@@ -79,7 +80,9 @@ final class DashboardControllerTest extends TestCase
             ]],
         ], $queryBuilderCalls);
 
-        $response = $this->controller(new User(), $entityManager)();
+        $response = $this->controller(new User(), $entityManager)(new Request([
+            'year' => $today->format('Y'),
+        ]));
         $payload = json_decode($response->getContent(), true);
 
         self::assertSame(200, $response->getStatusCode());
@@ -87,6 +90,7 @@ final class DashboardControllerTest extends TestCase
         self::assertSame(9, $payload['stats']['maintenances']);
         self::assertSame(['percentage' => 50, 'upToDateVehicles' => 1, 'totalVehicles' => 2], $payload['stats']['maintenanceHealth']);
         self::assertSame(4, $payload['stats']['alerts']);
+        self::assertSame((int) $today->format('Y'), $payload['maintenanceHistoryYear']);
         self::assertCount(12, $payload['maintenanceHistory']);
         self::assertContains(1, array_column($payload['maintenanceHistory'], 'count'));
 
@@ -131,14 +135,42 @@ final class DashboardControllerTest extends TestCase
             ['result' => []],
         ]);
 
-        $response = $this->controller((new User())->setRoles(['ROLE_ADMIN']), $entityManager, true)();
+        $response = $this->controller(
+            (new User())->setRoles(['ROLE_ADMIN']),
+            $entityManager,
+            true,
+        )(new Request(['year' => '1899']));
         $payload = json_decode($response->getContent(), true);
 
         self::assertSame(200, $response->getStatusCode());
         self::assertSame(['percentage' => 100, 'upToDateVehicles' => 0, 'totalVehicles' => 0], $payload['stats']['maintenanceHealth']);
+        self::assertSame(1900, $payload['maintenanceHistoryYear']);
         self::assertSame(0, $payload['stats']['alerts']);
         self::assertSame([], $payload['upcoming']);
         self::assertSame([], $payload['recentActivity']);
+    }
+
+    public function testInvalidHistoryYearFallsBackToCurrentYear(): void
+    {
+        $entityManager = $this->entityManagerForResults([
+            ['result' => []],
+            ['result' => []],
+            ['result' => []],
+            ['result' => []],
+            ['result' => []],
+            ['result' => []],
+            ['scalar' => '0'],
+            ['scalar' => '0'],
+            ['result' => []],
+            ['result' => []],
+        ]);
+
+        $response = $this->controller(new User(), $entityManager)(
+            new Request(['year' => 'invalid']),
+        );
+        $payload = json_decode($response->getContent(), true);
+
+        self::assertSame((int) (new \DateTimeImmutable())->format('Y'), $payload['maintenanceHistoryYear']);
     }
 
     /**
