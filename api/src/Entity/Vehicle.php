@@ -35,7 +35,7 @@ use Symfony\Component\Validator\Constraints as Assert;
         new GetCollection(security: SecurityExpression::ROLE_USER),
         new Get(security: SecurityExpression::ROLE_USER),
         new Post(security: SecurityExpression::ROLE_USER),
-        new Patch(security: SecurityExpression::ADMIN_OR_VEHICLE_OWNER),
+        new Patch(security: SecurityExpression::ADMIN_OR_OWNER),
         new Delete(security: SecurityExpression::ROLE_ADMIN),
     ],
     normalizationContext: ['groups' => ['vehicle:read']],

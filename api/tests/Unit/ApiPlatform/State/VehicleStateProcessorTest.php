@@ -71,14 +71,14 @@ final class VehicleStateProcessorTest extends TestCase
         self::assertSame($admin, $vehicle->getUser());
     }
 
-    public function testNonAdminUpdateReassignsCurrentUser(): void
+    public function testNonAdminUpdateKeepsExistingOwner(): void
     {
         $user = new User();
-        $vehicle = (new Vehicle())->setUser(new User());
+        $owner = new User();
+        $vehicle = (new Vehicle())->setUser($owner);
         $this->setId($vehicle, 7);
         $security = $this->createMock(Security::class);
         $security->method('getUser')->willReturn($user);
-        $security->method('isGranted')->with('ROLE_ADMIN')->willReturn(false);
         $em = $this->createMock(EntityManagerInterface::class);
         $em->expects(self::never())->method('persist');
         $em->expects(self::once())->method('flush');
@@ -86,7 +86,7 @@ final class VehicleStateProcessorTest extends TestCase
         $result = (new VehicleStateProcessor($em, $security))->process($vehicle, new Patch());
 
         self::assertSame($vehicle, $result);
-        self::assertSame($user, $vehicle->getUser());
+        self::assertSame($owner, $vehicle->getUser());
     }
 
     public function testAdminUpdateKeepsExistingOwner(): void

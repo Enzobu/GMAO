@@ -41,8 +41,6 @@ final readonly class VehicleStateProcessor implements ProcessorInterface
             }
 
             $this->entityManager->persist($data);
-        } elseif ($user instanceof User && !$this->security->isGranted('ROLE_ADMIN')) {
-            $data->setUser($user);
         }
 
         $this->entityManager->flush();
