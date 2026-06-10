@@ -19,6 +19,7 @@ import {
   type DocumentParent,
   updateParentDocument,
 } from "@/api/documents"
+import { documentDisplayName } from "@/lib/form-documents"
 import { LabelText } from "@/components/page-primitives"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -32,6 +33,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
+import { Skeleton } from "@/components/ui/skeleton"
 import { Textarea } from "@/components/ui/textarea"
 import type { AppDocument } from "@/types/document"
 
@@ -388,9 +390,7 @@ function DocumentFormDialog({
                   onFormChange({
                     ...form,
                     file,
-                    name:
-                      form.name ||
-                      (file ? file.name.replaceAll(/\.[^.]+$/g, "") : ""),
+                    name: file ? documentDisplayName(file.name) : "",
                   })
                 }}
               />
@@ -485,11 +485,7 @@ function renderDocumentsContent({
   onPreview: (document: AppDocument) => Promise<void>
 }>) {
   if (isLoading) {
-    return (
-      <div className="text-sm text-muted-foreground">
-        Chargement des documents...
-      </div>
-    )
+    return <DocumentsListPlaceholder />
   }
 
   if (documents.length === 0) {
@@ -647,13 +643,8 @@ function DocumentPreviewDialog({
 
         <div className="h-[80vh] overflow-hidden rounded-lg border bg-muted/40">
           {isLoading && (
-            <div
-              className={
-                "flex h-full items-center justify-center text-sm " +
-                "text-muted-foreground"
-              }
-            >
-              Chargement du document...
+            <div className="flex h-full items-center justify-center p-6">
+              <Skeleton className="h-full max-h-96 w-full max-w-3xl" />
             </div>
           )}
           {!isLoading && document && previewUrl && (
@@ -663,6 +654,36 @@ function DocumentPreviewDialog({
       </DialogContent>
     </Dialog>
   )
+}
+
+function DocumentsListPlaceholder() {
+  const placeholders = placeholderIds("document-placeholder", 3)
+
+  return (
+    <div className="space-y-2">
+      {placeholders.map((placeholder) => (
+        <div
+          key={placeholder}
+          className="rounded-lg border border-foreground/10 p-3"
+        >
+          <div className="flex flex-col gap-3 sm:flex-row sm:justify-between">
+            <div className="min-w-0 flex-1 space-y-2">
+              <Skeleton className="h-5 w-52 max-w-full" />
+              <Skeleton className="h-4 w-72 max-w-full" />
+            </div>
+            <div className="flex gap-2">
+              <Skeleton className="h-9 w-24" />
+              <Skeleton className="h-9 w-24" />
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+function placeholderIds(prefix: string, count: number) {
+  return Array.from({ length: count }, (_, index) => `${prefix}-${index + 1}`)
 }
 
 function PreviewContent({

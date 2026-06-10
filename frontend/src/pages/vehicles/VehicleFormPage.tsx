@@ -9,6 +9,7 @@ import {
   updateVehicle,
 } from "@/api/vehicles"
 import { FormActions } from "@/components/form-actions"
+import { FormPagePlaceholder } from "@/components/loading-placeholders"
 import { ErrorMessage, Field, PageHeader } from "@/components/page-primitives"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { NativeSelect } from "@/components/ui/native-select"
@@ -165,11 +166,7 @@ export default function VehicleFormPage() {
   }
 
   if (isLoading) {
-    return (
-      <div className="text-sm text-muted-foreground">
-        Chargement du véhicule...
-      </div>
-    )
+    return <FormPagePlaceholder />
   }
 
   if (error && isEditing && !vehicle) {

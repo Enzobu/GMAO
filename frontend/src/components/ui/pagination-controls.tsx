@@ -55,29 +55,27 @@ function PaginationControls({
           />
         </label>
 
-        {itemsPerPage !== "all" && (
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={onPreviousPage}
-              disabled={currentPage === 1}
-            >
-              Précédent
-            </Button>
-            <span className="whitespace-nowrap">
-              Page {currentPage} / {pageCount}
-            </span>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={onNextPage}
-              disabled={currentPage === pageCount}
-            >
-              Suivant
-            </Button>
-          </div>
-        )}
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={onPreviousPage}
+            disabled={currentPage === 1}
+          >
+            Précédent
+          </Button>
+          <span className="whitespace-nowrap">
+            Page {currentPage} / {pageCount}
+          </span>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={onNextPage}
+            disabled={currentPage === pageCount}
+          >
+            Suivant
+          </Button>
+        </div>
       </div>
     </div>
   )

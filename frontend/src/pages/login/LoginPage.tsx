@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { useNavigate } from "react-router-dom"
+import { Link, useNavigate, useSearchParams } from "react-router-dom"
 
 import { getMe, login } from "@/api/auth"
 import { useAuthStore } from "@/stores/auth-store"
@@ -11,6 +11,7 @@ import { PasswordInput } from "@/components/password-input"
 
 export default function LoginPage() {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
 
   const setToken = useAuthStore((state) => state.setToken)
   const setUser = useAuthStore((state) => state.setUser)
@@ -38,7 +39,9 @@ export default function LoginPage() {
 
       setUser(user)
 
-      navigate("/dashboard")
+      navigate(loginRedirectPath(searchParams.get("redirect")), {
+        replace: true,
+      })
     } catch {
       setError("Identifiants invalides")
     } finally {
@@ -74,6 +77,15 @@ export default function LoginPage() {
             onChange={(e) => setPassword(e.target.value)}
           />
 
+          <div className="text-right text-sm">
+            <Link
+              to="/reset-password/request"
+              className="text-primary hover:underline"
+            >
+              Mot de passe oublié ?
+            </Link>
+          </div>
+
           {error && (
             <p className="text-sm text-red-500">
               {error}
@@ -91,4 +103,16 @@ export default function LoginPage() {
       </CardContent>
     </Card>
   )
+}
+
+function loginRedirectPath(value: string | null) {
+  if (!value || !value.startsWith("/") || value.startsWith("//")) {
+    return "/dashboard"
+  }
+
+  if (value.startsWith("/login") || value.startsWith("/reset-password")) {
+    return "/dashboard"
+  }
+
+  return value
 }

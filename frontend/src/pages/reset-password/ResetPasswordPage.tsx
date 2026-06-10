@@ -1,10 +1,9 @@
 import { useState } from "react"
-import { Link, useNavigate, useParams } from "react-router-dom"
+import { useNavigate, useParams } from "react-router-dom"
 
 import { resetPassword } from "@/api/reset-password"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { PasswordInput } from "@/components/password-input"
+import { ResetPasswordCard } from "@/pages/reset-password/ResetPasswordCard"
 
 const resetPasswordErrorMessage = [
   "Le lien est invalide, expiré ou le mot de passe n'a pas pu être",
@@ -55,52 +54,26 @@ export default function ResetPasswordPage() {
   }
 
   return (
-    <Card
-      className="w-full max-w-md rounded-3xl border-border bg-card shadow-xl"
+    <ResetPasswordCard
+      title="Réinitialiser le mot de passe"
+      message={message}
+      error={error}
+      isLoading={loading}
+      submitLabel="Réinitialiser"
+      loadingLabel="Réinitialisation..."
+      onSubmit={handleSubmit}
     >
-      <CardHeader>
-        <CardTitle className="text-2xl">
-          Réinitialiser le mot de passe
-        </CardTitle>
-      </CardHeader>
+      <PasswordInput
+        placeholder="Nouveau mot de passe"
+        value={password}
+        onChange={(event) => setPassword(event.target.value)}
+      />
 
-      <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <PasswordInput
-            placeholder="Nouveau mot de passe"
-            value={password}
-            onChange={(event) => setPassword(event.target.value)}
-          />
-
-          <PasswordInput
-            placeholder="Confirmer le mot de passe"
-            value={confirmPassword}
-            onChange={(event) => setConfirmPassword(event.target.value)}
-          />
-
-          {message && (
-            <p className="text-sm text-primary">
-              {message}
-            </p>
-          )}
-
-          {error && (
-            <p className="text-sm text-red-500">
-              {error}
-            </p>
-          )}
-
-          <Button type="submit" className="w-full" disabled={loading}>
-            {loading ? "Réinitialisation..." : "Réinitialiser"}
-          </Button>
-
-          <Button asChild variant="ghost" className="w-full">
-            <Link to="/login">
-              Retour à la connexion
-            </Link>
-          </Button>
-        </form>
-      </CardContent>
-    </Card>
+      <PasswordInput
+        placeholder="Confirmer le mot de passe"
+        value={confirmPassword}
+        onChange={(event) => setConfirmPassword(event.target.value)}
+      />
+    </ResetPasswordCard>
   )
 }

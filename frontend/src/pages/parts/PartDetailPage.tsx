@@ -4,6 +4,7 @@ import { ArrowLeft, Pencil, Trash2 } from "lucide-react"
 
 import { deletePart, getPart } from "@/api/parts"
 import { DocumentsPanel } from "@/components/documents-panel"
+import { DetailPagePlaceholder } from "@/components/loading-placeholders"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -70,11 +71,7 @@ export default function PartDetailPage() {
   }
 
   if (isLoading) {
-    return (
-      <div className="text-sm text-muted-foreground">
-        Chargement du stock...
-      </div>
-    )
+    return <DetailPagePlaceholder />
   }
 
   if (error || !part) {

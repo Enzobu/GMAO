@@ -3,9 +3,19 @@ import type { FormEvent } from "react"
 import { useNavigate, useParams } from "react-router-dom"
 
 import { createUser, getUser, updateUser } from "@/api/users"
+import { FormDocumentsField } from "@/components/form-documents-field"
 import { FormActions } from "@/components/form-actions"
+import { FormPagePlaceholder } from "@/components/loading-placeholders"
 import { ErrorMessage, Field, PageHeader } from "@/components/page-primitives"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import {
+  createDocumentFileInput,
+  FILE_TOO_LARGE_MESSAGE,
+  hasTooLargeDocument,
+  selectedDocumentFiles,
+  type DocumentFileInput,
+  uploadParentDocuments,
+} from "@/lib/form-documents"
 import { capitalizeFirstLetter } from "@/lib/text-format"
 import type { AppUser, UserPayload } from "@/types/user"
 
@@ -32,7 +42,11 @@ export default function UserFormPage() {
   const { id } = useParams()
   const navigate = useNavigate()
   const isEditing = Boolean(id)
+  const showDocumentFields = !isEditing
   const [form, setForm] = useState<UserPayload>(emptyForm)
+  const [documentFiles, setDocumentFiles] = useState<DocumentFileInput[]>([
+    createDocumentFileInput(),
+  ])
   const [isLoading, setIsLoading] = useState(isEditing)
   const [isSaving, setIsSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -73,8 +87,23 @@ export default function UserFormPage() {
     setIsSaving(true)
     setError(null)
 
+    if (showDocumentFields && hasTooLargeDocument(documentFiles)) {
+      setError(FILE_TOO_LARGE_MESSAGE)
+      setIsSaving(false)
+
+      return
+    }
+
     try {
       const saved = id ? await updateUser(id, form) : await createUser(form)
+
+      if (showDocumentFields) {
+        await uploadParentDocuments(
+          { type: "users", id: saved.id },
+          selectedDocumentFiles(documentFiles),
+        )
+      }
+
       navigate(`/users/${saved.id}`)
     } catch {
       setError(SAVE_ERROR)
@@ -107,11 +136,7 @@ export default function UserFormPage() {
   }
 
   if (isLoading) {
-    return (
-      <div className="text-sm text-muted-foreground">
-        Chargement du formulaire...
-      </div>
-    )
+    return <FormPagePlaceholder sections={2} />
   }
 
   return (
@@ -207,6 +232,15 @@ export default function UserFormPage() {
             </CardContent>
           </Card>
         </div>
+
+        {showDocumentFields && (
+          <FormDocumentsField
+            canEdit
+            documentFiles={documentFiles}
+            isSaving={isSaving}
+            setDocumentFiles={setDocumentFiles}
+          />
+        )}
 
         <FormActions
           cancelTo={id ? `/users/${id}` : "/users"}

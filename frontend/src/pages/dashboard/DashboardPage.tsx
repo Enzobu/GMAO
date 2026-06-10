@@ -4,6 +4,8 @@ import {
   BarChart3,
   CalendarClock,
   CarFront,
+  ChevronLeft,
+  ChevronRight,
   ClipboardCheck,
   Shield,
   Wrench,
@@ -32,6 +34,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
 
 const itemIcons: Record<DashboardItemType, typeof Wrench> = {
   maintenance: Wrench,
@@ -46,6 +49,9 @@ const severityClassNames: Record<DashboardItemSeverity, string> = {
 
 export default function DashboardPage() {
   const [dashboard, setDashboard] = useState<DashboardData | null>(null)
+  const [maintenanceHistoryYear, setMaintenanceHistoryYear] = useState(
+    new Date().getFullYear(),
+  )
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState("")
 
@@ -57,10 +63,11 @@ export default function DashboardPage() {
         setLoading(true)
         setError("")
 
-        const data = await getDashboard()
+        const data = await getDashboard(maintenanceHistoryYear)
 
         if (isMounted) {
           setDashboard(data)
+          setMaintenanceHistoryYear(data.maintenanceHistoryYear)
         }
       } catch {
         if (isMounted) {
@@ -78,7 +85,7 @@ export default function DashboardPage() {
     return () => {
       isMounted = false
     }
-  }, [])
+  }, [maintenanceHistoryYear])
 
   const maintenanceHealth = dashboard?.stats.maintenanceHealth
   const stats = [
@@ -201,7 +208,10 @@ export default function DashboardPage() {
 
       <MaintenanceHistoryChart
         loading={loading}
+        year={maintenanceHistoryYear}
         data={dashboard?.maintenanceHistory ?? []}
+        onPreviousYear={() => setMaintenanceHistoryYear((year) => year - 1)}
+        onNextYear={() => setMaintenanceHistoryYear((year) => year + 1)}
       />
 
       <DashboardListCard
@@ -220,7 +230,10 @@ export default function DashboardPage() {
 
 type MaintenanceHistoryChartProps = Readonly<{
   loading: boolean
+  year: number
   data: DashboardMaintenanceHistoryItem[]
+  onPreviousYear: () => void
+  onNextYear: () => void
 }>
 
 type MaintenanceHistoryTooltipProps = Readonly<{
@@ -261,31 +274,59 @@ function MaintenanceHistoryTooltip({
 
 function MaintenanceHistoryChart({
   loading,
+  year,
   data,
+  onPreviousYear,
+  onNextYear,
 }: MaintenanceHistoryChartProps) {
   const hasMaintenance = data.some((item) => item.count > 0)
 
   return (
     <Card className="min-w-0 rounded-3xl border-border bg-card shadow-sm">
       <CardHeader>
-        <div className="flex items-start justify-between gap-4">
+        <div className="flex flex-col gap-4 sm:flex-row sm:justify-between">
           <div>
             <CardTitle>
               Entretiens réalisés
             </CardTitle>
 
             <p className="mt-2 text-sm text-muted-foreground">
-              Volume mensuel sur les 12 derniers mois.
+              Volume mensuel du 1er janvier au 1er janvier suivant.
             </p>
           </div>
 
-          <div
-            className={[
-              "flex h-10 w-10 shrink-0 items-center justify-center",
-              "rounded-xl bg-primary/10 text-primary",
-            ].join(" ")}
-          >
-            <BarChart3 className="h-5 w-5" />
+          <div className="flex shrink-0 items-center gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              size="icon"
+              onClick={onPreviousYear}
+              disabled={loading}
+              aria-label="Année précédente"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            <div className="min-w-20 text-center text-sm font-medium">
+              {year}
+            </div>
+            <Button
+              type="button"
+              variant="outline"
+              size="icon"
+              onClick={onNextYear}
+              disabled={loading}
+              aria-label="Année suivante"
+            >
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+            <div
+              className={[
+                "hidden h-10 w-10 items-center justify-center sm:flex",
+                "rounded-xl bg-primary/10 text-primary",
+              ].join(" ")}
+            >
+              <BarChart3 className="h-5 w-5" />
+            </div>
           </div>
         </div>
       </CardHeader>
@@ -335,7 +376,7 @@ function MaintenanceHistoryChart({
 
             {!hasMaintenance && (
               <p className="text-sm text-muted-foreground">
-                Aucun entretien réalisé sur les 12 derniers mois.
+                Aucun entretien réalisé sur cette année.
               </p>
             )}
           </div>

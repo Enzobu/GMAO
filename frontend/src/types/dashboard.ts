@@ -36,6 +36,7 @@ export interface DashboardMaintenanceHistoryItem {
 
 export interface DashboardData {
   stats: DashboardStats
+  maintenanceHistoryYear: number
   maintenanceHistory: DashboardMaintenanceHistoryItem[]
   upcoming: DashboardUpcomingItem[]
   recentActivity: DashboardRecentActivityItem[]

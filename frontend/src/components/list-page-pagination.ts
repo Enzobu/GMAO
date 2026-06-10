@@ -1,4 +1,4 @@
-export type ItemsPerPageValue = "6" | "12" | "24" | "all"
+export type ItemsPerPageValue = "6" | "12" | "24" | "36"
 
 export type PaginationState = Readonly<{
   pageSize: number
@@ -14,25 +14,33 @@ export const ITEMS_PER_PAGE_OPTIONS = [
   { value: "6", label: "6" },
   { value: "12", label: "12" },
   { value: "24", label: "24" },
-  { value: "all", label: "Tous" },
+  { value: "36", label: "36" },
 ] as const
+
+export function itemsPerPageSize(value: string) {
+  return ITEMS_PER_PAGE_OPTIONS.some((option) => option.value === value)
+    ? Number(value)
+    : 12
+}
+
+export function itemsPerPageValue(value: string): ItemsPerPageValue {
+  return ITEMS_PER_PAGE_OPTIONS.some((option) => option.value === value)
+    ? value as ItemsPerPageValue
+    : "12"
+}
 
 export function getPaginationState(
   itemCount: number,
   itemsPerPage: ItemsPerPageValue,
   page: number,
 ): PaginationState {
-  const pageSize = itemsPerPage === "all"
-    ? itemCount || 1
-    : Number(itemsPerPage)
+  const pageSize = Number(itemsPerPage)
   const pageCount = Math.max(1, Math.ceil(itemCount / pageSize))
   const currentPage = Math.min(page, pageCount)
   const pageStart = (currentPage - 1) * pageSize
   const pageEnd = pageStart + pageSize
   const visibleStart = itemCount === 0 ? 0 : pageStart + 1
-  const visibleEnd = itemsPerPage === "all"
-    ? itemCount
-    : Math.min(pageEnd, itemCount)
+  const visibleEnd = Math.min(pageEnd, itemCount)
 
   return {
     pageSize,
@@ -47,10 +55,7 @@ export function getPaginationState(
 
 export function getPaginatedItems<T>(
   items: T[],
-  itemsPerPage: ItemsPerPageValue,
   pagination: PaginationState,
 ) {
-  return itemsPerPage === "all"
-    ? items
-    : items.slice(pagination.pageStart, pagination.pageEnd)
+  return items.slice(pagination.pageStart, pagination.pageEnd)
 }
