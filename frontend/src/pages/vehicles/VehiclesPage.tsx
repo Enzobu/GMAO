@@ -18,11 +18,11 @@ import {
   SearchField,
 } from "@/components/list-page-primitives"
 import { ListPagePlaceholder } from "@/components/loading-placeholders"
+import { PaginatedListSection } from "@/components/paginated-list-section"
 import {
   itemsPerPageSize,
   type ItemsPerPageValue,
 } from "@/components/list-page-pagination"
-import { ListPaginationControls } from "@/components/list-pagination-controls"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -180,18 +180,16 @@ export default function VehiclesPage() {
     }
 
     return (
-      <>
-        <ListPaginationControls
-          itemLabel="véhicule(s)"
-          pagination={vehiclesPage}
-          itemsPerPage={itemsPerPage}
-          onItemsPerPageChange={(value) => {
-            setItemsPerPage(value)
-            setPage(1)
-          }}
-          onPageChange={setPage}
-        />
-
+      <PaginatedListSection
+        itemLabel="véhicule(s)"
+        pagination={vehiclesPage}
+        itemsPerPage={itemsPerPage}
+        onItemsPerPageChange={(value) => {
+          setItemsPerPage(value)
+          setPage(1)
+        }}
+        onPageChange={setPage}
+      >
         <div className="grid gap-4 xl:grid-cols-2">
           {vehicles.map((vehicle) => {
             const canEdit = canEditVehicle(vehicle, currentUser?.id, isAdmin)
@@ -274,18 +272,7 @@ export default function VehiclesPage() {
             )
           })}
         </div>
-
-        <ListPaginationControls
-          itemLabel="véhicule(s)"
-          pagination={vehiclesPage}
-          itemsPerPage={itemsPerPage}
-          onItemsPerPageChange={(value) => {
-            setItemsPerPage(value)
-            setPage(1)
-          }}
-          onPageChange={setPage}
-        />
-      </>
+      </PaginatedListSection>
     )
   }
 

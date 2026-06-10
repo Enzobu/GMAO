@@ -7,6 +7,7 @@ import {
   getVehicle,
   getVehicleHistoryArchive,
 } from "@/api/vehicles"
+import { DetailMetric } from "@/components/detail-metric"
 import { DocumentsPanel } from "@/components/documents-panel"
 import { DetailPagePlaceholder } from "@/components/loading-placeholders"
 import { Badge } from "@/components/ui/badge"
@@ -304,15 +305,15 @@ export default function VehicleDetailPage() {
             <CardTitle>Achat et suivi</CardTitle>
           </CardHeader>
           <CardContent className="grid gap-3 md:grid-cols-4">
-            <Metric
+            <DetailMetric
               label="Date d’achat"
               value={formatDate(vehicle.purchaseDate)}
             />
-            <Metric
+            <DetailMetric
               label="Prix d’achat"
               value={formatPrice(vehicle.purchasePrice)}
             />
-            <Metric
+            <DetailMetric
               label="Dernier kilométrage"
               value={
                 vehicle.lastMileage !== null &&
@@ -321,7 +322,7 @@ export default function VehicleDetailPage() {
                   : "—"
               }
             />
-            <Metric label="Propriétaire" value={userLabel(vehicle.user)} />
+            <DetailMetric label="Propriétaire" value={userLabel(vehicle.user)} />
           </CardContent>
         </Card>
       </section>
@@ -382,15 +383,6 @@ function InfoCard({
         </dl>
       </CardContent>
     </Card>
-  )
-}
-
-function Metric({ label, value }: Readonly<{ label: string; value: string }>) {
-  return (
-    <div className="rounded-lg border p-3">
-      <div className="text-xs text-muted-foreground">{label}</div>
-      <div className="mt-1 font-medium">{value}</div>
-    </div>
   )
 }
 

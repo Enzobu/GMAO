@@ -4,6 +4,7 @@ import { ArrowLeft, Info, Pencil, Trash2 } from "lucide-react"
 import { AxiosError } from "axios"
 
 import { deleteUser, getUser } from "@/api/users"
+import { DetailMetric } from "@/components/detail-metric"
 import { DocumentsPanel } from "@/components/documents-panel"
 import { ReadOnlyBadge } from "@/components/list-page-primitives"
 import { DetailPagePlaceholder } from "@/components/loading-placeholders"
@@ -160,10 +161,10 @@ export default function UserDetailPage() {
             <CardTitle>Informations</CardTitle>
           </CardHeader>
           <CardContent className="grid gap-3 md:grid-cols-2">
-            <Metric label="Email" value={user.email} />
-            <Metric label="ID" value={String(user.id)} />
-            <Metric label="Prénom" value={displayValue(user.firstname)} />
-            <Metric label="Nom" value={displayValue(user.lastname)} />
+            <DetailMetric label="Email" value={user.email} />
+            <DetailMetric label="ID" value={String(user.id)} />
+            <DetailMetric label="Prénom" value={displayValue(user.firstname)} />
+            <DetailMetric label="Nom" value={displayValue(user.lastname)} />
           </CardContent>
         </Card>
 
@@ -172,14 +173,14 @@ export default function UserDetailPage() {
             <CardTitle>Adresse</CardTitle>
           </CardHeader>
           <CardContent className="grid gap-3 md:grid-cols-2">
-            <Metric label="Adresse" value={user.address?.line1 || "—"} />
-            <Metric label="Complément" value={user.address?.line2 || "—"} />
-            <Metric
+            <DetailMetric label="Adresse" value={user.address?.line1 || "—"} />
+            <DetailMetric label="Complément" value={user.address?.line2 || "—"} />
+            <DetailMetric
               label="Code postal"
               value={user.address?.postalCode || "—"}
             />
-            <Metric label="Ville" value={user.address?.city || "—"} />
-            <Metric label="Pays" value={user.address?.country || "—"} />
+            <DetailMetric label="Ville" value={user.address?.city || "—"} />
+            <DetailMetric label="Pays" value={user.address?.country || "—"} />
           </CardContent>
         </Card>
       </div>
@@ -252,15 +253,6 @@ function CurrentUserBadge() {
     <span className="inline-flex">
       <span className={CURRENT_USER_BADGE_CLASS}>Vous</span>
     </span>
-  )
-}
-
-function Metric({ label, value }: Readonly<{ label: string; value: string }>) {
-  return (
-    <div className="rounded-lg border p-3">
-      <div className="text-xs text-muted-foreground">{label}</div>
-      <div className="mt-1 font-medium">{value}</div>
-    </div>
   )
 }
 

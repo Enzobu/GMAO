@@ -1,10 +1,8 @@
 import { useState } from "react"
-import { Link } from "react-router-dom"
 
 import { requestPasswordReset } from "@/api/reset-password"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
+import { ResetPasswordCard } from "@/pages/reset-password/ResetPasswordCard"
 
 const ERROR_MESSAGE = [
   "Impossible d’envoyer la demande de réinitialisation.",
@@ -36,48 +34,22 @@ export default function RequestResetPasswordPage() {
   }
 
   return (
-    <Card
-      className="w-full max-w-md rounded-3xl border-border bg-card shadow-xl"
+    <ResetPasswordCard
+      title="Mot de passe oublié"
+      message={message}
+      error={error}
+      isLoading={loading}
+      submitLabel="Envoyer le lien"
+      loadingLabel="Envoi..."
+      onSubmit={handleSubmit}
     >
-      <CardHeader>
-        <CardTitle className="text-2xl">
-          Mot de passe oublié
-        </CardTitle>
-      </CardHeader>
-
-      <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <Input
-            type="email"
-            placeholder="Email"
-            value={email}
-            onChange={(event) => setEmail(event.target.value)}
-            required
-          />
-
-          {message && (
-            <p className="text-sm text-primary">
-              {message}
-            </p>
-          )}
-
-          {error && (
-            <p className="text-sm text-red-500">
-              {error}
-            </p>
-          )}
-
-          <Button type="submit" className="w-full" disabled={loading}>
-            {loading ? "Envoi..." : "Envoyer le lien"}
-          </Button>
-
-          <Button asChild variant="ghost" className="w-full">
-            <Link to="/login">
-              Retour à la connexion
-            </Link>
-          </Button>
-        </form>
-      </CardContent>
-    </Card>
+      <Input
+        type="email"
+        placeholder="Email"
+        value={email}
+        onChange={(event) => setEmail(event.target.value)}
+        required
+      />
+    </ResetPasswordCard>
   )
 }

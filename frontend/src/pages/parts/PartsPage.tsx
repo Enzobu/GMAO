@@ -20,11 +20,11 @@ import {
   SearchField,
 } from "@/components/list-page-primitives"
 import { ListPagePlaceholder } from "@/components/loading-placeholders"
+import { PaginatedListSection } from "@/components/paginated-list-section"
 import {
   itemsPerPageSize,
   type ItemsPerPageValue,
 } from "@/components/list-page-pagination"
-import { ListPaginationControls } from "@/components/list-pagination-controls"
 import { LabelText } from "@/components/page-primitives"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -195,18 +195,16 @@ export default function PartsPage() {
     }
 
     return (
-      <>
-        <ListPaginationControls
-          pagination={partsPage}
-          itemsPerPage={itemsPerPage}
-          onItemsPerPageChange={(value) => {
-            setItemsPerPage(value)
-            setPage(1)
-          }}
-          onPageChange={setPage}
-          itemLabel="ligne(s)"
-        />
-
+      <PaginatedListSection
+        itemLabel="ligne(s)"
+        pagination={partsPage}
+        itemsPerPage={itemsPerPage}
+        onItemsPerPageChange={(value) => {
+          setItemsPerPage(value)
+          setPage(1)
+        }}
+        onPageChange={setPage}
+      >
         <div className="grid gap-4 xl:grid-cols-2">
           {parts.map((part) => {
             const status = stockStatus(part.quantity)
@@ -300,18 +298,7 @@ export default function PartsPage() {
             )
           })}
         </div>
-
-        <ListPaginationControls
-          pagination={partsPage}
-          itemsPerPage={itemsPerPage}
-          onItemsPerPageChange={(value) => {
-            setItemsPerPage(value)
-            setPage(1)
-          }}
-          onPageChange={setPage}
-          itemLabel="ligne(s)"
-        />
-      </>
+      </PaginatedListSection>
     )
   }
 

@@ -18,11 +18,11 @@ import {
   SearchField,
 } from "@/components/list-page-primitives"
 import { ListPagePlaceholder } from "@/components/loading-placeholders"
+import { PaginatedListSection } from "@/components/paginated-list-section"
 import {
   itemsPerPageSize,
   type ItemsPerPageValue,
 } from "@/components/list-page-pagination"
-import { ListPaginationControls } from "@/components/list-pagination-controls"
 import { ErrorMessage } from "@/components/page-primitives"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -222,16 +222,16 @@ export default function UsersPage() {
           Aucun utilisateur ne correspond aux critères.
         </EmptyListCard>
       ) : (
-        <>
-          <UsersPagination
-            pagination={usersPage}
-            itemsPerPage={itemsPerPage}
-            onItemsPerPageChange={(value) => {
-              setItemsPerPage(value)
-              setPage(1)
-            }}
-            onPageChange={setPage}
-          />
+        <PaginatedListSection
+          itemLabel="utilisateur(s)"
+          pagination={usersPage}
+          itemsPerPage={itemsPerPage}
+          onItemsPerPageChange={(value) => {
+            setItemsPerPage(value)
+            setPage(1)
+          }}
+          onPageChange={setPage}
+        >
           <div className="grid gap-4 xl:grid-cols-2">
             {users.map((user) => (
               <UserCard
@@ -243,16 +243,7 @@ export default function UsersPage() {
               />
             ))}
           </div>
-          <UsersPagination
-            pagination={usersPage}
-            itemsPerPage={itemsPerPage}
-            onItemsPerPageChange={(value) => {
-              setItemsPerPage(value)
-              setPage(1)
-            }}
-            onPageChange={setPage}
-          />
-        </>
+        </PaginatedListSection>
       )}
     </div>
   )
@@ -317,15 +308,6 @@ function FiltersCard({
       </CardContent>
     </Card>
   )
-}
-
-function UsersPagination(props: Readonly<{
-  pagination: Parameters<typeof ListPaginationControls>[0]["pagination"]
-  itemsPerPage: ItemsPerPageValue
-  onItemsPerPageChange: (value: ItemsPerPageValue) => void
-  onPageChange: (value: number) => void
-}>) {
-  return <ListPaginationControls {...props} itemLabel="utilisateur(s)" />
 }
 
 function UserCard({
