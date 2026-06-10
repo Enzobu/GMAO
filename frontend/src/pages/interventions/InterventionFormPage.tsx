@@ -77,6 +77,8 @@ interface InterventionPartForm {
   notes: string
 }
 
+type InterventionFormState = typeof emptyForm
+
 export default function InterventionFormPage() {
   const { vehicleId, interventionId } = useParams()
   const navigate = useNavigate()
@@ -165,39 +167,15 @@ export default function InterventionFormPage() {
 
   async function save(forceMileage: boolean) {
     if (!vehicleId || !canEdit) return
-    if (!form.maintenanceTypeId) {
-      setError("Sélectionnez un type d’intervention.")
-      return
-    }
-    if (isCompleted && !form.finishedAt) {
-      setError("Saisissez la date de fin pour terminer l’intervention.")
-      return
-    }
-    if (isCompleted && !form.mileage) {
-      setError("Saisissez le kilométrage pour terminer l’intervention.")
-      return
-    }
-    if (form.parts.some((line) => !line.partId)) {
-      setError(
-        "Sélectionnez une pièce pour chaque ligne de pièces utilisées.",
-      )
-      return
-    }
-    if (
-      form.parts.some(
-        (line) => !compatibleParts.some(
-          (part) => String(part.id) === line.partId,
-        ),
-      )
-    ) {
-      setError(
-        "Une pièce sélectionnée n’est pas compatible avec ce véhicule.",
-      )
-      return
-    }
+    const validationError = validateSave(form, {
+      compatibleParts,
+      documentFiles,
+      isCompleted,
+      showDocumentFields,
+    })
 
-    if (showDocumentFields && hasTooLargeDocument(documentFiles)) {
-      setError(FILE_TOO_LARGE_MESSAGE)
+    if (validationError) {
+      setError(validationError)
       return
     }
 
@@ -625,6 +603,56 @@ function errorMessage(error: unknown) {
       ?? "Impossible d’enregistrer l’intervention."
   }
   return "Impossible d’enregistrer l’intervention."
+}
+
+function validateSave(
+  form: InterventionFormState,
+  context: Readonly<{
+    compatibleParts: Part[]
+    documentFiles: DocumentFileInput[]
+    isCompleted: boolean
+    showDocumentFields: boolean
+  }>,
+) {
+  if (!form.maintenanceTypeId) {
+    return "Sélectionnez un type d’intervention."
+  }
+
+  if (context.isCompleted && !form.finishedAt) {
+    return "Saisissez la date de fin pour terminer l’intervention."
+  }
+
+  if (context.isCompleted && !form.mileage) {
+    return "Saisissez le kilométrage pour terminer l’intervention."
+  }
+
+  if (form.parts.some((line) => !line.partId)) {
+    return "Sélectionnez une pièce pour chaque ligne de pièces utilisées."
+  }
+
+  if (hasIncompatiblePart(form.parts, context.compatibleParts)) {
+    return "Une pièce sélectionnée n’est pas compatible avec ce véhicule."
+  }
+
+  if (
+    context.showDocumentFields
+    && hasTooLargeDocument(context.documentFiles)
+  ) {
+    return FILE_TOO_LARGE_MESSAGE
+  }
+
+  return null
+}
+
+function hasIncompatiblePart(
+  lines: InterventionPartForm[],
+  compatibleParts: Part[],
+) {
+  return lines.some(
+    (line) => !compatibleParts.some(
+      (part) => String(part.id) === line.partId,
+    ),
+  )
 }
 
 function partOptions(parts: Part[]) {

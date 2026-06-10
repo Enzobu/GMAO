@@ -906,11 +906,13 @@ function ConfigurationItemsList<
 }
 
 function ConfigurationListPlaceholder() {
+  const placeholders = placeholderIds("configuration-placeholder", 4)
+
   return (
     <div className="space-y-2">
-      {Array.from({ length: 4 }).map((_, index) => (
+      {placeholders.map((placeholder) => (
         <div
-          key={`configuration-placeholder-${index}`}
+          key={placeholder}
           className="rounded-lg border border-foreground/10 p-3"
         >
           <div className={listItemBodyClassName}>
@@ -927,6 +929,10 @@ function ConfigurationListPlaceholder() {
       ))}
     </div>
   )
+}
+
+function placeholderIds(prefix: string, count: number) {
+  return Array.from({ length: count }, (_, index) => `${prefix}-${index + 1}`)
 }
 
 function ConfigurationListItem<

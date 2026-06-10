@@ -1,6 +1,8 @@
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 
+const FORM_FIELD_PLACEHOLDERS = ["field-1", "field-2", "field-3", "field-4"]
+
 export function ListPagePlaceholder({
   filters = 4,
   items = 4,
@@ -8,6 +10,9 @@ export function ListPagePlaceholder({
   filters?: number
   items?: number
 }>) {
+  const filterPlaceholders = placeholderIds("filter", filters)
+  const itemPlaceholders = placeholderIds("item", items)
+
   return (
     <div className="space-y-6">
       <div className="flex items-start justify-between gap-4">
@@ -20,8 +25,8 @@ export function ListPagePlaceholder({
 
       <Card>
         <CardContent className="grid gap-4 p-4 md:grid-cols-2 xl:grid-cols-4">
-          {Array.from({ length: filters }).map((_, index) => (
-            <div key={`filter-${index}`} className="space-y-2">
+          {filterPlaceholders.map((placeholder) => (
+            <div key={placeholder} className="space-y-2">
               <Skeleton className="h-4 w-20" />
               <Skeleton className="h-10 w-full" />
             </div>
@@ -32,8 +37,8 @@ export function ListPagePlaceholder({
       <Skeleton className="h-10 w-full" />
 
       <div className="grid gap-4 xl:grid-cols-2">
-        {Array.from({ length: items }).map((_, index) => (
-          <Card key={`item-${index}`}>
+        {itemPlaceholders.map((placeholder) => (
+          <Card key={placeholder}>
             <CardHeader className="space-y-3">
               <Skeleton className="h-6 w-2/3" />
               <Skeleton className="h-4 w-1/3" />
@@ -56,6 +61,8 @@ export function ListPagePlaceholder({
 export function FormPagePlaceholder({
   sections = 3,
 }: Readonly<{ sections?: number }>) {
+  const sectionPlaceholders = placeholderIds("section", sections)
+
   return (
     <div className="space-y-6">
       <div className="space-y-2">
@@ -63,17 +70,14 @@ export function FormPagePlaceholder({
         <Skeleton className="h-4 w-80 max-w-full" />
       </div>
 
-      {Array.from({ length: sections }).map((_, sectionIndex) => (
-        <Card key={`section-${sectionIndex}`}>
+      {sectionPlaceholders.map((section) => (
+        <Card key={section}>
           <CardHeader>
             <Skeleton className="h-6 w-40" />
           </CardHeader>
           <CardContent className="grid gap-4 md:grid-cols-2">
-            {Array.from({ length: 4 }).map((__, fieldIndex) => (
-              <div
-                key={`field-${sectionIndex}-${fieldIndex}`}
-                className="space-y-2"
-              >
+            {FORM_FIELD_PLACEHOLDERS.map((field) => (
+              <div key={`${section}-${field}`} className="space-y-2">
                 <Skeleton className="h-4 w-24" />
                 <Skeleton className="h-10 w-full" />
               </div>
@@ -88,6 +92,8 @@ export function FormPagePlaceholder({
 export function DetailPagePlaceholder({
   cards = 3,
 }: Readonly<{ cards?: number }>) {
+  const cardPlaceholders = placeholderIds("detail", cards)
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:justify-between">
@@ -102,8 +108,8 @@ export function DetailPagePlaceholder({
       </div>
 
       <div className="grid gap-4 lg:grid-cols-2">
-        {Array.from({ length: cards }).map((_, index) => (
-          <Card key={`detail-${index}`}>
+        {cardPlaceholders.map((placeholder) => (
+          <Card key={placeholder}>
             <CardHeader>
               <Skeleton className="h-6 w-40" />
             </CardHeader>
@@ -117,4 +123,8 @@ export function DetailPagePlaceholder({
       </div>
     </div>
   )
+}
+
+function placeholderIds(prefix: string, count: number) {
+  return Array.from({ length: count }, (_, index) => `${prefix}-${index + 1}`)
 }
