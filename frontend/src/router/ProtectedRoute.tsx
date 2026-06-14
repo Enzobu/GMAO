@@ -9,10 +9,13 @@ export default function ProtectedRoute() {
 
   if (!isAuthenticated) {
     const redirect = `${location.pathname}${location.search}${location.hash}`
+    const loginPath = redirect === "/"
+      ? "/login"
+      : `/login?redirect=${encodeURIComponent(redirect)}`
 
     return (
       <Navigate
-        to={`/login?redirect=${encodeURIComponent(redirect)}`}
+        to={loginPath}
         replace
       />
     )
