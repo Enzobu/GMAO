@@ -6,6 +6,8 @@ import { ArrowLeft, Save } from "lucide-react"
 import { createPart, getPart, updatePart } from "@/api/parts"
 import { getPartTypes } from "@/api/configuration"
 import { getVehicles } from "@/api/vehicles"
+import { FormDocumentsField } from "@/components/form-documents-field"
+import { FormPagePlaceholder } from "@/components/loading-placeholders"
 import { LabelText } from "@/components/page-primitives"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -15,6 +17,14 @@ import { Textarea } from "@/components/ui/textarea"
 import type { ConfigurationItem } from "@/types/configuration"
 import type { Part, PartPayload } from "@/types/part"
 import type { Vehicle } from "@/types/vehicle"
+import {
+  createDocumentFileInput,
+  FILE_TOO_LARGE_MESSAGE,
+  hasTooLargeDocument,
+  selectedDocumentFiles,
+  type DocumentFileInput,
+  uploadParentDocuments,
+} from "@/lib/form-documents"
 import { vehicleDisplayName } from "@/lib/part-utils"
 
 const emptyForm = {
@@ -37,7 +47,11 @@ export default function PartFormPage() {
   const { id } = useParams()
   const navigate = useNavigate()
   const isEditing = Boolean(id)
+  const showDocumentFields = !isEditing
   const [form, setForm] = useState(emptyForm)
+  const [documentFiles, setDocumentFiles] = useState<DocumentFileInput[]>([
+    createDocumentFileInput(),
+  ])
   const [partTypes, setPartTypes] = useState<ConfigurationItem[]>([])
   const [vehicles, setVehicles] = useState<Vehicle[]>([])
   const [isLoading, setIsLoading] = useState(isEditing)
@@ -73,10 +87,26 @@ export default function PartFormPage() {
     event.preventDefault()
     setIsSaving(true)
     setError(null)
+
+    if (showDocumentFields && hasTooLargeDocument(documentFiles)) {
+      setError(FILE_TOO_LARGE_MESSAGE)
+      setIsSaving(false)
+
+      return
+    }
+
     try {
       const saved = id
         ? await updatePart(id, formToPayload(form))
         : await createPart(formToPayload(form))
+
+      if (showDocumentFields) {
+        await uploadParentDocuments(
+          { type: "parts", id: saved.id },
+          selectedDocumentFiles(documentFiles),
+        )
+      }
+
       navigate(`/parts/${saved.id}`)
     } catch {
       setError(SAVE_ERROR)
@@ -95,11 +125,7 @@ export default function PartFormPage() {
   }
 
   if (isLoading) {
-    return (
-      <div className="text-sm text-muted-foreground">
-        Chargement du formulaire...
-      </div>
-    )
+    return <FormPagePlaceholder sections={2} />
   }
 
   return (
@@ -213,6 +239,15 @@ export default function PartFormPage() {
             })}
           </CardContent>
         </Card>
+
+        {showDocumentFields && (
+          <FormDocumentsField
+            canEdit
+            documentFiles={documentFiles}
+            isSaving={isSaving}
+            setDocumentFiles={setDocumentFiles}
+          />
+        )}
 
         <div className="flex justify-end gap-2">
           <Button variant="outline" asChild>

@@ -48,7 +48,7 @@ final readonly class DashboardService
     ) {}
 
     /** @return array<string, mixed> */
-    public function dashboardFor(User $user): array
+    public function dashboardFor(User $user, int $maintenanceHistoryYear): array
     {
         $now = new \DateTimeImmutable('today');
         $next30Days = $now->modify('+30 days');
@@ -77,7 +77,11 @@ final readonly class DashboardService
                 'maintenanceHealth' => $this->getMaintenanceHealth($user, $now),
                 'alerts' => count($upcoming),
             ],
-            'maintenanceHistory' => $this->getMaintenanceHistory($user, $now),
+            'maintenanceHistoryYear' => $maintenanceHistoryYear,
+            'maintenanceHistory' => $this->getMaintenanceHistory(
+                $user,
+                $maintenanceHistoryYear,
+            ),
             'upcoming' => array_slice($upcoming, 0, 8),
             'recentActivity' => array_slice($recentActivity, 0, 8),
         ];
@@ -167,10 +171,10 @@ final readonly class DashboardService
     /**
      * @return array<int, array{month:string,count:int}>
      */
-    private function getMaintenanceHistory(User $user, \DateTimeImmutable $now): array
+    private function getMaintenanceHistory(User $user, int $year): array
     {
-        $start = $now->modify('first day of this month')->modify('-11 months');
-        $end = $now->modify('first day of next month');
+        $start = new \DateTimeImmutable(sprintf('%d-01-01', $year));
+        $end = $start->modify('+1 year');
 
         $qb = $this->entityManager->createQueryBuilder()
             ->select('m.finishedAt')

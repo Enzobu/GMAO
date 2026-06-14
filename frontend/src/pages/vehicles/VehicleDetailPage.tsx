@@ -1,13 +1,16 @@
 import { useEffect, useMemo, useState } from "react"
 import { Link, useNavigate, useParams } from "react-router-dom"
-import { ArrowLeft, Download, Pencil, Trash2 } from "lucide-react"
+import { Download } from "lucide-react"
 
 import {
   deleteVehicle,
   getVehicle,
   getVehicleHistoryArchive,
 } from "@/api/vehicles"
+import { DetailMetric } from "@/components/detail-metric"
+import { DetailPageActions } from "@/components/detail-page-actions"
 import { DocumentsPanel } from "@/components/documents-panel"
+import { DetailPagePlaceholder } from "@/components/loading-placeholders"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -35,6 +38,7 @@ import {
   PAYMENT_FREQUENCIES,
 } from "@/lib/vehicle-events"
 import { capitalizeFirstLetter, displayValue } from "@/lib/text-format"
+import { softDeleteDescription } from "@/lib/delete-description"
 
 const ALERT_CLASS = [
   "rounded-lg border border-destructive/30 bg-destructive/10 p-4",
@@ -119,11 +123,7 @@ export default function VehicleDetailPage() {
   )
 
   if (isLoading) {
-    return (
-      <div className="text-sm text-muted-foreground">
-        Chargement du véhicule...
-      </div>
-    )
+    return <DetailPagePlaceholder cards={4} />
   }
 
   if (error || !vehicle) {
@@ -133,10 +133,9 @@ export default function VehicleDetailPage() {
   }
 
   const canEdit = isAdmin || vehicle.user.id === currentUser?.id
-  const deleteDialogDescription = [
-    `${displayVehicleName(vehicle)} sera masqué de la plateforme.`,
-    "Aucune donnée ne sera supprimée définitivement.",
-  ].join(" ")
+  const deleteDialogDescription = softDeleteDescription(
+    displayVehicleName(vehicle),
+  )
 
   async function confirmDelete() {
     if (!vehicle) {
@@ -229,46 +228,24 @@ export default function VehicleDetailPage() {
           </div>
         </div>
 
-        <div className="flex flex-col gap-2 sm:flex-row">
-          <Button variant="outline" asChild>
-            <Link to="/vehicles">
-              <ArrowLeft />
-              Retour
-            </Link>
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            onClick={downloadHistoryArchive}
-            disabled={isArchiveDownloading}
-          >
-            <Download />
-            {isArchiveDownloading
-              ? "Téléchargement..."
-              : "Télécharger l’historique"}
-          </Button>
-          <Button asChild disabled={!canEdit}>
-            <Link
-              to={
-                canEdit
-                  ? `/vehicles/${vehicle.id}/edit`
-                  : `/vehicles/${vehicle.id}`
-              }
-            >
-              <Pencil />
-              Modifier
-            </Link>
-          </Button>
-          {isAdmin && (
+        <DetailPageActions
+          backTo="/vehicles"
+          editTo={canEdit ? `/vehicles/${vehicle.id}/edit` : undefined}
+          extraActions={(
             <Button
-              variant="destructive"
-              onClick={() => setIsDeleteDialogOpen(true)}
+              type="button"
+              variant="outline"
+              onClick={downloadHistoryArchive}
+              disabled={isArchiveDownloading}
             >
-              <Trash2 />
-              Supprimer
+              <Download />
+              {isArchiveDownloading
+                ? "Téléchargement..."
+                : "Télécharger l’historique"}
             </Button>
           )}
-        </div>
+          onDelete={isAdmin ? () => setIsDeleteDialogOpen(true) : undefined}
+        />
       </div>
 
       {archiveError && <div className={ALERT_CLASS}>{archiveError}</div>}
@@ -307,15 +284,15 @@ export default function VehicleDetailPage() {
             <CardTitle>Achat et suivi</CardTitle>
           </CardHeader>
           <CardContent className="grid gap-3 md:grid-cols-4">
-            <Metric
+            <DetailMetric
               label="Date d’achat"
               value={formatDate(vehicle.purchaseDate)}
             />
-            <Metric
+            <DetailMetric
               label="Prix d’achat"
               value={formatPrice(vehicle.purchasePrice)}
             />
-            <Metric
+            <DetailMetric
               label="Dernier kilométrage"
               value={
                 vehicle.lastMileage !== null &&
@@ -324,7 +301,7 @@ export default function VehicleDetailPage() {
                   : "—"
               }
             />
-            <Metric label="Propriétaire" value={userLabel(vehicle.user)} />
+            <DetailMetric label="Propriétaire" value={userLabel(vehicle.user)} />
           </CardContent>
         </Card>
       </section>
@@ -385,15 +362,6 @@ function InfoCard({
         </dl>
       </CardContent>
     </Card>
-  )
-}
-
-function Metric({ label, value }: Readonly<{ label: string; value: string }>) {
-  return (
-    <div className="rounded-lg border p-3">
-      <div className="text-xs text-muted-foreground">{label}</div>
-      <div className="mt-1 font-medium">{value}</div>
-    </div>
   )
 }
 
@@ -726,5 +694,18 @@ function formatNumber(value: number) {
 }
 
 function formatPrice(value?: string | null) {
-  return value ? `${value} €` : "—"
+  if (!value) {
+    return "—"
+  }
+
+  const amount = Number(value)
+
+  if (!Number.isFinite(amount)) {
+    return `${value} €`
+  }
+
+  return `${new Intl.NumberFormat("fr-FR", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(amount)} €`
 }

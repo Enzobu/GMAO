@@ -36,7 +36,15 @@ api.interceptors.response.use(
       useAuthStore.getState().logout()
 
       if (!isAlreadyOnLogin) {
-        globalThis.location.href = "/login"
+        const redirect = [
+          globalThis.location.pathname,
+          globalThis.location.search,
+          globalThis.location.hash,
+        ].join("")
+
+        globalThis.location.href = `/login?redirect=${encodeURIComponent(
+          redirect,
+        )}`
       }
     }
 

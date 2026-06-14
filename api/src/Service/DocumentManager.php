@@ -76,7 +76,9 @@ class DocumentManager
         string $name,
         ?string $description = null,
     ): Document {
-        $originalFilename = $file->getClientOriginalName();
+        $originalFilename = $this->normalizedOriginalFilename(
+            $file->getClientOriginalName(),
+        );
         $extension = $file->guessExtension() ?? $file->getClientOriginalExtension() ?? 'bin';
         $mimeType = $file->getMimeType() ?? 'application/octet-stream';
         $size = $file->getSize() ?? 0;
@@ -160,5 +162,10 @@ class DocumentManager
     public function getDownloadFilename(Document $document): string
     {
         return $document->getOriginalFilename() ?: $document->getStoredFilename() ?: 'document';
+    }
+
+    private function normalizedOriginalFilename(string $filename): string
+    {
+        return str_replace(' ', '_', trim($filename));
     }
 }

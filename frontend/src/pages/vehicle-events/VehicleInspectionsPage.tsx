@@ -4,9 +4,16 @@ import { Plus, Trash2 } from "lucide-react"
 
 import {
   deleteVehicleInspection,
-  getVehicleInspections,
+  getVehicleInspectionsPage,
 } from "@/api/vehicle-events"
+import { emptyCollectionPage } from "@/api/api-collection"
 import { getVehicle } from "@/api/vehicles"
+import {
+  itemsPerPageSize,
+  type ItemsPerPageValue,
+} from "@/components/list-page-pagination"
+import { ListPaginationControls } from "@/components/list-pagination-controls"
+import { ListPagePlaceholder } from "@/components/loading-placeholders"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -17,6 +24,7 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { ConfirmDialog } from "@/components/ui/confirm-dialog"
+import { useLocalStorageState } from "@/hooks/use-local-storage-state"
 import { useAuthStore } from "@/stores/auth-store"
 import type { Vehicle } from "@/types/vehicle"
 import type { VehicleInspectionEvent } from "@/types/vehicle-events"
@@ -51,6 +59,15 @@ export default function VehicleInspectionsPage() {
 
   const [vehicle, setVehicle] = useState<Vehicle | null>(null)
   const [inspections, setInspections] = useState<VehicleInspectionEvent[]>([])
+  const [inspectionsPage, setInspectionsPage] = useState(
+    emptyCollectionPage<VehicleInspectionEvent>(12),
+  )
+  const [itemsPerPage, setItemsPerPage] =
+    useLocalStorageState<ItemsPerPageValue>(
+      "vehicleInspections.itemsPerPage",
+      "12",
+    )
+  const [page, setPage] = useState(1)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [inspectionToDelete, setInspectionToDelete] =
@@ -68,7 +85,11 @@ export default function VehicleInspectionsPage() {
       try {
         const [vehicleData, inspectionData] = await Promise.all([
           getVehicle(vehicleId),
-          getVehicleInspections(),
+          getVehicleInspectionsPage({
+            page,
+            itemsPerPage: itemsPerPageSize(itemsPerPage),
+            vehicleId,
+          }),
         ])
 
         if (ignore) {
@@ -76,7 +97,8 @@ export default function VehicleInspectionsPage() {
         }
 
         setVehicle(vehicleData)
-        setInspections(filterVehicleInspections(inspectionData, vehicleId))
+        setInspections(inspectionData.items)
+        setInspectionsPage(inspectionData)
       } catch {
         if (!ignore) {
           setError("Impossible de charger les contrôles techniques.")
@@ -93,7 +115,7 @@ export default function VehicleInspectionsPage() {
     return () => {
       ignore = true
     }
-  }, [vehicleId])
+  }, [itemsPerPage, page, vehicleId])
 
   const canEdit = useMemo(
     () => isAdmin || vehicle?.user.id === user?.id,
@@ -112,6 +134,10 @@ export default function VehicleInspectionsPage() {
       setInspections((current) => (
         current.filter((inspection) => inspection.id !== inspectionToDelete.id)
       ))
+      setInspectionsPage((current) => ({
+        ...current,
+        totalItems: Math.max(0, current.totalItems - 1),
+      }))
       setInspectionToDelete(null)
     } finally {
       setIsDeleting(false)
@@ -119,11 +145,7 @@ export default function VehicleInspectionsPage() {
   }
 
   if (isLoading) {
-    return (
-      <div className="text-sm text-muted-foreground">
-        Chargement des contrôles...
-      </div>
-    )
+    return <ListPagePlaceholder filters={0} items={4} />
   }
 
   if (error || !vehicle) {
@@ -148,7 +170,7 @@ export default function VehicleInspectionsPage() {
 
       <VehicleEventHeader
         title="Contrôles techniques du véhicule"
-        description={`${inspections.length} contrôle(s) technique(s)`}
+        description={`${inspectionsPage.totalItems} contrôle(s) technique(s)`}
         backTo={`/vehicles/${vehicle.id}`}
         backLabel="Retour au véhicule"
         actions={canEdit && (
@@ -159,6 +181,17 @@ export default function VehicleInspectionsPage() {
             </Link>
           </Button>
         )}
+      />
+
+      <ListPaginationControls
+        itemLabel="contrôle(s) technique(s)"
+        pagination={inspectionsPage}
+        itemsPerPage={itemsPerPage}
+        onItemsPerPageChange={(value) => {
+          setItemsPerPage(value)
+          setPage(1)
+        }}
+        onPageChange={setPage}
       />
 
       {inspections.length === 0 ? (
@@ -179,6 +212,17 @@ export default function VehicleInspectionsPage() {
           ))}
         </div>
       )}
+
+      <ListPaginationControls
+        itemLabel="contrôle(s) technique(s)"
+        pagination={inspectionsPage}
+        itemsPerPage={itemsPerPage}
+        onItemsPerPageChange={(value) => {
+          setItemsPerPage(value)
+          setPage(1)
+        }}
+        onPageChange={setPage}
+      />
     </div>
   )
 }
@@ -273,17 +317,6 @@ function CounterVisitBadge({ required }: Readonly<{ required: boolean }>) {
       Contre-visite requise
     </Badge>
   )
-}
-
-function filterVehicleInspections(
-  items: VehicleInspectionEvent[],
-  vehicleId: string
-) {
-  return items
-    .filter((item) => item.vehicle.id === Number(vehicleId))
-    .sort((a, b) => (
-      String(b.inspectionDate).localeCompare(String(a.inspectionDate))
-    ))
 }
 
 function deleteDescription(inspection: VehicleInspectionEvent | null) {

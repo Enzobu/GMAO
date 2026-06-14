@@ -32,12 +32,12 @@ final readonly class DocumentPayloadValidator
         $name = trim((string) $request->request->get('name', ''));
 
         if ($name !== '') {
-            return $name;
+            return $this->displayName($name);
         }
 
-        $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
+        $originalName = $file->getClientOriginalName();
 
-        return $originalName ?: 'Document';
+        return $this->displayName($originalName) ?: 'Document';
     }
 
     public function requestDescription(Request $request): ?string
@@ -59,8 +59,16 @@ final readonly class DocumentPayloadValidator
         }
 
         $document
-            ->setName($name)
+            ->setName($this->displayName($name))
             ->setDescription($this->nullableString($payload['description'] ?? null));
+    }
+
+    private function displayName(string $value): string
+    {
+        $value = str_replace('_', ' ', trim($value));
+        $value = preg_replace('/\s+/', ' ', $value) ?? '';
+
+        return ucfirst($value);
     }
 
     private function nullableString(mixed $value): ?string

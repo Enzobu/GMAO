@@ -1,5 +1,13 @@
 import { api } from "@/api/client"
-import { collectionItems, type ApiCollection } from "@/api/api-collection"
+import {
+  collectionItems,
+  collectionNextPage,
+  collectionPage,
+  collectionParams,
+  COLLECTION_REQUEST_HEADERS,
+  type ApiCollection,
+  type CollectionParams,
+} from "@/api/api-collection"
 import type {
   Vehicle,
   VehicleInspection,
@@ -10,9 +18,33 @@ import type {
 } from "@/types/vehicle"
 
 export async function getVehicles() {
-  const response = await api.get<ApiCollection<Vehicle>>("/vehicles")
+  const response = await api.get<ApiCollection<Vehicle>>("/vehicles", {
+    headers: COLLECTION_REQUEST_HEADERS,
+    params: { itemsPerPage: 36 },
+  })
+  const items = [...collectionItems(response.data)]
+  let nextPage = collectionNextPage(response.data)
 
-  return collectionItems(response.data)
+  while (nextPage !== null) {
+    const nextResponse = await api.get<ApiCollection<Vehicle>>("/vehicles", {
+      headers: COLLECTION_REQUEST_HEADERS,
+      params: { page: nextPage, itemsPerPage: 36 },
+    })
+
+    items.push(...collectionItems(nextResponse.data))
+    nextPage = collectionNextPage(nextResponse.data)
+  }
+
+  return items
+}
+
+export async function getVehiclesPage(params: CollectionParams) {
+  const response = await api.get<ApiCollection<Vehicle>>("/vehicles", {
+    headers: COLLECTION_REQUEST_HEADERS,
+    params: collectionParams(params),
+  })
+
+  return collectionPage(response.data, params.page, params.itemsPerPage)
 }
 
 export async function getVehicle(id: string | number) {
@@ -58,9 +90,24 @@ export async function getVehicleHistoryArchive(
 }
 
 export async function getUsers() {
-  const response = await api.get<ApiCollection<VehicleUser>>("/users")
+  const response = await api.get<ApiCollection<VehicleUser>>("/users", {
+    headers: COLLECTION_REQUEST_HEADERS,
+    params: { itemsPerPage: 36 },
+  })
+  const items = [...collectionItems(response.data)]
+  let nextPage = collectionNextPage(response.data)
 
-  return collectionItems(response.data)
+  while (nextPage !== null) {
+    const nextResponse = await api.get<ApiCollection<VehicleUser>>("/users", {
+      headers: COLLECTION_REQUEST_HEADERS,
+      params: { page: nextPage, itemsPerPage: 36 },
+    })
+
+    items.push(...collectionItems(nextResponse.data))
+    nextPage = collectionNextPage(nextResponse.data)
+  }
+
+  return items
 }
 
 function archiveFilename(

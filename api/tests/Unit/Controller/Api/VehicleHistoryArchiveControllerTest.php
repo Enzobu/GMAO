@@ -20,6 +20,7 @@ use PHPUnit\Framework\TestCase;
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 final class VehicleHistoryArchiveControllerTest extends TestCase
@@ -35,7 +36,7 @@ final class VehicleHistoryArchiveControllerTest extends TestCase
         $vehicles->expects(self::once())->method('find')->with(10)->willReturn($vehicle);
         $controller = new VehicleHistoryArchiveController(
             $vehicles,
-            $this->accessChecker(),
+            $this->accessChecker(new User()),
             $this->archiveBuilder(),
         );
 
@@ -60,19 +61,34 @@ final class VehicleHistoryArchiveControllerTest extends TestCase
 
         (new VehicleHistoryArchiveController(
             $vehicles,
-            $this->accessChecker(),
+            $this->accessChecker(new User()),
             $this->archiveBuilder(),
         ))->download(10);
     }
 
-    private function accessChecker(): DocumentAccessChecker
+    public function testDownloadRejectsUnauthenticatedUser(): void
+    {
+        $vehicles = $this->createMock(VehicleRepository::class);
+        $vehicles->method('find')->with(10)->willReturn(new Vehicle());
+
+        $this->expectException(HttpException::class);
+        $this->expectExceptionMessage('Unauthenticated');
+
+        (new VehicleHistoryArchiveController(
+            $vehicles,
+            $this->accessChecker(null),
+            $this->archiveBuilder(),
+        ))->download(10);
+    }
+
+    private function accessChecker(?User $user): DocumentAccessChecker
     {
         $token = $this->createMock(TokenInterface::class);
-        $token->method('getUser')->willReturn(new User());
+        $token->method('getUser')->willReturn($user);
         $tokenStorage = $this->createMock(TokenStorageInterface::class);
         $tokenStorage->method('getToken')->willReturn($token);
         $authorizationChecker = $this->createMock(AuthorizationCheckerInterface::class);
-        $authorizationChecker->method('isGranted')->with('ROLE_ADMIN')->willReturn(true);
+        $authorizationChecker->method('isGranted')->with('ROLE_USER')->willReturn($user instanceof User);
 
         return new DocumentAccessChecker(
             new DocumentParentResolver(

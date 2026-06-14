@@ -1,11 +1,14 @@
 import { useEffect, useState } from "react"
-import { Link, useNavigate, useParams } from "react-router-dom"
-import { ArrowLeft, Info, Pencil, Trash2 } from "lucide-react"
+import { useNavigate, useParams } from "react-router-dom"
+import { Info } from "lucide-react"
 import { AxiosError } from "axios"
 
 import { deleteUser, getUser } from "@/api/users"
+import { DetailMetric } from "@/components/detail-metric"
+import { DetailPageActions } from "@/components/detail-page-actions"
 import { DocumentsPanel } from "@/components/documents-panel"
 import { ReadOnlyBadge } from "@/components/list-page-primitives"
+import { DetailPagePlaceholder } from "@/components/loading-placeholders"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { ConfirmDialog } from "@/components/ui/confirm-dialog"
@@ -18,6 +21,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { displayValue } from "@/lib/text-format"
+import { softDeleteDescription } from "@/lib/delete-description"
 import { userDisplayName } from "@/lib/user-utils"
 import { useAuthStore } from "@/stores/auth-store"
 import type { AppUser } from "@/types/user"
@@ -113,11 +117,7 @@ export default function UserDetailPage() {
   }
 
   if (isLoading) {
-    return (
-      <div className="text-sm text-muted-foreground">
-        Chargement de l’utilisateur...
-      </div>
-    )
+    return <DetailPagePlaceholder />
   }
 
   if (error && !user) {
@@ -136,7 +136,7 @@ export default function UserDetailPage() {
       <ConfirmDialog
         open={isDeleteOpen}
         title="Supprimer l’utilisateur ?"
-        description={deleteDescription(user)}
+        description={softDeleteDescription(userDisplayName(user))}
         confirmLabel="Supprimer"
         isLoading={isDeleting}
         onOpenChange={(open) => !isDeleting && setIsDeleteOpen(open)}
@@ -163,10 +163,10 @@ export default function UserDetailPage() {
             <CardTitle>Informations</CardTitle>
           </CardHeader>
           <CardContent className="grid gap-3 md:grid-cols-2">
-            <Metric label="Email" value={user.email} />
-            <Metric label="ID" value={String(user.id)} />
-            <Metric label="Prénom" value={displayValue(user.firstname)} />
-            <Metric label="Nom" value={displayValue(user.lastname)} />
+            <DetailMetric label="Email" value={user.email} />
+            <DetailMetric label="ID" value={String(user.id)} />
+            <DetailMetric label="Prénom" value={displayValue(user.firstname)} />
+            <DetailMetric label="Nom" value={displayValue(user.lastname)} />
           </CardContent>
         </Card>
 
@@ -175,14 +175,14 @@ export default function UserDetailPage() {
             <CardTitle>Adresse</CardTitle>
           </CardHeader>
           <CardContent className="grid gap-3 md:grid-cols-2">
-            <Metric label="Adresse" value={user.address?.line1 || "—"} />
-            <Metric label="Complément" value={user.address?.line2 || "—"} />
-            <Metric
+            <DetailMetric label="Adresse" value={user.address?.line1 || "—"} />
+            <DetailMetric label="Complément" value={user.address?.line2 || "—"} />
+            <DetailMetric
               label="Code postal"
               value={user.address?.postalCode || "—"}
             />
-            <Metric label="Ville" value={user.address?.city || "—"} />
-            <Metric label="Pays" value={user.address?.country || "—"} />
+            <DetailMetric label="Ville" value={user.address?.city || "—"} />
+            <DetailMetric label="Pays" value={user.address?.country || "—"} />
           </CardContent>
         </Card>
       </div>
@@ -225,26 +225,12 @@ function PageHeader({
       </div>
 
       <div className="flex flex-col gap-2 sm:flex-row">
-        <Button variant="outline" asChild>
-          <Link to="/users">
-            <ArrowLeft />
-            Retour
-          </Link>
-        </Button>
-        {canEdit && (
-          <Button asChild>
-            <Link to={editPath(user, isCurrentUser, isAdmin)}>
-              <Pencil />
-              {isCurrentUser && !isAdmin ? "Modifier mon profil" : "Modifier"}
-            </Link>
-          </Button>
-        )}
-        {isAdmin && (
-          <Button variant="destructive" onClick={onDelete}>
-            <Trash2 />
-            Supprimer
-          </Button>
-        )}
+        <DetailPageActions
+          backTo="/users"
+          editTo={canEdit ? editPath(user, isCurrentUser, isAdmin) : undefined}
+          editLabel={isCurrentUser && !isAdmin ? "Modifier mon profil" : "Modifier"}
+          onDelete={isAdmin ? onDelete : undefined}
+        />
       </div>
     </div>
   )
@@ -255,15 +241,6 @@ function CurrentUserBadge() {
     <span className="inline-flex">
       <span className={CURRENT_USER_BADGE_CLASS}>Vous</span>
     </span>
-  )
-}
-
-function Metric({ label, value }: Readonly<{ label: string; value: string }>) {
-  return (
-    <div className="rounded-lg border p-3">
-      <div className="text-xs text-muted-foreground">{label}</div>
-      <div className="mt-1 font-medium">{value}</div>
-    </div>
   )
 }
 
@@ -298,13 +275,6 @@ function ErrorMessage({ children }: Readonly<{ children: string }>) {
       {children}
     </div>
   )
-}
-
-function deleteDescription(user: AppUser) {
-  return [
-    `${userDisplayName(user)} sera masqué de la plateforme.`,
-    "Aucune donnée ne sera supprimée définitivement.",
-  ].join(" ")
 }
 
 function editPath(user: AppUser, isCurrentUser: boolean, isAdmin: boolean) {

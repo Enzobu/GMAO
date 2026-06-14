@@ -4,6 +4,7 @@ import AppLayout from "@/layouts/AppLayout"
 import AuthLayout from "@/layouts/AuthLayout"
 
 import LoginPage from "@/pages/login/LoginPage"
+import RequestResetPasswordPage from "@/pages/reset-password/RequestResetPasswordPage"
 import ResetPasswordPage from "@/pages/reset-password/ResetPasswordPage"
 import DashboardPage from "@/pages/dashboard/DashboardPage"
 import SettingsPage from "@/pages/settings/SettingsPage"
@@ -38,6 +39,10 @@ export const router = createBrowserRouter([
       {
         path: "/login",
         element: <LoginPage />,
+      },
+      {
+        path: "/reset-password/request",
+        element: <RequestResetPasswordPage />,
       },
       {
         path: "/reset-password/reset/:token",

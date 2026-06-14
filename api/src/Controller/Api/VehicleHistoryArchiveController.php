@@ -28,7 +28,7 @@ final class VehicleHistoryArchiveController extends AbstractController
             throw new NotFoundHttpException('Véhicule introuvable.');
         }
 
-        $this->accessChecker->denyUnlessCanManage($vehicle);
+        $this->accessChecker->denyUnlessUser();
         $archive = $this->archiveBuilder->build($vehicle);
         $response = new BinaryFileResponse($archive->path);
 

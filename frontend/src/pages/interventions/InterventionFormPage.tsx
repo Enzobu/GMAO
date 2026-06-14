@@ -12,6 +12,8 @@ import {
 } from "@/api/interventions"
 import { getParts } from "@/api/parts"
 import { getVehicle } from "@/api/vehicles"
+import { FormDocumentsField } from "@/components/form-documents-field"
+import { FormPagePlaceholder } from "@/components/loading-placeholders"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import {
@@ -34,6 +36,14 @@ import type {
 import type { Part } from "@/types/part"
 import type { Vehicle } from "@/types/vehicle"
 import { MIN_INPUT_DATETIME, MAX_INPUT_DATETIME } from "@/lib/date-limits"
+import {
+  createDocumentFileInput,
+  FILE_TOO_LARGE_MESSAGE,
+  hasTooLargeDocument,
+  selectedDocumentFiles,
+  type DocumentFileInput,
+  uploadParentDocuments,
+} from "@/lib/form-documents"
 import {
   INTERVENTION_STATUSES,
   vehicleDisplayName,
@@ -67,17 +77,23 @@ interface InterventionPartForm {
   notes: string
 }
 
+type InterventionFormState = typeof emptyForm
+
 export default function InterventionFormPage() {
   const { vehicleId, interventionId } = useParams()
   const navigate = useNavigate()
   const user = useAuthStore((state) => state.user)
   const isAdmin = user?.roles.includes("ROLE_ADMIN") ?? false
   const isEditing = Boolean(interventionId)
+  const showDocumentFields = !isEditing
   const [vehicle, setVehicle] = useState<Vehicle | null>(null)
   const [intervention, setIntervention] = useState<Intervention | null>(null)
   const [types, setTypes] = useState<ConfigurationItem[]>([])
   const [parts, setParts] = useState<Part[]>([])
   const [form, setForm] = useState(emptyForm)
+  const [documentFiles, setDocumentFiles] = useState<DocumentFileInput[]>([
+    createDocumentFileInput(),
+  ])
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -151,34 +167,15 @@ export default function InterventionFormPage() {
 
   async function save(forceMileage: boolean) {
     if (!vehicleId || !canEdit) return
-    if (!form.maintenanceTypeId) {
-      setError("Sélectionnez un type d’intervention.")
-      return
-    }
-    if (isCompleted && !form.finishedAt) {
-      setError("Saisissez la date de fin pour terminer l’intervention.")
-      return
-    }
-    if (isCompleted && !form.mileage) {
-      setError("Saisissez le kilométrage pour terminer l’intervention.")
-      return
-    }
-    if (form.parts.some((line) => !line.partId)) {
-      setError(
-        "Sélectionnez une pièce pour chaque ligne de pièces utilisées.",
-      )
-      return
-    }
-    if (
-      form.parts.some(
-        (line) => !compatibleParts.some(
-          (part) => String(part.id) === line.partId,
-        ),
-      )
-    ) {
-      setError(
-        "Une pièce sélectionnée n’est pas compatible avec ce véhicule.",
-      )
+    const validationError = validateSave(form, {
+      compatibleParts,
+      documentFiles,
+      isCompleted,
+      showDocumentFields,
+    })
+
+    if (validationError) {
+      setError(validationError)
       return
     }
 
@@ -189,6 +186,14 @@ export default function InterventionFormPage() {
       const saved = interventionId
         ? await updateIntervention(interventionId, payload, forceMileage)
         : await createIntervention(payload, forceMileage)
+
+      if (showDocumentFields) {
+        await uploadParentDocuments(
+          { type: "maintenances", id: saved.id },
+          selectedDocumentFiles(documentFiles),
+        )
+      }
+
       navigate(`/vehicles/${vehicleId}/interventions/${saved.id}`)
     } catch (error_) {
       if (isAxiosError(error_) && error_.response?.status === 409) {
@@ -263,11 +268,7 @@ export default function InterventionFormPage() {
   }
 
   if (isLoading) {
-    return (
-      <div className="text-sm text-muted-foreground">
-        Chargement du formulaire...
-      </div>
-    )
+    return <FormPagePlaceholder sections={4} />
   }
 
   if (error && isEditing && !intervention) {
@@ -493,6 +494,15 @@ export default function InterventionFormPage() {
           </CardContent>
         </Card>
 
+        {showDocumentFields && (
+          <FormDocumentsField
+            canEdit={canEdit}
+            documentFiles={documentFiles}
+            isSaving={isSaving}
+            setDocumentFiles={setDocumentFiles}
+          />
+        )}
+
         <InterventionFormActions
           cancelTo={interventionId
             ? `/vehicles/${vehicleId}/interventions/${interventionId}`
@@ -593,6 +603,56 @@ function errorMessage(error: unknown) {
       ?? "Impossible d’enregistrer l’intervention."
   }
   return "Impossible d’enregistrer l’intervention."
+}
+
+function validateSave(
+  form: InterventionFormState,
+  context: Readonly<{
+    compatibleParts: Part[]
+    documentFiles: DocumentFileInput[]
+    isCompleted: boolean
+    showDocumentFields: boolean
+  }>,
+) {
+  if (!form.maintenanceTypeId) {
+    return "Sélectionnez un type d’intervention."
+  }
+
+  if (context.isCompleted && !form.finishedAt) {
+    return "Saisissez la date de fin pour terminer l’intervention."
+  }
+
+  if (context.isCompleted && !form.mileage) {
+    return "Saisissez le kilométrage pour terminer l’intervention."
+  }
+
+  if (form.parts.some((line) => !line.partId)) {
+    return "Sélectionnez une pièce pour chaque ligne de pièces utilisées."
+  }
+
+  if (hasIncompatiblePart(form.parts, context.compatibleParts)) {
+    return "Une pièce sélectionnée n’est pas compatible avec ce véhicule."
+  }
+
+  if (
+    context.showDocumentFields
+    && hasTooLargeDocument(context.documentFiles)
+  ) {
+    return FILE_TOO_LARGE_MESSAGE
+  }
+
+  return null
+}
+
+function hasIncompatiblePart(
+  lines: InterventionPartForm[],
+  compatibleParts: Part[],
+) {
+  return lines.some(
+    (line) => !compatibleParts.some(
+      (part) => String(part.id) === line.partId,
+    ),
+  )
 }
 
 function partOptions(parts: Part[]) {

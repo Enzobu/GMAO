@@ -79,13 +79,13 @@ final class DocumentControllerTest extends TestCase
     public function testCreateStoresDocumentWithFallbackName(): void
     {
         $user = $this->withId(new User(), 10);
-        $file = $this->uploadedFile('facture.pdf');
+        $file = $this->uploadedFile('facture_entretien.pdf');
         $request = new Request(request: ['description' => ' Note '], files: ['file' => $file]);
         $manager = $this->createMock(DocumentManager::class);
         $manager->expects(self::once())
             ->method('createDocument')
-            ->with($user, $file, 'facture', 'Note')
-            ->willReturn((new Document())->setUser($user)->setName('facture'));
+            ->with($user, $file, 'Facture entretien.pdf', 'Note')
+            ->willReturn((new Document())->setUser($user)->setName('Facture entretien.pdf'));
 
         $response = $this->controller($this->entityManager(User::class, $user), user: $user, documentManager: $manager)->create('users', 10, $request);
 

@@ -1,10 +1,12 @@
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useState } from "react"
 import { isAxiosError } from "axios"
 import { Link, useParams } from "react-router-dom"
 import { Pencil, Play, Plus, CheckCircle2 } from "lucide-react"
 
-import { getInterventions, updateIntervention } from "@/api/interventions"
+import { emptyCollectionPage } from "@/api/api-collection"
+import { getInterventionsPage, updateIntervention } from "@/api/interventions"
 import { getVehicle } from "@/api/vehicles"
+import { ListPagePlaceholder } from "@/components/loading-placeholders"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -16,7 +18,11 @@ import {
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { NativeSelect } from "@/components/ui/native-select"
-import { PaginationControls } from "@/components/ui/pagination-controls"
+import {
+  itemsPerPageSize,
+  type ItemsPerPageValue,
+} from "@/components/list-page-pagination"
+import { ListPaginationControls } from "@/components/list-pagination-controls"
 import { useLocalStorageState } from "@/hooks/use-local-storage-state"
 import { useAuthStore } from "@/stores/auth-store"
 import type { Intervention } from "@/types/intervention"
@@ -35,8 +41,6 @@ import {
   MileageWarningDialog,
 } from "./components"
 
-type ItemsPerPageValue = "6" | "12" | "24" | "all"
-
 export default function InterventionsPage({
   vehicleScoped = false,
 }: Readonly<{ vehicleScoped?: boolean }>) {
@@ -45,6 +49,9 @@ export default function InterventionsPage({
   const isAdmin = user?.roles.includes("ROLE_ADMIN") ?? false
   const [vehicle, setVehicle] = useState<Vehicle | null>(null)
   const [interventions, setInterventions] = useState<Intervention[]>([])
+  const [interventionsPage, setInterventionsPage] = useState(
+    emptyCollectionPage<Intervention>(12),
+  )
   const [query, setQuery] = useState("")
   const [status, setStatus] = useState("")
   const [itemsPerPage, setItemsPerPage] =
@@ -70,18 +77,19 @@ export default function InterventionsPage({
         const { interventionData, vehicleData } = await loadPageData(
           vehicleScoped,
           vehicleId,
+          {
+            page,
+            itemsPerPage: itemsPerPageSize(itemsPerPage),
+            search: query,
+            status,
+          },
         )
 
         if (ignore) return
 
         setVehicle(vehicleData)
-        setInterventions(
-          vehicleId
-            ? interventionData.filter(
-              (item) => item.vehicle.id === Number(vehicleId),
-            )
-            : interventionData,
-        )
+        setInterventions(interventionData.items)
+        setInterventionsPage(interventionData)
       } catch {
         if (!ignore) setError("Impossible de charger les interventions.")
       } finally {
@@ -93,7 +101,7 @@ export default function InterventionsPage({
     return () => {
       ignore = true
     }
-  }, [vehicleId, vehicleScoped])
+  }, [itemsPerPage, page, query, status, vehicleId, vehicleScoped])
 
   const canEditVehicle = isAdmin || vehicle?.user.id === user?.id
 
@@ -133,16 +141,17 @@ export default function InterventionsPage({
       const { interventionData, vehicleData } = await loadPageData(
         vehicleScoped,
         vehicleId,
+        {
+          page,
+          itemsPerPage: itemsPerPageSize(itemsPerPage),
+          search: query,
+          status,
+        },
       )
 
       setVehicle(vehicleData)
-      setInterventions(
-        vehicleId
-          ? interventionData.filter(
-            (item) => item.vehicle.id === Number(vehicleId),
-          )
-          : interventionData,
-      )
+      setInterventions(interventionData.items)
+      setInterventionsPage(interventionData)
       setQuickAction(null)
       setMileageDialogOpen(false)
     } catch (error_) {
@@ -157,46 +166,8 @@ export default function InterventionsPage({
     }
   }
 
-  const filtered = useMemo(() => {
-    return interventions
-      .filter((item) => !status || item.status === status)
-      .filter((item) => {
-        const text = [
-          item.maintenanceType?.name ?? "",
-          item.vehicle?.registration ?? "",
-          item.notes ?? "",
-        ].join(" ").toLowerCase()
-        return text.includes(query.toLowerCase().trim())
-      })
-      .sort((a, b) => String(
-        b.finishedAt ?? b.startedAt ?? b.plannedAt ?? b.createdAt ?? "",
-      ).localeCompare(String(
-        a.finishedAt ?? a.startedAt ?? a.plannedAt ?? a.createdAt ?? "",
-      )))
-  }, [interventions, query, status])
-  const pageSize = itemsPerPage === "all"
-    ? filtered.length || 1
-    : Number(itemsPerPage)
-  const totalPages = itemsPerPage === "all"
-    ? 1
-    : Math.max(1, Math.ceil(filtered.length / pageSize))
-  const currentPage = Math.min(page, totalPages)
-  const visible = itemsPerPage === "all"
-    ? filtered
-    : filtered.slice((currentPage - 1) * pageSize, currentPage * pageSize)
-  const visibleStart = filtered.length === 0
-    ? 0
-    : (currentPage - 1) * pageSize + 1
-  const visibleEnd = itemsPerPage === "all"
-    ? filtered.length
-    : Math.min(currentPage * pageSize, filtered.length)
-
   if (isLoading) {
-    return (
-      <div className="text-sm text-muted-foreground">
-        Chargement des interventions...
-      </div>
-    )
+    return <ListPagePlaceholder filters={2} items={5} />
   }
 
   if (error) {
@@ -275,11 +246,22 @@ export default function InterventionsPage({
         />
       </div>
 
-      {visible.length === 0 ? (
+      <ListPaginationControls
+        itemLabel="intervention(s)"
+        pagination={interventionsPage}
+        itemsPerPage={itemsPerPage}
+        onItemsPerPageChange={(value) => {
+          setItemsPerPage(value)
+          setPage(1)
+        }}
+        onPageChange={setPage}
+      />
+
+      {interventions.length === 0 ? (
         <EmptyCard>Aucune intervention trouvée.</EmptyCard>
       ) : (
         <div className="space-y-3">
-          {visible.map((intervention) => {
+          {interventions.map((intervention) => {
             const detailPath = vehicleScoped
               ? `/vehicles/${vehicleId}/interventions/${intervention.id}`
               : `/interventions/${intervention.id}`
@@ -304,28 +286,15 @@ export default function InterventionsPage({
         </div>
       )}
 
-      <PaginationControls
-        currentPage={currentPage}
-        pageCount={totalPages}
-        totalItems={filtered.length}
-        visibleStart={visibleStart}
-        visibleEnd={visibleEnd}
+      <ListPaginationControls
+        itemLabel="intervention(s)"
+        pagination={interventionsPage}
         itemsPerPage={itemsPerPage}
-        itemsPerPageOptions={[
-          { value: "6", label: "6" },
-          { value: "12", label: "12" },
-          { value: "24", label: "24" },
-          { value: "all", label: "Tout" },
-        ]}
         onItemsPerPageChange={(value) => {
-          setItemsPerPage(value as ItemsPerPageValue)
+          setItemsPerPage(value)
           setPage(1)
         }}
-        onPreviousPage={() => setPage((current) => Math.max(1, current - 1))}
-        onNextPage={() => setPage(
-          (current) => Math.min(totalPages, current + 1),
-        )}
-        itemLabel="intervention(s)"
+        onPageChange={setPage}
       />
     </div>
   )
@@ -459,9 +428,21 @@ function toApiDateTime(value: string) {
   return value ? new Date(value).toISOString() : null
 }
 
-async function loadPageData(vehicleScoped: boolean, vehicleId?: string) {
+async function loadPageData(
+  vehicleScoped: boolean,
+  vehicleId: string | undefined,
+  params: Readonly<{
+    page: number
+    itemsPerPage: number
+    search: string
+    status: string
+  }>,
+) {
   const [interventionData, vehicleData] = await Promise.all([
-    getInterventions(),
+    getInterventionsPage({
+      ...params,
+      vehicleId: vehicleScoped ? vehicleId : undefined,
+    }),
     vehicleScoped && vehicleId ? getVehicle(vehicleId) : Promise.resolve(null),
   ])
 
