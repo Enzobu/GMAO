@@ -253,11 +253,21 @@ final readonly class ListQueryExtension implements QueryCollectionExtensionInter
             return;
         }
 
-        match ($this->string($params, 'editability')) {
+        $editability = $this->string($params, 'editability');
+
+        if ($editability === null || $editability === 'all') {
+            return;
+        }
+
+        match ($editability) {
             'editable' => $queryBuilder->andWhere($rootAlias.'.user = :list_current_user'),
             'readonly' => $queryBuilder->andWhere($rootAlias.'.user != :list_current_user'),
             default => null,
         };
+
+        if (!in_array($editability, ['editable', 'readonly'], true)) {
+            return;
+        }
 
         $queryBuilder->setParameter('list_current_user', $user);
     }
