@@ -150,9 +150,28 @@ final class ListQueryExtensionTest extends TestCase
         $this->apply(Vehicle::class, ['editability' => 'readonly'], false);
     }
 
+    public function testVehicleEditabilityAllDoesNotBindCurrentUser(): void
+    {
+        $queryBuilder = $this->queryBuilder();
+        $queryBuilder->expects(self::never())->method('setParameter');
+
+        $this->extension(['editability' => 'all'], false)->applyToCollection(
+            $queryBuilder,
+            $this->queryNameGenerator(),
+            Vehicle::class,
+        );
+    }
+
     public function testVehicleUnknownEditabilityIsIgnored(): void
     {
-        $this->apply(Vehicle::class, ['editability' => 'unknown'], false);
+        $queryBuilder = $this->queryBuilder();
+        $queryBuilder->expects(self::never())->method('setParameter');
+
+        $this->extension(['editability' => 'unknown'], false)->applyToCollection(
+            $queryBuilder,
+            $this->queryNameGenerator(),
+            Vehicle::class,
+        );
     }
 
     public function testUserEditabilityAllIsIgnored(): void
