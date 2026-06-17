@@ -79,11 +79,25 @@ services:
             dockerfile: ./Dockerfile.prod
             args:
                 VITE_API_URL: ${VITE_API_URL}
+                VITE_DOCS_URL: ${VITE_DOCS_URL}
         container_name: ${DOCKER_PROJECT_NAME}-front
         environment:
             VITE_API_URL: ${VITE_API_URL}
+            VITE_DOCS_URL: ${VITE_DOCS_URL}
         ports:
             - '${FRONT_PROD_PORT:-8080}:80'
+        restart: unless-stopped
+        networks:
+            - project_network
+    
+    documentation:
+        image: ${DOCKER_PROJECT_NAME}-documentation:prod
+        build:
+            context: ./docs
+            dockerfile: ./Dockerfile.prod
+        container_name: ${DOCKER_PROJECT_NAME}-documentation
+        ports:
+            - '${DOCS_PROD_PORT:-8081}:80'
         restart: unless-stopped
         networks:
             - project_network
