@@ -1,6 +1,7 @@
 import { useState } from "react"
 import {
   Bell,
+  BookOpen,
   CarFront,
   House,
   Menu,
@@ -58,6 +59,8 @@ const navigation = [
     path: "/users",
   },
 ]
+
+const documentationUrl = import.meta.env.VITE_DOCS_URL ?? "/docs/"
 
 export default function AppLayout() {
   const user = useAuthStore((state) => state.user)
@@ -262,6 +265,10 @@ function SidebarContent({ isAdmin, onNavigate }: SidebarContentProps) {
       </nav>
 
       <div className="border-t border-border p-4">
+        <SidebarExternalLink href={documentationUrl} onNavigate={onNavigate}>
+          Documentation
+        </SidebarExternalLink>
+
         <SidebarFooterLink to="/settings" onNavigate={onNavigate}>
           Paramètres
         </SidebarFooterLink>
@@ -312,6 +319,31 @@ type SidebarFooterLinkProps = Readonly<{
   onNavigate?: () => void
   className?: string
 }>
+
+type SidebarExternalLinkProps = Readonly<{
+  href: string
+  children: string
+  onNavigate?: () => void
+}>
+
+function SidebarExternalLink({
+  href,
+  children,
+  onNavigate,
+}: SidebarExternalLinkProps) {
+  return (
+    <Button
+      variant="ghost"
+      className="h-12 w-full justify-start rounded-xl"
+      asChild
+    >
+      <a href={href} target="_blank" rel="noreferrer" onClick={onNavigate}>
+        <BookOpen className="mr-3 h-4 w-4" />
+        {children}
+      </a>
+    </Button>
+  )
+}
 
 function SidebarFooterLink({
   to,
