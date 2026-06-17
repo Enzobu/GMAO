@@ -5,6 +5,7 @@ export default defineConfig({
   description: "Documentation utilisateur, administrateur et technique du projet GMAO.",
   lang: "fr-FR",
   cleanUrls: true,
+  head: [["link", { rel: "icon", type: "image/svg+xml", href: "/favicon.svg" }]],
   themeConfig: {
     logo: "/images/logo.svg",
     nav: [
