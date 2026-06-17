@@ -72,10 +72,6 @@ export default defineConfig({
           { text: "Glossaire", link: "/reference/glossaire" },
         ],
       },
-      {
-        text: "Changelog",
-        items: [{ text: "Versions", link: "/changelog/" }],
-      },
     ],
     search: {
       provider: "local",
