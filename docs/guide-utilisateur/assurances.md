@@ -19,6 +19,8 @@ La liste affiche :
 - la date de fin ;
 - la date de dernière mise à jour.
 
+![Liste des assurances](/images/captures/assurances-liste.png)
+
 ## Statut actif
 
 Une assurance est considérée comme active si :
@@ -43,12 +45,16 @@ Champs disponibles :
 - fréquence de paiement : mensuel ou annuel ;
 - documents, uniquement à la création.
 
+![Formulaire assurance](/images/captures/assurance-formulaire.png)
+
 ## Clôturer l'assurance active précédente
 
 Lors de l'ajout d'une nouvelle assurance, si une assurance active existe déjà
 pour le véhicule, l'application propose de la clôturer.
 
 Vous pouvez saisir la date de fin de l'assurance actuelle puis confirmer.
+
+![Clôture de l'assurance active](/images/captures/cloture-assurance-active.png)
 
 ## Modifier une assurance
 

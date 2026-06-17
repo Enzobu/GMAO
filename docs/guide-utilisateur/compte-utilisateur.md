@@ -3,6 +3,8 @@
 Votre compte est accessible depuis le menu utilisateur en haut à droite, via
 **Paramètres du profil**.
 
+![Page profil](/images/captures/profil.png)
+
 ## Informations personnelles
 
 La page profil permet de consulter et modifier :
@@ -56,3 +58,5 @@ couleurs.
 
 Le bouton de thème dans l'en-tête permet de basculer entre les modes clair,
 sombre et système.
+
+![Paramètres d'apparence](/images/captures/parametres-apparence.png)

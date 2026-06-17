@@ -9,6 +9,8 @@ passe.
 2. Saisissez votre mot de passe.
 3. Cliquez sur **Se connecter**.
 
+![Page de connexion](/images/captures/connexion.png)
+
 Après connexion, l'application ouvre le dashboard ou la page que vous tentiez de
 consulter avant d'être redirigé vers la connexion.
 
@@ -28,6 +30,8 @@ Reconnectez-vous pour reprendre votre navigation.
 5. Saisissez le nouveau mot de passe et sa confirmation.
 
 Le nouveau mot de passe doit contenir au moins 8 caractères.
+
+![Demande de réinitialisation du mot de passe](/images/captures/mot-de-passe-oublie.png)
 
 ## En cas d'échec
 

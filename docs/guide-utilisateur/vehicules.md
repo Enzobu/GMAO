@@ -33,6 +33,8 @@ Vous pouvez filtrer la liste par :
 
 Le bouton de réinitialisation remet tous les filtres à leur valeur par défaut.
 
+![Liste des véhicules](/images/captures/vehicules-liste.png)
+
 ## Statuts de véhicule
 
 Les statuts disponibles sont :
@@ -70,6 +72,8 @@ Les champs complémentaires permettent de renseigner :
 
 Les administrateurs peuvent aussi choisir le propriétaire du véhicule.
 
+![Formulaire véhicule](/images/captures/vehicule-formulaire.png)
+
 ## Modifier un véhicule
 
 Un véhicule peut être modifié par :
@@ -100,6 +104,8 @@ Depuis cette fiche, vous pouvez accéder aux listes détaillées :
 - **Voir les contrôles** ;
 - **Voir les interventions** ;
 - **Ajouter une intervention** si vous avez les droits.
+
+![Fiche véhicule](/images/captures/vehicule-detail.png)
 
 ## Télécharger l'historique
 

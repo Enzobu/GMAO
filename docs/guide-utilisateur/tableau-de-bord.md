@@ -5,6 +5,8 @@ Le dashboard est le point d'entrée principal après la connexion.
 Il donne une vue globale du parc automobile et aide à repérer les échéances à
 surveiller.
 
+![Tableau de bord](/images/captures/tableau-de-bord.png)
+
 ## Indicateurs
 
 La première ligne affiche quatre indicateurs :

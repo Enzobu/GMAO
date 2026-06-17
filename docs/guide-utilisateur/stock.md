@@ -18,6 +18,8 @@ Chaque carte de stock affiche :
 - le statut de stock ;
 - un badge **Lecture seule** pour les utilisateurs non administrateurs.
 
+![Liste du stock](/images/captures/stock-liste.png)
+
 ## Statuts de stock
 
 Les statuts sont calculés à partir de la quantité :
@@ -57,6 +59,8 @@ Champs disponibles :
 - véhicules compatibles ;
 - documents, uniquement à la création.
 
+![Formulaire stock](/images/captures/stock-formulaire.png)
+
 ## Ajouter de la quantité
 
 Depuis la liste, un administrateur peut cliquer sur **Ajouter stock**.
@@ -64,6 +68,8 @@ Depuis la liste, un administrateur peut cliquer sur **Ajouter stock**.
 La fenêtre indique le stock actuel et demande le nombre de pièces à ajouter.
 
 La quantité saisie doit être strictement positive.
+
+![Ajout de quantité au stock](/images/captures/ajout-stock-dialog.png)
 
 ## Fiche stock
 

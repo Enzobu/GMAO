@@ -18,6 +18,10 @@ La barre latérale permet d'accéder aux sections principales :
 
 Sur mobile, ouvrez le menu avec le bouton situé en haut à gauche.
 
+![Navigation principale desktop](/images/captures/navigation-sidebar.png)
+
+![Menu mobile ouvert](/images/captures/menu-mobile.png)
+
 ## En-tête
 
 L'en-tête contient :

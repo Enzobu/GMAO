@@ -21,6 +21,8 @@ Un panneau **Documents** est disponible sur :
 Si vous avez les droits, cliquez sur **Ajouter un document** dans le panneau
 Documents.
 
+![Panneau documents](/images/captures/documents-panneau.png)
+
 Champs disponibles :
 
 - fichier, obligatoire ;
@@ -64,6 +66,8 @@ Chaque document propose :
 
 Les PDF et images sont affichés directement dans l'aperçu. Les autres types de
 fichiers peuvent être ouverts dans un nouvel onglet ou téléchargés.
+
+![Aperçu document](/images/captures/document-apercu.png)
 
 ## Accès sécurisé
 

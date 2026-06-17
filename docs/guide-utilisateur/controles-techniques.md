@@ -18,6 +18,8 @@ La liste affiche :
 - la date limite de contre-visite ;
 - le centre de contrôle.
 
+![Liste des contrôles techniques](/images/captures/controles-techniques-liste.png)
+
 ## Résultats disponibles
 
 Les résultats possibles sont :
@@ -42,6 +44,8 @@ Champs disponibles :
 - centre, obligatoire ;
 - notes ;
 - documents, uniquement à la création.
+
+![Formulaire contrôle technique](/images/captures/controle-technique-formulaire.png)
 
 ## Dates calculées automatiquement
 

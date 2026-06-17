@@ -27,6 +27,8 @@ La liste affiche les interventions avec :
 - les prochaines échéances ;
 - les actions rapides selon le statut.
 
+![Liste des interventions](/images/captures/interventions-liste.png)
+
 ## Filtres
 
 Vous pouvez filtrer les interventions avec :
@@ -60,6 +62,8 @@ Champs disponibles :
 - notes ;
 - pièces utilisées ;
 - documents, uniquement à la création.
+
+![Formulaire intervention](/images/captures/intervention-formulaire.png)
 
 ## Démarrer rapidement une intervention
 
@@ -107,6 +111,8 @@ Si le kilométrage saisi entre en conflit avec le kilométrage connu du véhicul
 une alerte peut apparaître.
 
 Un administrateur peut forcer l'enregistrement si la valeur est volontaire.
+
+![Alerte kilométrage](/images/captures/alerte-kilometrage.png)
 
 ## Fiche intervention
 

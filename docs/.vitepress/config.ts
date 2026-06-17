@@ -32,7 +32,6 @@ export default defineConfig({
           { text: "Notifications", link: "/guide-utilisateur/notifications" },
           { text: "Compte utilisateur", link: "/guide-utilisateur/compte-utilisateur" },
           { text: "Problèmes fréquents", link: "/guide-utilisateur/problemes-frequents" },
-          { text: "Captures d'écran", link: "/guide-utilisateur/captures-ecran" },
         ],
       },
       {

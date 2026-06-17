@@ -17,6 +17,8 @@ Sur macOS, le raccourci `Cmd + K` fonctionne également.
 
 La recherche commence à partir de 2 caractères et affiche jusqu'à 12 résultats.
 
+![Recherche globale](/images/captures/recherche-globale.png)
+
 ## Catégories recherchées
 
 La recherche globale interroge :
