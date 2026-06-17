@@ -120,3 +120,5 @@ L'action **Supprimer** archive le véhicule. Elle ne supprime pas définitivemen
 les données.
 
 Cette action est réservée aux administrateurs.
+
+![Actions administrateur sur un véhicule](/images/captures/admin-vehicule-actions.png)

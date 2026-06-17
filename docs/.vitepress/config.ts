@@ -27,6 +27,7 @@ export default defineConfig({
           { text: "Contrôles techniques", link: "/guide-utilisateur/controles-techniques" },
           { text: "Interventions", link: "/guide-utilisateur/interventions" },
           { text: "Stock", link: "/guide-utilisateur/stock" },
+          { text: "Utilisateurs", link: "/guide-utilisateur/utilisateurs" },
           { text: "Documents", link: "/guide-utilisateur/documents" },
           { text: "Recherche et filtres", link: "/guide-utilisateur/recherche-et-filtres" },
           { text: "Notifications", link: "/guide-utilisateur/notifications" },
@@ -38,7 +39,6 @@ export default defineConfig({
         text: "Guide administrateur",
         items: [
           { text: "Vue d'ensemble", link: "/guide-administrateur/" },
-          { text: "Utilisateurs", link: "/guide-administrateur/utilisateurs" },
           { text: "Rôles et droits", link: "/guide-administrateur/roles-et-droits" },
           { text: "Paramètres", link: "/guide-administrateur/parametres" },
           { text: "Données et suppression", link: "/guide-administrateur/donnees-et-suppression" },

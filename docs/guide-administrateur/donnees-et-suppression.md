@@ -58,6 +58,8 @@ restaurées dans le stock.
 Un document archivé est masqué de la ressource. Le fichier n'est plus proposé
 dans le panneau Documents.
 
+![Actions administrateur sur les documents](/images/captures/admin-document-actions.png)
+
 ### Référentiels
 
 Un type de pièce ou un centre de contrôle peut être conservé sur les données

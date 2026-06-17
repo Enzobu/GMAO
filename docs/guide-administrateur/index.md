@@ -10,7 +10,6 @@ maintenance courantes.
 
 Un administrateur peut notamment :
 
-- créer, modifier et archiver des utilisateurs ;
 - attribuer ou retirer le rôle administrateur ;
 - gérer les référentiels métier utilisés dans les formulaires ;
 - gérer les lignes de stock ;
@@ -23,7 +22,6 @@ Un administrateur peut notamment :
 
 Les entrées principales sont :
 
-- **Utilisateurs** dans la barre latérale ;
 - **Configuration** en bas de la barre latérale ;
 - les actions d'administration visibles dans les fiches métier.
 
@@ -40,7 +38,6 @@ Le lien **Configuration** n'est affiché que pour les administrateurs.
 ## Parcours conseillé
 
 1. Lire [Rôles et droits](./roles-et-droits.md).
-2. Configurer les [utilisateurs](./utilisateurs.md).
-3. Maintenir les [paramètres](./parametres.md) métier.
-4. Comprendre la [suppression logique](./donnees-et-suppression.md).
-5. Appliquer les contrôles de [maintenance](./maintenance.md).
+2. Maintenir les [paramètres](./parametres.md) métier.
+3. Comprendre la [suppression logique](./donnees-et-suppression.md).
+4. Appliquer les contrôles de [maintenance](./maintenance.md).

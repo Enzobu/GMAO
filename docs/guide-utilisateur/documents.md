@@ -69,6 +69,8 @@ fichiers peuvent être ouverts dans un nouvel onglet ou téléchargés.
 
 ![Aperçu document](/images/captures/document-apercu.png)
 
+![Actions administrateur sur les documents](/images/captures/admin-document-actions.png)
+
 ## Accès sécurisé
 
 L'accès aux fichiers est authentifié.

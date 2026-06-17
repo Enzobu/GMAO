@@ -6,6 +6,8 @@ les véhicules.
 Les utilisateurs peuvent consulter le stock. Les administrateurs peuvent créer,
 modifier, supprimer et ajouter des quantités.
 
+![Actions administrateur sur le stock](/images/captures/admin-stock-actions.png)
+
 ## Liste du stock
 
 Chaque carte de stock affiche :

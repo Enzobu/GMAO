@@ -33,5 +33,6 @@ Quand une donnée est visible mais non modifiable, l'interface affiche un badge
 4. Consulter le [dashboard](./tableau-de-bord.md).
 5. Suivre les [véhicules](./vehicules.md), [interventions](./interventions.md),
    [assurances](./assurances.md) et [contrôles techniques](./controles-techniques.md).
-6. Utiliser le [stock](./stock.md) et les [documents](./documents.md).
+6. Utiliser le [stock](./stock.md), les [utilisateurs](./utilisateurs.md) et les
+   [documents](./documents.md).
 7. Mettre à jour son [compte utilisateur](./compte-utilisateur.md).
