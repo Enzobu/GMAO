@@ -19,6 +19,7 @@ function collectionItems<T>(data: ApiCollection<T>) {
 export async function getMaintenanceTypes() {
   const response = await api.get<ApiCollection<ConfigurationItem>>(
     "/maintenance_types",
+    { params: { pagination: false } },
   )
 
   return collectionItems(response.data)
@@ -53,6 +54,7 @@ export async function deleteMaintenanceType(id: number) {
 export async function getPartTypes() {
   const response = await api.get<ApiCollection<ConfigurationItem>>(
     "/part_types",
+    { params: { pagination: false } },
   )
 
   return collectionItems(response.data)
@@ -86,6 +88,7 @@ export async function getInspectionCentersConfiguration() {
     ApiCollection<InspectionCenterConfigurationItem>
   >(
     "/inspection_centers",
+    { params: { pagination: false } },
   )
 
   return collectionItems(response.data)

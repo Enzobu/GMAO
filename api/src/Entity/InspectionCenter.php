@@ -22,11 +22,15 @@ use App\Security\SecurityExpression;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Validator\Constraints as Assert;
 
 #[ApiResource(
     operations: [
-        new GetCollection(security: SecurityExpression::ROLE_USER),
+        new GetCollection(
+            security: SecurityExpression::ROLE_USER,
+            paginationEnabled: false,
+        ),
         new Get(security: SecurityExpression::ROLE_USER),
         new Post(security: SecurityExpression::ROLE_ADMIN),
         new Patch(security: SecurityExpression::ROLE_ADMIN),
@@ -37,6 +41,7 @@ use Symfony\Component\Validator\Constraints as Assert;
     processor: InspectionCenterStateProcessor::class,
 )]
 #[ORM\Entity(repositoryClass: InspectionCenterRepository::class)]
+#[UniqueEntity(fields: ['name'], message: 'Ce centre de contrôle technique existe déjà.')]
 class InspectionCenter
 {
     #[ORM\Id]
@@ -45,7 +50,7 @@ class InspectionCenter
     #[Groups(['inspection_center:read', 'vehicle_inspection:read', 'vehicle:read'])]
     private ?int $id = null;
 
-    #[ORM\Column(length: 255)]
+    #[ORM\Column(length: 255, unique: true)]
     #[Groups(['inspection_center:read', 'inspection_center:write', 'vehicle_inspection:read', 'vehicle:read'])]
     private ?string $name = null;
 

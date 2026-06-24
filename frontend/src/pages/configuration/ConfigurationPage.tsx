@@ -272,10 +272,11 @@ function InspectionCentersPanel() {
         upsertById(current, saved).sort(compareInspectionCenters)
       ))
       setFormItem(null)
-    } catch {
-      setError(
+    } catch (error_) {
+      setError(errorMessage(
+        error_,
         "Impossible d’enregistrer le centre. Vérifiez les champs saisis.",
-      )
+      ))
     } finally {
       setIsSaving(false)
     }
@@ -468,8 +469,11 @@ function ConfigurationResourcePanel({
 
       setItems((current) => upsertById(current, saved).sort(compareItems))
       setFormItem(null)
-    } catch {
-      setError("Impossible d’enregistrer. Vérifiez les champs saisis.")
+    } catch (error_) {
+      setError(errorMessage(
+        error_,
+        "Impossible d’enregistrer. Vérifiez les champs saisis.",
+      ))
     } finally {
       setIsSaving(false)
     }
@@ -1180,8 +1184,11 @@ function normalize(value: string) {
 
 function errorMessage(caught: unknown, fallback: string) {
   if (caught instanceof AxiosError) {
-    const detail = caught.response?.data?.detail
-      ?? caught.response?.data?.message
+    const data = caught.response?.data as ApiErrorResponse | undefined
+    const violationMessage = data?.violations
+      ?.map((violation) => violation.message)
+      .find((message) => message.length > 0)
+    const detail = violationMessage ?? data?.detail ?? data?.message
 
     if (typeof detail === "string") {
       return detail
@@ -1189,4 +1196,10 @@ function errorMessage(caught: unknown, fallback: string) {
   }
 
   return fallback
+}
+
+type ApiErrorResponse = {
+  detail?: string
+  message?: string
+  violations?: { message: string }[]
 }

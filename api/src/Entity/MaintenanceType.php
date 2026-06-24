@@ -23,10 +23,14 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 
 #[ApiResource(
     operations: [
-        new GetCollection(security: SecurityExpression::ROLE_USER),
+        new GetCollection(
+            security: SecurityExpression::ROLE_USER,
+            paginationEnabled: false,
+        ),
         new Get(security: SecurityExpression::ROLE_USER),
         new Post(security: SecurityExpression::ROLE_ADMIN),
         new Patch(security: SecurityExpression::ROLE_ADMIN),
@@ -37,6 +41,7 @@ use Doctrine\ORM\Mapping as ORM;
     processor: MaintenanceTypeStateProcessor::class,
 )]
 #[ORM\Entity(repositoryClass: MaintenanceTypeRepository::class)]
+#[UniqueEntity(fields: ['name'], message: 'Ce type d’entretien existe déjà.')]
 class MaintenanceType
 {
     #[ORM\Id]

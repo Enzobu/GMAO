@@ -2,10 +2,13 @@
 
 namespace App\Tests\Unit\Entity;
 
+use ApiPlatform\Metadata\ApiResource;
+use ApiPlatform\Metadata\GetCollection;
 use App\Entity\Address;
 use App\Entity\InspectionCenter;
 use App\Entity\VehicleInspection;
 use PHPUnit\Framework\TestCase;
+use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Validator\Validation;
 
 final class InspectionCenterTest extends TestCase
@@ -50,15 +53,54 @@ final class InspectionCenterTest extends TestCase
         self::assertSame($otherCenter, $inspection->getCenter());
     }
 
+    public function testNameMustBeUnique(): void
+    {
+        $uniqueEntityAttributes = (new \ReflectionClass(InspectionCenter::class))
+            ->getAttributes(UniqueEntity::class);
+
+        self::assertCount(1, $uniqueEntityAttributes);
+        $attribute = $uniqueEntityAttributes[0]->newInstance();
+
+        self::assertSame(['name'], $attribute->fields);
+        self::assertSame(
+            'Ce centre de contrôle technique existe déjà.',
+            $attribute->message,
+        );
+    }
+
+    public function testCollectionIsNotPaginated(): void
+    {
+        $resourceAttributes = (new \ReflectionClass(InspectionCenter::class))
+            ->getAttributes(ApiResource::class);
+
+        self::assertCount(1, $resourceAttributes);
+
+        foreach ($resourceAttributes[0]->newInstance()->getOperations() as $operation) {
+            if ($operation instanceof GetCollection) {
+                self::assertFalse($operation->getPaginationEnabled());
+
+                return;
+            }
+        }
+
+        self::fail('GetCollection operation not found.');
+    }
+
     public function testPhoneMustUseFrenchGroupedFormat(): void
     {
         $validator = Validation::createValidatorBuilder()
             ->enableAttributeMapping()
             ->getValidator();
 
-        self::assertCount(0, $validator->validate((new InspectionCenter())->setPhone('0485748596')));
+        self::assertCount(0, $validator->validateProperty(
+            (new InspectionCenter())->setPhone('0485748596'),
+            'phone',
+        ));
 
-        $violations = $validator->validate((new InspectionCenter())->setPhone('00 85 74 85 96'));
+        $violations = $validator->validateProperty(
+            (new InspectionCenter())->setPhone('00 85 74 85 96'),
+            'phone',
+        );
 
         self::assertCount(1, $violations);
         self::assertSame('phone', $violations[0]->getPropertyPath());
