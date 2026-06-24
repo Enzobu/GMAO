@@ -2,6 +2,8 @@
 
 namespace App\Tests\Unit\Entity;
 
+use ApiPlatform\Metadata\ApiResource;
+use ApiPlatform\Metadata\GetCollection;
 use App\Entity\Maintenance;
 use App\Entity\MaintenanceType;
 use PHPUnit\Framework\TestCase;
@@ -31,6 +33,24 @@ final class MaintenanceTypeTest extends TestCase
 
         self::assertSame(['name'], $attribute->fields);
         self::assertSame('Ce type d’entretien existe déjà.', $attribute->message);
+    }
+
+    public function testCollectionIsNotPaginated(): void
+    {
+        $resourceAttributes = (new \ReflectionClass(MaintenanceType::class))
+            ->getAttributes(ApiResource::class);
+
+        self::assertCount(1, $resourceAttributes);
+
+        foreach ($resourceAttributes[0]->newInstance()->getOperations() as $operation) {
+            if ($operation instanceof GetCollection) {
+                self::assertFalse($operation->getPaginationEnabled());
+
+                return;
+            }
+        }
+
+        self::fail('GetCollection operation not found.');
     }
 
     public function testMaintenanceRelationIsBidirectional(): void

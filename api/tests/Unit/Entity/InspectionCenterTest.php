@@ -2,6 +2,8 @@
 
 namespace App\Tests\Unit\Entity;
 
+use ApiPlatform\Metadata\ApiResource;
+use ApiPlatform\Metadata\GetCollection;
 use App\Entity\Address;
 use App\Entity\InspectionCenter;
 use App\Entity\VehicleInspection;
@@ -64,6 +66,24 @@ final class InspectionCenterTest extends TestCase
             'Ce centre de contrôle technique existe déjà.',
             $attribute->message,
         );
+    }
+
+    public function testCollectionIsNotPaginated(): void
+    {
+        $resourceAttributes = (new \ReflectionClass(InspectionCenter::class))
+            ->getAttributes(ApiResource::class);
+
+        self::assertCount(1, $resourceAttributes);
+
+        foreach ($resourceAttributes[0]->newInstance()->getOperations() as $operation) {
+            if ($operation instanceof GetCollection) {
+                self::assertFalse($operation->getPaginationEnabled());
+
+                return;
+            }
+        }
+
+        self::fail('GetCollection operation not found.');
     }
 
     public function testPhoneMustUseFrenchGroupedFormat(): void

@@ -27,7 +27,10 @@ use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 
 #[ApiResource(
     operations: [
-        new GetCollection(security: SecurityExpression::ROLE_USER),
+        new GetCollection(
+            security: SecurityExpression::ROLE_USER,
+            paginationEnabled: false,
+        ),
         new Get(security: SecurityExpression::ROLE_USER),
         new Post(security: SecurityExpression::ROLE_ADMIN),
         new Patch(security: SecurityExpression::ROLE_ADMIN),
