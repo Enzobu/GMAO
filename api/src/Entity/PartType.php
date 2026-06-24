@@ -23,6 +23,7 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 
 #[ApiResource(
     operations: [
@@ -37,6 +38,7 @@ use Doctrine\ORM\Mapping as ORM;
     processor: PartTypeStateProcessor::class,
 )]
 #[ORM\Entity(repositoryClass: PartTypeRepository::class)]
+#[UniqueEntity(fields: ['name'], message: 'Ce type de pièce existe déjà.')]
 class PartType
 {
     #[ORM\Id]

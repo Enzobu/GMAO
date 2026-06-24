@@ -23,6 +23,7 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 
 #[ApiResource(
     operations: [
@@ -37,6 +38,7 @@ use Doctrine\ORM\Mapping as ORM;
     processor: MaintenanceTypeStateProcessor::class,
 )]
 #[ORM\Entity(repositoryClass: MaintenanceTypeRepository::class)]
+#[UniqueEntity(fields: ['name'], message: 'Ce type d’entretien existe déjà.')]
 class MaintenanceType
 {
     #[ORM\Id]
