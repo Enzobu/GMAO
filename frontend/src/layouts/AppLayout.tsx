@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import {
   Bell,
   BookOpen,
@@ -18,7 +18,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { NavLink, Outlet } from "react-router-dom"
+import { NavLink, Outlet, useLocation } from "react-router-dom"
 import { Button } from "@/components/ui/button"
 import { Breadcrumbs } from "@/components/breadcrumbs"
 import { GlobalSearch } from "@/components/global-search"
@@ -67,6 +67,11 @@ export default function AppLayout() {
   const logout = useAuthStore((state) => state.logout)
   const isAdmin = user?.roles.includes("ROLE_ADMIN") ?? false
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const { pathname, search } = useLocation()
+
+  useEffect(() => {
+    globalThis.scrollTo({ top: 0, left: 0, behavior: "auto" })
+  }, [pathname, search])
 
   return (
     <div className="min-h-screen bg-background text-foreground">
