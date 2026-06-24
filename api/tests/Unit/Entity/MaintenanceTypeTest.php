@@ -5,6 +5,7 @@ namespace App\Tests\Unit\Entity;
 use App\Entity\Maintenance;
 use App\Entity\MaintenanceType;
 use PHPUnit\Framework\TestCase;
+use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 
 final class MaintenanceTypeTest extends TestCase
 {
@@ -18,6 +19,18 @@ final class MaintenanceTypeTest extends TestCase
         self::assertSame('Vidange', $type->getName());
         self::assertSame('Entretien moteur', $type->getDescription());
         self::assertTrue($type->isDeleted());
+    }
+
+    public function testNameMustBeUnique(): void
+    {
+        $uniqueEntityAttributes = (new \ReflectionClass(MaintenanceType::class))
+            ->getAttributes(UniqueEntity::class);
+
+        self::assertCount(1, $uniqueEntityAttributes);
+        $attribute = $uniqueEntityAttributes[0]->newInstance();
+
+        self::assertSame(['name'], $attribute->fields);
+        self::assertSame('Ce type d’entretien existe déjà.', $attribute->message);
     }
 
     public function testMaintenanceRelationIsBidirectional(): void
