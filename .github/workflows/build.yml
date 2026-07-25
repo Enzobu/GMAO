@@ -203,7 +203,7 @@ jobs:
     steps:
       - name: Deploy pre-prod
         run: |
-          HTTP_CODE=$(curl -sS -o /tmp/deploy-response.txt -w "%{http_code}" -X POST "https://dockploy-dev.enzo-palermo.com/api/compose.deploy" \
+          HTTP_CODE=$(curl -sS -o /tmp/deploy-response.txt -w "%{http_code}" -X POST "https://dokploy-dev.enzo-palermo.com/api/compose.deploy" \
             -H "accept: application/json" \
             -H "Content-Type: application/json" \
             -H "x-api-key: ${{ secrets.DOKPLOY_DEV_API_KEY }}" \
@@ -225,7 +225,7 @@ jobs:
     steps:
       - name: Deploy prod
         run: |
-          HTTP_CODE=$(curl -sS -o /tmp/deploy-response.txt -w "%{http_code}" -X POST "https://dockploy.enzo-palermo.com/api/compose.deploy" \
+          HTTP_CODE=$(curl -sS -o /tmp/deploy-response.txt -w "%{http_code}" -X POST "https://dokploy.enzo-palermo.com/api/compose.deploy" \
             -H "accept: application/json" \
             -H "Content-Type: application/json" \
             -H "x-api-key: ${{ secrets.DOKPLOY_PROD_API_KEY }}" \
