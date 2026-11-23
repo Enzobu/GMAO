@@ -3,7 +3,7 @@ import type { FormEvent } from "react"
 import { Link, useNavigate, useParams } from "react-router-dom"
 import { ArrowLeft, Save } from "lucide-react"
 
-import { createPart, getPart, updatePart } from "@/api/parts"
+import { createPart, getPart, getParts, updatePart } from "@/api/parts"
 import { getPartTypes } from "@/api/configuration"
 import { getVehicles } from "@/api/vehicles"
 import { FormDocumentsField } from "@/components/form-documents-field"
@@ -57,6 +57,8 @@ export default function PartFormPage() {
   const [isLoading, setIsLoading] = useState(isEditing)
   const [isSaving, setIsSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [conflicts, setConflicts] = useState<Part[]>([])
+  const [typeSearch, setTypeSearch] = useState("")
 
   useEffect(() => {
     let ignore = false
@@ -96,6 +98,20 @@ export default function PartFormPage() {
     }
 
     try {
+      const existingParts = await getParts()
+      const overlapping = existingParts.filter((part) => (
+        part.id !== Number(id)
+        && part.partType.id === Number(form.partTypeId)
+        && part.vehicles.some((vehicle) => (
+          form.vehicleIds.includes(String(vehicle.id))
+        ))
+      ))
+      setConflicts(overlapping)
+      if (overlapping.length > 0) {
+        setError("Ce type de pièce est déjà présent pour ce véhicule. Réapprovisionnez le stock existant.")
+        return
+      }
+
       const saved = id
         ? await updatePart(id, formToPayload(form))
         : await createPart(formToPayload(form))
@@ -155,6 +171,13 @@ export default function PartFormPage() {
       {error && (
         <div className={DESTRUCTIVE_MESSAGE_CLASS}>
           {error}
+          {conflicts.map((part) => (
+            <div key={part.id}>
+              <Link className="underline" to={`/parts/${part.id}`}>
+                Voir le stock existant : {part.partType.name}
+              </Link>
+            </div>
+          ))}
         </div>
       )}
 
@@ -164,6 +187,10 @@ export default function PartFormPage() {
             <CardTitle>Informations</CardTitle>
           </CardHeader>
           <CardContent className="grid gap-4 md:grid-cols-2">
+            <label className="grid gap-1.5 text-sm font-medium">
+              Rechercher un type
+              <Input value={typeSearch} onChange={(event) => setTypeSearch(event.target.value)} placeholder="Nom de la pièce..." />
+            </label>
             <NativeSelect
               label="Type de pièce"
               value={form.partTypeId}
@@ -174,7 +201,7 @@ export default function PartFormPage() {
                 }))
               }
               required
-              options={partTypes.map((type) => ({
+              options={partTypes.filter((type) => !typeSearch || type.name.toLocaleLowerCase("fr").includes(typeSearch.toLocaleLowerCase("fr")) || String(type.id) === form.partTypeId).map((type) => ({
                 value: String(type.id),
                 label: type.name,
               }))}
