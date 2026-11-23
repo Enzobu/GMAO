@@ -10,13 +10,11 @@ import { FILTER_GRID_WIDE_CLASS } from "@/components/list-page-classes"
 import {
   EmptyListCard,
   ListPageHeader,
-  ReadOnlyBadge,
   ResetFiltersButton,
   SearchField,
 } from "@/components/list-page-primitives"
 import { ListPagePlaceholder } from "@/components/loading-placeholders"
 import { PaginatedListSection } from "@/components/paginated-list-section"
-import { ResourceCard, ResourceMeta } from "@/components/resource-card"
 import {
   itemsPerPageSize,
   type ItemsPerPageValue,
@@ -42,7 +40,6 @@ import type { ConfigurationItem } from "@/types/configuration"
 import type { Part } from "@/types/part"
 import type { Vehicle } from "@/types/vehicle"
 import {
-  formatDateTime,
   partName,
   stockStatus,
   vehicleDisplayName,
@@ -68,6 +65,8 @@ export default function PartsPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [search, setSearch] = useState("")
+  const [debouncedSearch, setDebouncedSearch] = useState("")
+  const [view, setView] = useState<"vehicle" | "all">("vehicle")
   const [vehicleFilter, setVehicleFilter] = useState("all")
   const [partTypeFilter, setPartTypeFilter] = useState("all")
   const [stockFilter, setStockFilter] = useState<StockFilter>("all")
@@ -80,7 +79,14 @@ export default function PartsPage() {
   const [isDeleting, setIsDeleting] = useState(false)
 
   useEffect(() => {
+    const timer = setTimeout(() => setDebouncedSearch(search), 250)
+    return () => clearTimeout(timer)
+  }, [search])
+
+  useEffect(() => {
     let ignore = false
+    setIsLoading(true)
+    setError(null)
 
     async function load() {
       try {
@@ -102,6 +108,9 @@ export default function PartsPage() {
           setParts(partsData.items)
           setPartsPage(partsData)
           setVehicles(vehiclesData)
+          if (view === "vehicle" && vehicleFilter === "all" && vehiclesData[0]) {
+            setVehicleFilter(String(vehiclesData[0].id))
+          }
           setPartTypes(partTypesData)
         }
       } catch {
@@ -120,7 +129,7 @@ export default function PartsPage() {
     return () => {
       ignore = true
     }
-  }, [itemsPerPage, page, partTypeFilter, search, sort, stockFilter, vehicleFilter])
+  }, [debouncedSearch, itemsPerPage, page, partTypeFilter, sort, stockFilter, vehicleFilter, view])
 
   const hasActiveFilters =
     search ||
@@ -159,17 +168,6 @@ export default function PartsPage() {
     setSort("quantity-asc")
   }
 
-  if (isLoading) {
-    return <ListPagePlaceholder filters={5} />
-  }
-
-  if (error) {
-    return (
-      <div className={DESTRUCTIVE_MESSAGE_CLASS}>
-        {error}
-      </div>
-    )
-  }
 
   function renderPartsContent() {
     if (partsPage.totalItems === 0 && !hasActiveFilters) {
@@ -195,93 +193,28 @@ export default function PartsPage() {
         }}
         onPageChange={setPage}
       >
-        <div className="grid gap-4 xl:grid-cols-2">
-          {parts.map((part) => {
-            const status = stockStatus(part.quantity)
-
-            return (
-              <ResourceCard
-                key={part.id}
-                to={`/parts/${part.id}`}
-                ariaLabel={`Voir ${partName(part)}`}
-                className="flex h-full flex-col"
-                title={(
-                  <>
-                    <span>{partName(part)}</span>
-                    <Badge
-                      variant={status.variant}
-                      className={
-                        status.value === "low"
-                          ? LOW_STOCK_BADGE_CLASS
-                          : undefined
-                      }
-                    >
-                      {status.label}
-                    </Badge>
-                    {part.vehicles.length === 0 && (
-                      <Badge variant="destructive">
-                        Aucun véhicule compatible
-                      </Badge>
-                    )}
-                    {!isAdmin && <ReadOnlyBadge />}
-                  </>
-                )}
-                footer={isAdmin && (
-                  <>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setPartToStock(part)}
-                    >
-                      Ajouter stock
-                    </Button>
-                    <Button variant="outline" size="sm" asChild>
-                      <Link to={`/parts/${part.id}/edit`}>Modifier</Link>
-                    </Button>
-                    <Button
-                      variant="destructive"
-                      size="sm"
-                      onClick={() => setPartToDelete(part)}
-                    >
-                      <Trash2 />
-                      Supprimer
-                    </Button>
-                  </>
-                )}
-              >
-                  <ResourceMeta>
-                    <span>
-                      <strong className="text-foreground">Quantité</strong>
-                      {" "}
-                      {part.quantity}
-                    </span>
-                    <span>
-                      <strong className="text-foreground">Màj</strong>{" "}
-                      {formatDateTime(part.updatedAt)}
-                    </span>
-                  </ResourceMeta>
-                  {part.note && (
-                    <p className="line-clamp-2 text-sm text-muted-foreground">
-                      {part.note}
-                    </p>
-                  )}
-                  <div className="flex flex-wrap gap-2">
-                    {part.vehicles.length > 0 ? (
-                      part.vehicles.map((vehicle) => (
-                        <Badge key={vehicle.id} variant="outline">
-                          {vehicleDisplayName(vehicle)}
-                        </Badge>
-                      ))
-                    ) : (
-                      <span className="text-sm text-destructive">
-                        Cette pièce ne pourra être utilisée sur aucune
-                        intervention.
-                      </span>
-                    )}
-                  </div>
-              </ResourceCard>
-            )
-          })}
+        <div className="overflow-x-auto rounded-lg border">
+          <table className="w-full text-sm">
+            <thead className="bg-muted/50 text-left">
+              <tr className="border-b">
+                <th className="p-3 font-medium">Pièce</th>
+                <th className="p-3 font-medium">Véhicules</th>
+                <th className="p-3 text-right font-medium">Quantité</th>
+                <th className="p-3 text-right font-medium">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {parts.map((part) => (
+                <StockTableRow
+                  key={part.id}
+                  part={part}
+                  isAdmin={isAdmin}
+                  onAdd={() => setPartToStock(part)}
+                  onDelete={() => setPartToDelete(part)}
+                />
+              ))}
+            </tbody>
+          </table>
         </div>
       </PaginatedListSection>
     )
@@ -295,7 +228,7 @@ export default function PartsPage() {
         description={
           partToDelete
             ? `${partName(partToDelete)} sera masqué de la plateforme. ` +
-              "Aucune donnée ne sera supprimée définitivement."
+              "Un stock sans historique sera supprimé définitivement."
             : ""
         }
         confirmLabel="Supprimer"
@@ -326,6 +259,31 @@ export default function PartsPage() {
         addTo={isAdmin ? "/parts/new" : undefined}
         addLabel="Ajouter un stock"
       />
+
+      <div className="flex gap-2">
+        <Button
+          type="button"
+          variant={view === "vehicle" ? "default" : "outline"}
+          onClick={() => {
+            setView("vehicle")
+            setVehicleFilter(vehicles[0] ? String(vehicles[0].id) : "all")
+            setPage(1)
+          }}
+        >
+          Par véhicule
+        </Button>
+        <Button
+          type="button"
+          variant={view === "all" ? "default" : "outline"}
+          onClick={() => {
+            setView("all")
+            setVehicleFilter("all")
+            setPage(1)
+          }}
+        >
+          Vue globale
+        </Button>
+      </div>
 
       <Card>
         <CardContent className={FILTER_GRID_WIDE_CLASS}>
@@ -402,8 +360,72 @@ export default function PartsPage() {
         </CardContent>
       </Card>
 
-      {renderPartsContent()}
+      {error && <div className={DESTRUCTIVE_MESSAGE_CLASS}>{error}</div>}
+      {isLoading ? <ListPagePlaceholder filters={0} /> : renderPartsContent()}
     </div>
+  )
+}
+
+function StockTableRow({
+  part,
+  isAdmin,
+  onAdd,
+  onDelete,
+}: Readonly<{
+  part: Part
+  isAdmin: boolean
+  onAdd: () => void
+  onDelete: () => void
+}>) {
+  const status = stockStatus(part.quantity)
+
+  return (
+    <tr className="border-b last:border-0 hover:bg-muted/30">
+      <td className="p-3">
+        <Link to={`/parts/${part.id}`} className="font-medium hover:underline">
+          {partName(part)}
+        </Link>
+        {part.note && (
+          <p className="max-w-72 truncate text-xs text-muted-foreground">
+            {part.note}
+          </p>
+        )}
+      </td>
+      <td className="p-3">
+        <div className="flex max-w-96 flex-wrap gap-1">
+          {part.vehicles.map((vehicle) => (
+            <Badge key={vehicle.id} variant="outline">
+              {vehicleDisplayName(vehicle)}
+            </Badge>
+          ))}
+          {part.vehicles.length === 0 && <span>Aucun véhicule</span>}
+        </div>
+      </td>
+      <td className="p-3 text-right">
+        <span className="mr-2 font-medium tabular-nums">{part.quantity}</span>
+        <Badge variant={status.variant} className={status.value === "low"
+          ? LOW_STOCK_BADGE_CLASS
+          : undefined}>
+          {status.label}
+        </Badge>
+      </td>
+      <td className="p-3">
+        {isAdmin && (
+          <div className="flex justify-end gap-1">
+            <Button type="button" size="sm" variant="outline" onClick={onAdd}>
+              Ajouter
+            </Button>
+            <Button size="sm" variant="outline" asChild>
+              <Link to={`/parts/${part.id}/edit`}>Modifier</Link>
+            </Button>
+            <Button size="icon" variant="ghost" onClick={onDelete}
+              aria-label="Supprimer le stock">
+              <Trash2 />
+            </Button>
+          </div>
+        )}
+      </td>
+    </tr>
   )
 }
 
