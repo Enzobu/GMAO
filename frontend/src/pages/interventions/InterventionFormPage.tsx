@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState } from "react"
 import type { FormEvent } from "react"
 import { isAxiosError } from "axios"
 import { useNavigate, useParams } from "react-router-dom"
-import { Plus, Trash2 } from "lucide-react"
 
 import { getMaintenanceTypes } from "@/api/configuration"
 import {
@@ -25,6 +24,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { NativeSelect } from "@/components/ui/native-select"
+import { StockPartPicker } from "./StockPartPicker"
 import { Textarea } from "@/components/ui/textarea"
 import { useAuthStore } from "@/stores/auth-store"
 import type { ConfigurationItem } from "@/types/configuration"
@@ -156,6 +156,18 @@ export default function InterventionFormPage() {
     [parts, vehicle],
   )
 
+  const previousConsumption = useMemo(() => {
+    const totals: Record<string, number> = {}
+    if (!intervention?.finishedAt) return totals
+
+    for (const line of intervention.maintenanceParts ?? []) {
+      const id = partId(line.part)
+      totals[id] = (totals[id] ?? 0) + line.quantity
+    }
+
+    return totals
+  }, [intervention])
+
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     if (shouldAskStockRestore()) {
@@ -231,39 +243,6 @@ export default function InterventionFormPage() {
         : "",
       finishedAt: status === "completed" ? current.finishedAt : "",
       mileage: status === "completed" ? current.mileage : "",
-    }))
-  }
-
-  function addPartLine() {
-    setForm((current) => ({
-      ...current,
-      parts: [
-        ...current.parts,
-        {
-          partId: compatibleParts[0]
-            ? String(compatibleParts[0].id)
-            : "",
-          quantity: "1",
-          notes: "",
-        },
-      ],
-    }))
-  }
-
-  function updatePartLine(index: number, line: InterventionPartForm) {
-    setForm((current) => ({
-      ...current,
-      parts: current.parts.map((item, itemIndex) => itemIndex === index
-        ? line
-        : item,
-      ),
-    }))
-  }
-
-  function removePartLine(index: number) {
-    setForm((current) => ({
-      ...current,
-      parts: current.parts.filter((_, itemIndex) => itemIndex !== index),
     }))
   }
 
@@ -422,75 +401,17 @@ export default function InterventionFormPage() {
         </Card>
 
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
+          <CardHeader>
             <CardTitle>Pièces utilisées</CardTitle>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={addPartLine}
-              disabled={!canEdit || compatibleParts.length === 0}
-            >
-              <Plus />
-              Ajouter
-            </Button>
           </CardHeader>
-          <CardContent className="space-y-3">
-            {compatibleParts.length === 0 && (
-              <div className="text-sm text-destructive">
-                Aucune pièce compatible avec ce véhicule.
-              </div>
-            )}
-            {form.parts.length === 0 && (
-              <div className="text-sm text-muted-foreground">
-                Aucune pièce ajoutée.
-              </div>
-            )}
-            {form.parts.map((line, index) => (
-              <div
-                key={`${line.id ?? "new"}-${index}`}
-                className={
-                  "grid gap-3 rounded-lg border p-3 "
-                    + "md:grid-cols-[1fr_8rem_auto]"
-                }
-              >
-                <NativeSelect
-                  label="Pièce"
-                  value={line.partId}
-                  options={partOptions(
-                    partsForLine(compatibleParts, parts, line.partId),
-                  )}
-                  onChange={(event) => updatePartLine(index, {
-                    ...line,
-                    partId: event.target.value,
-                  })}
-                  required
-                  disabled={!canEdit}
-                />
-                <Field
-                  label="Quantité"
-                  type="number"
-                  min="1"
-                  value={line.quantity}
-                  onChange={(value) => updatePartLine(index, {
-                    ...line,
-                    quantity: value,
-                  })}
-                  required
-                  disabled={!canEdit}
-                />
-                <Button
-                  type="button"
-                  variant="destructive"
-                  className="self-end"
-                  onClick={() => removePartLine(index)}
-                  disabled={!canEdit}
-                >
-                  <Trash2 />
-                  Retirer
-                </Button>
-              </div>
-            ))}
+          <CardContent>
+            <StockPartPicker
+              parts={compatibleParts}
+              selected={form.parts}
+              previouslyConsumed={previousConsumption}
+              disabled={!canEdit}
+              onChange={(next) => updateField("parts", next)}
+            />
           </CardContent>
         </Card>
 
@@ -655,33 +576,8 @@ function hasIncompatiblePart(
   )
 }
 
-function partOptions(parts: Part[]) {
-  return parts.map((part) => ({
-    value: String(part.id),
-    label: `${part.partType.name} ・ stock ${part.quantity}`,
-  }))
-}
-
 function isPartCompatibleWithVehicle(part: Part, vehicleId: number) {
   return part.vehicles.some((vehicle) => vehicle.id === vehicleId)
-}
-
-function partsForLine(
-  compatibleParts: Part[],
-  allParts: Part[],
-  selectedPartId: string,
-) {
-  if (
-    !selectedPartId
-      || compatibleParts.some((part) => String(part.id) === selectedPartId)
-  ) {
-    return compatibleParts
-  }
-
-  const selectedPart = allParts.find(
-    (part) => String(part.id) === selectedPartId,
-  )
-  return selectedPart ? [selectedPart, ...compatibleParts] : compatibleParts
 }
 
 function StockRestoreDialog({
