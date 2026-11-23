@@ -32,6 +32,14 @@ final readonly class MaintenanceStateProcessor implements ProcessorInterface
             return null;
         }
 
+        return $this->entityManager->wrapInTransaction(
+            fn (): ?Maintenance => $this->processMaintenance($data, $operation, $context),
+        );
+    }
+
+    /** @param array<string, mixed> $context */
+    private function processMaintenance(Maintenance $data, Operation $operation, array $context): ?Maintenance
+    {
         $this->denyUnlessAllowed($data, $operation);
 
         $previousMaintenance = $context['previous_data'] ?? null;
@@ -200,9 +208,11 @@ final readonly class MaintenanceStateProcessor implements ProcessorInterface
 
             $part = $this->entityManager->find(\App\Entity\Part::class, $partId);
             if ($part === null) {
-                continue;
+                throw new ConflictHttpException('La pièce sélectionnée est introuvable.');
             }
 
+            $this->entityManager->lock($part, \Doctrine\DBAL\LockMode::PESSIMISTIC_WRITE);
+            $this->entityManager->refresh($part);
             $newQuantity = ($part->getQuantity() ?? 0) - $delta;
             if ($newQuantity < 0) {
                 throw new ConflictHttpException(sprintf('Stock insuffisant pour %s.', $part->getPartType()?->getName() ?? 'la pièce sélectionnée'));
