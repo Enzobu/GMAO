@@ -126,7 +126,7 @@ export default function PartsPage() {
     return () => {
       ignore = true
     }
-  }, [debouncedSearch, itemsPerPage, page, partTypeFilter, sort, stockFilter, vehicleFilter, view])
+  }, [debouncedSearch, itemsPerPage, page, partTypeFilter, requestKey, sort, stockFilter, vehicleFilter, view])
 
   const hasActiveFilters =
     search ||
