@@ -379,6 +379,41 @@ final class MaintenanceStateProcessorTest extends TestCase
         );
     }
 
+    public function testMultiPartFailureDoesNotFlushPartialMovements(): void
+    {
+        $vehicle = new Vehicle();
+        $this->setId($vehicle, 1);
+
+        $first = (new Part())->setQuantity(2)->addVehicle($vehicle);
+        $second = (new Part())->setQuantity(0)->addVehicle($vehicle);
+        $this->setId($first, 10);
+        $this->setId($second, 20);
+
+        $maintenance = (new Maintenance())
+            ->setVehicle($vehicle)
+            ->setStatus(MaintenanceStatusEnum::Completed)
+            ->setFinishedAt(new \DateTimeImmutable())
+            ->setMileage(1500)
+            ->addMaintenancePart((new MaintenancePart())->setPart($first)->setQuantity(1))
+            ->addMaintenancePart((new MaintenancePart())->setPart($second)->setQuantity(1));
+
+        $em = $this->createMock(EntityManagerInterface::class);
+        $em->method('find')->willReturnCallback(
+            static fn (string $class, int $id): ?Part => [
+                10 => $first,
+                20 => $second,
+            ][$id] ?? null,
+        );
+        $em->expects(self::exactly(2))
+            ->method('lock');
+        $em->expects(self::never())->method('flush');
+
+        $this->expectException(ConflictHttpException::class);
+        $this->expectExceptionMessage('Stock insuffisant');
+
+        $this->processor($em)->process($maintenance, new Post());
+    }
+
     public function testStockAdjustmentsLockPartsInStableOrder(): void
     {
         $vehicle = new Vehicle();
