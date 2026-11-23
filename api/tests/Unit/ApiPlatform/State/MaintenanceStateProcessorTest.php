@@ -272,7 +272,8 @@ final class MaintenanceStateProcessorTest extends TestCase
             ->setFinishedAt(new \DateTimeImmutable())
             ->setMileage(1800)
             ->addMaintenancePart((new MaintenancePart())->setPart($part)->setQuantity(2));
-        $maintenance = new Maintenance();
+        $maintenance = clone $previousMaintenance;
+        $this->setId($maintenance, 30);
         $em = $this->createMock(EntityManagerInterface::class);
         $em->method('find')->with(Part::class, 10)->willReturn($part);
         $em->expects(self::exactly(2))->method('flush');
@@ -335,13 +336,17 @@ final class MaintenanceStateProcessorTest extends TestCase
             ->setStatus(MaintenanceStatusEnum::Completed)
             ->setFinishedAt(new \DateTimeImmutable())
             ->addMaintenancePart((new MaintenancePart())->setPart($part)->setQuantity(2));
+        $this->setId($maintenance, 30);
         $previous = clone $maintenance;
 
         $em = $this->createMock(EntityManagerInterface::class);
         $em->method('find')->with(Part::class, 10)->willReturn($part);
-        $em->expects(self::once())->method('lock')
-            ->with($part, \Doctrine\DBAL\LockMode::PESSIMISTIC_WRITE);
-        $em->expects(self::once())->method('refresh')->with($part);
+        $locked = [];
+        $em->expects(self::exactly(2))->method('lock')
+            ->willReturnCallback(static function (object $entity) use (&$locked): void {
+                $locked[] = $entity::class;
+            });
+        $em->expects(self::exactly(2))->method('refresh');
 
         $this->processor($em)->process(
             $maintenance,
@@ -351,6 +356,7 @@ final class MaintenanceStateProcessorTest extends TestCase
 
         self::assertTrue($maintenance->isDeleted());
         self::assertSame(2, $part->getQuantity());
+        self::assertSame([Maintenance::class, Part::class], $locked);
     }
 
     public function testDeletingPreviouslyDeletedMaintenanceDoesNotRestoreStockAgain(): void
