@@ -30,6 +30,11 @@ export function FilterSelect({
   const [query, setQuery] = useState("")
   const labelId = useId()
   const selected = options.find((option) => option.value === value)
+  const longestLabel = options.reduce(
+    (length, option) => Math.max(length, option.label.length),
+    0,
+  )
+  const contentWidth = `min(26rem, calc(100vw - 2rem), max(var(--radix-popover-trigger-width), ${longestLabel + 5}ch))`
   const filteredOptions = useMemo(() => {
     const search = query.trim().toLocaleLowerCase("fr")
     return options.filter((option) => (
@@ -68,9 +73,9 @@ export function FilterSelect({
           <PopoverPrimitive.Content
             align="start"
             sideOffset={4}
+            style={{ width: contentWidth }}
             className={cn(
-              "z-50 w-fit min-w-[var(--radix-popover-trigger-width)]",
-              "max-w-[min(26rem,calc(100vw-2rem))] rounded-lg border",
+              "z-50 rounded-lg border",
               "bg-popover p-1 text-popover-foreground shadow-md",
             )}
           >
@@ -95,7 +100,7 @@ export function FilterSelect({
                   variant="ghost"
                   aria-pressed={option.value === value}
                   className={cn(
-                    "h-auto min-h-8 w-fit min-w-full max-w-full justify-start px-2 py-1.5",
+                    "h-auto min-h-8 w-full justify-start px-2 py-1.5",
                     "text-left font-normal whitespace-normal",
                     option.value === value && "bg-accent text-accent-foreground",
                   )}
