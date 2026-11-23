@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react"
 import { Link } from "react-router-dom"
-import { Trash2 } from "lucide-react"
 
 import { emptyCollectionPage } from "@/api/api-collection"
 import { deletePart, getPartsPage, updatePartQuantity } from "@/api/parts"
@@ -20,7 +19,6 @@ import {
   type ItemsPerPageValue,
 } from "@/components/list-page-pagination"
 import { LabelText } from "@/components/page-primitives"
-import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { ConfirmDialog } from "@/components/ui/confirm-dialog"
@@ -35,6 +33,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { NativeSelect } from "@/components/ui/native-select"
 import { useLocalStorageState } from "@/hooks/use-local-storage-state"
+import { StockTableRow } from "./StockTableRow"
 import { useAuthStore } from "@/stores/auth-store"
 import type { ConfigurationItem } from "@/types/configuration"
 import type { Part } from "@/types/part"
@@ -363,69 +362,6 @@ export default function PartsPage() {
       {error && <div className={DESTRUCTIVE_MESSAGE_CLASS}>{error}</div>}
       {isLoading ? <ListPagePlaceholder filters={0} /> : renderPartsContent()}
     </div>
-  )
-}
-
-function StockTableRow({
-  part,
-  isAdmin,
-  onAdd,
-  onDelete,
-}: Readonly<{
-  part: Part
-  isAdmin: boolean
-  onAdd: () => void
-  onDelete: () => void
-}>) {
-  const status = stockStatus(part.quantity)
-
-  return (
-    <tr className="border-b last:border-0 hover:bg-muted/30">
-      <td className="p-3">
-        <Link to={`/parts/${part.id}`} className="font-medium hover:underline">
-          {partName(part)}
-        </Link>
-        {part.note && (
-          <p className="max-w-72 truncate text-xs text-muted-foreground">
-            {part.note}
-          </p>
-        )}
-      </td>
-      <td className="p-3">
-        <div className="flex max-w-96 flex-wrap gap-1">
-          {part.vehicles.map((vehicle) => (
-            <Badge key={vehicle.id} variant="outline">
-              {vehicleDisplayName(vehicle)}
-            </Badge>
-          ))}
-          {part.vehicles.length === 0 && <span>Aucun véhicule</span>}
-        </div>
-      </td>
-      <td className="p-3 text-right">
-        <span className="mr-2 font-medium tabular-nums">{part.quantity}</span>
-        <Badge variant={status.variant} className={status.value === "low"
-          ? LOW_STOCK_BADGE_CLASS
-          : undefined}>
-          {status.label}
-        </Badge>
-      </td>
-      <td className="p-3">
-        {isAdmin && (
-          <div className="flex justify-end gap-1">
-            <Button type="button" size="sm" variant="outline" onClick={onAdd}>
-              Ajouter
-            </Button>
-            <Button size="sm" variant="outline" asChild>
-              <Link to={`/parts/${part.id}/edit`}>Modifier</Link>
-            </Button>
-            <Button size="icon" variant="ghost" onClick={onDelete}
-              aria-label="Supprimer le stock">
-              <Trash2 />
-            </Button>
-          </div>
-        )}
-      </td>
-    </tr>
   )
 }
 
