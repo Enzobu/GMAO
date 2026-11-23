@@ -97,7 +97,7 @@ export default function InterventionFormPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [restoreDialogOpen, setRestoreDialogOpen] = useState(false)
+  const [stockDialogOpen, setStockDialogOpen] = useState(false)
   const [mileageDialogOpen, setMileageDialogOpen] = useState(false)
   const [mileageMessage, setMileageMessage] = useState("")
 
@@ -168,10 +168,41 @@ export default function InterventionFormPage() {
     return totals
   }, [intervention])
 
+  const stockMovements = useMemo(() => {
+    const next: Record<string, number> = {}
+    if (form.status === "completed" && form.finishedAt) {
+      for (const line of form.parts) {
+        next[line.partId] = (next[line.partId] ?? 0) + Number(line.quantity)
+      }
+    }
+
+    const ids = new Set([
+      ...Object.keys(previousConsumption),
+      ...Object.keys(next),
+    ])
+    return [...ids].map((id) => ({
+      id,
+      delta: (next[id] ?? 0) - (previousConsumption[id] ?? 0),
+      name: parts.find((part) => String(part.id) === id)?.partType.name
+        ?? `Pièce #${id}`,
+    })).filter((movement) => movement.delta !== 0)
+  }, [form.parts, form.status, form.finishedAt, previousConsumption, parts])
+
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
-    if (shouldAskStockRestore()) {
-      setRestoreDialogOpen(true)
+    const validationError = validateSave(form, {
+      compatibleParts,
+      documentFiles,
+      isCompleted,
+      showDocumentFields,
+      previouslyConsumed: previousConsumption,
+    })
+    if (validationError) {
+      setError(validationError)
+      return
+    }
+    if (stockMovements.length > 0) {
+      setStockDialogOpen(true)
       return
     }
     await save(false)
@@ -184,6 +215,7 @@ export default function InterventionFormPage() {
       documentFiles,
       isCompleted,
       showDocumentFields,
+      previouslyConsumed: previousConsumption,
     })
 
     if (validationError) {
@@ -219,14 +251,6 @@ export default function InterventionFormPage() {
     }
   }
 
-  function shouldAskStockRestore() {
-    return Boolean(
-      intervention?.finishedAt
-        && (!isCompleted || !form.finishedAt)
-        && intervention.maintenanceParts?.length,
-    )
-  }
-
   function updateField<K extends keyof typeof emptyForm>(
     field: K,
     value: (typeof emptyForm)[K],
@@ -256,12 +280,13 @@ export default function InterventionFormPage() {
 
   return (
     <div className="space-y-6">
-      <StockRestoreDialog
-        open={restoreDialogOpen}
+      <StockMovementDialog
+        open={stockDialogOpen}
         isLoading={isSaving}
-        onOpenChange={setRestoreDialogOpen}
+        movements={stockMovements}
+        onOpenChange={setStockDialogOpen}
         onConfirm={() => {
-          setRestoreDialogOpen(false)
+          setStockDialogOpen(false)
           void save(false)
         }}
       />
@@ -533,6 +558,7 @@ function validateSave(
     documentFiles: DocumentFileInput[]
     isCompleted: boolean
     showDocumentFields: boolean
+    previouslyConsumed: Record<string, number>
   }>,
 ) {
   if (!form.maintenanceTypeId) {
@@ -553,6 +579,22 @@ function validateSave(
 
   if (hasIncompatiblePart(form.parts, context.compatibleParts)) {
     return "Une pièce sélectionnée n’est pas compatible avec ce véhicule."
+  }
+
+  if (new Set(form.parts.map((line) => line.partId)).size !== form.parts.length) {
+    return "Une pièce ne peut être utilisée qu’une seule fois."
+  }
+
+  for (const line of form.parts) {
+    const part = context.compatibleParts.find(
+      (item) => String(item.id) === line.partId,
+    )
+    const quantity = Number(line.quantity)
+    const maximum = (part?.quantity ?? 0)
+      + (context.previouslyConsumed[line.partId] ?? 0)
+    if (!Number.isInteger(quantity) || quantity < 1 || quantity > maximum) {
+      return "La quantité demandée dépasse le stock disponible."
+    }
   }
 
   if (
@@ -580,27 +622,35 @@ function isPartCompatibleWithVehicle(part: Part, vehicleId: number) {
   return part.vehicles.some((vehicle) => vehicle.id === vehicleId)
 }
 
-function StockRestoreDialog({
+function StockMovementDialog({
   open,
   isLoading,
   onOpenChange,
   onConfirm,
+  movements,
 }: Readonly<{
   open: boolean
   isLoading: boolean
   onOpenChange: (open: boolean) => void
   onConfirm: () => void
+  movements: { id: string; name: string; delta: number }[]
 }>) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Restaurer les pièces en stock ?</DialogTitle>
+          <DialogTitle>Confirmer les mouvements de stock</DialogTitle>
           <DialogDescription>
-            Vous retirez la date de réalisation. Les pièces consommées par
-            cette intervention seront restaurées en stock.
+            Ces quantités seront ajustées lors de l’enregistrement.
           </DialogDescription>
         </DialogHeader>
+        <ul className="space-y-1 text-sm">
+          {movements.map((movement) => (
+            <li key={movement.id}>
+              {movement.name} : {movement.delta > 0 ? "-" : "+"}{Math.abs(movement.delta)}
+            </li>
+          ))}
+        </ul>
         <DialogFooter>
           <Button
             variant="outline"
