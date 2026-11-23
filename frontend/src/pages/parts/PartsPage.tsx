@@ -40,16 +40,12 @@ import type { Part } from "@/types/part"
 import type { Vehicle } from "@/types/vehicle"
 import {
   partName,
-  stockStatus,
   vehicleDisplayName,
 } from "@/lib/part-utils"
 
 type SortValue = "name" | "quantity-asc" | "quantity-desc" | "updated-desc"
 type StockFilter = "all" | "ok" | "low" | "out"
 
-const LOW_STOCK_BADGE_CLASS =
-  "border-amber-500/30 bg-amber-500/10 text-amber-700 " +
-  "dark:text-amber-300"
 const DESTRUCTIVE_MESSAGE_CLASS =
   "rounded-lg border border-destructive/30 bg-destructive/10 p-4 " +
   "text-sm text-destructive"
