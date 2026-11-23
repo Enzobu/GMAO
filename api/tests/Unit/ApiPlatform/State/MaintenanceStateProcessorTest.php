@@ -147,6 +147,45 @@ final class MaintenanceStateProcessorTest extends TestCase
         $this->processor(security: $this->adminSecurity())->process($maintenance, new Post());
     }
 
+    public function testRejectsDuplicatePartLines(): void
+    {
+        $vehicle = new Vehicle();
+        $this->setId($vehicle, 1);
+        $part = (new Part())->setQuantity(4)->addVehicle($vehicle);
+        $this->setId($part, 10);
+        $maintenance = (new Maintenance())
+            ->setVehicle($vehicle)
+            ->setStatus(MaintenanceStatusEnum::Completed)
+            ->setFinishedAt(new \DateTimeImmutable())
+            ->setMileage(1500)
+            ->addMaintenancePart((new MaintenancePart())->setPart($part)->setQuantity(1))
+            ->addMaintenancePart((new MaintenancePart())->setPart($part)->setQuantity(1));
+
+        $this->expectException(BadRequestHttpException::class);
+        $this->expectExceptionMessage('une seule fois');
+
+        $this->processor(security: $this->adminSecurity())->process($maintenance, new Post());
+    }
+
+    public function testRejectsZeroQuantity(): void
+    {
+        $vehicle = new Vehicle();
+        $this->setId($vehicle, 1);
+        $part = (new Part())->setQuantity(4)->addVehicle($vehicle);
+        $this->setId($part, 10);
+        $maintenance = (new Maintenance())
+            ->setVehicle($vehicle)
+            ->setStatus(MaintenanceStatusEnum::Completed)
+            ->setFinishedAt(new \DateTimeImmutable())
+            ->setMileage(1500)
+            ->addMaintenancePart((new MaintenancePart())->setPart($part)->setQuantity(0));
+
+        $this->expectException(BadRequestHttpException::class);
+        $this->expectExceptionMessage('strictement positive');
+
+        $this->processor(security: $this->adminSecurity())->process($maintenance, new Post());
+    }
+
     public function testCompletedMaintenanceRejectsInsufficientStock(): void
     {
         $vehicle = new Vehicle();
