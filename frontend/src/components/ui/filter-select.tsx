@@ -69,7 +69,8 @@ export function FilterSelect({
             align="start"
             sideOffset={4}
             className={cn(
-              "z-50 w-(--radix-popover-trigger-width) rounded-lg border",
+              "z-50 w-[min(26rem,calc(100vw-2rem))] rounded-lg border",
+              "min-w-[var(--radix-popover-trigger-width)]",
               "bg-popover p-1 text-popover-foreground shadow-md",
             )}
           >
@@ -92,10 +93,10 @@ export function FilterSelect({
                   key={option.value}
                   type="button"
                   variant="ghost"
-                  className="h-8 w-full justify-between gap-2 px-2 text-left font-normal"
+                  className="h-auto min-h-8 w-full justify-between gap-2 px-2 py-1.5 text-left font-normal whitespace-normal"
                   onClick={() => selectOption(option.value)}
                 >
-                  <span className="min-w-0 truncate">{option.label}</span>
+                  <span className="min-w-0 break-words text-left">{option.label}</span>
                   {option.value === value && <Check className="size-4 shrink-0" />}
                 </Button>
               ))}
