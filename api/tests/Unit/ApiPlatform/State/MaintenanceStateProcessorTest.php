@@ -289,6 +289,38 @@ final class MaintenanceStateProcessorTest extends TestCase
         self::assertSame(5, $part->getQuantity());
     }
 
+    public function testEditingCompletedMaintenanceDebitsOnlyAdditionalQuantity(): void
+    {
+        $vehicle = new Vehicle();
+        $this->setId($vehicle, 1);
+        $part = (new Part())->setQuantity(3)->addVehicle($vehicle);
+        $this->setId($part, 10);
+        $line = (new MaintenancePart())->setPart($part)->setQuantity(1);
+        $maintenance = (new Maintenance())
+            ->setVehicle($vehicle)
+            ->setStatus(MaintenanceStatusEnum::Completed)
+            ->setFinishedAt(new \DateTimeImmutable())
+            ->setMileage(1000)
+            ->addMaintenancePart($line);
+        $this->setId($maintenance, 20);
+
+        $previous = clone $maintenance;
+        $line->setQuantity(2);
+
+        $manager = $this->createMock(EntityManagerInterface::class);
+        $manager->method('find')->with(Part::class, 10)->willReturn($part);
+        $manager->expects(self::once())->method('flush');
+
+        $result = $this->processor($manager, $this->adminSecurity())->process(
+            $maintenance,
+            new Patch(),
+            context: ['previous_data' => $previous],
+        );
+
+        self::assertSame($maintenance, $result);
+        self::assertSame(2, $part->getQuantity());
+    }
+
     public function testPreviousSnapshotKeepsQuantitiesWhenPartLinesAreEdited(): void
     {
         $part = new Part();
