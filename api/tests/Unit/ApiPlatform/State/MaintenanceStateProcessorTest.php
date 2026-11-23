@@ -289,6 +289,41 @@ final class MaintenanceStateProcessorTest extends TestCase
         self::assertSame(5, $part->getQuantity());
     }
 
+    public function testPreviousSnapshotKeepsQuantitiesWhenPartLinesAreEdited(): void
+    {
+        $part = new Part();
+        $this->setId($part, 10);
+
+        $line = (new MaintenancePart())->setPart($part)->setQuantity(1);
+        $maintenance = (new Maintenance())
+            ->setStatus(MaintenanceStatusEnum::Completed)
+            ->setFinishedAt(new \DateTimeImmutable())
+            ->addMaintenancePart($line);
+
+        $previous = clone $maintenance;
+        $line->setQuantity(2);
+
+        self::assertSame(1, $previous->getMaintenanceParts()->first()->getQuantity());
+        self::assertSame(2, $maintenance->getMaintenanceParts()->first()->getQuantity());
+        self::assertNotSame(
+            $previous->getMaintenanceParts()->first(),
+            $maintenance->getMaintenanceParts()->first(),
+        );
+    }
+
+    public function testPreviousSnapshotKeepsRemovedPartLines(): void
+    {
+        $part = new Part();
+        $line = (new MaintenancePart())->setPart($part)->setQuantity(1);
+        $maintenance = (new Maintenance())->addMaintenancePart($line);
+
+        $previous = clone $maintenance;
+        $maintenance->removeMaintenancePart($line);
+
+        self::assertCount(1, $previous->getMaintenanceParts());
+        self::assertCount(0, $maintenance->getMaintenanceParts());
+    }
+
     public function testUpdatingCompletedMaintenanceWithSameStockSkipsStockLookup(): void
     {
         $vehicle = new Vehicle();
