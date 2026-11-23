@@ -20,7 +20,7 @@ import {
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { ConfirmDialog } from "@/components/ui/confirm-dialog"
-import { NativeSelect } from "@/components/ui/native-select"
+import { FilterSelect } from "@/components/ui/filter-select"
 import { useLocalStorageState } from "@/hooks/use-local-storage-state"
 import { StockTableRow } from "./StockTableRow"
 import { AddStockDialog } from "./AddStockDialog"
@@ -281,11 +281,11 @@ export default function PartsPage() {
             onChange={(value) => updateFilter(setSearch, value, setPage)}
           />
 
-          <NativeSelect
+          <FilterSelect
             label="Véhicule"
             value={vehicleFilter}
-            onChange={(event) => {
-              updateFilter(setVehicleFilter, event.target.value, setPage)
+            onValueChange={(value) => {
+              updateFilter(setVehicleFilter, value, setPage)
             }}
             options={[
               ...(view === "all" ? [{ value: "all", label: "Tous" }] : []),
@@ -295,11 +295,11 @@ export default function PartsPage() {
               })),
             ]}
           />
-          <NativeSelect
+          <FilterSelect
             label="Type"
             value={partTypeFilter}
-            onChange={(event) => {
-              updateFilter(setPartTypeFilter, event.target.value, setPage)
+            onValueChange={(value) => {
+              updateFilter(setPartTypeFilter, value, setPage)
             }}
             options={[
               { value: "all", label: "Tous" },
@@ -309,15 +309,11 @@ export default function PartsPage() {
               })),
             ]}
           />
-          <NativeSelect
+          <FilterSelect
             label="Stock"
             value={stockFilter}
-            onChange={(event) => {
-              updateFilter(
-                setStockFilter,
-                event.target.value as StockFilter,
-                setPage,
-              )
+            onValueChange={(value) => {
+              updateFilter(setStockFilter, value as StockFilter, setPage)
             }}
             options={[
               { value: "all", label: "Tous" },
@@ -326,11 +322,11 @@ export default function PartsPage() {
               { value: "out", label: "Rupture" },
             ]}
           />
-          <NativeSelect
+          <FilterSelect
             label="Tri"
             value={sort}
-            onChange={(event) => {
-              updateFilter(setSort, event.target.value as SortValue, setPage)
+            onValueChange={(value) => {
+              updateFilter(setSort, value as SortValue, setPage)
             }}
             options={[
               { value: "quantity-asc", label: "Qté croissante" },
