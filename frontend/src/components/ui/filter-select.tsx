@@ -1,6 +1,6 @@
 import { useId, useMemo, useState } from "react"
 import { Popover as PopoverPrimitive } from "radix-ui"
-import { Check, ChevronDown, Search } from "lucide-react"
+import { ChevronDown, Search } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -93,11 +93,15 @@ export function FilterSelect({
                   key={option.value}
                   type="button"
                   variant="ghost"
-                  className="h-auto min-h-8 w-full justify-between gap-2 px-2 py-1.5 text-left font-normal whitespace-normal"
+                  aria-pressed={option.value === value}
+                  className={cn(
+                    "h-auto min-h-8 w-full justify-start px-2 py-1.5",
+                    "text-left font-normal whitespace-normal",
+                    option.value === value && "bg-accent text-accent-foreground",
+                  )}
                   onClick={() => selectOption(option.value)}
                 >
                   <span className="min-w-0 break-words text-left">{option.label}</span>
-                  {option.value === value && <Check className="size-4 shrink-0" />}
                 </Button>
               ))}
               {filteredOptions.length === 0 && (
