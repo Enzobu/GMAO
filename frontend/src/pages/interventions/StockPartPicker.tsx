@@ -28,7 +28,6 @@ export function StockPartPicker({
   onChange,
 }: Readonly<Props>) {
   const [search, setSearch] = useState("")
-  const [searchOpen, setSearchOpen] = useState(false)
   const selectedIds = useMemo(
     () => new Set(selected.map((item) => item.partId)),
     [selected],
@@ -63,7 +62,6 @@ export function StockPartPicker({
       notes: "",
     }])
     setSearch("")
-    setSearchOpen(false)
   }
 
   return (
@@ -158,59 +156,46 @@ export function StockPartPicker({
         </div>
       )}
 
-      <div className="space-y-2">
-        <label className="text-sm font-medium" htmlFor="stock-part-search">
+      <div className="space-y-3">
+        <label className="block text-sm font-medium" htmlFor="stock-part-search">
           Ajouter une pièce
         </label>
-        <div
-          className="relative"
-          onBlur={(event) => {
-            if (!event.currentTarget.contains(event.relatedTarget)) {
-              setSearchOpen(false)
-            }
-          }}
-        >
+        <div className="relative">
           <Search className="pointer-events-none absolute left-3 top-2.5 size-4 text-muted-foreground" />
           <Input
             id="stock-part-search"
             className="pl-9"
             value={search}
-            onChange={(event) => {
-              setSearch(event.target.value)
-              setSearchOpen(true)
-            }}
-            onFocus={() => setSearchOpen(true)}
+            onChange={(event) => setSearch(event.target.value)}
             placeholder="Rechercher dans le stock..."
             autoComplete="off"
             disabled={disabled}
-            aria-expanded={searchOpen && !disabled}
             aria-controls="stock-part-results"
           />
-          {searchOpen && !disabled && (
-            <div
-              id="stock-part-results"
-              className="absolute z-20 mt-1 max-h-56 w-full overflow-y-auto rounded-lg border bg-popover p-1 shadow-lg"
+        </div>
+        <div
+          id="stock-part-results"
+          className="max-h-56 overflow-y-auto rounded-lg border p-1"
+        >
+          {matches.map((part) => (
+            <Button
+              key={part.id}
+              type="button"
+              variant="ghost"
+              className="flex h-auto w-full justify-between gap-3 px-3 py-2 text-left"
+              disabled={disabled}
+              onClick={() => addPart(part)}
             >
-              {matches.map((part) => (
-                <Button
-                  key={part.id}
-                  type="button"
-                  variant="ghost"
-                  className="flex h-auto w-full justify-between gap-3 px-3 py-2 text-left"
-                  onClick={() => addPart(part)}
-                >
-                  <span className="min-w-0 truncate text-sm">{part.partType.name}</span>
-                  <span className="flex shrink-0 items-center gap-2 text-xs text-muted-foreground">
-                    {part.quantity} en stock <Plus className="size-3.5" />
-                  </span>
-                </Button>
-              ))}
-              {matches.length === 0 && (
-                <p className="px-3 py-2 text-sm text-muted-foreground">
-                  Aucune autre pièce disponible.
-                </p>
-              )}
-            </div>
+              <span className="min-w-0 truncate text-sm">{part.partType.name}</span>
+              <span className="flex shrink-0 items-center gap-2 text-xs text-muted-foreground">
+                {part.quantity} en stock <Plus className="size-3.5" />
+              </span>
+            </Button>
+          ))}
+          {matches.length === 0 && (
+            <p className="px-3 py-2 text-sm text-muted-foreground">
+              Aucune autre pièce disponible.
+            </p>
           )}
         </div>
       </div>
