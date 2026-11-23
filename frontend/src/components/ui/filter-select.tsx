@@ -69,8 +69,8 @@ export function FilterSelect({
             align="start"
             sideOffset={4}
             className={cn(
-              "z-50 w-[min(26rem,calc(100vw-2rem))] rounded-lg border",
-              "min-w-[var(--radix-popover-trigger-width)]",
+              "z-50 w-max min-w-[var(--radix-popover-trigger-width)]",
+              "max-w-[min(26rem,calc(100vw-2rem))] rounded-lg border",
               "bg-popover p-1 text-popover-foreground shadow-md",
             )}
           >
