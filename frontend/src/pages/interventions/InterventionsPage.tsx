@@ -194,6 +194,7 @@ export default function InterventionsPage({
       setPendingStockMovements([])
       setMileageDialogOpen(false)
     } catch (error_) {
+      setStockConfirmationOpen(false)
       if (isAxiosError(error_) && error_.response?.status === 409 && /kilom[eé]trage/i.test(errorMessage(error_))) {
         setMileageDialogMessage(errorMessage(error_))
         setMileageDialogOpen(true)
@@ -233,10 +234,7 @@ export default function InterventionsPage({
         isLoading={isUpdatingStatus}
         movements={pendingStockMovements}
         onOpenChange={setStockConfirmationOpen}
-        onConfirm={() => {
-          setStockConfirmationOpen(false)
-          void confirmQuickAction(false)
-        }}
+        onConfirm={() => void confirmQuickAction(false)}
       />
       <MileageWarningDialog
         open={mileageDialogOpen}
