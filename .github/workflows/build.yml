@@ -150,7 +150,7 @@ jobs:
       - name: Verify stock fixture data in MariaDB
         run: |
           docker compose -f docker-compose.yml --env-file .env.local exec -T database sh -c '
-            mysql -ugmao -pgmao gmao -N -e "
+            mysql -ugmao -pgmao gmao_test -N -e "
               SELECT IF(
                 (SELECT COUNT(*) FROM part_type) > 0
                 AND (SELECT COUNT(*) FROM part) > 0
