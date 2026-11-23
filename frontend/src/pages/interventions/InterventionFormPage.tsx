@@ -15,16 +15,9 @@ import { FormDocumentsField } from "@/components/form-documents-field"
 import { FormPagePlaceholder } from "@/components/loading-placeholders"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
 import { NativeSelect } from "@/components/ui/native-select"
 import { StockPartPicker } from "./StockPartPicker"
+import { StockMovementDialog } from "./StockMovementDialog"
 import { Textarea } from "@/components/ui/textarea"
 import { useAuthStore } from "@/stores/auth-store"
 import type { ConfigurationItem } from "@/types/configuration"
@@ -624,52 +617,6 @@ function hasIncompatiblePart(
 
 function isPartCompatibleWithVehicle(part: Part, vehicleId: number) {
   return part.vehicles.some((vehicle) => vehicle.id === vehicleId)
-}
-
-function StockMovementDialog({
-  open,
-  isLoading,
-  onOpenChange,
-  onConfirm,
-  movements,
-}: Readonly<{
-  open: boolean
-  isLoading: boolean
-  onOpenChange: (open: boolean) => void
-  onConfirm: () => void
-  movements: { id: string; name: string; delta: number }[]
-}>) {
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Confirmer les mouvements de stock</DialogTitle>
-          <DialogDescription>
-            Ces quantités seront ajustées lors de l’enregistrement.
-          </DialogDescription>
-        </DialogHeader>
-        <ul className="space-y-1 text-sm">
-          {movements.map((movement) => (
-            <li key={movement.id}>
-              {movement.name} : {movement.delta > 0 ? "-" : "+"}{Math.abs(movement.delta)}
-            </li>
-          ))}
-        </ul>
-        <DialogFooter>
-          <Button
-            variant="outline"
-            onClick={() => onOpenChange(false)}
-            disabled={isLoading}
-          >
-            Annuler
-          </Button>
-          <Button onClick={onConfirm} disabled={isLoading}>
-            {isLoading ? "Enregistrement..." : "Confirmer"}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  )
 }
 
 const MODE_OPTIONS = [
