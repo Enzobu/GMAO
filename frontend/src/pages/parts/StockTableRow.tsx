@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom"
+import { Link, useNavigate } from "react-router-dom"
 import { Trash2 } from "lucide-react"
 
 import { Badge } from "@/components/ui/badge"
@@ -22,13 +22,26 @@ export function StockTableRow({
   onDelete: () => void
 }>) {
   const status = stockStatus(part.quantity)
+  const navigate = useNavigate()
+  const detailPath = `/parts/${part.id}`
 
   return (
-    <tr className="border-b last:border-0 hover:bg-muted/30">
+    <tr
+      className="cursor-pointer border-b last:border-0 hover:bg-muted/30 focus-visible:outline-2 focus-visible:outline-primary"
+      tabIndex={0}
+      role="link"
+      aria-label={`Voir le détail de ${partName(part)}`}
+      onClick={() => navigate(detailPath)}
+      onKeyDown={(event) => {
+        if (event.target !== event.currentTarget) return
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault()
+          navigate(detailPath)
+        }
+      }}
+    >
       <td className="p-3">
-        <Link to={`/parts/${part.id}`} className="font-medium hover:underline">
-          {partName(part)}
-        </Link>
+        <span className="font-medium">{partName(part)}</span>
         {part.note && (
           <p className="max-w-72 truncate text-xs text-muted-foreground">
             {part.note}
@@ -55,7 +68,11 @@ export function StockTableRow({
       </td>
       <td className="p-3">
         {isAdmin && (
-          <div className="flex justify-end gap-1">
+          <div
+            className="flex justify-end gap-1"
+            onClick={(event) => event.stopPropagation()}
+            onKeyDown={(event) => event.stopPropagation()}
+          >
             <Button type="button" size="sm" variant="outline" onClick={onAdd}>
               Ajouter
             </Button>
