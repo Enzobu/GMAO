@@ -3,7 +3,7 @@ import type { FormEvent } from "react"
 import { Link, useNavigate, useParams } from "react-router-dom"
 import { ArrowLeft, Save } from "lucide-react"
 
-import { createPart, getPart, getParts, updatePart } from "@/api/parts"
+import { createPart, getPart, getParts, updatePart, updatePartQuantity } from "@/api/parts"
 import { getPartTypes } from "@/api/configuration"
 import { getVehicles } from "@/api/vehicles"
 import { FormDocumentsField } from "@/components/form-documents-field"
@@ -172,10 +172,33 @@ export default function PartFormPage() {
         <div className={DESTRUCTIVE_MESSAGE_CLASS}>
           {error}
           {conflicts.map((part) => (
-            <div key={part.id}>
+            <div key={part.id} className="mt-2 flex items-center gap-3">
               <Link className="underline" to={`/parts/${part.id}`}>
                 Voir le stock existant : {part.partType.name}
               </Link>
+              {!isEditing && conflicts.length === 1 && Number(form.quantity) > 0 && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  disabled={isSaving}
+                  onClick={async () => {
+                    setIsSaving(true)
+                    try {
+                      await updatePartQuantity(
+                        part.id,
+                        part.quantity + Number(form.quantity),
+                      )
+                      navigate(`/parts/${part.id}`)
+                    } catch {
+                      setError("Impossible de réapprovisionner cette pièce.")
+                    } finally {
+                      setIsSaving(false)
+                    }
+                  }}
+                >
+                  Ajouter {form.quantity} au stock existant
+                </Button>
+              )}
             </div>
           ))}
         </div>
