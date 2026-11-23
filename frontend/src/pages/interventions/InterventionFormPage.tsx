@@ -240,11 +240,15 @@ export default function InterventionFormPage() {
 
       navigate(`/vehicles/${vehicleId}/interventions/${saved.id}`)
     } catch (error_) {
-      if (isAxiosError(error_) && error_.response?.status === 409) {
-        setMileageMessage(errorMessage(error_))
+      const message = errorMessage(error_)
+      const isMileageConflict = isAxiosError(error_)
+        && error_.response?.status === 409
+        && /kilom[eé]trage/i.test(message)
+      if (isMileageConflict) {
+        setMileageMessage(message)
         setMileageDialogOpen(true)
       } else {
-        setError(errorMessage(error_))
+        setError(message)
       }
     } finally {
       setIsSaving(false)
