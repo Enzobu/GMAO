@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react"
-import { Link } from "react-router-dom"
 
 import { emptyCollectionPage } from "@/api/api-collection"
 import { deletePart, getPartsPage } from "@/api/parts"
