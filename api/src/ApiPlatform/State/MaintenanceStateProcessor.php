@@ -50,19 +50,7 @@ final readonly class MaintenanceStateProcessor implements ProcessorInterface
         $oldStockMap = $previousMaintenance instanceof Maintenance ? $this->stockMap($previousMaintenance) : [];
 
         if ($operation instanceof DeleteOperationInterface) {
-            if ($data->isDeleted()) {
-                return null;
-            }
-
-            $this->applyStockDelta($oldStockMap, []);
-            $data->setIsDeleted(true);
-            $this->entityManager->flush();
-
-            if ($this->vehicleManager->syncAfterEventMileageChange($oldVehicle, $oldMileage, null, null, $oldVehicleLastMileage)) {
-                $this->entityManager->flush();
-            }
-
-            return null;
+            return $this->deleteMaintenance($data);
         }
 
         $this->normalizeCompletionFields($data);
@@ -88,6 +76,38 @@ final readonly class MaintenanceStateProcessor implements ProcessorInterface
         }
 
         return $data;
+    }
+
+    private function deleteMaintenance(Maintenance $maintenance): ?Maintenance
+    {
+        if ($maintenance->getId() !== null) {
+            $this->entityManager->lock($maintenance, LockMode::PESSIMISTIC_WRITE);
+            $this->entityManager->refresh($maintenance);
+        }
+
+        if ($maintenance->isDeleted()) {
+            return null;
+        }
+
+        $vehicle = $maintenance->getVehicle();
+        $mileage = $this->getMileageContribution($maintenance);
+        $lastMileage = $vehicle?->getLastMileage();
+
+        $this->applyStockDelta($this->stockMap($maintenance), []);
+        $maintenance->setIsDeleted(true);
+        $this->entityManager->flush();
+
+        if ($this->vehicleManager->syncAfterEventMileageChange(
+            $vehicle,
+            $mileage,
+            null,
+            null,
+            $lastMileage,
+        )) {
+            $this->entityManager->flush();
+        }
+
+        return null;
     }
 
     private function denyUnlessAllowed(Maintenance $maintenance, Operation $operation): void
