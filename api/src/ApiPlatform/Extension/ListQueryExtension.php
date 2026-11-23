@@ -214,7 +214,11 @@ final readonly class ListQueryExtension implements QueryCollectionExtensionInter
 
         $parameter = 'list_'.$field;
 
-        if ($field === 'vehicleId' || ($field === 'vehicle' && $alias === 'partVehicle')) {
+        if (
+            $field === 'vehicleId'
+            || ($field === 'vehicle' && $alias === 'partVehicle')
+            || ($field === 'partType' && $alias === 'partType')
+        ) {
             $field = 'id';
         }
 
