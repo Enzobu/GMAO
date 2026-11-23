@@ -10,6 +10,7 @@ use App\Entity\User;
 use App\Enum\MaintenanceStatusEnum;
 use App\Service\VehicleManager;
 use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\DBAL\LockMode;
 use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
@@ -49,8 +50,12 @@ final readonly class MaintenanceStateProcessor implements ProcessorInterface
         $oldStockMap = $previousMaintenance instanceof Maintenance ? $this->stockMap($previousMaintenance) : [];
 
         if ($operation instanceof DeleteOperationInterface) {
+            if ($data->isDeleted()) {
+                return null;
+            }
+
+            $this->applyStockDelta($oldStockMap, []);
             $data->setIsDeleted(true);
-            $this->restoreStock($oldStockMap);
             $this->entityManager->flush();
 
             if ($this->vehicleManager->syncAfterEventMileageChange($oldVehicle, $oldMileage, null, null, $oldVehicleLastMileage)) {
@@ -199,6 +204,7 @@ final readonly class MaintenanceStateProcessor implements ProcessorInterface
     private function applyStockDelta(array $oldStockMap, array $newStockMap): void
     {
         $partIds = array_unique([...array_keys($oldStockMap), ...array_keys($newStockMap)]);
+        sort($partIds, SORT_NUMERIC);
 
         foreach ($partIds as $partId) {
             $delta = ($newStockMap[$partId] ?? 0) - ($oldStockMap[$partId] ?? 0);
@@ -211,7 +217,7 @@ final readonly class MaintenanceStateProcessor implements ProcessorInterface
                 throw new ConflictHttpException('La pièce sélectionnée est introuvable.');
             }
 
-            $this->entityManager->lock($part, \Doctrine\DBAL\LockMode::PESSIMISTIC_WRITE);
+            $this->entityManager->lock($part, LockMode::PESSIMISTIC_WRITE);
             $this->entityManager->refresh($part);
             $newQuantity = ($part->getQuantity() ?? 0) - $delta;
             if ($newQuantity < 0) {
@@ -219,17 +225,6 @@ final readonly class MaintenanceStateProcessor implements ProcessorInterface
             }
 
             $part->setQuantity($newQuantity);
-        }
-    }
-
-    /** @param array<int, int> $stockMap */
-    private function restoreStock(array $stockMap): void
-    {
-        foreach ($stockMap as $partId => $quantity) {
-            $part = $this->entityManager->find(\App\Entity\Part::class, $partId);
-            if ($part !== null) {
-                $part->setQuantity(($part->getQuantity() ?? 0) + $quantity);
-            }
         }
     }
 
