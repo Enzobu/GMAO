@@ -279,7 +279,7 @@ final class MaintenanceStateProcessorTest extends TestCase
         self::assertSame(3, $part->getQuantity());
     }
 
-    public function testStockDeltaSkipsMissingPart(): void
+    public function testStockDeltaRejectsMissingPart(): void
     {
         $part = new Part();
         $this->setId($part, 10);
@@ -292,11 +292,9 @@ final class MaintenanceStateProcessorTest extends TestCase
         $this->setId($maintenance, 20);
         $em = $this->createMock(EntityManagerInterface::class);
         $em->expects(self::once())->method('find')->with(Part::class, 10)->willReturn(null);
-        $em->expects(self::once())->method('flush');
+        $this->expectException(ConflictHttpException::class);
 
-        $result = $this->processor($em, $this->adminSecurity())->process($maintenance, new Patch(), context: ['previous_data' => $previousMaintenance]);
-
-        self::assertSame($maintenance, $result);
+        $this->processor($em, $this->adminSecurity())->process($maintenance, new Patch(), context: ['previous_data' => $previousMaintenance]);
     }
 
     public function testStockMapSkipsPartWithoutId(): void
@@ -326,8 +324,12 @@ final class MaintenanceStateProcessorTest extends TestCase
         $vehicleManager->method('buildEventMileageWarning')->willReturn(null);
         $vehicleManager->method('syncAfterEventMileageChange')->willReturn(false);
 
+        $manager = $em ?? $this->createMock(EntityManagerInterface::class);
+        $manager->method('wrapInTransaction')
+            ->willReturnCallback(static fn (callable $callback) => $callback());
+
         return new MaintenanceStateProcessor(
-            $em ?? $this->createMock(EntityManagerInterface::class),
+            $manager,
             $security ?? $this->adminSecurity(),
             $vehicleManager,
             $requestStack ?? new RequestStack(),
