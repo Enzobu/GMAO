@@ -47,8 +47,8 @@ export default function PartsPage() {
   const [partsPage, setPartsPage] = useState(emptyCollectionPage<Part>(6))
   const [vehicles, setVehicles] = useState<Vehicle[]>([])
   const [partTypes, setPartTypes] = useState<ConfigurationItem[]>([])
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const [finishedRequest, setFinishedRequest] = useState<string | null>(null)
+  const [loadError, setLoadError] = useState<{ request: string; message: string } | null>(null)
   const [search, setSearch] = useState("")
   const [debouncedSearch, setDebouncedSearch] = useState("")
   const [view, setView] = useState<"vehicle" | "all">("vehicle")
@@ -63,6 +63,19 @@ export default function PartsPage() {
   const [partToStock, setPartToStock] = useState<Part | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
 
+  const requestKey = JSON.stringify([
+    debouncedSearch,
+    itemsPerPage,
+    page,
+    partTypeFilter,
+    sort,
+    stockFilter,
+    vehicleFilter,
+    view,
+  ])
+  const isLoading = finishedRequest !== requestKey
+  const error = loadError?.request === requestKey ? loadError.message : null
+
   useEffect(() => {
     const timer = setTimeout(() => setDebouncedSearch(search), 250)
     return () => clearTimeout(timer)
@@ -70,8 +83,6 @@ export default function PartsPage() {
 
   useEffect(() => {
     let ignore = false
-    setIsLoading(true)
-    setError(null)
 
     async function load() {
       try {
@@ -97,14 +108,15 @@ export default function PartsPage() {
             setVehicleFilter(String(vehiclesData[0].id))
           }
           setPartTypes(partTypesData)
+          setLoadError(null)
         }
       } catch {
         if (!ignore) {
-          setError("Impossible de charger le stock.")
+          setLoadError({ request: requestKey, message: "Impossible de charger le stock." })
         }
       } finally {
         if (!ignore) {
-          setIsLoading(false)
+          setFinishedRequest(requestKey)
         }
       }
     }
