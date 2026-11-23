@@ -55,6 +55,7 @@ final readonly class MaintenanceStateProcessor implements ProcessorInterface
         $this->normalizeCompletionFields($data);
         $this->guardCompletedMileage($data);
         $this->guardCompatibleParts($data);
+        $this->guardUniqueParts($data);
         $this->guardMileage($oldVehicle, $oldMileage, $data);
         $newStockMap = $data->getFinishedAt() !== null ? $this->stockMap($data) : [];
         $this->applyStockDelta($oldStockMap, $newStockMap);
@@ -147,8 +148,12 @@ final readonly class MaintenanceStateProcessor implements ProcessorInterface
 
         foreach ($maintenance->getMaintenanceParts() as $maintenancePart) {
             $part = $maintenancePart->getPart();
-            if ($part === null) {
-                throw new BadRequestHttpException('Chaque ligne de pièce doit contenir une pièce valide.');
+            if ($part === null || $part->isDeleted()) {
+                throw new BadRequestHttpException('Chaque ligne de pièce doit contenir une pièce active.');
+            }
+
+            if ($maintenancePart->getQuantity() === null || $maintenancePart->getQuantity() < 1) {
+                throw new BadRequestHttpException('La quantité de chaque pièce doit être strictement positive.');
             }
 
             $isCompatible = $part->getVehicles()->exists(
@@ -161,6 +166,24 @@ final readonly class MaintenanceStateProcessor implements ProcessorInterface
                     $part->getPartType()?->getName() ?? 'sélectionnée'
                 ));
             }
+        }
+    }
+
+    private function guardUniqueParts(Maintenance $maintenance): void
+    {
+        $usedIds = [];
+
+        foreach ($maintenance->getMaintenanceParts() as $line) {
+            $id = $line->getPart()?->getId();
+            if ($id === null) {
+                continue;
+            }
+
+            if (isset($usedIds[$id])) {
+                throw new BadRequestHttpException('Une pièce ne peut être ajoutée qu’une seule fois à une intervention.');
+            }
+
+            $usedIds[$id] = true;
         }
     }
 
