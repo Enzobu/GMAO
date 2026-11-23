@@ -90,6 +90,35 @@ final class ListQueryExtensionTest extends TestCase
         self::assertNotContains('partVehicle.vehicle = :list_vehicle', $conditions);
     }
 
+    public function testPartTypeFilterUsesTypeId(): void
+    {
+        $queryBuilder = $this->createMock(QueryBuilder::class);
+        $queryBuilder->method('getRootAliases')->willReturn(['r']);
+        $queryBuilder->method('getAllAliases')->willReturn(['r']);
+        $queryBuilder->method('leftJoin')->willReturnSelf();
+        $queryBuilder->method('distinct')->willReturnSelf();
+        $queryBuilder->method('setParameter')->willReturnSelf();
+        $queryBuilder->method('orderBy')->willReturnSelf();
+
+        $conditions = [];
+        $queryBuilder->method('andWhere')
+            ->willReturnCallback(static function (string $condition) use (&$conditions, $queryBuilder): QueryBuilder {
+                $conditions[] = $condition;
+
+                return $queryBuilder;
+            });
+
+        $this->extension(['partType' => '6', 'vehicle' => '1'])->applyToCollection(
+            $queryBuilder,
+            $this->queryNameGenerator(),
+            Part::class,
+        );
+
+        self::assertContains('partType.id = :list_partType', $conditions);
+        self::assertContains('partVehicle.id = :list_vehicle', $conditions);
+        self::assertNotContains('partType.partType = :list_partType', $conditions);
+    }
+
     public static function partProvider(): iterable
     {
         yield ['ok', 'name'];
