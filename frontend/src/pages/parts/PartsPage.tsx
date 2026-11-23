@@ -79,7 +79,7 @@ export default function PartsPage() {
           getPartsPage({
             page,
             itemsPerPage: itemsPerPageSize(itemsPerPage),
-            search,
+            search: debouncedSearch,
             vehicle: vehicleFilter,
             partType: partTypeFilter,
             stock: stockFilter,
@@ -147,7 +147,9 @@ export default function PartsPage() {
 
   function resetFilters() {
     setSearch("")
-    setVehicleFilter("all")
+    setVehicleFilter(
+      view === "vehicle" && vehicles[0] ? String(vehicles[0].id) : "all",
+    )
     setPartTypeFilter("all")
     setStockFilter("all")
     setSort("quantity-asc")
@@ -286,7 +288,7 @@ export default function PartsPage() {
               updateFilter(setVehicleFilter, event.target.value, setPage)
             }}
             options={[
-              { value: "all", label: "Tous" },
+              ...(view === "all" ? [{ value: "all", label: "Tous" }] : []),
               ...vehicles.map((vehicle) => ({
                 value: String(vehicle.id),
                 label: vehicleDisplayName(vehicle),
