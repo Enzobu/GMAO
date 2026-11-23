@@ -140,6 +140,28 @@ jobs:
       - name: Run API tests
         run: docker compose -f docker-compose.yml --env-file .env.local exec -T apache sh -c 'APP_ENV=test TRUSTED_PROXIES=127.0.0.1 XDEBUG_MODE=coverage vendor/bin/phpunit --coverage-clover var/coverage/clover.xml'
 
+      - name: Load fixtures into disposable CI database
+        run: |
+          docker compose -f docker-compose.yml --env-file .env.local exec -T apache sh -c '
+            APP_ENV=test LOAD_DATAFIXTURES=all TRUSTED_PROXIES=127.0.0.1 \
+              php bin/console doctrine:fixtures:load --no-interaction --env=test
+          '
+
+      - name: Verify stock fixture data in MariaDB
+        run: |
+          docker compose -f docker-compose.yml --env-file .env.local exec -T database sh -c '
+            mysql -ugmao -pgmao gmao -N -e "
+              SELECT IF(
+                (SELECT COUNT(*) FROM part_type) > 0
+                AND (SELECT COUNT(*) FROM part) > 0
+                AND (SELECT COUNT(*) FROM maintenance_part) > 0
+                AND (SELECT COUNT(*) FROM part WHERE quantity < 0) = 0,
+                \"Fixture validation OK\",
+                \"Fixture validation FAILED\"
+              );
+            " | grep -Fx "Fixture validation OK"
+          '
+
       - name: Fix Clover paths for SonarQube
         run: |
           sed -i 's#/var/www/#api/#g' api/var/coverage/clover.xml
