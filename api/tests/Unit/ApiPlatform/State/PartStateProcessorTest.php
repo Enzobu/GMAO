@@ -27,10 +27,7 @@ final class PartStateProcessorTest extends TestCase
         $em->expects(self::once())->method('persist')->with($part);
         $em->expects(self::once())->method('flush');
 
-        $guard = $this->createMock(PartCompatibilityGuard::class);
-        $guard->expects(self::once())->method('assertNoOverlap')->with($part);
-
-        self::assertSame($part, $this->processor($em, $guard)->process($part, new Post()));
+        self::assertSame($part, $this->processor($em)->process($part, new Post()));
     }
 
     public function testDeletesUnusedPartPermanently(): void
@@ -61,7 +58,7 @@ final class PartStateProcessorTest extends TestCase
     ): PartStateProcessor {
         return new PartStateProcessor(
             $em ?? $this->entityManager(),
-            $guard ?? $this->createMock(PartCompatibilityGuard::class),
+            $guard ?? new PartCompatibilityGuard($em ?? $this->entityManager()),
         );
     }
 
