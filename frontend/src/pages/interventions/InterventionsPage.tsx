@@ -4,7 +4,7 @@ import { Link, useParams } from "react-router-dom"
 import { Pencil, Play, Plus, CheckCircle2 } from "lucide-react"
 
 import { emptyCollectionPage } from "@/api/api-collection"
-import { getInterventionsPage, updateIntervention } from "@/api/interventions"
+import { getIntervention, getInterventionsPage, updateIntervention } from "@/api/interventions"
 import { getVehicle } from "@/api/vehicles"
 import { ListPagePlaceholder } from "@/components/loading-placeholders"
 import { Button } from "@/components/ui/button"
@@ -26,6 +26,7 @@ import { ListPaginationControls } from "@/components/list-pagination-controls"
 import { useLocalStorageState } from "@/hooks/use-local-storage-state"
 import { useAuthStore } from "@/stores/auth-store"
 import type { Intervention } from "@/types/intervention"
+import { StockMovementDialog, type StockMovement } from "./StockMovementDialog"
 import type { Vehicle } from "@/types/vehicle"
 import { MIN_INPUT_DATETIME, MAX_INPUT_DATETIME } from "@/lib/date-limits"
 import {
@@ -65,6 +66,8 @@ export default function InterventionsPage({
   const [quickAction, setQuickAction] = useState<QuickAction | null>(null)
   const [quickActionDate, setQuickActionDate] = useState(nowInputValue())
   const [quickActionMileage, setQuickActionMileage] = useState("")
+  const [stockConfirmationOpen, setStockConfirmationOpen] = useState(false)
+  const [pendingStockMovements, setPendingStockMovements] = useState<StockMovement[]>([])
   const [mileageDialogMessage, setMileageDialogMessage] = useState("")
   const [mileageDialogOpen, setMileageDialogOpen] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -119,6 +122,40 @@ export default function InterventionsPage({
     )
   }
 
+  async function requestQuickActionConfirmation() {
+    if (!quickAction) return
+
+    if (quickAction.type !== "finish") {
+      await confirmQuickAction(false)
+      return
+    }
+
+    setIsUpdatingStatus(true)
+    setError(null)
+    try {
+      const latest = await getIntervention(quickAction.intervention.id)
+      const movements = (latest.maintenanceParts ?? []).map((line, index) => ({
+        id: String(line.id ?? index),
+        name: typeof line.part === "string"
+          ? `Pièce ${line.part.split("/").findLast(Boolean) ?? ""}`
+          : line.part.partType.name,
+        delta: line.quantity,
+      })).filter((movement) => movement.delta > 0)
+
+      setQuickAction({ ...quickAction, intervention: latest })
+      setPendingStockMovements(movements)
+      if (movements.length > 0) {
+        setStockConfirmationOpen(true)
+      } else {
+        await confirmQuickAction(false)
+      }
+    } catch (error_) {
+      setError(errorMessage(error_))
+    } finally {
+      setIsUpdatingStatus(false)
+    }
+  }
+
   async function confirmQuickAction(forceMileage = false) {
     if (!quickAction) return
 
@@ -153,9 +190,11 @@ export default function InterventionsPage({
       setInterventions(interventionData.items)
       setInterventionsPage(interventionData)
       setQuickAction(null)
+      setStockConfirmationOpen(false)
+      setPendingStockMovements([])
       setMileageDialogOpen(false)
     } catch (error_) {
-      if (isAxiosError(error_) && error_.response?.status === 409) {
+      if (isAxiosError(error_) && error_.response?.status === 409 && /kilom[eé]trage/i.test(errorMessage(error_))) {
         setMileageDialogMessage(errorMessage(error_))
         setMileageDialogOpen(true)
       } else {
@@ -178,6 +217,7 @@ export default function InterventionsPage({
     <div className="space-y-6">
       <QuickActionDialog
         action={quickAction}
+        open={quickAction !== null && !stockConfirmationOpen && !mileageDialogOpen}
         date={quickActionDate}
         mileage={quickActionMileage}
         isLoading={isUpdatingStatus}
@@ -186,7 +226,17 @@ export default function InterventionsPage({
         onOpenChange={(open) => (
           !open && !isUpdatingStatus && setQuickAction(null)
         )}
-        onConfirm={() => confirmQuickAction(false)}
+        onConfirm={() => void requestQuickActionConfirmation()}
+      />
+      <StockMovementDialog
+        open={stockConfirmationOpen}
+        isLoading={isUpdatingStatus}
+        movements={pendingStockMovements}
+        onOpenChange={setStockConfirmationOpen}
+        onConfirm={() => {
+          setStockConfirmationOpen(false)
+          void confirmQuickAction(false)
+        }}
       />
       <MileageWarningDialog
         open={mileageDialogOpen}
@@ -347,6 +397,7 @@ function InterventionActions({
 
 function QuickActionDialog({
   action,
+  open,
   date,
   mileage,
   isLoading,
@@ -356,6 +407,7 @@ function QuickActionDialog({
   onConfirm,
 }: Readonly<{
   action: QuickAction | null
+  open: boolean
   date: string
   mileage: string
   isLoading: boolean
@@ -367,7 +419,7 @@ function QuickActionDialog({
   const isStart = action?.type === "start"
 
   return (
-    <Dialog open={action !== null} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>
