@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react"
 import type { FormEvent } from "react"
 import { Link, useNavigate, useParams } from "react-router-dom"
-import { ArrowLeft, Save } from "lucide-react"
+import { ArrowLeft, Check, Save } from "lucide-react"
 
 import { createPart, getPart, getParts, updatePart, updatePartQuantity } from "@/api/parts"
 import { getPartTypes } from "@/api/configuration"
@@ -26,6 +26,7 @@ import {
   uploadParentDocuments,
 } from "@/lib/form-documents"
 import { vehicleDisplayName } from "@/lib/part-utils"
+import { cn } from "@/lib/utils"
 
 const emptyForm = {
   partTypeId: "",
@@ -138,6 +139,17 @@ export default function PartFormPage() {
         ? current.vehicleIds.filter((id) => id !== vehicleId)
         : [...current.vehicleIds, vehicleId],
     }))
+  }
+
+  function selectAllVehicles() {
+    setForm((current) => ({
+      ...current,
+      vehicleIds: vehicles.map((vehicle) => String(vehicle.id)),
+    }))
+  }
+
+  function deselectAllVehicles() {
+    setForm((current) => ({ ...current, vehicleIds: [] }))
   }
 
   if (isLoading) {
@@ -261,30 +273,61 @@ export default function PartFormPage() {
         </Card>
 
         <Card>
-          <CardHeader>
+          <CardHeader className="flex flex-wrap items-center justify-between gap-3">
             <CardTitle>Véhicules compatibles</CardTitle>
+            <div className="flex flex-wrap gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                disabled={isSaving || vehicles.length === 0}
+                onClick={selectAllVehicles}
+              >
+                Tout sélectionner
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                disabled={isSaving || form.vehicleIds.length === 0}
+                onClick={deselectAllVehicles}
+              >
+                Tout désélectionner
+              </Button>
+            </div>
           </CardHeader>
           <CardContent className="grid gap-2 md:grid-cols-2">
             {vehicles.map((vehicle) => {
               const value = String(vehicle.id)
+              const selected = form.vehicleIds.includes(value)
+
               return (
-                <label
+                <button
                   key={vehicle.id}
-                  className={
-                    "flex items-center gap-2 rounded-lg border p-3 " +
-                    "text-sm"
-                  }
+                  type="button"
+                  aria-pressed={selected}
+                  disabled={isSaving}
+                  onClick={() => toggleVehicle(value)}
+                  className={cn(
+                    "flex min-h-12 items-center justify-between gap-3",
+                    "rounded-lg border px-3 py-3 text-left text-sm",
+                    "transition-colors hover:border-primary/40",
+                    "focus-visible:outline-none focus-visible:ring-2",
+                    "focus-visible:ring-ring/50 disabled:opacity-50",
+                    selected
+                      ? "border-primary/50 bg-primary/10 hover:bg-primary/15"
+                      : "border-border bg-background hover:bg-muted/50",
+                  )}
                 >
-                  <input
-                    type="checkbox"
-                    checked={form.vehicleIds.includes(value)}
-                    onChange={() => toggleVehicle(value)}
-                  />
-                  <span>
-                    {vehicleDisplayName(vehicle)} ・{" "}
-                    {vehicle.registration.toUpperCase()}
+                  <span className="min-w-0">
+                    <span className="font-medium">{vehicleDisplayName(vehicle)}</span>
+                    <span className="mx-2 text-muted-foreground">·</span>
+                    <span className="text-muted-foreground">
+                      {vehicle.registration.toUpperCase()}
+                    </span>
                   </span>
-                </label>
+                  {selected && <Check className="size-4 shrink-0 text-primary" />}
+                </button>
               )
             })}
           </CardContent>
