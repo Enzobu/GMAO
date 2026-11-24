@@ -1,91 +1,46 @@
 # Stock
 
-La section **Stock** liste les pièces disponibles et leurs compatibilités avec
-les véhicules.
+Le stock est organisé par **type de pièce** et par **compatibilité véhicule**, sans notion obligatoire de marque ou de référence fabricant. Les types sont gérés dans **Configuration**.
 
-Les utilisateurs peuvent consulter le stock. Les administrateurs peuvent créer,
-modifier, supprimer et ajouter des quantités.
+## Quantité partagée
 
-![Actions administrateur sur le stock](/images/captures/admin-stock-actions.png)
+Une ligne de stock dispose d'une quantité unique, même si elle est compatible avec plusieurs véhicules.
 
-## Liste du stock
+Par exemple, cinq flacons de liquide de frein compatibles avec la Focus, la Polo et la Ninja représentent **cinq flacons au total**, pas cinq par véhicule.
 
-Chaque carte de stock affiche :
+Un type de pièce ne peut pas figurer sur deux lignes de stock qui couvrent un même véhicule. Si une ligne correspond déjà à la pièce recherchée, ouvrez-la et utilisez **Ajouter** pour la réapprovisionner.
 
-- le type de pièce ;
-- la quantité ;
-- la date de mise à jour ;
-- une note éventuelle ;
-- les véhicules compatibles ;
-- le statut de stock ;
-- un badge **Lecture seule** pour les utilisateurs non administrateurs.
+## Consultation
 
-![Liste du stock](/images/captures/stock-liste.png)
+La page Stock propose :
 
-## Statuts de stock
+- **Par véhicule** : affiche les pièces compatibles avec le véhicule sélectionné, y compris celles en rupture ;
+- **Vue globale** : affiche les lignes de stock de tous les véhicules ;
+- une recherche textuelle, des filtres par type, statut et véhicule, des tris et une pagination ;
+- une présentation en tableau avec quantité, compatibilités et actions rapides.
 
-Les statuts sont calculés à partir de la quantité :
+Les résultats se mettent à jour après un court délai de saisie. Un état de chargement indique que la recherche est en cours.
 
-- **OK** : quantité supérieure à 1 ;
-- **Stock faible** : quantité égale à 1 ;
-- **Rupture** : quantité égale à 0.
+## Statuts
 
-## Filtres disponibles
+- **Rupture** : 0 unité ;
+- **Stock faible** : 1 unité ;
+- **OK** : 2 unités ou davantage.
 
-Vous pouvez filtrer par :
+Les lignes à zéro restent dans le stock afin d'être réapprovisionnées.
 
-- recherche texte : pièce, note, véhicule ;
-- véhicule compatible ;
-- type de pièce ;
-- statut de stock ;
-- tri : quantité croissante, quantité décroissante, nom, mise à jour.
+## Gestion
 
-## Compatibilité véhicule
+Les administrateurs peuvent créer, modifier et supprimer des lignes et ajouter des quantités. Les autres utilisateurs disposent d'un accès en lecture.
 
-Une pièce doit être compatible avec un véhicule pour être proposée dans le
-formulaire d'intervention de ce véhicule.
+À la création ou à la modification, l'application refuse les doublons de type de pièce qui partagent au moins un véhicule compatible. Si le formulaire rencontre une ligne déjà existante, il propose un lien permettant de la consulter et de la réapprovisionner.
 
-Si une pièce n'a aucun véhicule compatible, elle apparaît avec un badge
-**Aucun véhicule compatible** et ne pourra pas être utilisée dans une
-intervention.
+Une ligne jamais utilisée peut être supprimée définitivement. Une ligne portant un historique d'intervention ou des documents est masquée de la consultation active afin de préserver ses références.
 
-## Ajouter une ligne de stock
+## Utilisation dans les interventions
 
-Action réservée aux administrateurs.
+Les pièces ne sont consommées **qu'à la clôture** d'une intervention. Le stock est ajusté par différence lorsqu'une intervention terminée est modifiée. Une intervention déplanifiée ou supprimée restitue les quantités qu'elle avait consommées.
 
-Champs disponibles :
+Les pièces indisponibles ne peuvent pas être ajoutées à une nouvelle intervention. Dans une intervention terminée existante, une pièce déjà consommée reste modifiable, même si la quantité actuelle en stock est nulle.
 
-- type de pièce, obligatoire ;
-- quantité, obligatoire ;
-- note ;
-- véhicules compatibles ;
-- documents, uniquement à la création.
-
-![Formulaire stock](/images/captures/stock-formulaire.png)
-
-## Ajouter de la quantité
-
-Depuis la liste, un administrateur peut cliquer sur **Ajouter stock**.
-
-La fenêtre indique le stock actuel et demande le nombre de pièces à ajouter.
-
-La quantité saisie doit être strictement positive.
-
-![Ajout de quantité au stock](/images/captures/ajout-stock-dialog.png)
-
-## Fiche stock
-
-La fiche stock affiche :
-
-- le type de pièce ;
-- la quantité ;
-- la note ;
-- les véhicules compatibles ;
-- les dates de création et de mise à jour ;
-- les documents associés.
-
-## Suppression
-
-La suppression masque la ligne de stock de la plateforme.
-
-Elle est réservée aux administrateurs.
+Voir [Interventions](./interventions.md).

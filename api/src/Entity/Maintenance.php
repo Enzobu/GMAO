@@ -135,6 +135,21 @@ class Maintenance
         $this->documents = new ArrayCollection();
     }
 
+    public function __clone()
+    {
+        if (!isset($this->maintenanceParts)) {
+            return;
+        }
+
+        $snapshot = new ArrayCollection();
+
+        foreach ($this->maintenanceParts as $maintenancePart) {
+            $snapshot->add(clone $maintenancePart);
+        }
+
+        $this->maintenanceParts = $snapshot;
+    }
+
     public function getId(): ?int
     {
         return $this->id;

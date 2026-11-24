@@ -1,59 +1,41 @@
 import { useEffect, useState } from "react"
-import { Link } from "react-router-dom"
-import { Trash2 } from "lucide-react"
 
 import { emptyCollectionPage } from "@/api/api-collection"
-import { deletePart, getPartsPage, updatePartQuantity } from "@/api/parts"
+import { deletePart, getPartsPage } from "@/api/parts"
 import { getPartTypes } from "@/api/configuration"
 import { getVehicles } from "@/api/vehicles"
 import { FILTER_GRID_WIDE_CLASS } from "@/components/list-page-classes"
 import {
   EmptyListCard,
   ListPageHeader,
-  ReadOnlyBadge,
   ResetFiltersButton,
   SearchField,
 } from "@/components/list-page-primitives"
 import { ListPagePlaceholder } from "@/components/loading-placeholders"
 import { PaginatedListSection } from "@/components/paginated-list-section"
-import { ResourceCard, ResourceMeta } from "@/components/resource-card"
 import {
   itemsPerPageSize,
   type ItemsPerPageValue,
 } from "@/components/list-page-pagination"
-import { LabelText } from "@/components/page-primitives"
-import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { ConfirmDialog } from "@/components/ui/confirm-dialog"
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
-import { NativeSelect } from "@/components/ui/native-select"
+import { FilterSelect } from "@/components/ui/filter-select"
 import { useLocalStorageState } from "@/hooks/use-local-storage-state"
+import { StockTableRow } from "./StockTableRow"
+import { AddStockDialog } from "./AddStockDialog"
 import { useAuthStore } from "@/stores/auth-store"
 import type { ConfigurationItem } from "@/types/configuration"
 import type { Part } from "@/types/part"
 import type { Vehicle } from "@/types/vehicle"
 import {
-  formatDateTime,
   partName,
-  stockStatus,
   vehicleDisplayName,
 } from "@/lib/part-utils"
 
 type SortValue = "name" | "quantity-asc" | "quantity-desc" | "updated-desc"
 type StockFilter = "all" | "ok" | "low" | "out"
 
-const LOW_STOCK_BADGE_CLASS =
-  "border-amber-500/30 bg-amber-500/10 text-amber-700 " +
-  "dark:text-amber-300"
 const DESTRUCTIVE_MESSAGE_CLASS =
   "rounded-lg border border-destructive/30 bg-destructive/10 p-4 " +
   "text-sm text-destructive"
@@ -65,9 +47,11 @@ export default function PartsPage() {
   const [partsPage, setPartsPage] = useState(emptyCollectionPage<Part>(6))
   const [vehicles, setVehicles] = useState<Vehicle[]>([])
   const [partTypes, setPartTypes] = useState<ConfigurationItem[]>([])
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const [finishedRequest, setFinishedRequest] = useState<string | null>(null)
+  const [loadError, setLoadError] = useState<{ request: string; message: string } | null>(null)
   const [search, setSearch] = useState("")
+  const [debouncedSearch, setDebouncedSearch] = useState("")
+  const [view, setView] = useState<"vehicle" | "all">("vehicle")
   const [vehicleFilter, setVehicleFilter] = useState("all")
   const [partTypeFilter, setPartTypeFilter] = useState("all")
   const [stockFilter, setStockFilter] = useState<StockFilter>("all")
@@ -79,6 +63,24 @@ export default function PartsPage() {
   const [partToStock, setPartToStock] = useState<Part | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
 
+  const requestKey = JSON.stringify([
+    debouncedSearch,
+    itemsPerPage,
+    page,
+    partTypeFilter,
+    sort,
+    stockFilter,
+    vehicleFilter,
+    view,
+  ])
+  const isLoading = finishedRequest !== requestKey
+  const error = loadError?.request === requestKey ? loadError.message : null
+
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedSearch(search), 250)
+    return () => clearTimeout(timer)
+  }, [search])
+
   useEffect(() => {
     let ignore = false
 
@@ -88,7 +90,7 @@ export default function PartsPage() {
           getPartsPage({
             page,
             itemsPerPage: itemsPerPageSize(itemsPerPage),
-            search,
+            search: debouncedSearch,
             vehicle: vehicleFilter,
             partType: partTypeFilter,
             stock: stockFilter,
@@ -102,15 +104,19 @@ export default function PartsPage() {
           setParts(partsData.items)
           setPartsPage(partsData)
           setVehicles(vehiclesData)
+          if (view === "vehicle" && vehicleFilter === "all" && vehiclesData[0]) {
+            setVehicleFilter(String(vehiclesData[0].id))
+          }
           setPartTypes(partTypesData)
+          setLoadError(null)
         }
       } catch {
         if (!ignore) {
-          setError("Impossible de charger le stock.")
+          setLoadError({ request: requestKey, message: "Impossible de charger le stock." })
         }
       } finally {
         if (!ignore) {
-          setIsLoading(false)
+          setFinishedRequest(requestKey)
         }
       }
     }
@@ -120,7 +126,7 @@ export default function PartsPage() {
     return () => {
       ignore = true
     }
-  }, [itemsPerPage, page, partTypeFilter, search, sort, stockFilter, vehicleFilter])
+  }, [debouncedSearch, itemsPerPage, page, partTypeFilter, requestKey, sort, stockFilter, vehicleFilter, view])
 
   const hasActiveFilters =
     search ||
@@ -153,23 +159,14 @@ export default function PartsPage() {
 
   function resetFilters() {
     setSearch("")
-    setVehicleFilter("all")
+    setVehicleFilter(
+      view === "vehicle" && vehicles[0] ? String(vehicles[0].id) : "all",
+    )
     setPartTypeFilter("all")
     setStockFilter("all")
     setSort("quantity-asc")
   }
 
-  if (isLoading) {
-    return <ListPagePlaceholder filters={5} />
-  }
-
-  if (error) {
-    return (
-      <div className={DESTRUCTIVE_MESSAGE_CLASS}>
-        {error}
-      </div>
-    )
-  }
 
   function renderPartsContent() {
     if (partsPage.totalItems === 0 && !hasActiveFilters) {
@@ -195,93 +192,28 @@ export default function PartsPage() {
         }}
         onPageChange={setPage}
       >
-        <div className="grid gap-4 xl:grid-cols-2">
-          {parts.map((part) => {
-            const status = stockStatus(part.quantity)
-
-            return (
-              <ResourceCard
-                key={part.id}
-                to={`/parts/${part.id}`}
-                ariaLabel={`Voir ${partName(part)}`}
-                className="flex h-full flex-col"
-                title={(
-                  <>
-                    <span>{partName(part)}</span>
-                    <Badge
-                      variant={status.variant}
-                      className={
-                        status.value === "low"
-                          ? LOW_STOCK_BADGE_CLASS
-                          : undefined
-                      }
-                    >
-                      {status.label}
-                    </Badge>
-                    {part.vehicles.length === 0 && (
-                      <Badge variant="destructive">
-                        Aucun véhicule compatible
-                      </Badge>
-                    )}
-                    {!isAdmin && <ReadOnlyBadge />}
-                  </>
-                )}
-                footer={isAdmin && (
-                  <>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setPartToStock(part)}
-                    >
-                      Ajouter stock
-                    </Button>
-                    <Button variant="outline" size="sm" asChild>
-                      <Link to={`/parts/${part.id}/edit`}>Modifier</Link>
-                    </Button>
-                    <Button
-                      variant="destructive"
-                      size="sm"
-                      onClick={() => setPartToDelete(part)}
-                    >
-                      <Trash2 />
-                      Supprimer
-                    </Button>
-                  </>
-                )}
-              >
-                  <ResourceMeta>
-                    <span>
-                      <strong className="text-foreground">Quantité</strong>
-                      {" "}
-                      {part.quantity}
-                    </span>
-                    <span>
-                      <strong className="text-foreground">Màj</strong>{" "}
-                      {formatDateTime(part.updatedAt)}
-                    </span>
-                  </ResourceMeta>
-                  {part.note && (
-                    <p className="line-clamp-2 text-sm text-muted-foreground">
-                      {part.note}
-                    </p>
-                  )}
-                  <div className="flex flex-wrap gap-2">
-                    {part.vehicles.length > 0 ? (
-                      part.vehicles.map((vehicle) => (
-                        <Badge key={vehicle.id} variant="outline">
-                          {vehicleDisplayName(vehicle)}
-                        </Badge>
-                      ))
-                    ) : (
-                      <span className="text-sm text-destructive">
-                        Cette pièce ne pourra être utilisée sur aucune
-                        intervention.
-                      </span>
-                    )}
-                  </div>
-              </ResourceCard>
-            )
-          })}
+        <div className="overflow-x-auto rounded-lg border">
+          <table className="w-full text-sm">
+            <thead className="bg-muted/50 text-left">
+              <tr className="border-b">
+                <th className="p-3 font-medium">Pièce</th>
+                <th className="p-3 font-medium">Véhicules</th>
+                <th className="p-3 text-right font-medium">Quantité</th>
+                <th className="p-3 text-right font-medium">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {parts.map((part) => (
+                <StockTableRow
+                  key={part.id}
+                  part={part}
+                  isAdmin={isAdmin}
+                  onAdd={() => setPartToStock(part)}
+                  onDelete={() => setPartToDelete(part)}
+                />
+              ))}
+            </tbody>
+          </table>
         </div>
       </PaginatedListSection>
     )
@@ -295,7 +227,7 @@ export default function PartsPage() {
         description={
           partToDelete
             ? `${partName(partToDelete)} sera masqué de la plateforme. ` +
-              "Aucune donnée ne sera supprimée définitivement."
+              "Un stock sans historique sera supprimé définitivement."
             : ""
         }
         confirmLabel="Supprimer"
@@ -327,6 +259,31 @@ export default function PartsPage() {
         addLabel="Ajouter un stock"
       />
 
+      <div className="flex gap-2">
+        <Button
+          type="button"
+          variant={view === "vehicle" ? "default" : "outline"}
+          onClick={() => {
+            setView("vehicle")
+            setVehicleFilter(vehicles[0] ? String(vehicles[0].id) : "all")
+            setPage(1)
+          }}
+        >
+          Par véhicule
+        </Button>
+        <Button
+          type="button"
+          variant={view === "all" ? "default" : "outline"}
+          onClick={() => {
+            setView("all")
+            setVehicleFilter("all")
+            setPage(1)
+          }}
+        >
+          Vue globale
+        </Button>
+      </div>
+
       <Card>
         <CardContent className={FILTER_GRID_WIDE_CLASS}>
           <SearchField
@@ -336,25 +293,25 @@ export default function PartsPage() {
             onChange={(value) => updateFilter(setSearch, value, setPage)}
           />
 
-          <NativeSelect
+          <FilterSelect
             label="Véhicule"
             value={vehicleFilter}
-            onChange={(event) => {
-              updateFilter(setVehicleFilter, event.target.value, setPage)
+            onValueChange={(value) => {
+              updateFilter(setVehicleFilter, value, setPage)
             }}
             options={[
-              { value: "all", label: "Tous" },
+              ...(view === "all" ? [{ value: "all", label: "Tous" }] : []),
               ...vehicles.map((vehicle) => ({
                 value: String(vehicle.id),
                 label: vehicleDisplayName(vehicle),
               })),
             ]}
           />
-          <NativeSelect
+          <FilterSelect
             label="Type"
             value={partTypeFilter}
-            onChange={(event) => {
-              updateFilter(setPartTypeFilter, event.target.value, setPage)
+            onValueChange={(value) => {
+              updateFilter(setPartTypeFilter, value, setPage)
             }}
             options={[
               { value: "all", label: "Tous" },
@@ -364,15 +321,11 @@ export default function PartsPage() {
               })),
             ]}
           />
-          <NativeSelect
+          <FilterSelect
             label="Stock"
             value={stockFilter}
-            onChange={(event) => {
-              updateFilter(
-                setStockFilter,
-                event.target.value as StockFilter,
-                setPage,
-              )
+            onValueChange={(value) => {
+              updateFilter(setStockFilter, value as StockFilter, setPage)
             }}
             options={[
               { value: "all", label: "Tous" },
@@ -381,11 +334,11 @@ export default function PartsPage() {
               { value: "out", label: "Rupture" },
             ]}
           />
-          <NativeSelect
+          <FilterSelect
             label="Tri"
             value={sort}
-            onChange={(event) => {
-              updateFilter(setSort, event.target.value as SortValue, setPage)
+            onValueChange={(value) => {
+              updateFilter(setSort, value as SortValue, setPage)
             }}
             options={[
               { value: "quantity-asc", label: "Qté croissante" },
@@ -402,89 +355,9 @@ export default function PartsPage() {
         </CardContent>
       </Card>
 
-      {renderPartsContent()}
+      {error && <div className={DESTRUCTIVE_MESSAGE_CLASS}>{error}</div>}
+      {isLoading ? <ListPagePlaceholder filters={0} /> : renderPartsContent()}
     </div>
-  )
-}
-
-function AddStockDialog({
-  part,
-  onOpenChange,
-  onSaved,
-}: Readonly<{
-  part: Part | null
-  onOpenChange: (open: boolean) => void
-  onSaved: (part: Part) => void
-}>) {
-  const [quantity, setQuantity] = useState("1")
-  const [isSaving, setIsSaving] = useState(false)
-
-  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault()
-
-    if (!part) {
-      return
-    }
-
-    const quantityToAdd = Number(quantity)
-
-    if (!Number.isFinite(quantityToAdd) || quantityToAdd <= 0) {
-      return
-    }
-
-    setIsSaving(true)
-
-    try {
-      const saved = await updatePartQuantity(
-        part.id,
-        part.quantity + quantityToAdd,
-      )
-      onSaved(saved)
-    } finally {
-      setIsSaving(false)
-    }
-  }
-
-  return (
-    <Dialog
-      open={part !== null}
-      onOpenChange={(open) => !isSaving && onOpenChange(open)}
-    >
-      <DialogContent>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <DialogHeader>
-            <DialogTitle>Ajouter du stock</DialogTitle>
-            <DialogDescription>
-              {part ? `Stock actuel ${partName(part)} : ${part.quantity}` : ""}
-            </DialogDescription>
-          </DialogHeader>
-          <label className="grid gap-1.5 text-sm font-medium">
-            <LabelText label="Nombre de pièces à ajouter" required />
-            <Input
-              type="number"
-              min="1"
-              step="1"
-              value={quantity}
-              onChange={(event) => setQuantity(event.target.value)}
-              required
-            />
-          </label>
-          <DialogFooter>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => onOpenChange(false)}
-              disabled={isSaving}
-            >
-              Annuler
-            </Button>
-            <Button type="submit" disabled={isSaving}>
-              {isSaving ? "Ajout..." : "Ajouter"}
-            </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
   )
 }
 

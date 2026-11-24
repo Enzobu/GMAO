@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState } from "react"
 import type { FormEvent } from "react"
 import { isAxiosError } from "axios"
 import { useNavigate, useParams } from "react-router-dom"
-import { Plus, Trash2 } from "lucide-react"
 
 import { getMaintenanceTypes } from "@/api/configuration"
 import {
@@ -14,17 +13,10 @@ import { getParts } from "@/api/parts"
 import { getVehicle } from "@/api/vehicles"
 import { FormDocumentsField } from "@/components/form-documents-field"
 import { FormPagePlaceholder } from "@/components/loading-placeholders"
-import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
 import { NativeSelect } from "@/components/ui/native-select"
+import { StockPartPicker } from "./StockPartPicker"
+import { StockMovementDialog } from "./StockMovementDialog"
 import { Textarea } from "@/components/ui/textarea"
 import { useAuthStore } from "@/stores/auth-store"
 import type { ConfigurationItem } from "@/types/configuration"
@@ -97,7 +89,7 @@ export default function InterventionFormPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [restoreDialogOpen, setRestoreDialogOpen] = useState(false)
+  const [stockDialogOpen, setStockDialogOpen] = useState(false)
   const [mileageDialogOpen, setMileageDialogOpen] = useState(false)
   const [mileageMessage, setMileageMessage] = useState("")
 
@@ -156,10 +148,53 @@ export default function InterventionFormPage() {
     [parts, vehicle],
   )
 
+  const previousConsumption = useMemo(() => {
+    const totals: Record<string, number> = {}
+    if (!intervention?.finishedAt) return totals
+
+    for (const line of intervention.maintenanceParts ?? []) {
+      const id = partId(line.part)
+      totals[id] = (totals[id] ?? 0) + line.quantity
+    }
+
+    return totals
+  }, [intervention])
+
+  const stockMovements = useMemo(() => {
+    const next: Record<string, number> = {}
+    if (form.status === "completed" && form.finishedAt) {
+      for (const line of form.parts) {
+        next[line.partId] = (next[line.partId] ?? 0) + Number(line.quantity)
+      }
+    }
+
+    const ids = new Set([
+      ...Object.keys(previousConsumption),
+      ...Object.keys(next),
+    ])
+    return [...ids].map((id) => ({
+      id,
+      delta: (next[id] ?? 0) - (previousConsumption[id] ?? 0),
+      name: parts.find((part) => String(part.id) === id)?.partType.name
+        ?? `Pièce #${id}`,
+    })).filter((movement) => movement.delta !== 0)
+  }, [form.parts, form.status, form.finishedAt, previousConsumption, parts])
+
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
-    if (shouldAskStockRestore()) {
-      setRestoreDialogOpen(true)
+    const validationError = validateSave(form, {
+      compatibleParts,
+      documentFiles,
+      isCompleted,
+      showDocumentFields,
+      previouslyConsumed: previousConsumption,
+    })
+    if (validationError) {
+      setError(validationError)
+      return
+    }
+    if (stockMovements.length > 0) {
+      setStockDialogOpen(true)
       return
     }
     await save(false)
@@ -172,6 +207,7 @@ export default function InterventionFormPage() {
       documentFiles,
       isCompleted,
       showDocumentFields,
+      previouslyConsumed: previousConsumption,
     })
 
     if (validationError) {
@@ -196,23 +232,19 @@ export default function InterventionFormPage() {
 
       navigate(`/vehicles/${vehicleId}/interventions/${saved.id}`)
     } catch (error_) {
-      if (isAxiosError(error_) && error_.response?.status === 409) {
-        setMileageMessage(errorMessage(error_))
+      const message = errorMessage(error_)
+      const isMileageConflict = isAxiosError(error_)
+        && error_.response?.status === 409
+        && /kilom[eé]trage/i.test(message)
+      if (isMileageConflict) {
+        setMileageMessage(message)
         setMileageDialogOpen(true)
       } else {
-        setError(errorMessage(error_))
+        setError(message)
       }
     } finally {
       setIsSaving(false)
     }
-  }
-
-  function shouldAskStockRestore() {
-    return Boolean(
-      intervention?.finishedAt
-        && (!isCompleted || !form.finishedAt)
-        && intervention.maintenanceParts?.length,
-    )
   }
 
   function updateField<K extends keyof typeof emptyForm>(
@@ -234,39 +266,6 @@ export default function InterventionFormPage() {
     }))
   }
 
-  function addPartLine() {
-    setForm((current) => ({
-      ...current,
-      parts: [
-        ...current.parts,
-        {
-          partId: compatibleParts[0]
-            ? String(compatibleParts[0].id)
-            : "",
-          quantity: "1",
-          notes: "",
-        },
-      ],
-    }))
-  }
-
-  function updatePartLine(index: number, line: InterventionPartForm) {
-    setForm((current) => ({
-      ...current,
-      parts: current.parts.map((item, itemIndex) => itemIndex === index
-        ? line
-        : item,
-      ),
-    }))
-  }
-
-  function removePartLine(index: number) {
-    setForm((current) => ({
-      ...current,
-      parts: current.parts.filter((_, itemIndex) => itemIndex !== index),
-    }))
-  }
-
   if (isLoading) {
     return <FormPagePlaceholder sections={4} />
   }
@@ -277,12 +276,13 @@ export default function InterventionFormPage() {
 
   return (
     <div className="space-y-6">
-      <StockRestoreDialog
-        open={restoreDialogOpen}
+      <StockMovementDialog
+        open={stockDialogOpen}
         isLoading={isSaving}
-        onOpenChange={setRestoreDialogOpen}
+        movements={stockMovements}
+        onOpenChange={setStockDialogOpen}
         onConfirm={() => {
-          setRestoreDialogOpen(false)
+          setStockDialogOpen(false)
           void save(false)
         }}
       />
@@ -422,75 +422,17 @@ export default function InterventionFormPage() {
         </Card>
 
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
+          <CardHeader>
             <CardTitle>Pièces utilisées</CardTitle>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={addPartLine}
-              disabled={!canEdit || compatibleParts.length === 0}
-            >
-              <Plus />
-              Ajouter
-            </Button>
           </CardHeader>
-          <CardContent className="space-y-3">
-            {compatibleParts.length === 0 && (
-              <div className="text-sm text-destructive">
-                Aucune pièce compatible avec ce véhicule.
-              </div>
-            )}
-            {form.parts.length === 0 && (
-              <div className="text-sm text-muted-foreground">
-                Aucune pièce ajoutée.
-              </div>
-            )}
-            {form.parts.map((line, index) => (
-              <div
-                key={`${line.id ?? "new"}-${index}`}
-                className={
-                  "grid gap-3 rounded-lg border p-3 "
-                    + "md:grid-cols-[1fr_8rem_auto]"
-                }
-              >
-                <NativeSelect
-                  label="Pièce"
-                  value={line.partId}
-                  options={partOptions(
-                    partsForLine(compatibleParts, parts, line.partId),
-                  )}
-                  onChange={(event) => updatePartLine(index, {
-                    ...line,
-                    partId: event.target.value,
-                  })}
-                  required
-                  disabled={!canEdit}
-                />
-                <Field
-                  label="Quantité"
-                  type="number"
-                  min="1"
-                  value={line.quantity}
-                  onChange={(value) => updatePartLine(index, {
-                    ...line,
-                    quantity: value,
-                  })}
-                  required
-                  disabled={!canEdit}
-                />
-                <Button
-                  type="button"
-                  variant="destructive"
-                  className="self-end"
-                  onClick={() => removePartLine(index)}
-                  disabled={!canEdit}
-                >
-                  <Trash2 />
-                  Retirer
-                </Button>
-              </div>
-            ))}
+          <CardContent>
+            <StockPartPicker
+              parts={compatibleParts}
+              selected={form.parts}
+              previouslyConsumed={previousConsumption}
+              disabled={!canEdit}
+              onChange={(next) => updateField("parts", next)}
+            />
           </CardContent>
         </Card>
 
@@ -612,6 +554,7 @@ function validateSave(
     documentFiles: DocumentFileInput[]
     isCompleted: boolean
     showDocumentFields: boolean
+    previouslyConsumed: Record<string, number>
   }>,
 ) {
   if (!form.maintenanceTypeId) {
@@ -632,6 +575,22 @@ function validateSave(
 
   if (hasIncompatiblePart(form.parts, context.compatibleParts)) {
     return "Une pièce sélectionnée n’est pas compatible avec ce véhicule."
+  }
+
+  if (new Set(form.parts.map((line) => line.partId)).size !== form.parts.length) {
+    return "Une pièce ne peut être utilisée qu’une seule fois."
+  }
+
+  for (const line of form.parts) {
+    const part = context.compatibleParts.find(
+      (item) => String(item.id) === line.partId,
+    )
+    const quantity = Number(line.quantity)
+    const maximum = (part?.quantity ?? 0)
+      + (context.previouslyConsumed[line.partId] ?? 0)
+    if (!Number.isInteger(quantity) || quantity < 1 || quantity > maximum) {
+      return "La quantité demandée dépasse le stock disponible."
+    }
   }
 
   if (
@@ -655,71 +614,8 @@ function hasIncompatiblePart(
   )
 }
 
-function partOptions(parts: Part[]) {
-  return parts.map((part) => ({
-    value: String(part.id),
-    label: `${part.partType.name} ・ stock ${part.quantity}`,
-  }))
-}
-
 function isPartCompatibleWithVehicle(part: Part, vehicleId: number) {
   return part.vehicles.some((vehicle) => vehicle.id === vehicleId)
-}
-
-function partsForLine(
-  compatibleParts: Part[],
-  allParts: Part[],
-  selectedPartId: string,
-) {
-  if (
-    !selectedPartId
-      || compatibleParts.some((part) => String(part.id) === selectedPartId)
-  ) {
-    return compatibleParts
-  }
-
-  const selectedPart = allParts.find(
-    (part) => String(part.id) === selectedPartId,
-  )
-  return selectedPart ? [selectedPart, ...compatibleParts] : compatibleParts
-}
-
-function StockRestoreDialog({
-  open,
-  isLoading,
-  onOpenChange,
-  onConfirm,
-}: Readonly<{
-  open: boolean
-  isLoading: boolean
-  onOpenChange: (open: boolean) => void
-  onConfirm: () => void
-}>) {
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Restaurer les pièces en stock ?</DialogTitle>
-          <DialogDescription>
-            Vous retirez la date de réalisation. Les pièces consommées par
-            cette intervention seront restaurées en stock.
-          </DialogDescription>
-        </DialogHeader>
-        <DialogFooter>
-          <Button
-            variant="outline"
-            onClick={() => onOpenChange(false)}
-            disabled={isLoading}
-          >
-            Annuler
-          </Button>
-          <Button onClick={onConfirm} disabled={isLoading}>
-            {isLoading ? "Enregistrement..." : "Confirmer"}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  )
 }
 
 const MODE_OPTIONS = [

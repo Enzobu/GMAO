@@ -147,6 +147,45 @@ final class MaintenanceStateProcessorTest extends TestCase
         $this->processor(security: $this->adminSecurity())->process($maintenance, new Post());
     }
 
+    public function testRejectsDuplicatePartLines(): void
+    {
+        $vehicle = new Vehicle();
+        $this->setId($vehicle, 1);
+        $part = (new Part())->setQuantity(4)->addVehicle($vehicle);
+        $this->setId($part, 10);
+        $maintenance = (new Maintenance())
+            ->setVehicle($vehicle)
+            ->setStatus(MaintenanceStatusEnum::Completed)
+            ->setFinishedAt(new \DateTimeImmutable())
+            ->setMileage(1500)
+            ->addMaintenancePart((new MaintenancePart())->setPart($part)->setQuantity(1))
+            ->addMaintenancePart((new MaintenancePart())->setPart($part)->setQuantity(1));
+
+        $this->expectException(BadRequestHttpException::class);
+        $this->expectExceptionMessage('une seule fois');
+
+        $this->processor(security: $this->adminSecurity())->process($maintenance, new Post());
+    }
+
+    public function testRejectsZeroQuantity(): void
+    {
+        $vehicle = new Vehicle();
+        $this->setId($vehicle, 1);
+        $part = (new Part())->setQuantity(4)->addVehicle($vehicle);
+        $this->setId($part, 10);
+        $maintenance = (new Maintenance())
+            ->setVehicle($vehicle)
+            ->setStatus(MaintenanceStatusEnum::Completed)
+            ->setFinishedAt(new \DateTimeImmutable())
+            ->setMileage(1500)
+            ->addMaintenancePart((new MaintenancePart())->setPart($part)->setQuantity(0));
+
+        $this->expectException(BadRequestHttpException::class);
+        $this->expectExceptionMessage('strictement positive');
+
+        $this->processor(security: $this->adminSecurity())->process($maintenance, new Post());
+    }
+
     public function testCompletedMaintenanceRejectsInsufficientStock(): void
     {
         $vehicle = new Vehicle();
@@ -233,7 +272,8 @@ final class MaintenanceStateProcessorTest extends TestCase
             ->setFinishedAt(new \DateTimeImmutable())
             ->setMileage(1800)
             ->addMaintenancePart((new MaintenancePart())->setPart($part)->setQuantity(2));
-        $maintenance = new Maintenance();
+        $maintenance = clone $previousMaintenance;
+        $this->setId($maintenance, 30);
         $em = $this->createMock(EntityManagerInterface::class);
         $em->method('find')->with(Part::class, 10)->willReturn($part);
         $em->expects(self::exactly(2))->method('flush');
@@ -248,6 +288,236 @@ final class MaintenanceStateProcessorTest extends TestCase
         self::assertNull($result);
         self::assertTrue($maintenance->isDeleted());
         self::assertSame(5, $part->getQuantity());
+    }
+
+    public function testUnfinishingMaintenanceRestoresOnlyPreviouslyConsumedParts(): void
+    {
+        $vehicle = new Vehicle();
+        $this->setId($vehicle, 1);
+        $part = (new Part())->setQuantity(0)->addVehicle($vehicle);
+        $this->setId($part, 10);
+
+        $maintenance = (new Maintenance())
+            ->setVehicle($vehicle)
+            ->setStatus(MaintenanceStatusEnum::Completed)
+            ->setFinishedAt(new \DateTimeImmutable())
+            ->setMileage(1500)
+            ->addMaintenancePart((new MaintenancePart())->setPart($part)->setQuantity(3));
+        $this->setId($maintenance, 30);
+
+        $previous = clone $maintenance;
+        $maintenance->setStatus(MaintenanceStatusEnum::ToDo);
+
+        $em = $this->createMock(EntityManagerInterface::class);
+        $em->method('find')->with(Part::class, 10)->willReturn($part);
+        $em->expects(self::once())->method('lock')
+            ->with($part, \Doctrine\DBAL\LockMode::PESSIMISTIC_WRITE);
+        $em->expects(self::once())->method('refresh')->with($part);
+
+        $this->processor($em)->process(
+            $maintenance,
+            new Patch(),
+            context: ['previous_data' => $previous],
+        );
+
+        self::assertSame(3, $part->getQuantity());
+        self::assertNull($maintenance->getFinishedAt());
+    }
+
+    public function testDeletingCompletedMaintenanceLocksStockAndRestoresQuantity(): void
+    {
+        $vehicle = new Vehicle();
+        $this->setId($vehicle, 1);
+        $part = (new Part())->setQuantity(0)->addVehicle($vehicle);
+        $this->setId($part, 10);
+
+        $maintenance = (new Maintenance())
+            ->setVehicle($vehicle)
+            ->setStatus(MaintenanceStatusEnum::Completed)
+            ->setFinishedAt(new \DateTimeImmutable())
+            ->addMaintenancePart((new MaintenancePart())->setPart($part)->setQuantity(2));
+        $this->setId($maintenance, 30);
+        $previous = clone $maintenance;
+
+        $em = $this->createMock(EntityManagerInterface::class);
+        $em->method('find')->with(Part::class, 10)->willReturn($part);
+        $locked = [];
+        $em->expects(self::exactly(2))->method('lock')
+            ->willReturnCallback(static function (object $entity) use (&$locked): void {
+                $locked[] = $entity::class;
+            });
+        $em->expects(self::exactly(2))->method('refresh');
+
+        $this->processor($em)->process(
+            $maintenance,
+            new Delete(),
+            context: ['previous_data' => $previous],
+        );
+
+        self::assertTrue($maintenance->isDeleted());
+        self::assertSame(2, $part->getQuantity());
+        self::assertSame([Maintenance::class, Part::class], $locked);
+    }
+
+    public function testDeletingPreviouslyDeletedMaintenanceDoesNotRestoreStockAgain(): void
+    {
+        $part = new Part();
+        $this->setId($part, 10);
+        $maintenance = (new Maintenance())->setIsDeleted(true);
+        $previous = (new Maintenance())
+            ->setFinishedAt(new \DateTimeImmutable())
+            ->addMaintenancePart((new MaintenancePart())->setPart($part)->setQuantity(3));
+
+        $em = $this->createMock(EntityManagerInterface::class);
+        $em->expects(self::never())->method('find');
+        $em->expects(self::never())->method('flush');
+
+        $this->processor($em)->process(
+            $maintenance,
+            new Delete(),
+            context: ['previous_data' => $previous],
+        );
+    }
+
+    public function testMultiPartFailureDoesNotFlushPartialMovements(): void
+    {
+        $vehicle = new Vehicle();
+        $this->setId($vehicle, 1);
+
+        $first = (new Part())->setQuantity(2)->addVehicle($vehicle);
+        $second = (new Part())->setQuantity(0)->addVehicle($vehicle);
+        $this->setId($first, 10);
+        $this->setId($second, 20);
+
+        $maintenance = (new Maintenance())
+            ->setVehicle($vehicle)
+            ->setStatus(MaintenanceStatusEnum::Completed)
+            ->setFinishedAt(new \DateTimeImmutable())
+            ->setMileage(1500)
+            ->addMaintenancePart((new MaintenancePart())->setPart($first)->setQuantity(1))
+            ->addMaintenancePart((new MaintenancePart())->setPart($second)->setQuantity(1));
+
+        $em = $this->createMock(EntityManagerInterface::class);
+        $em->method('find')->willReturnCallback(
+            static fn (string $class, int $id): ?Part => [
+                10 => $first,
+                20 => $second,
+            ][$id] ?? null,
+        );
+        $em->expects(self::exactly(2))
+            ->method('lock');
+        $em->expects(self::never())->method('flush');
+
+        $this->expectException(ConflictHttpException::class);
+        $this->expectExceptionMessage('Stock insuffisant');
+
+        $this->processor($em)->process($maintenance, new Post());
+    }
+
+    public function testStockAdjustmentsLockPartsInStableOrder(): void
+    {
+        $vehicle = new Vehicle();
+        $this->setId($vehicle, 1);
+
+        $first = (new Part())->setQuantity(2)->addVehicle($vehicle);
+        $second = (new Part())->setQuantity(3)->addVehicle($vehicle);
+        $this->setId($first, 10);
+        $this->setId($second, 20);
+
+        $maintenance = (new Maintenance())
+            ->setVehicle($vehicle)
+            ->setStatus(MaintenanceStatusEnum::Completed)
+            ->setFinishedAt(new \DateTimeImmutable())
+            ->setMileage(1500)
+            ->addMaintenancePart((new MaintenancePart())->setPart($second)->setQuantity(1))
+            ->addMaintenancePart((new MaintenancePart())->setPart($first)->setQuantity(1));
+
+        $em = $this->createMock(EntityManagerInterface::class);
+        $em->method('find')->willReturnCallback(
+            static fn (string $class, int $id): ?Part => [
+                10 => $first,
+                20 => $second,
+            ][$id] ?? null,
+        );
+        $locked = [];
+        $em->method('lock')->willReturnCallback(
+            static function (Part $part) use (&$locked): void {
+                $locked[] = $part->getId();
+            },
+        );
+
+        $this->processor($em)->process($maintenance, new Post());
+
+        self::assertSame([10, 20], $locked);
+        self::assertSame(1, $first->getQuantity());
+        self::assertSame(2, $second->getQuantity());
+    }
+
+    public function testEditingCompletedMaintenanceDebitsOnlyAdditionalQuantity(): void
+    {
+        $vehicle = new Vehicle();
+        $this->setId($vehicle, 1);
+        $part = (new Part())->setQuantity(3)->addVehicle($vehicle);
+        $this->setId($part, 10);
+        $line = (new MaintenancePart())->setPart($part)->setQuantity(1);
+        $maintenance = (new Maintenance())
+            ->setVehicle($vehicle)
+            ->setStatus(MaintenanceStatusEnum::Completed)
+            ->setFinishedAt(new \DateTimeImmutable())
+            ->setMileage(1000)
+            ->addMaintenancePart($line);
+        $this->setId($maintenance, 20);
+
+        $previous = clone $maintenance;
+        $line->setQuantity(2);
+
+        $manager = $this->createMock(EntityManagerInterface::class);
+        $manager->method('find')->with(Part::class, 10)->willReturn($part);
+        $manager->expects(self::once())->method('flush');
+
+        $result = $this->processor($manager, $this->adminSecurity())->process(
+            $maintenance,
+            new Patch(),
+            context: ['previous_data' => $previous],
+        );
+
+        self::assertSame($maintenance, $result);
+        self::assertSame(2, $part->getQuantity());
+    }
+
+    public function testPreviousSnapshotKeepsQuantitiesWhenPartLinesAreEdited(): void
+    {
+        $part = new Part();
+        $this->setId($part, 10);
+
+        $line = (new MaintenancePart())->setPart($part)->setQuantity(1);
+        $maintenance = (new Maintenance())
+            ->setStatus(MaintenanceStatusEnum::Completed)
+            ->setFinishedAt(new \DateTimeImmutable())
+            ->addMaintenancePart($line);
+
+        $previous = clone $maintenance;
+        $line->setQuantity(2);
+
+        self::assertSame(1, $previous->getMaintenanceParts()->first()->getQuantity());
+        self::assertSame(2, $maintenance->getMaintenanceParts()->first()->getQuantity());
+        self::assertNotSame(
+            $previous->getMaintenanceParts()->first(),
+            $maintenance->getMaintenanceParts()->first(),
+        );
+    }
+
+    public function testPreviousSnapshotKeepsRemovedPartLines(): void
+    {
+        $part = new Part();
+        $line = (new MaintenancePart())->setPart($part)->setQuantity(1);
+        $maintenance = (new Maintenance())->addMaintenancePart($line);
+
+        $previous = clone $maintenance;
+        $maintenance->removeMaintenancePart($line);
+
+        self::assertCount(1, $previous->getMaintenanceParts());
+        self::assertCount(0, $maintenance->getMaintenanceParts());
     }
 
     public function testUpdatingCompletedMaintenanceWithSameStockSkipsStockLookup(): void
@@ -279,7 +549,7 @@ final class MaintenanceStateProcessorTest extends TestCase
         self::assertSame(3, $part->getQuantity());
     }
 
-    public function testStockDeltaSkipsMissingPart(): void
+    public function testStockDeltaRejectsMissingPart(): void
     {
         $part = new Part();
         $this->setId($part, 10);
@@ -292,11 +562,9 @@ final class MaintenanceStateProcessorTest extends TestCase
         $this->setId($maintenance, 20);
         $em = $this->createMock(EntityManagerInterface::class);
         $em->expects(self::once())->method('find')->with(Part::class, 10)->willReturn(null);
-        $em->expects(self::once())->method('flush');
+        $this->expectException(ConflictHttpException::class);
 
-        $result = $this->processor($em, $this->adminSecurity())->process($maintenance, new Patch(), context: ['previous_data' => $previousMaintenance]);
-
-        self::assertSame($maintenance, $result);
+        $this->processor($em, $this->adminSecurity())->process($maintenance, new Patch(), context: ['previous_data' => $previousMaintenance]);
     }
 
     public function testStockMapSkipsPartWithoutId(): void
@@ -326,8 +594,12 @@ final class MaintenanceStateProcessorTest extends TestCase
         $vehicleManager->method('buildEventMileageWarning')->willReturn(null);
         $vehicleManager->method('syncAfterEventMileageChange')->willReturn(false);
 
+        $manager = $em ?? $this->createMock(EntityManagerInterface::class);
+        $manager->method('wrapInTransaction')
+            ->willReturnCallback(static fn (callable $callback) => $callback());
+
         return new MaintenanceStateProcessor(
-            $em ?? $this->createMock(EntityManagerInterface::class),
+            $manager,
             $security ?? $this->adminSecurity(),
             $vehicleManager,
             $requestStack ?? new RequestStack(),
