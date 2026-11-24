@@ -10,6 +10,7 @@ use App\Entity\User;
 use App\Enum\MaintenanceStatusEnum;
 use App\Service\VehicleManager;
 use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\DBAL\LockMode;
 use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
@@ -32,6 +33,14 @@ final readonly class MaintenanceStateProcessor implements ProcessorInterface
             return null;
         }
 
+        return $this->entityManager->wrapInTransaction(
+            fn (): ?Maintenance => $this->processMaintenance($data, $operation, $context),
+        );
+    }
+
+    /** @param array<string, mixed> $context */
+    private function processMaintenance(Maintenance $data, Operation $operation, array $context): ?Maintenance
+    {
         $this->denyUnlessAllowed($data, $operation);
 
         $previousMaintenance = $context['previous_data'] ?? null;
@@ -41,20 +50,13 @@ final readonly class MaintenanceStateProcessor implements ProcessorInterface
         $oldStockMap = $previousMaintenance instanceof Maintenance ? $this->stockMap($previousMaintenance) : [];
 
         if ($operation instanceof DeleteOperationInterface) {
-            $data->setIsDeleted(true);
-            $this->restoreStock($oldStockMap);
-            $this->entityManager->flush();
-
-            if ($this->vehicleManager->syncAfterEventMileageChange($oldVehicle, $oldMileage, null, null, $oldVehicleLastMileage)) {
-                $this->entityManager->flush();
-            }
-
-            return null;
+            return $this->deleteMaintenance($data);
         }
 
         $this->normalizeCompletionFields($data);
         $this->guardCompletedMileage($data);
         $this->guardCompatibleParts($data);
+        $this->guardUniqueParts($data);
         $this->guardMileage($oldVehicle, $oldMileage, $data);
         $newStockMap = $data->getFinishedAt() !== null ? $this->stockMap($data) : [];
         $this->applyStockDelta($oldStockMap, $newStockMap);
@@ -74,6 +76,38 @@ final readonly class MaintenanceStateProcessor implements ProcessorInterface
         }
 
         return $data;
+    }
+
+    private function deleteMaintenance(Maintenance $maintenance): ?Maintenance
+    {
+        if ($maintenance->getId() !== null) {
+            $this->entityManager->lock($maintenance, LockMode::PESSIMISTIC_WRITE);
+            $this->entityManager->refresh($maintenance);
+        }
+
+        if ($maintenance->isDeleted()) {
+            return null;
+        }
+
+        $vehicle = $maintenance->getVehicle();
+        $mileage = $this->getMileageContribution($maintenance);
+        $lastMileage = $vehicle?->getLastMileage();
+
+        $this->applyStockDelta($this->stockMap($maintenance), []);
+        $maintenance->setIsDeleted(true);
+        $this->entityManager->flush();
+
+        if ($this->vehicleManager->syncAfterEventMileageChange(
+            $vehicle,
+            $mileage,
+            null,
+            null,
+            $lastMileage,
+        )) {
+            $this->entityManager->flush();
+        }
+
+        return null;
     }
 
     private function denyUnlessAllowed(Maintenance $maintenance, Operation $operation): void
@@ -147,8 +181,12 @@ final readonly class MaintenanceStateProcessor implements ProcessorInterface
 
         foreach ($maintenance->getMaintenanceParts() as $maintenancePart) {
             $part = $maintenancePart->getPart();
-            if ($part === null) {
-                throw new BadRequestHttpException('Chaque ligne de pièce doit contenir une pièce valide.');
+            if ($part === null || $part->isDeleted()) {
+                throw new BadRequestHttpException('Chaque ligne de pièce doit contenir une pièce active.');
+            }
+
+            if ($maintenancePart->getQuantity() === null || $maintenancePart->getQuantity() < 1) {
+                throw new BadRequestHttpException('La quantité de chaque pièce doit être strictement positive.');
             }
 
             $isCompatible = $part->getVehicles()->exists(
@@ -164,10 +202,29 @@ final readonly class MaintenanceStateProcessor implements ProcessorInterface
         }
     }
 
+    private function guardUniqueParts(Maintenance $maintenance): void
+    {
+        $usedIds = [];
+
+        foreach ($maintenance->getMaintenanceParts() as $line) {
+            $id = $line->getPart()?->getId();
+            if ($id === null) {
+                continue;
+            }
+
+            if (isset($usedIds[$id])) {
+                throw new BadRequestHttpException('Une pièce ne peut être ajoutée qu’une seule fois à une intervention.');
+            }
+
+            $usedIds[$id] = true;
+        }
+    }
+
     /** @param array<int, int> $oldStockMap @param array<int, int> $newStockMap */
     private function applyStockDelta(array $oldStockMap, array $newStockMap): void
     {
         $partIds = array_unique([...array_keys($oldStockMap), ...array_keys($newStockMap)]);
+        sort($partIds, SORT_NUMERIC);
 
         foreach ($partIds as $partId) {
             $delta = ($newStockMap[$partId] ?? 0) - ($oldStockMap[$partId] ?? 0);
@@ -177,26 +234,17 @@ final readonly class MaintenanceStateProcessor implements ProcessorInterface
 
             $part = $this->entityManager->find(\App\Entity\Part::class, $partId);
             if ($part === null) {
-                continue;
+                throw new ConflictHttpException('La pièce sélectionnée est introuvable.');
             }
 
+            $this->entityManager->lock($part, LockMode::PESSIMISTIC_WRITE);
+            $this->entityManager->refresh($part);
             $newQuantity = ($part->getQuantity() ?? 0) - $delta;
             if ($newQuantity < 0) {
                 throw new ConflictHttpException(sprintf('Stock insuffisant pour %s.', $part->getPartType()?->getName() ?? 'la pièce sélectionnée'));
             }
 
             $part->setQuantity($newQuantity);
-        }
-    }
-
-    /** @param array<int, int> $stockMap */
-    private function restoreStock(array $stockMap): void
-    {
-        foreach ($stockMap as $partId => $quantity) {
-            $part = $this->entityManager->find(\App\Entity\Part::class, $partId);
-            if ($part !== null) {
-                $part->setQuantity(($part->getQuantity() ?? 0) + $quantity);
-            }
         }
     }
 

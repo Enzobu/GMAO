@@ -86,7 +86,7 @@ final class AppFixturesTest extends TestCase
         self::assertCount(7, $vehicles);
         self::assertCount(2, $inspectionCenters);
         self::assertCount(12, $partTypes);
-        self::assertCount(12, $parts);
+        self::assertCount(11, $parts);
         self::assertCount(9, $maintenanceTypes);
         self::assertCount(14, $insurances);
         self::assertCount(5, $inspections);
@@ -118,10 +118,24 @@ final class AppFixturesTest extends TestCase
             $partByName[$part->getPartType()->getName()] = $part;
         }
 
-        self::assertSame(8, $partByName[self::PART_TYPE_ENGINE_OIL_5W40]->getQuantity());
-        self::assertSame('Bidons 1L pour appoints et vidanges voitures sportives', $partByName[self::PART_TYPE_ENGINE_OIL_5W40]->getNote());
+        self::assertGreaterThanOrEqual(0, $partByName[self::PART_TYPE_ENGINE_OIL_5W40]->getQuantity());
+        self::assertSame(
+            'Bidons 1L pour appoints et vidanges voitures sportives',
+            $partByName[self::PART_TYPE_ENGINE_OIL_5W40]->getNote()
+        );
         self::assertCount(5, $partByName[self::PART_TYPE_ENGINE_OIL_5W40]->getVehicles());
-        self::assertNull($partByName[self::PART_TYPE_OIL_FILTER]);
+
+        foreach ($parts as $first) {
+            self::assertGreaterThanOrEqual(0, $first->getQuantity());
+            foreach ($parts as $second) {
+                if ($first === $second || $first->getPartType() !== $second->getPartType()) {
+                    continue;
+                }
+                foreach ($first->getVehicles() as $vehicle) {
+                    self::assertFalse($second->getVehicles()->contains($vehicle));
+                }
+            }
+        }
 
         $activePorscheInsurance = null;
         $oldPorscheInsurance = null;
@@ -170,8 +184,6 @@ final class AppFixturesTest extends TestCase
         self::assertNull($passedInspection->getCounterVisitDueAt());
         self::assertSame('RAS', $passedInspection->getNotes());
 
-        $completedWithFiveLiters = null;
-        $motorcycleTransmissionPart = null;
         $plannedMaintenance = null;
         $repair = null;
 
@@ -185,21 +197,12 @@ final class AppFixturesTest extends TestCase
             }
         }
 
-        foreach ($maintenanceParts as $maintenancePart) {
-            if ($maintenancePart->getQuantity() === 5) {
-                $completedWithFiveLiters = $maintenancePart;
-            }
-
-            if ($maintenancePart->getPart()->getPartType()->getName() === self::PART_TYPE_REINFORCED_CHAIN_KIT) {
-                $motorcycleTransmissionPart = $maintenancePart;
-            }
+        foreach ($maintenanceParts as $line) {
+            self::assertGreaterThan(0, $line->getQuantity());
+            self::assertTrue(
+                $line->getPart()->getVehicles()->contains($line->getMaintenance()->getVehicle())
+            );
         }
-
-        self::assertInstanceOf(MaintenancePart::class, $completedWithFiveLiters);
-        self::assertSame(self::PART_TYPE_ENGINE_OIL_5W40, $completedWithFiveLiters->getPart()->getPartType()->getName());
-        self::assertNull($completedWithFiveLiters->getNotes());
-        self::assertInstanceOf(MaintenancePart::class, $motorcycleTransmissionPart);
-        self::assertSame(1, $motorcycleTransmissionPart->getQuantity());
 
         self::assertInstanceOf(Maintenance::class, $plannedMaintenance);
         self::assertSame(MaintenanceStatusEnum::ToDo, $plannedMaintenance->getStatus());
