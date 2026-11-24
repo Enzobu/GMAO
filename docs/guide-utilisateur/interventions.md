@@ -84,26 +84,43 @@ Il permet de passer l'intervention au statut **Terminé** en renseignant :
 
 ## Pièces utilisées
 
-Une intervention peut consommer des pièces du stock.
+La section **Pièces utilisées** dispose d'une recherche par nom de pièce.
+Elle ne propose à l'ajout que les pièces **compatibles avec le véhicule** dont
+la quantité disponible est strictement positive.
 
-Seules les pièces compatibles avec le véhicule sont proposées.
+- Sélectionnez une pièce : elle apparaît dans la liste des pièces choisies.
+- La pièce sélectionnée disparaît aussitôt des résultats pour empêcher un doublon.
+- Ajustez la quantité utilisée, dans la limite du stock disponible.
+- Retirez une pièce pour la rendre de nouveau disponible dans la recherche.
 
-Pour chaque pièce, renseignez :
-
-- la pièce ;
-- la quantité.
-
-Si aucune pièce compatible n'existe pour le véhicule, l'interface affiche un
-message et empêche l'ajout de ligne de pièce.
+Les pièces d'une intervention déjà terminée restent visibles en édition même
+si leur stock actuel vaut zéro. Le maximum autorisé tient alors compte des
+quantités consommées par cette intervention.
 
 ## Impact sur le stock
 
-Lorsqu'une intervention est enregistrée comme terminée, les pièces utilisées
-sont consommées dans le stock.
+Une intervention **À faire** ou **En cours** ne consomme et ne réserve aucune
+pièce. À son passage au statut **Terminé**, une fenêtre confirme les débits.
 
-Si une intervention déjà réalisée est repassée dans un état non terminé ou perd
-sa date de réalisation, l'application demande confirmation pour restaurer les
-pièces en stock.
+Si vous éditez une intervention déjà terminée, la fenêtre ne s'affiche que
+lorsqu'une quantité consommée change. Le stock n'est ajusté que de la
+**différence** :
+
+- ajout de quatre bougies : débit de quatre ;
+- passage de deux à quatre bougies : débit de deux ;
+- passage de quatre à deux : restitution de deux ;
+- suppression d'une ligne : restitution de la quantité précédemment utilisée ;
+- modification de notes ou kilométrage : aucun mouvement.
+
+Une intervention terminée peut recevoir de nouvelles pièces ultérieurement :
+elles sont débitées lors de l'enregistrement de cette modification.
+
+Le retour à un statut non terminé ou la suppression d'une intervention terminée
+restitue les quantités qu'elle avait consommées.
+
+Une confirmation est demandée pour les mouvements de stock. Le serveur vérifie
+aussi que la quantité demandée est disponible, y compris si elle a changé
+depuis l'ouverture du formulaire.
 
 ## Alerte kilométrage
 

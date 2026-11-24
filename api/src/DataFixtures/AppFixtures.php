@@ -369,7 +369,6 @@ class AppFixtures extends Fixture
             ['type' => self::PART_TYPE_ENGINE_OIL_5W40, 'quantity' => 8, 'vehicles' => ['porsche-911', 'bmw-m3', 'audi-rs3', 'alpine-a110', 'nissan-gtr'], 'note' => 'Bidons 1L pour appoints et vidanges voitures sportives'],
             ['type' => self::PART_TYPE_ENGINE_OIL_10W50, 'quantity' => 5, 'vehicles' => ['s1000rr', 'zx6r'], 'note' => 'Usage motos sportives'],
             ['type' => self::PART_TYPE_OIL_FILTER, 'quantity' => 7, 'vehicles' => ['porsche-911', 'bmw-m3', 'audi-rs3', 'alpine-a110', 'nissan-gtr', 's1000rr', 'zx6r'], 'note' => null],
-            ['type' => self::PART_TYPE_OIL_FILTER, 'quantity' => 3, 'vehicles' => ['bmw-m3', 'audi-rs3', 'alpine-a110'], 'note' => 'Filtres performance nettoyables'],
             ['type' => self::PART_TYPE_FRONT_SPORT_BRAKE_PADS, 'quantity' => 4, 'vehicles' => ['porsche-911', 'bmw-m3', 'audi-rs3', 'nissan-gtr'], 'note' => 'Jeux avant route/trackday'],
             ['type' => self::PART_TYPE_REAR_SPORT_BRAKE_PADS, 'quantity' => 3, 'vehicles' => ['porsche-911', 'bmw-m3', 'nissan-gtr'], 'note' => null],
             ['type' => self::PART_TYPE_RBF660_BRAKE_FLUID, 'quantity' => 6, 'vehicles' => ['porsche-911', 'bmw-m3', 'audi-rs3', 'alpine-a110', 'nissan-gtr', 's1000rr', 'zx6r'], 'note' => 'Flacons haute température'],
@@ -568,11 +567,21 @@ class AppFixtures extends Fixture
 
                 $manager->persist($maintenance);
 
-                if (isset($parts[$partName])) {
+                if (
+                    $year >= 2025
+                    && isset($parts[$partName])
+                    && $parts[$partName]->getVehicles()->contains($vehicle)
+                ) {
+                    $usedQuantity = $partName === self::PART_TYPE_ENGINE_OIL_5W40 ? 5 : 1;
+                    $part = $parts[$partName];
+                    if ($part->getQuantity() < $usedQuantity) {
+                        continue;
+                    }
+                    $part->setQuantity($part->getQuantity() - $usedQuantity);
                     $maintenancePart = (new MaintenancePart())
                         ->setMaintenance($maintenance)
-                        ->setPart($parts[$partName])
-                        ->setQuantity($partName === self::PART_TYPE_ENGINE_OIL_5W40 ? 5 : 1)
+                        ->setPart($part)
+                        ->setQuantity($usedQuantity)
                         ->setNotes(null);
 
                     $maintenance->addMaintenancePart($maintenancePart);

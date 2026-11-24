@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react"
 import type { FormEvent } from "react"
 import { Link, useNavigate, useParams } from "react-router-dom"
-import { ArrowLeft, Save } from "lucide-react"
+import { ArrowLeft, Check, Save } from "lucide-react"
 
-import { createPart, getPart, updatePart } from "@/api/parts"
+import { createPart, getPart, getParts, updatePart, updatePartQuantity } from "@/api/parts"
 import { getPartTypes } from "@/api/configuration"
 import { getVehicles } from "@/api/vehicles"
 import { FormDocumentsField } from "@/components/form-documents-field"
@@ -26,6 +26,7 @@ import {
   uploadParentDocuments,
 } from "@/lib/form-documents"
 import { vehicleDisplayName } from "@/lib/part-utils"
+import { cn } from "@/lib/utils"
 
 const emptyForm = {
   partTypeId: "",
@@ -57,6 +58,8 @@ export default function PartFormPage() {
   const [isLoading, setIsLoading] = useState(isEditing)
   const [isSaving, setIsSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [conflicts, setConflicts] = useState<Part[]>([])
+  const [typeSearch, setTypeSearch] = useState("")
 
   useEffect(() => {
     let ignore = false
@@ -96,6 +99,20 @@ export default function PartFormPage() {
     }
 
     try {
+      const existingParts = await getParts()
+      const overlapping = existingParts.filter((part) => (
+        part.id !== Number(id)
+        && part.partType.id === Number(form.partTypeId)
+        && part.vehicles.some((vehicle) => (
+          form.vehicleIds.includes(String(vehicle.id))
+        ))
+      ))
+      setConflicts(overlapping)
+      if (overlapping.length > 0) {
+        setError("Ce type de pièce est déjà présent pour ce véhicule. Réapprovisionnez le stock existant.")
+        return
+      }
+
       const saved = id
         ? await updatePart(id, formToPayload(form))
         : await createPart(formToPayload(form))
@@ -122,6 +139,17 @@ export default function PartFormPage() {
         ? current.vehicleIds.filter((id) => id !== vehicleId)
         : [...current.vehicleIds, vehicleId],
     }))
+  }
+
+  function selectAllVehicles() {
+    setForm((current) => ({
+      ...current,
+      vehicleIds: vehicles.map((vehicle) => String(vehicle.id)),
+    }))
+  }
+
+  function deselectAllVehicles() {
+    setForm((current) => ({ ...current, vehicleIds: [] }))
   }
 
   if (isLoading) {
@@ -155,6 +183,36 @@ export default function PartFormPage() {
       {error && (
         <div className={DESTRUCTIVE_MESSAGE_CLASS}>
           {error}
+          {conflicts.map((part) => (
+            <div key={part.id} className="mt-2 flex items-center gap-3">
+              <Link className="underline" to={`/parts/${part.id}`}>
+                Voir le stock existant : {part.partType.name}
+              </Link>
+              {!isEditing && conflicts.length === 1 && Number(form.quantity) > 0 && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  disabled={isSaving}
+                  onClick={async () => {
+                    setIsSaving(true)
+                    try {
+                      await updatePartQuantity(
+                        part.id,
+                        part.quantity + Number(form.quantity),
+                      )
+                      navigate(`/parts/${part.id}`)
+                    } catch {
+                      setError("Impossible de réapprovisionner cette pièce.")
+                    } finally {
+                      setIsSaving(false)
+                    }
+                  }}
+                >
+                  Ajouter {form.quantity} au stock existant
+                </Button>
+              )}
+            </div>
+          ))}
         </div>
       )}
 
@@ -164,6 +222,10 @@ export default function PartFormPage() {
             <CardTitle>Informations</CardTitle>
           </CardHeader>
           <CardContent className="grid gap-4 md:grid-cols-2">
+            <label className="grid gap-1.5 text-sm font-medium">
+              Rechercher un type
+              <Input value={typeSearch} onChange={(event) => setTypeSearch(event.target.value)} placeholder="Nom de la pièce..." />
+            </label>
             <NativeSelect
               label="Type de pièce"
               value={form.partTypeId}
@@ -174,7 +236,7 @@ export default function PartFormPage() {
                 }))
               }
               required
-              options={partTypes.map((type) => ({
+              options={partTypes.filter((type) => !typeSearch || type.name.toLocaleLowerCase("fr").includes(typeSearch.toLocaleLowerCase("fr")) || String(type.id) === form.partTypeId).map((type) => ({
                 value: String(type.id),
                 label: type.name,
               }))}
@@ -211,30 +273,61 @@ export default function PartFormPage() {
         </Card>
 
         <Card>
-          <CardHeader>
+          <CardHeader className="flex flex-wrap items-center justify-between gap-3">
             <CardTitle>Véhicules compatibles</CardTitle>
+            <div className="flex flex-wrap gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                disabled={isSaving || vehicles.length === 0}
+                onClick={selectAllVehicles}
+              >
+                Tout sélectionner
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                disabled={isSaving || form.vehicleIds.length === 0}
+                onClick={deselectAllVehicles}
+              >
+                Tout désélectionner
+              </Button>
+            </div>
           </CardHeader>
           <CardContent className="grid gap-2 md:grid-cols-2">
             {vehicles.map((vehicle) => {
               const value = String(vehicle.id)
+              const selected = form.vehicleIds.includes(value)
+
               return (
-                <label
+                <button
                   key={vehicle.id}
-                  className={
-                    "flex items-center gap-2 rounded-lg border p-3 " +
-                    "text-sm"
-                  }
+                  type="button"
+                  aria-pressed={selected}
+                  disabled={isSaving}
+                  onClick={() => toggleVehicle(value)}
+                  className={cn(
+                    "flex min-h-12 items-center justify-between gap-3",
+                    "rounded-lg border px-3 py-3 text-left text-sm",
+                    "transition-colors hover:border-primary/40",
+                    "focus-visible:outline-none focus-visible:ring-2",
+                    "focus-visible:ring-ring/50 disabled:opacity-50",
+                    selected
+                      ? "border-primary/50 bg-primary/10 hover:bg-primary/15"
+                      : "border-border bg-background hover:bg-muted/50",
+                  )}
                 >
-                  <input
-                    type="checkbox"
-                    checked={form.vehicleIds.includes(value)}
-                    onChange={() => toggleVehicle(value)}
-                  />
-                  <span>
-                    {vehicleDisplayName(vehicle)} ・{" "}
-                    {vehicle.registration.toUpperCase()}
+                  <span className="min-w-0">
+                    <span className="font-medium">{vehicleDisplayName(vehicle)}</span>
+                    <span className="mx-2 text-muted-foreground">·</span>
+                    <span className="text-muted-foreground">
+                      {vehicle.registration.toUpperCase()}
+                    </span>
                   </span>
-                </label>
+                  {selected && <Check className="size-4 shrink-0 text-primary" />}
+                </button>
               )
             })}
           </CardContent>
